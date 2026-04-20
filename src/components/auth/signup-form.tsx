@@ -31,10 +31,9 @@ const signupSchema = z
 
 type SignupValues = z.infer<typeof signupSchema>;
 
-export function SignupForm() {
+export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
-  const googleEnabled = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true";
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
@@ -99,7 +98,12 @@ export function SignupForm() {
               type="button"
               variant="secondary"
               className="w-full"
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              onClick={() =>
+                signIn("google", {
+                  callbackUrl: "/dashboard",
+                  prompt: "select_account",
+                })
+              }
             >
               <Globe2 className="h-4 w-4" />
               {dictionary.continueGoogle}

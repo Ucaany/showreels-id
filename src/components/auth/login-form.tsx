@@ -20,10 +20,30 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>;
 
-export function LoginForm() {
+function getOauthErrorMessage(code: string) {
+  const normalized = code.trim().toLowerCase();
+  if (normalized === "oauthaccountnotlinked") {
+    return "Email ini sudah terdaftar dengan metode login lain. Masuk dengan password dulu, lalu coba Google lagi.";
+  }
+  if (normalized === "accessdenied" || normalized === "access_denied") {
+    return "Akses login Google ditolak.";
+  }
+  if (normalized === "callback") {
+    return "Proses callback Google bermasalah. Coba lagi beberapa saat.";
+  }
+  return "";
+}
+
+export function LoginForm({
+  googleEnabled,
+  oauthError = "",
+}: {
+  googleEnabled: boolean;
+  oauthError?: string;
+}) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
-  const googleEnabled = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true";
+  const oauthErrorMessage = getOauthErrorMessage(oauthError);
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -61,13 +81,24 @@ export function LoginForm() {
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
+        {oauthErrorMessage ? (
+          <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            {oauthErrorMessage}
+          </p>
+        ) : null}
+
         {googleEnabled ? (
           <>
             <Button
               type="button"
               variant="secondary"
               className="w-full"
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              onClick={() =>
+                signIn("google", {
+                  callbackUrl: "/dashboard",
+                  prompt: "select_account",
+                })
+              }
             >
               <Globe2 className="h-4 w-4" />
               {dictionary.continueGoogle}

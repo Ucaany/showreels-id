@@ -17,6 +17,9 @@ export interface CreateVideoInput {
   sourceUrl: string;
   tags: string[];
   visibility: VideoVisibility;
+  thumbnailUrl?: string;
+  extraVideoUrls?: string[];
+  imageUrls?: string[];
   description?: string;
 }
 
@@ -59,6 +62,9 @@ export const videoService = {
         }),
       tags: normalizedTags,
       visibility: input.visibility,
+      thumbnailUrl: input.thumbnailUrl?.trim() || "",
+      extraVideoUrls: input.extraVideoUrls || [],
+      imageUrls: input.imageUrls || [],
       sourceUrl: input.sourceUrl.trim(),
       source,
       publicSlug,

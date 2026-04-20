@@ -20,9 +20,19 @@ export const users = pgTable(
     email: text("email").notNull().unique(),
     emailVerified: timestamp("email_verified", { mode: "date" }),
     image: text("image"),
+    coverImageUrl: text("cover_image_url").notNull().default(""),
     username: text("username").unique(),
     bio: text("bio").notNull().default(""),
     experience: text("experience").notNull().default(""),
+    birthDate: text("birth_date").notNull().default(""),
+    city: text("city").notNull().default(""),
+    contactEmail: text("contact_email").notNull().default(""),
+    phoneNumber: text("phone_number").notNull().default(""),
+    websiteUrl: text("website_url").notNull().default(""),
+    instagramUrl: text("instagram_url").notNull().default(""),
+    youtubeUrl: text("youtube_url").notNull().default(""),
+    facebookUrl: text("facebook_url").notNull().default(""),
+    threadsUrl: text("threads_url").notNull().default(""),
     skills: jsonb("skills")
       .$type<string[]>()
       .notNull()
@@ -109,6 +119,15 @@ export const videos = pgTable(
       .$type<"draft" | "private" | "public">()
       .notNull()
       .default("public"),
+    thumbnailUrl: text("thumbnail_url").notNull().default(""),
+    extraVideoUrls: jsonb("extra_video_urls")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    imageUrls: jsonb("image_urls")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     sourceUrl: text("source_url").notNull(),
     source: text("source").notNull(),
     publicSlug: text("public_slug").notNull().unique(),

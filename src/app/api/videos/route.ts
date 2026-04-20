@@ -3,16 +3,24 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { videoSchema } from "@/lib/auth-schemas";
+import { isAdminEmail } from "@/server/admin-access";
 import {
   buildAiDescription,
   createPublicSlug,
   detectVideoSource,
+  getAutoThumbnailFromVideoUrl,
 } from "@/lib/video-utils";
 
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (isAdminEmail(session.user.email)) {
+    return NextResponse.json(
+      { error: "Akun owner hanya untuk admin panel, tidak untuk submit video." },
+      { status: 403 }
+    );
   }
 
   const body = await request.json().catch(() => null);
@@ -56,6 +64,11 @@ export async function POST(request: Request) {
         }),
       tags: parsed.data.tags,
       visibility: parsed.data.visibility,
+      thumbnailUrl:
+        parsed.data.thumbnailUrl?.trim() ||
+        getAutoThumbnailFromVideoUrl(parsed.data.sourceUrl),
+      extraVideoUrls: parsed.data.extraVideoUrls,
+      imageUrls: parsed.data.imageUrls,
       sourceUrl: parsed.data.sourceUrl.trim(),
       source,
       publicSlug,

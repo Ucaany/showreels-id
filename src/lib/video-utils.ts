@@ -1,11 +1,27 @@
 import type { VideoSource, VideoVisibility } from "@/lib/types";
+import { extractGoogleDriveFileId } from "@/lib/avatar-utils";
 
 const YOUTUBE_REGEX =
   /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{6,})/i;
-const GDRIVE_REGEX = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i;
+const GDRIVE_REGEX =
+  /(drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^#]*&)?id=|thumbnail\?(?:[^#]*&)?id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/i;
 const INSTAGRAM_REGEX =
   /instagram\.com\/(?:p|reel|tv)\/([a-zA-Z0-9_-]+)/i;
 const VIMEO_REGEX = /vimeo\.com\/(?:video\/)?([0-9]+)/i;
+
+function extractYoutubeId(url: string): string | null {
+  const match = url.match(YOUTUBE_REGEX);
+  return match?.[1] || null;
+}
+
+function extractGdriveId(url: string): string | null {
+  return extractGoogleDriveFileId(url);
+}
+
+function extractVimeoId(url: string): string | null {
+  const match = url.match(VIMEO_REGEX);
+  return match?.[1] || null;
+}
 
 export function detectVideoSource(url: string): VideoSource | null {
   const normalized = url.trim();
@@ -62,13 +78,13 @@ export function createPublicSlug(
 export function getEmbedUrl(sourceUrl: string, source: VideoSource): string {
   switch (source) {
     case "youtube": {
-      const match = sourceUrl.match(YOUTUBE_REGEX);
-      return match ? `https://www.youtube.com/embed/${match[1]}` : sourceUrl;
+      const id = extractYoutubeId(sourceUrl);
+      return id ? `https://www.youtube.com/embed/${id}` : sourceUrl;
     }
     case "gdrive": {
-      const match = sourceUrl.match(GDRIVE_REGEX);
-      return match
-        ? `https://drive.google.com/file/d/${match[1]}/preview`
+      const id = extractGdriveId(sourceUrl);
+      return id
+        ? `https://drive.google.com/file/d/${id}/preview`
         : sourceUrl;
     }
     case "instagram": {
@@ -78,8 +94,8 @@ export function getEmbedUrl(sourceUrl: string, source: VideoSource): string {
         : sourceUrl;
     }
     case "vimeo": {
-      const match = sourceUrl.match(VIMEO_REGEX);
-      return match ? `https://player.vimeo.com/video/${match[1]}` : sourceUrl;
+      const id = extractVimeoId(sourceUrl);
+      return id ? `https://player.vimeo.com/video/${id}` : sourceUrl;
     }
     default:
       return sourceUrl;
@@ -97,6 +113,122 @@ export function getVisibilityLabel(visibility: VideoVisibility): string {
   if (visibility === "draft") return "Draft";
   if (visibility === "private") return "Private";
   return "Public";
+}
+
+export function normalizeHttpUrl(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const withProtocol =
+    trimmed.startsWith("http://") || trimmed.startsWith("https://")
+      ? trimmed
+      : `https://${trimmed}`;
+
+  try {
+    const parsed = new URL(withProtocol);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "";
+    }
+    return parsed.toString();
+  } catch {
+    return "";
+  }
+}
+
+export function parseMultilineUrls(value: string): string[] {
+  return value
+    .split(/\r?\n|,/)
+    .map((item) => normalizeHttpUrl(item))
+    .filter(Boolean);
+}
+
+export function getAutoThumbnailFromVideoUrl(sourceUrl: string): string {
+  const source = detectVideoSource(sourceUrl);
+  if (!source) {
+    return "";
+  }
+
+  if (source === "youtube") {
+    const id = extractYoutubeId(sourceUrl);
+    return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "";
+  }
+
+  if (source === "gdrive") {
+    const id = extractGdriveId(sourceUrl);
+    return id ? `https://lh3.googleusercontent.com/d/${id}=w640` : "";
+  }
+
+  if (source === "vimeo") {
+    const id = extractVimeoId(sourceUrl);
+    return id ? `https://vumbnail.com/${id}.jpg` : "";
+  }
+
+  if (source === "instagram") {
+    const match = sourceUrl.match(INSTAGRAM_REGEX);
+    return match ? `https://www.instagram.com/p/${match[1]}/media/?size=l` : "";
+  }
+
+  return "";
+}
+
+export function getThumbnailCandidates(
+  sourceUrl: string,
+  manualThumbnailUrl?: string | null
+): string[] {
+  const candidates: string[] = [];
+  const addCandidate = (value?: string | null) => {
+    const normalized = value?.trim() || "";
+    if (!normalized || candidates.includes(normalized)) {
+      return;
+    }
+    candidates.push(normalized);
+  };
+
+  addCandidate(manualThumbnailUrl);
+
+  const source = detectVideoSource(sourceUrl);
+  if (!source) {
+    return candidates;
+  }
+
+  if (source === "youtube") {
+    const id = extractYoutubeId(sourceUrl);
+    if (id) {
+      addCandidate(`https://img.youtube.com/vi/${id}/mqdefault.jpg`);
+      addCandidate(`https://img.youtube.com/vi/${id}/hqdefault.jpg`);
+      addCandidate(`https://img.youtube.com/vi/${id}/maxresdefault.jpg`);
+    }
+    return candidates;
+  }
+
+  if (source === "gdrive") {
+    const id = extractGdriveId(sourceUrl);
+    if (id) {
+      addCandidate(`https://lh3.googleusercontent.com/d/${id}=w640`);
+      addCandidate(`https://drive.google.com/thumbnail?id=${id}&sz=w640`);
+      addCandidate(`https://drive.google.com/uc?id=${id}`);
+    }
+    return candidates;
+  }
+
+  if (source === "vimeo") {
+    const id = extractVimeoId(sourceUrl);
+    if (id) {
+      addCandidate(`https://vumbnail.com/${id}.jpg`);
+    }
+    return candidates;
+  }
+
+  if (source === "instagram") {
+    const match = sourceUrl.match(INSTAGRAM_REGEX);
+    if (match) {
+      addCandidate(`https://www.instagram.com/p/${match[1]}/media/?size=l`);
+    }
+  }
+
+  return candidates;
 }
 
 export function buildAiDescription({

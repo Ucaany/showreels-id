@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { type ChangeEvent, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
-import { Sparkles, Trash2 } from "lucide-react";
+import { ImagePlus, Sparkles, Trash2 } from "lucide-react";
+import { MediaPreviewCarousel } from "@/components/media-preview-carousel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,10 @@ import { usePreferences } from "@/hooks/use-preferences";
 import {
   buildAiDescription,
   detectVideoSource,
+  getAutoThumbnailFromVideoUrl,
   getVisibilityLabel,
+  normalizeHttpUrl,
+  parseMultilineUrls,
   slugifyText,
 } from "@/lib/video-utils";
 import type { VideoVisibility } from "@/lib/types";
@@ -24,6 +28,9 @@ const schema = z
   .object({
     title: z.string().min(4, "Judul minimal 4 karakter."),
     sourceUrl: z.url("Masukkan URL yang valid."),
+    thumbnailUrl: z.string().optional(),
+    extraVideoUrls: z.string().optional(),
+    imageUrls: z.string().optional(),
     tags: z.string().optional(),
     visibility: z.enum(["draft", "private", "public"]),
     description: z.string().max(1500, "Deskripsi terlalu panjang.").optional(),
@@ -41,6 +48,9 @@ interface VideoFormProps {
     id: string;
     title: string;
     sourceUrl: string;
+    thumbnailUrl: string;
+    extraVideoUrls: string[];
+    imageUrls: string[];
     tags: string[];
     visibility: VideoVisibility;
     description: string;
@@ -58,12 +68,16 @@ export function VideoForm({
   const [success, setSuccess] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const thumbnailFileRef = useRef<HTMLInputElement | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: initialVideo?.title || "",
       sourceUrl: initialVideo?.sourceUrl || "",
+      thumbnailUrl: initialVideo?.thumbnailUrl || "",
+      extraVideoUrls: initialVideo?.extraVideoUrls.join("\n") || "",
+      imageUrls: initialVideo?.imageUrls.join("\n") || "",
       tags: initialVideo?.tags.join(", ") || "",
       visibility: initialVideo?.visibility || "public",
       description: initialVideo?.description || "",
@@ -72,9 +86,17 @@ export function VideoForm({
 
   const watchedTitle = useWatch({ control: form.control, name: "title" });
   const watchedSourceUrl = useWatch({ control: form.control, name: "sourceUrl" });
+  const watchedThumbnailUrl = useWatch({ control: form.control, name: "thumbnailUrl" });
+  const watchedExtraVideoUrls = useWatch({ control: form.control, name: "extraVideoUrls" });
+  const watchedImageUrls = useWatch({ control: form.control, name: "imageUrls" });
   const watchedTags = useWatch({ control: form.control, name: "tags" });
   const watchedVisibility = useWatch({ control: form.control, name: "visibility" });
   const source = detectVideoSource(watchedSourceUrl || "");
+  const thumbnailPreview =
+    normalizeHttpUrl(watchedThumbnailUrl || "") ||
+    getAutoThumbnailFromVideoUrl(watchedSourceUrl || "");
+  const extraVideoPreview = parseMultilineUrls(watchedExtraVideoUrls || "");
+  const imagePreview = parseMultilineUrls(watchedImageUrls || "");
   const slugPreview =
     mode === "edit" && !watchedTitle?.trim()
       ? initialVideo?.publicSlug || "video-portofolio"
@@ -104,6 +126,44 @@ export function VideoForm({
     setAiLoading(false);
   };
 
+  const handleThumbnailFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setSubmitError("Thumbnail harus berupa file gambar.");
+      return;
+    }
+
+    if (file.size > 3 * 1024 * 1024) {
+      setSubmitError("Ukuran thumbnail maksimal 3MB.");
+      return;
+    }
+
+    const toDataUrl = () =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Gagal membaca file thumbnail."));
+        reader.readAsDataURL(file);
+      });
+
+    try {
+      setSubmitError("");
+      const dataUrl = await toDataUrl();
+      form.setValue("thumbnailUrl", dataUrl, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    } catch {
+      setSubmitError("Gagal memproses file thumbnail.");
+    } finally {
+      event.target.value = "";
+    }
+  };
+
   const onSubmit = form.handleSubmit(async (values) => {
     setSubmitError("");
     setSuccess("");
@@ -118,6 +178,9 @@ export function VideoForm({
         body: JSON.stringify({
           title: values.title,
           sourceUrl: values.sourceUrl,
+          thumbnailUrl: normalizeHttpUrl(values.thumbnailUrl || ""),
+          extraVideoUrls: parseMultilineUrls(values.extraVideoUrls || ""),
+          imageUrls: parseMultilineUrls(values.imageUrls || ""),
           tags: (values.tags || "")
             .split(",")
             .map((item) => item.trim())
@@ -224,6 +287,82 @@ export function VideoForm({
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-800">
+              Thumbnail (opsional)
+            </label>
+            <input
+              ref={thumbnailFileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleThumbnailFileChange}
+            />
+            <div className="mb-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => thumbnailFileRef.current?.click()}
+              >
+                <ImagePlus className="h-4 w-4" />
+                Add File Thumbnail
+              </Button>
+              {thumbnailPreview ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    form.setValue("thumbnailUrl", "", {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }
+                >
+                  Hapus Thumbnail
+                </Button>
+              ) : null}
+            </div>
+            <Input
+              placeholder="https://images.unsplash.com/..."
+              {...form.register("thumbnailUrl")}
+            />
+            <p className="mt-1 text-xs text-slate-600">
+              Upload file atau isi link. Thumbnail menjadi cover pada slider video utama.
+            </p>
+            {!normalizeHttpUrl(watchedThumbnailUrl || "") && source ? (
+              <p className="mt-1 text-xs text-brand-700">
+                Thumbnail otomatis diambil dari video utama.
+              </p>
+            ) : null}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-800">
+              Video Tambahan (opsional)
+            </label>
+            <Textarea
+              className="min-h-24"
+              placeholder={"Satu URL per baris\nhttps://youtube.com/watch?v=...\nhttps://vimeo.com/..."}
+              {...form.register("extraVideoUrls")}
+            />
+            <p className="mt-1 text-xs text-slate-600">
+              Bisa isi lebih dari 2 video untuk galeri slide.
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-800">
+              Gambar Tambahan (opsional)
+            </label>
+            <Textarea
+              className="min-h-24"
+              placeholder={"Satu URL gambar per baris\nhttps://.../shot-1.jpg\nhttps://.../shot-2.jpg"}
+              {...form.register("imageUrls")}
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-800">
               Tags
             </label>
             <Input {...form.register("tags")} />
@@ -304,6 +443,24 @@ export function VideoForm({
           Hanya video dengan status public yang muncul di landing page, profil creator,
           dan link `/v/[slug]`.
         </p>
+        <div className="space-y-3 border-t border-slate-200 pt-4">
+          <p className="text-sm font-semibold text-slate-900">
+            Preview Sebelum Submit
+          </p>
+          {source ? (
+            <MediaPreviewCarousel
+              thumbnailUrl={thumbnailPreview}
+              mainVideoUrl={watchedSourceUrl || ""}
+              extraVideoUrls={extraVideoPreview}
+              imageUrls={imagePreview}
+              title={watchedTitle || "Preview video"}
+            />
+          ) : (
+            <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600 ring-1 ring-slate-200">
+              Isi URL video utama dulu untuk melihat preview.
+            </p>
+          )}
+        </div>
         {mode === "edit" && initialVideo ? (
           <div className="space-y-3 border-t border-slate-200 pt-4">
             <p className="text-sm font-semibold text-slate-900">Danger Zone</p>

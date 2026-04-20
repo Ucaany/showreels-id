@@ -4,10 +4,12 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { videoSchema } from "@/lib/auth-schemas";
+import { isAdminEmail } from "@/server/admin-access";
 import {
   buildAiDescription,
   createPublicSlug,
   detectVideoSource,
+  getAutoThumbnailFromVideoUrl,
 } from "@/lib/video-utils";
 
 export async function PATCH(
@@ -17,6 +19,12 @@ export async function PATCH(
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (isAdminEmail(session.user.email)) {
+    return NextResponse.json(
+      { error: "Akun owner hanya untuk admin panel, tidak untuk kelola video creator." },
+      { status: 403 }
+    );
   }
 
   const { id } = await context.params;
@@ -76,6 +84,11 @@ export async function PATCH(
         }),
       tags: parsed.data.tags,
       visibility: parsed.data.visibility,
+      thumbnailUrl:
+        parsed.data.thumbnailUrl?.trim() ||
+        getAutoThumbnailFromVideoUrl(parsed.data.sourceUrl),
+      extraVideoUrls: parsed.data.extraVideoUrls,
+      imageUrls: parsed.data.imageUrls,
       sourceUrl: parsed.data.sourceUrl.trim(),
       source,
       publicSlug,
@@ -94,6 +107,12 @@ export async function DELETE(
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (isAdminEmail(session.user.email)) {
+    return NextResponse.json(
+      { error: "Akun owner hanya untuk admin panel, tidak untuk kelola video creator." },
+      { status: 403 }
+    );
   }
 
   const { id } = await context.params;

@@ -1,7 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
+    remotePatterns: [
+      { protocol: "https", hostname: "img.youtube.com" },
+      { protocol: "https", hostname: "i.ytimg.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "drive.google.com" },
+      { protocol: "https", hostname: "vumbnail.com" },
+      { protocol: "https", hostname: "www.instagram.com" },
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
+    ],
+  },
 };
 
 export default nextConfig;

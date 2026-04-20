@@ -16,6 +16,15 @@ export interface UserProfile {
   avatarUrl: string;
   bio: string;
   experience: string;
+  birthDate: string;
+  city: string;
+  contactEmail: string;
+  phoneNumber: string;
+  websiteUrl: string;
+  instagramUrl: string;
+  youtubeUrl: string;
+  facebookUrl: string;
+  threadsUrl: string;
   skills: string[];
   createdAt: string;
 }
@@ -27,6 +36,9 @@ export interface VideoItem {
   description: string;
   tags: string[];
   visibility: VideoVisibility;
+  thumbnailUrl: string;
+  extraVideoUrls: string[];
+  imageUrls: string[];
   sourceUrl: string;
   source: VideoSource;
   publicSlug: string;
@@ -38,6 +50,9 @@ export interface VideoFormInput {
   sourceUrl: string;
   tags: string;
   visibility: VideoVisibility;
+  thumbnailUrl?: string;
+  extraVideoUrls?: string[];
+  imageUrls?: string[];
   description?: string;
 }
 

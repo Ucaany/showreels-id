@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AppLogo } from "@/components/app-logo";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { PublicShareCard } from "@/components/public-share-card";
-import { SitePreferences } from "@/components/site-preferences";
-import { VideoEmbed } from "@/components/video-embed";
+import { PublicMobileHeader } from "@/components/public-mobile-header";
+import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatDateLabel } from "@/lib/helpers";
+import { getAgeFromBirthDate } from "@/lib/profile-utils";
 import { getPublicVideo } from "@/server/public-data";
-import { getSourceLabel } from "@/lib/video-utils";
+import { getAutoThumbnailFromVideoUrl, getSourceLabel } from "@/lib/video-utils";
+import { MediaPreviewCarousel } from "@/components/media-preview-carousel";
 
 export default async function PublicVideoPage({
   params,
@@ -23,20 +24,11 @@ export default async function PublicVideoPage({
   if (!video || !video.author) {
     notFound();
   }
+  const age = getAgeFromBirthDate(video.author.birthDate);
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="border-b border-border bg-surface backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <AppLogo />
-          <div className="flex flex-wrap items-center gap-3">
-            <SitePreferences />
-            <Link href="/auth/login">
-              <Button variant="secondary">Masuk Dashboard</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PublicMobileHeader ctaHref="/auth/login" ctaLabel="Masuk Dashboard" />
 
       <main className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_320px]">
         <Card className="space-y-5 border-border bg-surface">
@@ -50,7 +42,13 @@ export default async function PublicVideoPage({
             </p>
           </div>
 
-          <VideoEmbed sourceUrl={video.sourceUrl} source={video.source as never} title={video.title} />
+          <MediaPreviewCarousel
+            thumbnailUrl={video.thumbnailUrl || getAutoThumbnailFromVideoUrl(video.sourceUrl)}
+            mainVideoUrl={video.sourceUrl}
+            extraVideoUrls={video.extraVideoUrls}
+            imageUrls={video.imageUrls}
+            title={video.title}
+          />
 
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">
@@ -80,11 +78,23 @@ export default async function PublicVideoPage({
                 <p className="text-sm text-slate-600">
                   @{video.author.username || "creator"}
                 </p>
+                <p className="text-xs text-slate-600">
+                  {video.author.city || "Kota belum diisi"}
+                </p>
               </div>
             </div>
+            <p className="text-sm text-slate-600">
+              Umur: {age !== null ? `${age} tahun` : "Belum diatur"}
+            </p>
             <p className="text-sm leading-relaxed text-slate-600">
               {video.author.bio || "Bio belum ditambahkan."}
             </p>
+            <SocialLinks
+              instagramUrl={video.author.instagramUrl}
+              youtubeUrl={video.author.youtubeUrl}
+              facebookUrl={video.author.facebookUrl}
+              threadsUrl={video.author.threadsUrl}
+            />
             {video.author.username ? (
               <Link href={`/creator/${video.author.username}`}>
                 <Button className="w-full" variant="ghost">

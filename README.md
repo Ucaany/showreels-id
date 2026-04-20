@@ -17,6 +17,7 @@ Next.js 16 App Router project for a video portfolio platform with:
    - `AUTH_TRUST_HOST`
    - `AUTH_GOOGLE_ID`
    - `AUTH_GOOGLE_SECRET`
+   - `ADMIN_EMAILS`
    - `NEXT_PUBLIC_APP_URL`
 3. Install dependencies:
 
@@ -47,6 +48,8 @@ Use these callback URLs in Google Cloud Console:
 
 Auth.js deployment guidance: [authjs.dev/getting-started/deployment](https://authjs.dev/getting-started/deployment)  
 Google provider guidance: [authjs.dev/getting-started/providers/google](https://authjs.dev/getting-started/providers/google)
+
+Google login button otomatis muncul ketika `AUTH_GOOGLE_ID` dan `AUTH_GOOGLE_SECRET` terisi.
 
 ## Database workflow
 
@@ -80,7 +83,7 @@ Drizzle docs: [orm.drizzle.team/docs/get-started/postgresql-new](https://orm.dri
    - `AUTH_TRUST_HOST=true`
    - `AUTH_GOOGLE_ID`
    - `AUTH_GOOGLE_SECRET`
-   - `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED`
+   - `ADMIN_EMAILS`
    - `NEXT_PUBLIC_APP_URL=https://your-project-name.vercel.app`
 4. Provision a PostgreSQL database, for example Neon, and set its connection string as `DATABASE_URL`.
 5. Update the Google OAuth production callback URL to your Vercel domain.

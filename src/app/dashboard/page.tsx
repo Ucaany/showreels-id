@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { FolderOpen, Video } from "lucide-react";
+import { CopyProfileLinkButton } from "@/components/dashboard/copy-profile-link-button";
 import { DashboardVideoList } from "@/components/dashboard/dashboard-video-list";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -47,9 +48,12 @@ export default async function DashboardPage() {
               <Button variant="secondary">{dictionary.editProfile}</Button>
             </Link>
             {user.username ? (
-              <Link href={`/creator/${user.username}`}>
-                <Button variant="ghost">{dictionary.publicProfile}</Button>
-              </Link>
+              <>
+                <Link href={`/creator/${user.username}`}>
+                  <Button variant="ghost">{dictionary.publicProfile}</Button>
+                </Link>
+                <CopyProfileLinkButton username={user.username} />
+              </>
             ) : null}
           </div>
         </Card>

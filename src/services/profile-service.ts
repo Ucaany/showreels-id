@@ -7,6 +7,15 @@ export interface ProfileUpdateInput {
   avatarUrl: string;
   bio: string;
   experience: string;
+  birthDate: string;
+  city: string;
+  contactEmail: string;
+  phoneNumber: string;
+  websiteUrl: string;
+  instagramUrl: string;
+  youtubeUrl: string;
+  facebookUrl: string;
+  threadsUrl: string;
   skills: string[];
 }
 
@@ -37,6 +46,15 @@ export const profileService = {
         avatarUrl: payload.avatarUrl.trim(),
         bio: payload.bio.trim(),
         experience: payload.experience.trim(),
+        birthDate: payload.birthDate.trim(),
+        city: payload.city.trim(),
+        contactEmail: payload.contactEmail.trim().toLowerCase(),
+        phoneNumber: payload.phoneNumber.trim(),
+        websiteUrl: payload.websiteUrl.trim(),
+        instagramUrl: payload.instagramUrl.trim(),
+        youtubeUrl: payload.youtubeUrl.trim(),
+        facebookUrl: payload.facebookUrl.trim(),
+        threadsUrl: payload.threadsUrl.trim(),
         skills: payload.skills,
       };
     });

@@ -27,13 +27,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     verificationTokensTable: verificationTokens,
   }),
   session: {
-    strategy: "jwt",
+    strategy: "database",
   },
   pages: {
     signIn: "/auth/login",
+    error: "/auth/login",
   },
   providers: [
-    ...(googleConfigured ? [Google] : []),
+    ...(googleConfigured
+      ? [
+          Google({
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
@@ -73,35 +80,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    session({ session, token }) {
+    async session({ session, user }) {
       if (session.user) {
-        session.user.id = String(token.id ?? "");
-        session.user.username =
-          typeof token.username === "string" ? token.username : null;
-      }
-      return session;
-    },
-    async jwt({ token, user }) {
-      if (user?.id) {
-        token.id = user.id;
-      }
-
-      if (user?.email) {
-        const currentUser = await db.query.users.findFirst({
-          where: eq(users.email, user.email),
+        session.user.id = String(user.id ?? "");
+        const sessionUser = await db.query.users.findFirst({
+          where: eq(users.id, String(user.id ?? "")),
           columns: {
-            id: true,
             username: true,
           },
         });
-
-        if (currentUser) {
-          token.id = currentUser.id;
-          token.username = currentUser.username ?? null;
-        }
+        session.user.username = sessionUser?.username ?? null;
       }
-
-      return token;
+      return session;
     },
     async signIn({ user, account }) {
       if (!user.email) {

@@ -1,0 +1,167 @@
+"use client";
+
+import Image from "next/image";
+import { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Image as ImageIcon, PlayCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { detectVideoSource, getEmbedUrl } from "@/lib/video-utils";
+import type { VideoSource } from "@/lib/types";
+
+type MediaSlide =
+  | { type: "cover"; url: string }
+  | { type: "video"; url: string }
+  | { type: "image"; url: string };
+
+interface MediaPreviewCarouselProps {
+  thumbnailUrl?: string;
+  mainVideoUrl?: string;
+  extraVideoUrls: string[];
+  imageUrls: string[];
+  title: string;
+}
+
+export function MediaPreviewCarousel({
+  thumbnailUrl,
+  mainVideoUrl,
+  extraVideoUrls,
+  imageUrls,
+  title,
+}: MediaPreviewCarouselProps) {
+  const [index, setIndex] = useState(0);
+
+  const slides = useMemo<MediaSlide[]>(() => {
+    const coverSlides: MediaSlide[] = thumbnailUrl
+      ? [{ type: "cover" as const, url: thumbnailUrl }]
+      : [];
+    const videoSlides: MediaSlide[] = [
+      ...(mainVideoUrl ? [{ type: "video", url: mainVideoUrl } as const] : []),
+      ...extraVideoUrls.map((url) => ({ type: "video" as const, url })),
+    ];
+    const imageSlides: MediaSlide[] = imageUrls.map((url) => ({
+      type: "image" as const,
+      url,
+    }));
+    return [...coverSlides, ...videoSlides, ...imageSlides];
+  }, [thumbnailUrl, mainVideoUrl, extraVideoUrls, imageUrls]);
+
+  if (slides.length === 0) {
+    return null;
+  }
+
+  const active = slides[index] ?? slides[0];
+  const canSlide = slides.length > 1;
+  const headingLabel = canSlide ? "Preview Media" : "Media Utama";
+
+  const renderVideo = (url: string) => {
+    const source = detectVideoSource(url) as VideoSource | null;
+    if (!source) {
+      return (
+        <div className="flex aspect-video items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+          URL video tidak didukung untuk preview.
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-card">
+        <div className="aspect-video w-full">
+          <iframe
+            title={title}
+            src={getEmbedUrl(url, source)}
+            className="h-full w-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">
+          {headingLabel}
+        </h2>
+        {canSlide ? (
+          <p className="text-xs text-slate-600">
+            {index + 1}/{slides.length}
+          </p>
+        ) : null}
+      </div>
+
+      {active.type === "video" ? (
+        renderVideo(active.url)
+      ) : (
+        <div className="relative">
+          <Image
+            src={active.url}
+            alt={`Preview media ${index + 1}`}
+            width={1280}
+            height={720}
+            sizes="(max-width: 1024px) 100vw, 820px"
+            unoptimized
+            className="w-full rounded-2xl border border-slate-200 object-cover shadow-card"
+            loading="lazy"
+          />
+          {active.type === "cover" ? (
+            <span className="absolute left-3 top-3 rounded-full bg-slate-900/85 px-2.5 py-1 text-xs font-semibold text-white">
+              Cover Video
+            </span>
+          ) : null}
+        </div>
+      )}
+
+      {canSlide ? (
+        <div className="flex items-center justify-between gap-3">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setIndex((prev) => (prev - 1 + slides.length) % slides.length)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Sebelumnya
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setIndex((prev) => (prev + 1) % slides.length)}
+          >
+            Berikutnya
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      ) : null}
+
+      {canSlide ? (
+        <div className="flex flex-wrap gap-2">
+          {slides.map((slide, slideIndex) => (
+            <button
+              key={`${slide.type}-${slide.url}-${slideIndex}`}
+              type="button"
+              onClick={() => setIndex(slideIndex)}
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
+                index === slideIndex
+                  ? "border-brand-400 bg-brand-50 text-brand-700"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-brand-200"
+              }`}
+            >
+              {slide.type === "video" ? (
+                <PlayCircle className="h-3.5 w-3.5" />
+              ) : (
+                <ImageIcon className="h-3.5 w-3.5" />
+              )}
+              {slide.type === "cover"
+                ? "Cover"
+                : slide.type === "video"
+                  ? `Video ${slideIndex + 1}`
+                  : `Gambar ${slideIndex + 1}`}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
