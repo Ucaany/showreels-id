@@ -3,13 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { signIn, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
   BriefcaseBusiness,
   Camera,
-  Circle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -17,12 +16,10 @@ import {
   CircleHelp,
   HardDrive,
   LayoutGrid,
-  Link2,
   LogOut,
   MapPin,
   Menu,
   PlayCircle,
-  ShieldCheck,
   Sparkles,
   ThumbsUp,
   UploadCloud,
@@ -96,84 +93,6 @@ function AnimatedBackdrop() {
   );
 }
 
-function LatestVideoThumbButton({
-  title,
-  sourceUrl,
-  thumbnailUrl,
-  active,
-  onClick,
-}: {
-  title: string;
-  sourceUrl: string;
-  thumbnailUrl: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  const candidates = useMemo(
-    () => getThumbnailCandidates(sourceUrl, thumbnailUrl),
-    [sourceUrl, thumbnailUrl]
-  );
-  const [candidateIndexRaw, setCandidateIndexRaw] = useState(0);
-  const candidateIndex =
-    candidates.length === 0 ? 0 : Math.min(candidateIndexRaw, candidates.length);
-  const currentThumbnail = candidates[candidateIndex] || "";
-  const source = detectVideoSource(sourceUrl);
-  const sourceLabel =
-    source === "youtube"
-      ? "YouTube"
-      : source === "gdrive"
-        ? "Google Drive"
-        : source === "instagram"
-          ? "Instagram"
-          : source === "vimeo"
-            ? "Vimeo"
-            : "Video";
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "w-full overflow-hidden rounded-2xl border bg-[linear-gradient(180deg,#111827,#0f172a)] text-left shadow-[0_18px_36px_rgba(15,23,42,0.24)] transition",
-        active
-          ? "border-brand-400 ring-2 ring-brand-200"
-          : "border-slate-800 hover:border-brand-400"
-      )}
-      aria-label={`Pilih video ${title}`}
-    >
-      {currentThumbnail ? (
-        <Image
-          src={currentThumbnail}
-          alt={`Thumbnail ${title}`}
-          width={320}
-          height={180}
-          sizes="(max-width: 640px) 100vw, 220px"
-          unoptimized
-          className="aspect-video w-full object-cover opacity-[0.88]"
-          loading={active ? "eager" : "lazy"}
-          priority={active}
-          referrerPolicy="no-referrer"
-          onError={() => {
-            setCandidateIndexRaw((prev) =>
-              prev + 1 < candidates.length ? prev + 1 : candidates.length
-            );
-          }}
-        />
-      ) : (
-        <div className="flex aspect-video items-center justify-center bg-[linear-gradient(180deg,#111827,#020617)] px-2 text-center text-[11px] font-medium text-slate-400">
-          <span className="inline-flex items-center gap-1">
-            <PlayCircle className="h-3.5 w-3.5 text-brand-300" />
-            {sourceLabel}
-          </span>
-        </div>
-      )}
-      <div className="p-3">
-        <p className="line-clamp-2 text-sm font-semibold text-white">{title}</p>
-      </div>
-    </button>
-  );
-}
-
 function FaqItem({
   question,
   answer,
@@ -228,7 +147,6 @@ export function LandingPage({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [headerSolid, setHeaderSolid] = useState(false);
-  const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
   const year = new Date().getFullYear();
 
@@ -399,9 +317,6 @@ export function LandingPage({
 
   const shownCreators = featuredCreators.slice(0, 3);
   const shownVideos = featuredVideos.slice(0, 3);
-  const selectedVideoSafeIndex =
-    shownVideos.length === 0 ? 0 : Math.min(selectedVideoIndex, shownVideos.length - 1);
-  const selectedVideo = shownVideos[selectedVideoSafeIndex] ?? shownVideos[0] ?? null;
   const activeItem = testimonials[activeTestimonial];
 
   const nextTestimonial = () => {
@@ -572,13 +487,15 @@ export function LandingPage({
           <div className="relative mx-auto flex min-h-[92vh] w-full max-w-7xl flex-col justify-end px-4 pb-12 pt-28 sm:px-6 sm:pb-16 sm:pt-32">
             <div className="mx-auto max-w-4xl text-center">
               <div className="flex justify-center">
-                <Badge className="inline-flex items-center gap-2 bg-white/84 px-4 py-2 text-brand-700 ring-1 ring-white/70 backdrop-blur-sm">
-                  <span className="relative flex h-3 w-3 items-center justify-center">
-                    <span className="absolute inline-flex h-3 w-3 rounded-full bg-emerald-400/60 animate-ping" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                <Badge className="inline-flex items-center gap-2 bg-white/95 px-4 py-2 !text-slate-950 shadow-[0_10px_24px_rgba(15,23,42,0.12)] ring-1 ring-white/80 backdrop-blur-sm">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                    <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+                      <span className="absolute inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400/60 animate-ping" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                    </span>
+                    Live
                   </span>
-                  <Circle className="h-3.5 w-3.5 fill-current" />
-                  {dictionary.landingBadge}
+                  <span className="text-slate-950">{dictionary.landingBadge}</span>
                 </Badge>
               </div>
               <h1 className="mt-6 font-display text-4xl font-semibold leading-tight text-slate-950 sm:text-6xl lg:text-7xl">
@@ -605,23 +522,6 @@ export function LandingPage({
                   </Button>
                 </Link>
               </div>
-
-              {!currentUser ? (
-                <div className="mt-4 flex justify-center">
-                  <Button
-                    variant="secondary"
-                    className="min-w-[220px] border-white/80 bg-white/82 backdrop-blur-sm"
-                    onClick={() =>
-                      signIn("google", {
-                        callbackUrl: "/dashboard",
-                        prompt: "select_account",
-                      })
-                    }
-                  >
-                    {locale === "en" ? "Login with Google" : "Login dengan Google"}
-                  </Button>
-                </div>
-              ) : null}
 
               <div
                 id="platform-support"
@@ -660,7 +560,7 @@ export function LandingPage({
                   transition={{ delay: 0.2 + index * 0.08, duration: 0.3 }}
                   whileHover={{ y: -4, scale: 1.01 }}
                   onClick={() => scrollToSection(item.id)}
-                  className="rounded-[1.6rem] border border-white/65 bg-white/74 p-5 text-left shadow-[0_22px_50px_rgba(37,99,235,0.12)] backdrop-blur-md transition hover:border-brand-300"
+                  className="rounded-[1.6rem] border border-white/65 bg-white/74 p-5 text-center shadow-[0_22px_50px_rgba(37,99,235,0.12)] backdrop-blur-md transition hover:border-brand-300"
                 >
                   <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                     {item.label}
@@ -813,147 +713,112 @@ export function LandingPage({
             </section>
 
             <section id="latest-videos" className="mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
-              <div className="rounded-[2rem] border border-slate-800 bg-[linear-gradient(180deg,#0f172a,#020617)] p-6 text-white shadow-[0_24px_60px_rgba(2,6,23,0.32)] sm:p-8">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="rounded-[2rem] border border-border bg-white/88 p-6 shadow-card backdrop-blur-sm sm:p-8">
+                <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-300">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
                       Latest Videos
                     </p>
-                    <h2 className="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">
+                    <h2 className="mt-2 font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
                       {locale === "en" ? "Fresh work from creators" : "Video terbaru dari creator"}
                     </h2>
                   </div>
-                  <p className="max-w-xl text-sm text-slate-300">
+                  <p className="max-w-xl text-sm text-slate-600 lg:justify-self-end lg:text-right">
                     {locale === "en"
-                      ? "Preview the latest published work in a clean, client-facing layout."
-                      : "Lihat karya terbaru yang sudah dipublish dalam tampilan yang lebih simple dan fokus."}
+                      ? "The latest published work, presented in a simple and clean card layout."
+                      : "Karya terbaru yang sudah dipublish, ditampilkan dalam card yang sederhana dan rapi."}
                   </p>
                 </div>
 
-                <div className="mt-6 space-y-3 lg:hidden">
+                <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {shownVideos.length === 0 ? (
-                    <p className="text-sm text-slate-300">
+                    <p className="text-sm text-slate-600">
                       {locale === "en" ? "No video yet." : "Belum ada video."}
                     </p>
                   ) : (
                     shownVideos.map((video) => {
-                      const mobileThumbnail =
+                      const thumbnail =
                         getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
+                      const source = detectVideoSource(video.sourceUrl);
+                      const sourceLabel =
+                        source === "gdrive"
+                          ? "Google Drive"
+                          : source === "youtube"
+                            ? "YouTube"
+                            : source === "instagram"
+                              ? "Instagram"
+                              : source === "vimeo"
+                                ? "Vimeo"
+                                : "Video";
 
                       return (
-                        <Link
-                          key={`mobile-${video.id}`}
-                          href={`/v/${video.publicSlug}`}
-                          className="block rounded-[1.4rem] border border-slate-800 bg-slate-950/70 p-3"
+                        <motion.div
+                          key={video.id}
+                          initial={{ opacity: 0, y: 18 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, amount: 0.25 }}
+                          transition={{ duration: 0.28 }}
                         >
-                          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
-                            {mobileThumbnail ? (
+                          <Link
+                          href={`/v/${video.publicSlug}`}
+                            className="flex h-full flex-col rounded-[1.6rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)]"
+                        >
+                            <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-100">
+                            {thumbnail ? (
                               <Image
-                                src={mobileThumbnail}
+                                src={thumbnail}
                                 alt={`Thumbnail ${video.title}`}
-                                width={640}
-                                height={360}
-                                className="aspect-video w-full object-cover opacity-85"
+                                width={560}
+                                height={315}
+                                sizes="(max-width: 768px) 100vw, 33vw"
+                                className="aspect-video w-full object-cover"
                                 unoptimized
                                 loading="lazy"
                                 referrerPolicy="no-referrer"
                               />
                             ) : (
-                              <div className="flex aspect-video items-center justify-center bg-slate-950 text-sm font-medium text-slate-400">
+                              <div className="flex aspect-video items-center justify-center bg-slate-100 text-sm font-medium text-slate-500">
                                 <span className="inline-flex items-center gap-1">
-                                  <PlayCircle className="h-4 w-4 text-brand-300" />
+                                  <PlayCircle className="h-4 w-4 text-brand-600" />
                                   Video
                                 </span>
                               </div>
                             )}
                           </div>
-                          <p className="mt-3 line-clamp-2 text-sm font-semibold text-white">
-                            {video.title}
-                          </p>
-                          <p className="mt-1 line-clamp-2 text-xs text-slate-400">
-                            {video.description}
-                          </p>
-                        </Link>
+                            <div className="mt-4 flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="line-clamp-2 text-base font-semibold text-slate-950">
+                                  {video.title}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-500">
+                                  {video.author?.name || "Creator"}
+                                </p>
+                              </div>
+                              <span className="inline-flex shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                {sourceLabel}
+                              </span>
+                            </div>
+
+                            <p className="mt-3 min-h-[48px] line-clamp-2 text-sm leading-relaxed text-slate-600">
+                              {video.description}
+                            </p>
+
+                            <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
+                              <span className="text-slate-500">
+                                {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
+                                  month: "short",
+                                  year: "numeric",
+                                }).format(video.createdAt)}
+                              </span>
+                              <span className="inline-flex items-center gap-1 font-semibold text-brand-700">
+                                {locale === "en" ? "View video" : "Lihat video"}
+                                <ArrowRight className="h-4 w-4" />
+                              </span>
+                            </div>
+                          </Link>
+                        </motion.div>
                       );
                     })
-                  )}
-                </div>
-
-                <div className="mt-6 hidden gap-4 lg:grid lg:grid-cols-[220px_1fr]">
-                  {shownVideos.length === 0 ? (
-                    <p className="text-sm text-slate-300">
-                      {locale === "en" ? "No video yet." : "Belum ada video."}
-                    </p>
-                  ) : (
-                    <>
-                      <div className="space-y-2">
-                        {shownVideos.map((video, index) => {
-                          const active = index === selectedVideoSafeIndex;
-
-                          return (
-                            <LatestVideoThumbButton
-                              key={`${video.id}-${video.sourceUrl}-${video.thumbnailUrl}`}
-                              title={video.title}
-                              sourceUrl={video.sourceUrl}
-                              thumbnailUrl={video.thumbnailUrl}
-                              active={active}
-                              onClick={() => setSelectedVideoIndex(index)}
-                            />
-                          );
-                        })}
-                      </div>
-
-                      <div className="rounded-[1.6rem] border border-slate-800 bg-slate-950/72 p-4 shadow-[0_20px_40px_rgba(2,6,23,0.22)]">
-                        {selectedVideo ? (
-                          <>
-                            <div className="flex items-start justify-between gap-4">
-                              <div>
-                                <p className="text-xl font-semibold text-white">
-                                  {selectedVideo.title}
-                                </p>
-                                <p className="mt-1 text-sm text-slate-400">
-                                  {selectedVideo.author?.name || "Creator"}
-                                </p>
-                              </div>
-                              <Badge className="border border-brand-400/30 bg-brand-500/10 text-brand-200 ring-0">
-                                {detectVideoSource(selectedVideo.sourceUrl) === "gdrive"
-                                  ? "Google Drive"
-                                  : detectVideoSource(selectedVideo.sourceUrl) === "youtube"
-                                    ? "YouTube"
-                                    : detectVideoSource(selectedVideo.sourceUrl) === "instagram"
-                                      ? "Instagram"
-                                      : detectVideoSource(selectedVideo.sourceUrl) === "vimeo"
-                                        ? "Vimeo"
-                                        : "Video"}
-                              </Badge>
-                            </div>
-
-                            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-300">
-                                {selectedVideo.description}
-                              </p>
-
-                            <div className="mt-4 flex flex-wrap gap-2">
-                              <div className="inline-flex items-center gap-2 rounded-full bg-white/6 px-3 py-1.5 text-xs text-slate-300">
-                                <ShieldCheck className="h-4 w-4 text-brand-300" />
-                                {locale === "en" ? "Client-ready preview" : "Preview siap untuk klien"}
-                              </div>
-                              <div className="inline-flex items-center gap-2 rounded-full bg-white/6 px-3 py-1.5 text-xs text-slate-300">
-                                <Link2 className="h-4 w-4 text-brand-300" />
-                                {locale === "en" ? "Public shareable link" : "Link publik siap dibagikan"}
-                              </div>
-                            </div>
-
-                            <Link
-                              href={`/v/${selectedVideo.publicSlug}`}
-                              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand-300 hover:text-brand-200"
-                            >
-                              {locale === "en" ? "Open video detail" : "Lihat detail video"}
-                              <ArrowRight className="h-4 w-4" />
-                            </Link>
-                          </>
-                        ) : null}
-                      </div>
-                    </>
                   )}
                 </div>
               </div>
@@ -1112,7 +977,7 @@ export function LandingPage({
                 <Link href="/auth/signup">
                   <Button
                     size="lg"
-                    className="min-w-[170px] border border-white bg-white font-semibold text-slate-900 shadow-[0_14px_28px_rgba(15,23,42,0.18)] hover:bg-slate-100"
+                    className="min-w-[170px] border border-white !bg-white !text-slate-950 font-semibold shadow-[0_14px_28px_rgba(15,23,42,0.18)] hover:!bg-slate-100"
                   >
                     {signupLabel}
                   </Button>
