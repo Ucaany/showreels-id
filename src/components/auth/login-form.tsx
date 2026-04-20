@@ -87,31 +87,6 @@ export function LoginForm({
           </p>
         ) : null}
 
-        {googleEnabled ? (
-          <>
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full"
-              onClick={() =>
-                signIn("google", {
-                  callbackUrl: "/dashboard",
-                  prompt: "select_account",
-                })
-              }
-            >
-              <Globe2 className="h-4 w-4" />
-              {dictionary.continueGoogle}
-            </Button>
-
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-xs text-slate-500">
-              <span className="h-px bg-slate-200" />
-              <span>atau</span>
-              <span className="h-px bg-slate-200" />
-            </div>
-          </>
-        ) : null}
-
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700">
             Email
@@ -141,6 +116,31 @@ export function LoginForm({
         <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? "Memproses..." : dictionary.login}
         </Button>
+
+        {googleEnabled ? (
+          <>
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-slate-500">
+              <span className="h-px bg-slate-200" />
+              <span>atau</span>
+              <span className="h-px bg-slate-200" />
+            </div>
+
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full"
+              onClick={() =>
+                signIn("google", {
+                  callbackUrl: "/dashboard",
+                  prompt: "select_account",
+                })
+              }
+            >
+              <Globe2 className="h-4 w-4" />
+              {dictionary.continueGoogle}
+            </Button>
+          </>
+        ) : null}
       </motion.form>
 
       <p className="mt-5 text-center text-sm text-slate-600">
