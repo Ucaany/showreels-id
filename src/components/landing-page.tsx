@@ -439,11 +439,11 @@ export function LandingPage({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"
+          className="mx-auto max-w-5xl"
         >
           <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-7 shadow-[0_28px_80px_rgba(37,99,235,0.11)] sm:p-10">
             <video
-              className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-30"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-[0.56]"
               autoPlay
               loop
               muted
@@ -453,7 +453,7 @@ export function LandingPage({
             >
               <source src="/hero-loop.mp4" type="video/mp4" />
             </video>
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1),rgba(255,255,255,0.82)_70%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),rgba(255,255,255,0.72)_68%,rgba(255,255,255,0.9)_100%)]" />
             <div className="relative z-10 text-center">
               <Badge className="bg-brand-600 text-white">{dictionary.landingBadge}</Badge>
             </div>
@@ -524,33 +524,40 @@ export function LandingPage({
               ))}
             </div>
           </div>
+        </motion.section>
 
-          <div className="rounded-2xl border border-border bg-[linear-gradient(160deg,rgba(255,255,255,0.97),rgba(219,234,254,0.9))] p-6 shadow-[0_24px_60px_rgba(79,158,255,0.13)]">
+        <section className="mx-auto mt-10 max-w-6xl rounded-[2rem] border border-border bg-[linear-gradient(160deg,rgba(255,255,255,0.97),rgba(219,234,254,0.9))] p-6 shadow-[0_24px_60px_rgba(79,158,255,0.13)] sm:p-8">
+          <div className="max-w-xl">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">
               Features
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              {features.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <motion.div
-                    key={item.title}
-                    whileHover={{ y: -3 }}
-                    className="rounded-2xl border border-slate-200 bg-white p-4"
-                  >
-                    <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <p className="mt-3 text-sm font-semibold text-slate-900">{item.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                      {item.description}
-                    </p>
-                  </motion.div>
-                );
-              })}
-            </div>
+            <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+              {locale === "en"
+                ? "Everything creators need to publish faster."
+                : "Semua yang creator butuhkan untuk publish lebih cepat."}
+            </h2>
           </div>
-        </motion.section>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {features.map((item) => {
+              const Icon = item.icon;
+              return (
+                <motion.div
+                  key={item.title}
+                  whileHover={{ y: -4 }}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_30px_rgba(37,99,235,0.07)]"
+                >
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <p className="mt-4 text-base font-semibold text-slate-900">{item.title}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    {item.description}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
 
         <section className="mt-10 grid gap-4 lg:grid-cols-[1.2fr_0.9fr_0.9fr]">
           <div className="rounded-2xl border border-border bg-surface p-5 shadow-card">
