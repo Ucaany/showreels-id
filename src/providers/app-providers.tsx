@@ -1,0 +1,31 @@
+"use client";
+
+import { useEffect } from "react";
+import { SessionProvider } from "next-auth/react";
+import { type Locale } from "@/lib/i18n";
+import { SessionActivityManager } from "@/components/session-activity-manager";
+import { PreferencesProvider } from "@/providers/preferences-provider";
+
+export function AppProviders({
+  children,
+  initialLocale,
+}: {
+  children: React.ReactNode;
+  initialLocale: Locale;
+}) {
+  useEffect(() => {
+    document.documentElement.classList.remove("dark");
+    window.localStorage.removeItem("theme");
+    window.localStorage.removeItem("next-theme");
+    window.localStorage.removeItem("next-themes-theme");
+  }, []);
+
+  return (
+    <SessionProvider refetchOnWindowFocus={false} refetchInterval={0}>
+      <PreferencesProvider initialLocale={initialLocale}>
+        <SessionActivityManager />
+        {children}
+      </PreferencesProvider>
+    </SessionProvider>
+  );
+}
