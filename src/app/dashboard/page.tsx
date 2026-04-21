@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { FolderOpen, Video } from "lucide-react";
+import { FolderOpen, LayoutDashboard, Video } from "lucide-react";
 import { CopyProfileLinkButton } from "@/components/dashboard/copy-profile-link-button";
 import { DashboardVideoList } from "@/components/dashboard/dashboard-video-list";
 import { Button } from "@/components/ui/button";
@@ -26,17 +26,27 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border bg-surface md:col-span-2">
-          <p className="text-sm text-slate-600">
-            {dictionary.welcomeBack}
-          </p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-slate-900">
-            {user.name ?? "Creator"}
-          </h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-700">
-            Dashboard ini menampilkan ringkasan profil dan video portofolio yang
-            sudah kamu submit.
-          </p>
+        <Card className="border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.12),_transparent_32%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))] md:col-span-2">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-slate-600">{dictionary.welcomeBack}</p>
+              <h1 className="mt-1 font-display text-2xl font-semibold text-slate-900">
+                {user.name ?? "Creator"}
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-700">
+                Satu dashboard untuk mengatur profil creator, status video, dan
+                link publik yang siap dibagikan ke client.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+              <p className="font-semibold text-slate-900">Status profil</p>
+              <p className="mt-1 text-slate-600">
+                {user.username
+                  ? `Publik aktif di @${user.username}`
+                  : "Lengkapi username untuk mengaktifkan profil publik."}
+              </p>
+            </div>
+          </div>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href="/dashboard/videos/new">
               <Button>
@@ -59,19 +69,35 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="border-border bg-surface">
-          <p className="text-sm text-slate-600">Total video</p>
-          <p className="mt-2 font-display text-3xl font-semibold text-slate-900">
-            {myVideos.length}
-          </p>
-          <p className="mt-2 text-sm text-slate-600">
-            Link publik aktif:{" "}
-            <span className="font-semibold text-slate-700">
-              {publicVideosCount}
-            </span>
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            Draft + private: {myVideos.length - publicVideosCount}
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+              <LayoutDashboard className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-600">Total video</p>
+              <p className="font-display text-3xl font-semibold text-slate-900">
+                {myVideos.length}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-1">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Publik aktif
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
+                {publicVideosCount}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Draft + private
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
+                {myVideos.length - publicVideosCount}
+              </p>
+            </div>
+          </div>
         </Card>
       </section>
 

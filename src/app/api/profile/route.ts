@@ -8,6 +8,8 @@ import { profileSchema } from "@/lib/auth-schemas";
 import { sanitizeUsername } from "@/lib/username";
 import { isAdminEmail } from "@/server/admin-access";
 
+const USERNAME_CHANGE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
 export async function PATCH(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -31,6 +33,23 @@ export async function PATCH(request: Request) {
   }
 
   const username = sanitizeUsername(parsed.data.username);
+  const currentUser = await db.query.users.findFirst({
+    where: eq(users.id, session.user.id),
+    columns: {
+      id: true,
+      username: true,
+      usernameChangeCount: true,
+      usernameChangeWindowStart: true,
+    },
+  });
+
+  if (!currentUser) {
+    return NextResponse.json(
+      { error: "Akun tidak ditemukan." },
+      { status: 404 }
+    );
+  }
+
   const existingUser = await db.query.users.findFirst({
     where: and(eq(users.username, username), ne(users.id, session.user.id)),
     columns: { id: true },
@@ -43,17 +62,56 @@ export async function PATCH(request: Request) {
     );
   }
 
+  let usernameChangeCount = currentUser.usernameChangeCount;
+  let usernameChangeWindowStart = currentUser.usernameChangeWindowStart;
+
+  if (username !== (currentUser.username ?? "")) {
+    const now = new Date();
+    const shouldResetWindow =
+      !currentUser.usernameChangeWindowStart ||
+      now.getTime() - currentUser.usernameChangeWindowStart.getTime() >=
+        USERNAME_CHANGE_WINDOW_MS;
+
+    if (shouldResetWindow) {
+      usernameChangeCount = 1;
+      usernameChangeWindowStart = now;
+    } else if (currentUser.usernameChangeCount >= 3) {
+      const activeWindowStart = currentUser.usernameChangeWindowStart ?? now;
+      const resetAt = new Date(
+        activeWindowStart.getTime() + USERNAME_CHANGE_WINDOW_MS
+      );
+
+      return NextResponse.json(
+        {
+          error: `Username hanya bisa diubah 3 kali per 30 hari. Coba lagi setelah ${resetAt.toLocaleDateString(
+            "id-ID",
+            {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            }
+          )}.`,
+        },
+        { status: 429 }
+      );
+    } else {
+      usernameChangeCount = currentUser.usernameChangeCount + 1;
+    }
+  }
+
   const [updated] = await db
     .update(users)
     .set({
       name: parsed.data.fullName.trim(),
       username,
+      role: parsed.data.role.trim(),
       image: normalizeAvatarUrl(parsed.data.avatarUrl?.trim() || "") || null,
       coverImageUrl: normalizeAvatarUrl(parsed.data.coverImageUrl?.trim() || ""),
       bio: parsed.data.bio.trim(),
       experience: parsed.data.experience.trim(),
       birthDate: parsed.data.birthDate.trim(),
       city: parsed.data.city.trim(),
+      address: parsed.data.address.trim(),
       contactEmail: parsed.data.contactEmail.trim().toLowerCase(),
       phoneNumber: parsed.data.phoneNumber.trim(),
       websiteUrl: parsed.data.websiteUrl,
@@ -62,6 +120,8 @@ export async function PATCH(request: Request) {
       facebookUrl: parsed.data.facebookUrl,
       threadsUrl: parsed.data.threadsUrl,
       skills: parsed.data.skills,
+      usernameChangeCount,
+      usernameChangeWindowStart,
       updatedAt: new Date(),
     })
     .where(eq(users.id, session.user.id))

@@ -137,6 +137,19 @@ export function normalizeHttpUrl(value: string): string {
   }
 }
 
+export function normalizeAssetUrl(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  if (trimmed.startsWith("data:image/")) {
+    return trimmed;
+  }
+
+  return normalizeHttpUrl(trimmed);
+}
+
 export function parseMultilineUrls(value: string): string[] {
   return value
     .split(/\r?\n|,/)
@@ -240,13 +253,19 @@ export function buildAiDescription({
   tags: string[];
   source: VideoSource;
 }): string {
-  const tagsLine = tags.length
-    ? `Tag utama: ${tags.join(", ")}.`
-    : "Tag utama akan diperbarui sesuai kebutuhan campaign.";
+  const tagSummary = tags.length
+    ? `Highlight utama: ${tags.join(", ")}.`
+    : "Highlight visual dan konteks project masih bisa disesuaikan saat revisi akhir.";
+  const sourceSummary =
+    source === "youtube"
+      ? "Video ini disiapkan untuk tampil rapi di kanal YouTube dan kebutuhan presentasi client."
+      : source === "gdrive"
+        ? "File utama disimpan melalui Google Drive agar mudah direview dan dibagikan ke client."
+        : source === "instagram"
+          ? "Format konten ini cocok untuk distribusi sosial media dengan durasi yang ringkas dan visual yang cepat ditangkap."
+          : "Video ini disusun dengan format presentasi yang tetap nyaman saat dibuka lintas perangkat.";
 
-  return `Video "${title}" menampilkan hasil karya dengan sumber ${getSourceLabel(
-    source
-  )}. Fokus utama ada pada penyampaian cerita yang ringkas, ritme visual yang konsisten, dan kualitas output siap publish. ${tagsLine}`;
+  return `Project "${title}" menampilkan pendekatan editing yang fokus pada alur cerita yang jelas, ritme visual yang bersih, dan hasil akhir yang siap dipresentasikan. ${sourceSummary} ${tagSummary}`;
 }
 
 export function getSocialShareLinks(url: string, title: string): {

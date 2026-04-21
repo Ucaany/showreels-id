@@ -81,6 +81,11 @@ export default async function CreatorAboutPage({
                     <h1 className="font-display text-3xl font-semibold text-slate-950 sm:text-4xl">
                       {profile.user.name}
                     </h1>
+                    {profile.user.role ? (
+                      <p className="text-base font-medium text-brand-700">
+                        {profile.user.role}
+                      </p>
+                    ) : null}
                     <p className="text-base text-slate-600">@{profile.user.username}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Badge>{profile.user.city || "Kota belum diisi"}</Badge>
@@ -145,6 +150,14 @@ export default async function CreatorAboutPage({
                 </h2>
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Role
+                  </p>
+                  <p className="mt-2 text-sm text-slate-700">
+                    {profile.user.role || "Belum diisi"}
+                  </p>
+                </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Kota

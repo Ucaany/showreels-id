@@ -8,7 +8,7 @@ import {
   buildAiDescription,
   createPublicSlug,
   detectVideoSource,
-  getAutoThumbnailFromVideoUrl,
+  normalizeAssetUrl,
 } from "@/lib/video-utils";
 
 export async function POST(request: Request) {
@@ -64,9 +64,7 @@ export async function POST(request: Request) {
         }),
       tags: parsed.data.tags,
       visibility: parsed.data.visibility,
-      thumbnailUrl:
-        parsed.data.thumbnailUrl?.trim() ||
-        getAutoThumbnailFromVideoUrl(parsed.data.sourceUrl),
+      thumbnailUrl: normalizeAssetUrl(parsed.data.thumbnailUrl || ""),
       extraVideoUrls: parsed.data.extraVideoUrls,
       imageUrls: parsed.data.imageUrls,
       sourceUrl: parsed.data.sourceUrl.trim(),

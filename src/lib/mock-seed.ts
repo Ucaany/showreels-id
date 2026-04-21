@@ -5,6 +5,7 @@ const demoUser: UserProfile = {
   email: "demo@videoport.ai",
   username: "videocreator",
   fullName: "Demo Creator",
+  role: "Videografer & Video Editor",
   avatarUrl: "",
   bio: "Videografer freelance untuk brand, event, dan konten edukasi.",
   experience:

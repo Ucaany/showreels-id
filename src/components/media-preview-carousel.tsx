@@ -13,36 +13,71 @@ type MediaSlide =
   | { type: "image"; url: string };
 
 interface MediaPreviewCarouselProps {
-  thumbnailUrl?: string;
+  manualThumbnailUrl?: string;
+  fallbackThumbnailUrl?: string;
   mainVideoUrl?: string;
   extraVideoUrls: string[];
   imageUrls: string[];
   title: string;
+  showHeading?: boolean;
+  showStatusBadge?: boolean;
+  preferMainVideo?: boolean;
 }
 
 export function MediaPreviewCarousel({
-  thumbnailUrl,
+  manualThumbnailUrl,
+  fallbackThumbnailUrl,
   mainVideoUrl,
   extraVideoUrls,
   imageUrls,
   title,
+  showHeading = true,
+  showStatusBadge = true,
+  preferMainVideo = false,
 }: MediaPreviewCarouselProps) {
   const [index, setIndex] = useState(0);
 
   const slides = useMemo<MediaSlide[]>(() => {
-    const coverSlides: MediaSlide[] = thumbnailUrl
-      ? [{ type: "cover" as const, url: thumbnailUrl }]
+    const coverSlides: MediaSlide[] = manualThumbnailUrl
+      ? [{ type: "cover" as const, url: manualThumbnailUrl }]
       : [];
-    const videoSlides: MediaSlide[] = [
+    const galleryEnabled = Boolean(manualThumbnailUrl);
+    const videoSlides: MediaSlide[] = galleryEnabled
+      ? [
       ...(mainVideoUrl ? [{ type: "video", url: mainVideoUrl } as const] : []),
       ...extraVideoUrls.map((url) => ({ type: "video" as const, url })),
-    ];
-    const imageSlides: MediaSlide[] = imageUrls.map((url) => ({
-      type: "image" as const,
-      url,
-    }));
-    return [...coverSlides, ...videoSlides, ...imageSlides];
-  }, [thumbnailUrl, mainVideoUrl, extraVideoUrls, imageUrls]);
+    ]
+      : [];
+    const imageSlides: MediaSlide[] = galleryEnabled
+      ? imageUrls.map((url) => ({
+          type: "image" as const,
+          url,
+        }))
+      : [];
+    const singleFallback: MediaSlide[] = !galleryEnabled
+      ? preferMainVideo && mainVideoUrl
+        ? [{ type: "video" as const, url: mainVideoUrl }]
+        : fallbackThumbnailUrl
+          ? [{ type: "cover" as const, url: fallbackThumbnailUrl }]
+          : mainVideoUrl
+            ? [{ type: "video" as const, url: mainVideoUrl }]
+            : []
+      : [];
+    if (!galleryEnabled) {
+      return singleFallback;
+    }
+
+    return preferMainVideo
+      ? [...videoSlides, ...coverSlides, ...imageSlides]
+      : [...coverSlides, ...videoSlides, ...imageSlides];
+  }, [
+    manualThumbnailUrl,
+    fallbackThumbnailUrl,
+    mainVideoUrl,
+    extraVideoUrls,
+    imageUrls,
+    preferMainVideo,
+  ]);
 
   if (slides.length === 0) {
     return null;
@@ -50,7 +85,7 @@ export function MediaPreviewCarousel({
 
   const active = slides[index] ?? slides[0];
   const canSlide = slides.length > 1;
-  const headingLabel = canSlide ? "Preview Media" : "Media Utama";
+  const headingLabel = canSlide ? "Preview Media" : "Preview Utama";
 
   const renderVideo = (url: string) => {
     const source = detectVideoSource(url) as VideoSource | null;
@@ -79,16 +114,24 @@ export function MediaPreviewCarousel({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">
-          {headingLabel}
-        </h2>
-        {canSlide ? (
+      {showHeading ? (
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">
+            {headingLabel}
+          </h2>
+          {canSlide ? (
+            <p className="text-xs text-slate-600">
+              {index + 1}/{slides.length}
+            </p>
+          ) : null}
+        </div>
+      ) : canSlide ? (
+        <div className="flex justify-end">
           <p className="text-xs text-slate-600">
             {index + 1}/{slides.length}
           </p>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       {active.type === "video" ? (
         renderVideo(active.url)
@@ -104,7 +147,7 @@ export function MediaPreviewCarousel({
             className="w-full rounded-2xl border border-slate-200 object-cover shadow-card"
             loading="lazy"
           />
-          {active.type === "cover" ? (
+          {active.type === "cover" && showStatusBadge ? (
             <span className="absolute left-3 top-3 rounded-full bg-slate-900/85 px-2.5 py-1 text-xs font-semibold text-white">
               Cover Video
             </span>

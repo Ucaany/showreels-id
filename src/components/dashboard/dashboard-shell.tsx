@@ -25,6 +25,8 @@ export function DashboardShell({
   const pathname = usePathname();
   const { dictionary } = usePreferences();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const hideDesktopSidebar =
+    mode === "creator" && pathname === "/dashboard/profile";
   type NavItem = {
     href: string;
     label: string;
@@ -52,7 +54,7 @@ export function DashboardShell({
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <AppLogo />
           <div className="hidden items-center gap-3 lg:flex">
-            <SitePreferences />
+            <SitePreferences compact />
             <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold text-slate-900">
@@ -105,7 +107,7 @@ export function DashboardShell({
               </button>
             </div>
             <div className="mb-4">
-              <SitePreferences />
+              <SitePreferences compact />
             </div>
             <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
               <p className="text-sm font-semibold text-slate-900">{user.name}</p>
@@ -150,8 +152,18 @@ export function DashboardShell({
         </div>
       ) : null}
 
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[220px_1fr]">
-        <aside className="hidden rounded-2xl border border-border bg-surface p-3 shadow-card lg:block lg:h-fit">
+      <div
+        className={cn(
+          "mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6",
+          hideDesktopSidebar ? "lg:grid-cols-1" : "lg:grid-cols-[220px_1fr]"
+        )}
+      >
+        <aside
+          className={cn(
+            "hidden rounded-2xl border border-border bg-surface p-3 shadow-card lg:h-fit",
+            hideDesktopSidebar ? "lg:hidden" : "lg:block"
+          )}
+        >
           <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;

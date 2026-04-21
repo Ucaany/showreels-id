@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
+import { LockKeyhole } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useMockApp } from "@/hooks/use-mock-app";
 
 const schema = z
   .object({
@@ -24,7 +25,8 @@ const schema = z
 type FormValues = z.infer<typeof schema>;
 
 export default function ResetPasswordPage() {
-  const { resetPassword } = useMockApp();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "";
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -39,19 +41,32 @@ export default function ResetPasswordPage() {
   const onSubmit = form.handleSubmit(async ({ password }) => {
     setError("");
     setMessage("");
-    const result = await resetPassword(password);
-    if (!result.ok) {
-      setError(result.error ?? "Gagal reset password.");
+
+    const response = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ token, password }),
+    });
+
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: string; notice?: string }
+      | null;
+
+    if (!response.ok) {
+      setError(payload?.error ?? "Gagal reset password.");
       return;
     }
-    setMessage(result.data?.notice ?? "Password berhasil direset.");
+
+    setMessage(payload?.notice ?? "Password berhasil direset.");
     form.reset();
   });
 
   return (
     <AuthShell
-      title="Set Password Baru"
-      subtitle="Untuk MVP frontend, proses ini masih berupa simulasi tanpa backend."
+      title="Reset password"
+      subtitle="Masukkan password baru untuk menyelesaikan proses reset akun."
     >
       <motion.form
         onSubmit={onSubmit}
@@ -60,8 +75,15 @@ export default function ResetPasswordPage() {
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+        {!token ? (
+          <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            Token reset password tidak ditemukan. Ulangi dari menu lupa password.
+          </p>
+        ) : null}
+
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <LockKeyhole className="h-4 w-4 text-brand-600" />
             Password Baru
           </label>
           <Input type="password" placeholder="********" {...form.register("password")} />
@@ -70,8 +92,9 @@ export default function ResetPasswordPage() {
           </p>
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <LockKeyhole className="h-4 w-4 text-brand-600" />
             Konfirmasi Password Baru
           </label>
           <Input
@@ -95,7 +118,11 @@ export default function ResetPasswordPage() {
           </p>
         ) : null}
 
-        <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
+        <Button
+          className="w-full"
+          type="submit"
+          disabled={form.formState.isSubmitting || !token}
+        >
           {form.formState.isSubmitting ? "Menyimpan..." : "Simpan Password Baru"}
         </Button>
       </motion.form>

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { Globe2 } from "lucide-react";
+import { Globe2, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +83,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   return (
     <AuthShell
       title={dictionary.authSignupTitle}
-      subtitle={dictionary.authSignupSubtitle}
+      subtitle="Buat akun creator dengan tampilan yang lebih bersih dan alur registrasi yang sederhana."
     >
       <motion.form
         onSubmit={onSubmit}
@@ -92,8 +92,9 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <UserRound className="h-4 w-4 text-brand-600" />
             Nama Lengkap
           </label>
           <Input {...form.register("fullName")} />
@@ -102,8 +103,9 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <UserRound className="h-4 w-4 text-brand-600" />
             Username
           </label>
           <Input {...form.register("username")} />
@@ -112,8 +114,9 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <Mail className="h-4 w-4 text-brand-600" />
             Email
           </label>
           <Input {...form.register("email")} />
@@ -122,8 +125,9 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <LockKeyhole className="h-4 w-4 text-brand-600" />
             Password
           </label>
           <Input type="password" {...form.register("password")} />
@@ -132,8 +136,9 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <LockKeyhole className="h-4 w-4 text-brand-600" />
             Konfirmasi Password
           </label>
           <Input type="password" {...form.register("confirmPassword")} />

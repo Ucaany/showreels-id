@@ -46,12 +46,14 @@ export const profileSchema = z.object({
     .string()
     .min(3, "Username minimal 3 karakter.")
     .regex(/^[a-zA-Z0-9_]+$/, "Gunakan huruf, angka, atau underscore."),
+  role: z.string().trim().max(120, "Role terlalu panjang.").default(""),
   avatarUrl: z.string().trim().optional().or(z.literal("")),
   coverImageUrl: z.string().trim().optional().or(z.literal("")),
   bio: z.string().max(500, "Bio maksimal 500 karakter."),
   experience: z.string().max(700, "Pengalaman maksimal 700 karakter."),
   birthDate: birthDateSchema.default(""),
   city: z.string().trim().max(120, "Kota terlalu panjang.").default(""),
+  address: z.string().trim().max(240, "Alamat terlalu panjang.").default(""),
   contactEmail: z.email("Format email belum valid.").or(z.literal("")).default(""),
   phoneNumber: z
     .string()

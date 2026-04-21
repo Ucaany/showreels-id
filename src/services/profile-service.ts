@@ -4,6 +4,7 @@ import type { ServiceResult, UserProfile } from "@/lib/types";
 export interface ProfileUpdateInput {
   fullName: string;
   username: string;
+  role: string;
   avatarUrl: string;
   bio: string;
   experience: string;
@@ -43,6 +44,7 @@ export const profileService = {
         ...user,
         fullName: payload.fullName.trim(),
         username: normalizedUsername,
+        role: payload.role.trim(),
         avatarUrl: payload.avatarUrl.trim(),
         bio: payload.bio.trim(),
         experience: payload.experience.trim(),

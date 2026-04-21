@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
-import { ImagePlus, Sparkles, Trash2 } from "lucide-react";
+import {
+  Clapperboard,
+  ImagePlus,
+  LayoutTemplate,
+  Link2,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 import { MediaPreviewCarousel } from "@/components/media-preview-carousel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,7 +25,7 @@ import {
   detectVideoSource,
   getAutoThumbnailFromVideoUrl,
   getVisibilityLabel,
-  normalizeHttpUrl,
+  normalizeAssetUrl,
   parseMultilineUrls,
   slugifyText,
 } from "@/lib/video-utils";
@@ -92,11 +99,12 @@ export function VideoForm({
   const watchedTags = useWatch({ control: form.control, name: "tags" });
   const watchedVisibility = useWatch({ control: form.control, name: "visibility" });
   const source = detectVideoSource(watchedSourceUrl || "");
-  const thumbnailPreview =
-    normalizeHttpUrl(watchedThumbnailUrl || "") ||
-    getAutoThumbnailFromVideoUrl(watchedSourceUrl || "");
+  const manualThumbnailUrl = normalizeAssetUrl(watchedThumbnailUrl || "");
+  const autoThumbnailUrl = getAutoThumbnailFromVideoUrl(watchedSourceUrl || "");
+  const thumbnailPreview = manualThumbnailUrl || autoThumbnailUrl;
   const extraVideoPreview = parseMultilineUrls(watchedExtraVideoUrls || "");
   const imagePreview = parseMultilineUrls(watchedImageUrls || "");
+  const galleryEnabled = Boolean(manualThumbnailUrl);
   const slugPreview =
     mode === "edit" && !watchedTitle?.trim()
       ? initialVideo?.publicSlug || "video-portofolio"
@@ -178,7 +186,7 @@ export function VideoForm({
         body: JSON.stringify({
           title: values.title,
           sourceUrl: values.sourceUrl,
-          thumbnailUrl: normalizeHttpUrl(values.thumbnailUrl || ""),
+          thumbnailUrl: normalizeAssetUrl(values.thumbnailUrl || ""),
           extraVideoUrls: parseMultilineUrls(values.extraVideoUrls || ""),
           imageUrls: parseMultilineUrls(values.imageUrls || ""),
           tags: (values.tags || "")
@@ -251,18 +259,41 @@ export function VideoForm({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      <Card className="border-border bg-surface">
-        <h1 className="font-display text-2xl font-semibold text-slate-900">
-          {mode === "edit" ? "Edit Video Portfolio" : dictionary.publishVideo}
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          {mode === "edit"
-            ? "Perbarui detail video, link sumber, dan public page yang tampil ke klien."
-            : "Simpan video ke database dan hasilkan public page yang bisa dibagikan."}
-        </p>
-
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+      <Card className="border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.14),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-600">
+              Video dashboard
+            </p>
+            <h1 className="mt-2 font-display text-2xl font-semibold text-slate-900">
+              {mode === "edit" ? "Edit Video Portfolio" : dictionary.publishVideo}
+            </h1>
+            <p className="mt-1 text-sm text-slate-600">
+              {mode === "edit"
+                ? "Perbarui detail video, thumbnail, dan tampilan publik yang akan dilihat client."
+                : "Isi data video dengan urutan yang rapi, lalu cek preview sebelum disimpan."}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+            <p className="font-semibold text-slate-900">Status preview</p>
+            <p className="mt-1 text-slate-600">
+              {galleryEnabled
+                ? "Slider aktif karena thumbnail manual sudah ditambahkan."
+                : "Slider nonaktif. Sistem akan memakai thumbnail otomatis dari video utama."}
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={onSubmit} className="mt-6 space-y-5">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <Clapperboard className="h-4 w-4 text-brand-600" />
+              <h2 className="text-base font-semibold text-slate-900">
+                Informasi utama video
+              </h2>
+            </div>
+            <div className="space-y-4">
+              <div>
             <label className="mb-2 block text-sm font-medium text-slate-800">
               Judul Video
             </label>
@@ -283,8 +314,20 @@ export function VideoForm({
             <p className="mt-1 text-xs text-rose-600">
               {form.formState.errors.sourceUrl?.message}
             </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Gunakan link YouTube, Google Drive, Instagram Reel, atau Vimeo.
+            </p>
+          </div>
+            </div>
           </div>
 
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <LayoutTemplate className="h-4 w-4 text-brand-600" />
+              <h2 className="text-base font-semibold text-slate-900">
+                Thumbnail & galeri
+              </h2>
+            </div>
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-800">
               Thumbnail (opsional)
@@ -327,11 +370,11 @@ export function VideoForm({
               {...form.register("thumbnailUrl")}
             />
             <p className="mt-1 text-xs text-slate-600">
-              Upload file atau isi link. Thumbnail menjadi cover pada slider video utama.
+              Upload file atau isi link. Jika thumbnail manual diisi, slide media akan aktif.
             </p>
-            {!normalizeHttpUrl(watchedThumbnailUrl || "") && source ? (
+            {!manualThumbnailUrl && source ? (
               <p className="mt-1 text-xs text-brand-700">
-                Thumbnail otomatis diambil dari video utama.
+                Thumbnail otomatis diambil dari video utama dan slider dinonaktifkan.
               </p>
             ) : null}
           </div>
@@ -346,7 +389,7 @@ export function VideoForm({
               {...form.register("extraVideoUrls")}
             />
             <p className="mt-1 text-xs text-slate-600">
-              Bisa isi lebih dari 2 video untuk galeri slide.
+              Video tambahan hanya tampil sebagai slide saat thumbnail manual diaktifkan.
             </p>
           </div>
 
@@ -359,13 +402,27 @@ export function VideoForm({
               placeholder={"Satu URL gambar per baris\nhttps://.../shot-1.jpg\nhttps://.../shot-2.jpg"}
               {...form.register("imageUrls")}
             />
+            <p className="mt-1 text-xs text-slate-600">
+              Gambar tambahan ikut tampil di slide jika thumbnail manual tersedia.
+            </p>
+          </div>
           </div>
 
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-brand-600" />
+              <h2 className="text-base font-semibold text-slate-900">
+                Detail publik
+              </h2>
+            </div>
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-800">
               Tags
             </label>
             <Input {...form.register("tags")} />
+            <p className="mt-1 text-xs text-slate-600">
+              Pisahkan tag dengan koma. Tag membantu deskripsi AI jadi lebih relevan.
+            </p>
           </div>
 
           <div>
@@ -392,10 +449,17 @@ export function VideoForm({
                 disabled={aiLoading}
               >
                 <Sparkles className="h-4 w-4" />
-                {aiLoading ? "Generating..." : "Generate AI"}
+                {aiLoading ? "Generating..." : "Generated with AI"}
               </Button>
             </div>
-            <Textarea {...form.register("description")} />
+            <Textarea
+              placeholder="Tulis ringkasan project, tujuan video, style editing, dan highlight hasil akhir."
+              {...form.register("description")}
+            />
+            <p className="mt-1 text-xs text-slate-600">
+              Gunakan tombol AI untuk membuat draft deskripsi yang lebih natural, lalu edit sesuai project.
+            </p>
+          </div>
           </div>
 
           {submitError ? (
@@ -443,13 +507,21 @@ export function VideoForm({
           Hanya video dengan status public yang muncul di landing page, profil creator,
           dan link `/v/[slug]`.
         </p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700">
+          <p className="font-semibold text-slate-900">Logika thumbnail</p>
+          <ul className="mt-2 space-y-1 text-sm text-slate-600">
+            <li>- Tanpa thumbnail manual: sistem pakai thumbnail bawaan video utama.</li>
+            <li>- Dengan thumbnail manual: cover tampil dulu dan slider media aktif.</li>
+          </ul>
+        </div>
         <div className="space-y-3 border-t border-slate-200 pt-4">
           <p className="text-sm font-semibold text-slate-900">
             Preview Sebelum Submit
           </p>
           {source ? (
             <MediaPreviewCarousel
-              thumbnailUrl={thumbnailPreview}
+              manualThumbnailUrl={manualThumbnailUrl}
+              fallbackThumbnailUrl={thumbnailPreview}
               mainVideoUrl={watchedSourceUrl || ""}
               extraVideoUrls={extraVideoPreview}
               imageUrls={imagePreview}

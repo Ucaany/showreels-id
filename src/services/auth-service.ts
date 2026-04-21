@@ -83,6 +83,7 @@ export const authService = {
       email: normalizedEmail,
       username: normalizedUsername,
       fullName: input.fullName.trim(),
+      role: "",
       avatarUrl: "",
       bio: "",
       experience: "",

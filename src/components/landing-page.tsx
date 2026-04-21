@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { signOut } from "next-auth/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, LazyMotion, domAnimation, m } from "framer-motion";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -73,17 +73,17 @@ interface LandingPageProps {
 function AnimatedBackdrop() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <motion.div
+      <m.div
         className="absolute left-[-6%] top-24 h-64 w-64 rounded-full bg-brand-200/45 blur-3xl"
         animate={{ x: [0, 42, 0], y: [0, -24, 0], scale: [1, 1.08, 1] }}
         transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.div
+      <m.div
         className="absolute right-[-4%] top-[24%] h-72 w-72 rounded-full bg-sky-200/35 blur-3xl"
         animate={{ x: [0, -34, 0], y: [0, 36, 0], scale: [1.04, 0.96, 1.04] }}
         transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
       />
-      <motion.div
+      <m.div
         className="absolute left-[28%] top-[58%] h-56 w-56 rounded-full bg-indigo-100/45 blur-3xl"
         animate={{ x: [0, 20, -8, 0], y: [0, -18, 24, 0] }}
         transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
@@ -105,7 +105,7 @@ function FaqItem({
   onToggle: () => void;
 }) {
   return (
-    <motion.div
+    <m.div
       layout
       className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-md"
     >
@@ -115,13 +115,13 @@ function FaqItem({
         className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
       >
         <span className="text-sm font-semibold text-slate-900 sm:text-base">{question}</span>
-        <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+        <m.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown className="h-4 w-4 text-slate-500" />
-        </motion.span>
+        </m.span>
       </button>
       <AnimatePresence initial={false}>
         {open ? (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -129,16 +129,14 @@ function FaqItem({
             className="overflow-hidden"
           >
             <p className="px-5 pb-5 text-sm leading-relaxed text-slate-600">{answer}</p>
-          </motion.div>
+          </m.div>
         ) : null}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 }
 
 export function LandingPage({
-  creatorCount,
-  videoCount,
   featuredCreators,
   featuredVideos,
   currentUser = null,
@@ -241,30 +239,6 @@ export function LandingPage({
     { name: "Vimeo", icon: Video, tone: "bg-sky-100 text-sky-700" },
   ];
 
-  const stats = useMemo(
-    () => [
-      {
-        id: "featured-creators",
-        label: dictionary.statCreators,
-        value: creatorCount,
-        helper: locale === "en" ? "See creators" : "Lihat creator",
-      },
-      {
-        id: "latest-videos",
-        label: dictionary.statVideos,
-        value: videoCount,
-        helper: locale === "en" ? "See latest videos" : "Lihat video terbaru",
-      },
-      {
-        id: "platform-support",
-        label: "Platform",
-        value: platforms.length,
-        helper: locale === "en" ? "Supported sources" : "Sumber didukung",
-      },
-    ],
-    [creatorCount, dictionary.statCreators, dictionary.statVideos, locale, platforms.length, videoCount]
-  );
-
   const testimonials = useMemo(
     () => [
       {
@@ -329,15 +303,8 @@ export function LandingPage({
     );
   };
 
-  const scrollToSection = (id: string) => {
-    const target = document.getElementById(id);
-    if (!target) {
-      return;
-    }
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
+    <LazyMotion features={domAnimation} strict>
     <div className="min-h-screen bg-canvas text-slate-950">
       <header
         className={cn(
@@ -351,9 +318,6 @@ export function LandingPage({
           <AppLogo />
 
           <div className="hidden items-center gap-3 md:flex">
-            <Link href="/about" className="text-sm font-medium text-slate-700 hover:text-slate-950">
-              About
-            </Link>
             <SitePreferences compact />
 
             {currentUser ? (
@@ -422,11 +386,6 @@ export function LandingPage({
             </div>
             <div className="space-y-3">
               <SitePreferences compact />
-              <Link href="/about" className="block" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="secondary" className="w-full">
-                  About
-                </Button>
-              </Link>
 
               {currentUser ? (
                 <>
@@ -464,14 +423,14 @@ export function LandingPage({
       ) : null}
 
       <main className="pb-16">
-        <motion.section
+        <m.section
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
           className="relative mx-[calc(50%-50vw)] min-h-[92vh] w-screen overflow-hidden bg-slate-950"
         >
           <video
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-[0.58]"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-[0.40]"
             autoPlay
             loop
             muted
@@ -481,8 +440,8 @@ export function LandingPage({
           >
             <source src="/hero-loop.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(248,250,252,0.28),rgba(248,250,252,0.58)_28%,rgba(248,250,252,0.9)_74%,rgba(248,250,252,0.98)_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),rgba(255,255,255,0)_36%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.44),rgba(15,23,42,0.34)_42%,rgba(248,250,252,0.76)_84%,rgba(248,250,252,0.98)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.16),rgba(255,255,255,0)_34%)]" />
 
           <div className="relative mx-auto flex min-h-[92vh] w-full max-w-7xl flex-col justify-end px-4 pb-12 pt-28 sm:px-6 sm:pb-16 sm:pt-32">
             <div className="mx-auto max-w-4xl text-center">
@@ -498,12 +457,12 @@ export function LandingPage({
                   <span className="text-slate-950">{dictionary.landingBadge}</span>
                 </Badge>
               </div>
-              <h1 className="mt-6 font-display text-4xl font-semibold leading-tight text-slate-950 sm:text-6xl lg:text-7xl">
+              <h1 className="mt-6 font-display text-4xl font-semibold leading-tight text-white drop-shadow-[0_12px_28px_rgba(15,23,42,0.32)] sm:text-6xl lg:text-7xl">
                 {locale === "en"
                   ? "Showcase your best video portfolio."
                   : "Tampilkan karya video terbaikmu."}
               </h1>
-              <p className="mx-auto mt-4 max-w-2xl text-base text-slate-700 sm:text-lg">
+              <p className="mx-auto mt-4 max-w-2xl text-base text-white/88 drop-shadow-[0_8px_20px_rgba(15,23,42,0.26)] sm:text-lg">
                 {locale === "en"
                   ? "A clean and professional public page for content creators, editors, and videographers."
                   : "Halaman publik yang clean dan profesional untuk content creator, editor, dan videographer."}
@@ -530,7 +489,7 @@ export function LandingPage({
                 {platforms.map((item, index) => {
                   const Icon = item.icon;
                   return (
-                    <motion.span
+                    <m.span
                       key={item.name}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -544,38 +503,16 @@ export function LandingPage({
                         <Icon className="h-3 w-3" />
                       </span>
                       {item.name}
-                    </motion.span>
+                    </m.span>
                   );
                 })}
               </div>
             </div>
 
-            <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              {stats.map((item, index) => (
-                <motion.button
-                  key={item.id}
-                  type="button"
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 + index * 0.08, duration: 0.3 }}
-                  whileHover={{ y: -4, scale: 1.01 }}
-                  onClick={() => scrollToSection(item.id)}
-                  className="rounded-[1.6rem] border border-white/65 bg-white/74 p-5 text-center shadow-[0_22px_50px_rgba(37,99,235,0.12)] backdrop-blur-md transition hover:border-brand-300"
-                >
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 font-display text-4xl font-semibold text-slate-950">
-                    {item.value}
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-brand-700">{item.helper}</p>
-                </motion.button>
-              ))}
-            </div>
           </div>
-        </motion.section>
+        </m.section>
 
-        <section id="features" className="mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
+        <section id="features" className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
           <div className="rounded-[2rem] border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(239,246,255,0.92))] p-6 shadow-[0_24px_60px_rgba(79,158,255,0.12)] sm:p-8">
             <div className="max-w-2xl">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
@@ -592,7 +529,7 @@ export function LandingPage({
               {features.map((item, index) => {
                 const Icon = item.icon;
                 return (
-                  <motion.div
+                  <m.div
                     key={item.title}
                     initial={{ opacity: 0, y: 14 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -601,7 +538,7 @@ export function LandingPage({
                     whileHover={{ y: -5 }}
                     className="rounded-[1.6rem] border border-white/70 bg-white/68 p-5 shadow-[0_18px_40px_rgba(37,99,235,0.08)] backdrop-blur-xl"
                   >
-                    <motion.div
+                    <m.div
                       animate={{ y: [0, -5, 0], rotate: [0, 5, 0] }}
                       transition={{
                         duration: 4.8 + index,
@@ -611,12 +548,12 @@ export function LandingPage({
                       className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-100/90 text-brand-700 shadow-inner"
                     >
                       <Icon className="h-5 w-5" />
-                    </motion.div>
+                    </m.div>
                     <p className="mt-4 text-base font-semibold text-slate-950">{item.title}</p>
                     <p className="mt-2 text-sm leading-relaxed text-slate-600">
                       {item.description}
                     </p>
-                  </motion.div>
+                  </m.div>
                 );
               })}
             </div>
@@ -629,7 +566,7 @@ export function LandingPage({
           <div className="relative">
             <section
               id="featured-creators"
-              className="mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6"
+              className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6"
             >
               <div className="rounded-[2rem] border border-border bg-white/86 p-6 shadow-card backdrop-blur-sm sm:p-8">
                 <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
@@ -655,7 +592,7 @@ export function LandingPage({
                     </p>
                   ) : (
                     shownCreators.map((creator, index) => (
-                      <motion.div
+                      <m.div
                         key={creator.id}
                         initial={{ opacity: 0, y: 18 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -705,14 +642,14 @@ export function LandingPage({
                             </span>
                           </div>
                         </Link>
-                      </motion.div>
+                      </m.div>
                     ))
                   )}
                 </div>
               </div>
             </section>
 
-            <section id="latest-videos" className="mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
+            <section id="latest-videos" className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
               <div className="rounded-[2rem] border border-border bg-white/88 p-6 shadow-card backdrop-blur-sm sm:p-8">
                 <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
                   <div>
@@ -752,7 +689,7 @@ export function LandingPage({
                                 : "Video";
 
                       return (
-                        <motion.div
+                        <m.div
                           key={video.id}
                           initial={{ opacity: 0, y: 18 }}
                           whileInView={{ opacity: 1, y: 0 }}
@@ -816,7 +753,7 @@ export function LandingPage({
                               </span>
                             </div>
                           </Link>
-                        </motion.div>
+                        </m.div>
                       );
                     })
                   )}
@@ -824,7 +761,7 @@ export function LandingPage({
               </div>
             </section>
 
-            <section id="faq" className="mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
+            <section id="faq" className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
               <div className="rounded-[2rem] border border-border bg-white/84 p-6 shadow-card backdrop-blur-sm sm:p-8">
                 <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
                   <div>
@@ -864,7 +801,7 @@ export function LandingPage({
               </div>
             </section>
 
-            <section className="mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
+            <section className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
               <div className="rounded-[2rem] border border-border bg-white/88 p-6 shadow-card backdrop-blur-sm sm:p-8">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
@@ -897,7 +834,7 @@ export function LandingPage({
 
                 <div className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
                   <AnimatePresence mode="wait">
-                    <motion.div
+                    <m.div
                       key={`${activeItem.name}-${activeTestimonial}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -919,7 +856,7 @@ export function LandingPage({
                       <p className="mt-6 text-xl font-medium leading-relaxed text-slate-900 sm:text-2xl">
                         &ldquo;{activeItem.quote}&rdquo;
                       </p>
-                    </motion.div>
+                    </m.div>
                   </AnimatePresence>
 
                   <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
@@ -960,7 +897,7 @@ export function LandingPage({
           </div>
         </div>
 
-        <section className="mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
+        <section className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
           <div className="rounded-[2rem] border border-brand-200 bg-[linear-gradient(135deg,rgba(37,99,235,0.97),rgba(29,78,216,0.92))] p-6 text-white shadow-[0_28px_80px_rgba(37,99,235,0.25)] sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
@@ -1062,5 +999,9 @@ export function LandingPage({
         </div>
       </footer>
     </div>
+    </LazyMotion>
   );
 }
+
+
+

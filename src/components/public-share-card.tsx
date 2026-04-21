@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Copy, Globe2, Share2 } from "lucide-react";
+import { Copy, Globe2, MessageCircle, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSocialShareLinks } from "@/lib/video-utils";
 
@@ -21,9 +21,9 @@ export function PublicShareCard({
   const shareLinks = getSocialShareLinks(currentUrl, title);
 
   return (
-    <>
+    <div className="space-y-3">
       <Button
-        className="w-full"
+        className="h-11 w-full"
         variant="secondary"
         onClick={async () => {
           await navigator.clipboard.writeText(currentUrl);
@@ -36,23 +36,30 @@ export function PublicShareCard({
       </Button>
       <div className="grid grid-cols-2 gap-2">
         <Link href={shareLinks.x} target="_blank">
-          <Button className="w-full" variant="ghost">
+          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
             <Share2 className="h-4 w-4" />
             X
           </Button>
         </Link>
         <Link href={shareLinks.facebook} target="_blank">
-          <Button className="w-full" variant="ghost">
+          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
             <Globe2 className="h-4 w-4" />
             Facebook
           </Button>
         </Link>
+        <Link href={shareLinks.whatsapp} target="_blank">
+          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
+            <MessageCircle className="h-4 w-4" />
+            WhatsApp
+          </Button>
+        </Link>
+        <Link href={pathname} target="_blank">
+          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
+            <Globe2 className="h-4 w-4" />
+            Buka Halaman
+          </Button>
+        </Link>
       </div>
-      <Link href={shareLinks.whatsapp} target="_blank">
-        <Button className="w-full" variant="ghost">
-          Bagikan ke WhatsApp
-        </Button>
-      </Link>
-    </>
+    </div>
   );
 }

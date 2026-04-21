@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
+import { Mail } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useMockApp } from "@/hooks/use-mock-app";
 
 const schema = z.object({
   email: z.email("Format email belum valid."),
@@ -18,7 +19,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function ForgotPasswordPage() {
-  const { requestPasswordReset } = useMockApp();
+  const router = useRouter();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -30,18 +31,35 @@ export default function ForgotPasswordPage() {
   const onSubmit = form.handleSubmit(async ({ email }) => {
     setError("");
     setMessage("");
-    const result = await requestPasswordReset(email);
-    if (!result.ok) {
-      setError(result.error ?? "Gagal memproses reset password.");
+
+    const response = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: string; notice?: string; resetPath?: string }
+      | null;
+
+    if (!response.ok) {
+      setError(payload?.error ?? "Gagal memproses reset password.");
       return;
     }
-    setMessage(result.data?.notice ?? "Link reset berhasil dikirim.");
+
+    setMessage(payload?.notice ?? "Link reset berhasil disiapkan.");
+
+    if (payload?.resetPath) {
+      setTimeout(() => router.push(payload.resetPath as string), 900);
+    }
   });
 
   return (
     <AuthShell
-      title="Reset Password"
-      subtitle="Masukkan email untuk menerima tautan reset (mode simulasi frontend)."
+      title="Lupa password"
+      subtitle="Masukkan email akunmu. Untuk fase ini, link reset akan langsung diarahkan di browser."
     >
       <motion.form
         onSubmit={onSubmit}
@@ -50,8 +68,9 @@ export default function ForgotPasswordPage() {
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <Mail className="h-4 w-4 text-brand-600" />
             Email akun
           </label>
           <Input placeholder="nama@email.com" {...form.register("email")} />
@@ -72,7 +91,7 @@ export default function ForgotPasswordPage() {
         ) : null}
 
         <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Mengirim..." : "Kirim Tautan Reset"}
+          {form.formState.isSubmitting ? "Menyiapkan..." : "Lanjut reset password"}
         </Button>
       </motion.form>
 

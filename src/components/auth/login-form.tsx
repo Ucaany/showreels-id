@@ -7,7 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { Globe2 } from "lucide-react";
+import { Globe2, LockKeyhole, Mail } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,23 @@ export function LoginForm({
 
   const onSubmit = form.handleSubmit(async (values) => {
     setSubmitError("");
+    const preflight = await fetch("/api/auth/credential-login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+
+    const preflightPayload = (await preflight.json().catch(() => null)) as
+      | { error?: string }
+      | null;
+
+    if (!preflight.ok) {
+      setSubmitError(preflightPayload?.error ?? "Login gagal.");
+      return;
+    }
+
     const result = await signIn("credentials", {
       ...values,
       redirect: false,
@@ -72,7 +89,7 @@ export function LoginForm({
   return (
     <AuthShell
       title={dictionary.authLoginTitle}
-      subtitle={dictionary.authLoginSubtitle}
+      subtitle="Masuk dengan tampilan yang lebih ringkas, aman, dan mudah dipahami."
     >
       <motion.form
         onSubmit={onSubmit}
@@ -87,8 +104,9 @@ export function LoginForm({
           </p>
         ) : null}
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <Mail className="h-4 w-4 text-brand-600" />
             Email
           </label>
           <Input placeholder="nama@email.com" {...form.register("email")} />
@@ -97,10 +115,19 @@ export function LoginForm({
           </p>
         </div>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700">
-            Password
-          </label>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <LockKeyhole className="h-4 w-4 text-brand-600" />
+              Password
+            </label>
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs font-semibold text-brand-600 hover:text-brand-700"
+            >
+              Lupa password?
+            </Link>
+          </div>
           <Input type="password" placeholder="********" {...form.register("password")} />
           <p className="mt-1 text-xs text-rose-600">
             {form.formState.errors.password?.message}

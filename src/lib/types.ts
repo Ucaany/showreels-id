@@ -13,6 +13,7 @@ export interface UserProfile {
   email: string;
   username: string;
   fullName: string;
+  role: string;
   avatarUrl: string;
   bio: string;
   experience: string;

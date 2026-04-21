@@ -11,8 +11,13 @@ import {
   verificationTokens,
 } from "@/db/schema";
 import { signInSchema } from "@/lib/auth-schemas";
-import { verifyPassword } from "@/lib/password";
 import { ensureUniqueUsername } from "@/lib/username";
+import {
+  getRemainingLockMinutes,
+  getUserByEmail,
+  resetLoginAttempts,
+} from "@/server/auth-security";
+import { verifyPassword } from "@/lib/password";
 
 const googleConfigured = Boolean(
   process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
@@ -27,7 +32,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     verificationTokensTable: verificationTokens,
   }),
   session: {
-    strategy: "database",
+    strategy: "jwt",
   },
   pages: {
     signIn: "/auth/login",
@@ -53,12 +58,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         const email = parsed.data.email.trim().toLowerCase();
-        const user = await db.query.users.findFirst({
-          where: eq(users.email, email),
-        });
+        const user = await getUserByEmail(email);
 
         if (!user?.passwordHash) {
           return null;
+        }
+
+        if (user.loginLockedUntil && user.loginLockedUntil.getTime() > Date.now()) {
+          throw new Error(
+            `Terlalu banyak percobaan login. Coba lagi dalam ${getRemainingLockMinutes(
+              user.loginLockedUntil
+            )} menit.`
+          );
         }
 
         const passwordMatches = await verifyPassword(
@@ -70,6 +81,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        await resetLoginAttempts(user.id);
+
         return {
           id: user.id,
           email: user.email,
@@ -80,16 +93,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
+    async jwt({ token, user }) {
+      const userId = String(user?.id ?? token.sub ?? "");
+      if (!userId) {
+        return token;
+      }
+
+      const currentUser = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+        columns: {
+          id: true,
+          email: true,
+          name: true,
+          image: true,
+          username: true,
+        },
+      });
+
+      if (!currentUser) {
+        return token;
+      }
+
+      token.sub = currentUser.id;
+      token.email = currentUser.email;
+      token.name = currentUser.name;
+      token.picture = currentUser.image;
+      token.username = currentUser.username ?? null;
+
+      return token;
+    },
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = String(user.id ?? "");
-        const sessionUser = await db.query.users.findFirst({
-          where: eq(users.id, String(user.id ?? "")),
-          columns: {
-            username: true,
-          },
-        });
-        session.user.username = sessionUser?.username ?? null;
+        session.user.id = String(token.sub ?? "");
+        session.user.username =
+          typeof token.username === "string" ? token.username : null;
+        session.user.email = token.email ?? session.user.email ?? "";
+        session.user.name =
+          typeof token.name === "string" ? token.name : session.user.name;
+        session.user.image =
+          typeof token.picture === "string" ? token.picture : session.user.image;
       }
       return session;
     },

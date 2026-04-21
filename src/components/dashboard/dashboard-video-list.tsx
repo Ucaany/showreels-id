@@ -133,9 +133,11 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
             className="rounded-xl border border-border bg-white/80 p-4 transition hover:border-brand-200 hover:shadow-soft"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="space-y-2">
+              <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold text-slate-900">{video.title}</h3>
+                  <h3 className="text-base font-semibold text-slate-900">
+                    {video.title}
+                  </h3>
                   <Badge>{getSourceLabel(video.source as never)}</Badge>
                   <Badge
                     className={
@@ -153,39 +155,38 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                   {formatDateLabel(video.createdAt)}
                 </p>
               </div>
-              {video.visibility === "public" ? (
-                <Link
-                  href={`/v/${video.publicSlug}`}
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
-                >
-                  Lihat Public Page
-                  <ArrowUpRight className="h-4 w-4" />
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {video.visibility === "public" ? (
+                  <Link
+                    href={`/v/${video.publicSlug}`}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
+                  >
+                    Lihat Public Page
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <span className="text-sm font-medium text-slate-600">
+                    {video.visibility === "draft"
+                      ? "Masih draft"
+                      : "Tersimpan private"}
+                  </span>
+                )}
+                <Link href={`/dashboard/videos/${video.id}`}>
+                  <Button variant="secondary" size="sm">
+                    <PencilLine className="h-4 w-4" />
+                    Edit
+                  </Button>
                 </Link>
-              ) : (
-                <span className="text-sm font-medium text-slate-600">
-                  {video.visibility === "draft"
-                    ? "Masih draft"
-                    : "Tersimpan private"}
-                </span>
-              )}
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Link href={`/dashboard/videos/${video.id}`}>
-                <Button variant="secondary" size="sm">
-                  <PencilLine className="h-4 w-4" />
-                  Edit
+                <Button
+                  variant="danger"
+                  size="sm"
+                  disabled={deletingId === video.id}
+                  onClick={() => handleDelete(video.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deletingId === video.id ? "Menghapus..." : "Hapus"}
                 </Button>
-              </Link>
-              <Button
-                variant="danger"
-                size="sm"
-                disabled={deletingId === video.id}
-                onClick={() => handleDelete(video.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-                {deletingId === video.id ? "Menghapus..." : "Hapus"}
-              </Button>
+              </div>
             </div>
           </div>
         ))
