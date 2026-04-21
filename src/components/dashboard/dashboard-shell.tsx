@@ -24,8 +24,6 @@ export function DashboardShell({
   const pathname = usePathname();
   const { dictionary } = usePreferences();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const hideDesktopSidebar =
-    mode === "creator" && pathname === "/dashboard/profile";
   type NavItem = {
     href: string;
     label: string;
@@ -45,17 +43,17 @@ export function DashboardShell({
             icon: Video,
             matchPrefix: "/dashboard/videos",
           },
+          {
+            href: "/dashboard/settings",
+            label: "Settings",
+            icon: Settings2,
+          },
         ];
   const mobileNavItems: NavItem[] =
     mode === "admin"
       ? navItems
       : [
           ...navItems,
-          {
-            href: "/dashboard/profile?settings=1",
-            label: "Settings",
-            icon: Settings2,
-          },
         ];
 
   return (
@@ -173,12 +171,9 @@ export function DashboardShell({
         </div>
       ) : null}
 
-      <div className={cn("mx-auto grid w-full max-w-7xl gap-6 px-3 py-5 sm:px-6 sm:py-6", hideDesktopSidebar ? "lg:grid-cols-1" : "lg:grid-cols-[220px_1fr]")}>
+      <div className="mx-auto grid w-full max-w-7xl gap-6 px-3 py-5 sm:px-6 sm:py-6 md:grid-cols-[220px_1fr]">
         <aside
-          className={cn(
-            "hidden rounded-2xl border border-border bg-surface p-3 shadow-card lg:h-fit",
-            hideDesktopSidebar ? "lg:hidden" : "lg:block"
-          )}
+          className="hidden rounded-2xl border border-border bg-surface p-3 shadow-card md:block md:h-fit"
         >
           <nav className="space-y-1">
             {navItems.map((item) => {

@@ -84,65 +84,92 @@ export default async function DashboardPage() {
           </div>
         </Card>
 
-        <Card className="dashboard-clean-card border-border bg-surface">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
-              <LayoutDashboard className="h-5 w-5" />
+        <div className="space-y-4">
+          <Card className="dashboard-clean-card border-border bg-surface">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+                <LayoutDashboard className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-600">Total video</p>
+                <p className="font-display text-3xl font-semibold text-slate-900">
+                  {myVideos.length}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-slate-600">Total video</p>
-              <p className="font-display text-3xl font-semibold text-slate-900">
-                {myVideos.length}
-              </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3 md:grid-cols-1 xl:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Publik aktif
+                </p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">
+                  {publicVideosCount}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Draft
+                </p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">
+                  {draftVideosCount}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Private
+                </p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">
+                  {privateVideosCount}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3 md:grid-cols-1 xl:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Publik aktif
-              </p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">
-                {publicVideosCount}
-              </p>
+            <div className="mt-4 hidden gap-2 sm:grid md:hidden">
+              <Link href="/dashboard">
+                <Button variant="secondary" size="sm" className="w-full justify-start">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Link href="/dashboard/profile">
+                <Button variant="secondary" size="sm" className="w-full justify-start">
+                  <UserRound className="h-4 w-4" />
+                  Profil
+                </Button>
+              </Link>
+              <Link href="/dashboard/videos/new">
+                <Button variant="secondary" size="sm" className="w-full justify-start">
+                  <Video className="h-4 w-4" />
+                  Submit Video
+                </Button>
+              </Link>
+              <Link href="/dashboard/settings">
+                <Button variant="secondary" size="sm" className="w-full justify-start">
+                  Settings
+                </Button>
+              </Link>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Draft
-              </p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">
-                {draftVideosCount}
-              </p>
+          </Card>
+
+          <Card className="dashboard-clean-card border-border bg-surface">
+            <h2 className="font-display text-base font-semibold text-slate-900">
+              Preview Public Profile
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              @{user.username || "creator"}
+            </p>
+            <p className="text-sm text-slate-600">{user.role || "Role belum diisi"}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {user.username ? (
+                <Link href={`/creator/${user.username}`}>
+                  <Button variant="secondary" size="sm">
+                    Buka Profile
+                  </Button>
+                </Link>
+              ) : null}
+              {user.username ? <CopyProfileLinkButton username={user.username} /> : null}
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Private
-              </p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">
-                {privateVideosCount}
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 hidden gap-2 sm:grid lg:hidden">
-            <Link href="/dashboard">
-              <Button variant="secondary" size="sm" className="w-full justify-start">
-                <LayoutDashboard className="h-4 w-4" />
-                Dashboard
-              </Button>
-            </Link>
-            <Link href="/dashboard/profile">
-              <Button variant="secondary" size="sm" className="w-full justify-start">
-                <UserRound className="h-4 w-4" />
-                Profil
-              </Button>
-            </Link>
-            <Link href="/dashboard/videos/new">
-              <Button variant="secondary" size="sm" className="w-full justify-start">
-                <Video className="h-4 w-4" />
-                Submit Video
-              </Button>
-            </Link>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </section>
 
       <section>
@@ -179,6 +206,8 @@ export default async function DashboardPage() {
                 id: video.id,
                 title: video.title,
                 source: video.source,
+                sourceUrl: video.sourceUrl,
+                thumbnailUrl: video.thumbnailUrl,
                 visibility: video.visibility,
                 publicSlug: video.publicSlug,
                 createdAt: video.createdAt.toISOString(),

@@ -2,22 +2,16 @@
 
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import {
-  Home,
   ImagePlus,
   List,
   MapPinHouse,
-  Settings2,
   Pilcrow,
-  ShieldAlert,
   Sparkles,
-  Video,
-  UserRound,
   UserRoundPen,
 } from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
@@ -144,12 +138,9 @@ function FieldHint({ children }: { children: React.ReactNode }) {
 
 export function ProfileForm({ user }: { user: DbUser }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { dictionary } = usePreferences();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [deletingAccount, setDeletingAccount] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [cropTarget, setCropTarget] = useState<CropTarget | null>(null);
   const [autoSaveLabel, setAutoSaveLabel] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -236,7 +227,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
     () => getUsernameQuota(user, watchedUsername || ""),
     [user, watchedUsername]
   );
-  const showSettings = settingsOpen || searchParams.get("settings") === "1";
 
   const appendTextBlock = (
     field: "bio" | "experience",
@@ -452,31 +442,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
     watchedYoutube,
   ]);
 
-  const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      "Yakin ingin menghapus akun secara permanen? Semua data profil dan video akan ikut terhapus."
-    );
-    if (!confirmed) {
-      return;
-    }
-
-    setDeletingAccount(true);
-    setError("");
-    setMessage("");
-
-    const response = await fetch("/api/profile", {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      setError("Gagal menghapus akun. Coba lagi.");
-      setDeletingAccount(false);
-      return;
-    }
-
-    await signOut({ callbackUrl: "/" });
-  };
-
   return (
     <>
       <div className="dashboard-profile-mobile grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -504,35 +469,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
                           ? "Auto-save: gagal menyimpan, cek koneksi."
                           : "Auto-save aktif untuk perubahan profil."}
                   </p>
-                  <div className="hidden flex-wrap items-center gap-2 lg:flex">
-                    <Link href="/dashboard">
-                      <Button variant="secondary" size="sm">
-                        <Home className="h-4 w-4" />
-                        {dictionary.dashboard}
-                      </Button>
-                    </Link>
-                    <Link href="/dashboard/profile">
-                      <Button size="sm">
-                        <UserRound className="h-4 w-4" />
-                        {dictionary.profile}
-                      </Button>
-                    </Link>
-                    <Link href="/dashboard/videos/new">
-                      <Button variant="secondary" size="sm">
-                        <Video className="h-4 w-4" />
-                        {dictionary.submitVideo}
-                      </Button>
-                    </Link>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSettingsOpen((prev) => !prev)}
-                    >
-                      <Settings2 className="h-4 w-4" />
-                      Settings
-                    </Button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -977,57 +913,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
               </div>
             </form>
           </Card>
-          {showSettings ? (
-            <section
-              id="settings"
-              className="rounded-2xl border border-rose-200 bg-[linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(255,241,242,0.96))] p-4 shadow-sm"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="max-w-2xl">
-                  <div className="mb-2 flex items-center gap-2">
-                    <ShieldAlert className="h-4 w-4 text-rose-600" />
-                    <h2 className="text-base font-semibold text-slate-950">
-                      Settings akun
-                    </h2>
-                  </div>
-                  <p className="text-sm leading-relaxed text-slate-600">
-                    Area ini khusus pengaturan sensitif. Hapus akun dibuat
-                    terpisah dari form edit profil agar tidak tercampur dengan
-                    perubahan data utama.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setSettingsOpen(false);
-                    router.replace("/dashboard/profile", { scroll: false });
-                  }}
-                >
-                  Tutup
-                </Button>
-              </div>
-              <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-4">
-                <p className="text-sm font-semibold text-rose-700">
-                  Hapus akun
-                </p>
-                <p className="mt-1 text-sm leading-relaxed text-rose-600">
-                  Aksi ini permanen. Semua video, profil, dan data creator akan
-                  ikut terhapus.
-                </p>
-                <Button
-                  type="button"
-                  className="mt-4 w-full sm:w-auto"
-                  variant="danger"
-                  onClick={handleDeleteAccount}
-                  disabled={deletingAccount}
-                >
-                  {deletingAccount ? "Menghapus akun..." : "Hapus Profile / Account"}
-                </Button>
-              </div>
-            </section>
-          ) : null}
         </div>
 
         <div className="space-y-5 xl:sticky xl:top-24 xl:h-fit">

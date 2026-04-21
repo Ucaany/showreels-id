@@ -1,12 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, PencilLine, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getSourceLabel, getVisibilityLabel } from "@/lib/video-utils";
+import { getSourceLabel, getThumbnailCandidates, getVisibilityLabel } from "@/lib/video-utils";
 import { formatDateLabel } from "@/lib/helpers";
 import type { VideoVisibility } from "@/lib/types";
 
@@ -15,6 +16,8 @@ interface DashboardVideoListProps {
     id: string;
     title: string;
     source: string;
+    sourceUrl: string;
+    thumbnailUrl: string;
     visibility: VideoVisibility;
     publicSlug: string;
     createdAt: string;
@@ -127,13 +130,32 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
           Belum ada video untuk filter ini.
         </div>
       ) : (
-        paginatedVideos.map((video) => (
-          <div
-            key={video.id}
-            className="rounded-xl border border-border bg-white/80 p-4 transition hover:border-brand-200 hover:shadow-soft"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0 flex-1 space-y-2">
+        paginatedVideos.map((video) => {
+          const thumbnail = getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
+          return (
+            <div
+              key={video.id}
+              className="rounded-xl border border-border bg-white/80 p-4 transition hover:border-brand-200 hover:shadow-soft"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                  {thumbnail ? (
+                    <Image
+                      src={thumbnail}
+                      alt={`Thumbnail ${video.title}`}
+                      width={160}
+                      height={90}
+                      className="h-[90px] w-[160px] object-cover"
+                      unoptimized
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-[90px] w-[160px] items-center justify-center text-xs text-slate-500">
+                      No thumbnail
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-base font-semibold text-slate-900">
                     {video.title}
@@ -191,8 +213,9 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 </Button>
               </div>
             </div>
-          </div>
-        ))
+            </div>
+          );
+        })
       )}
 
       {totalPages > 1 ? (
