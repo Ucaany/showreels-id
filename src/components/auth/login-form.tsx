@@ -34,9 +34,17 @@ function getOauthErrorMessage(code: string) {
   return "";
 }
 
-function getCredentialsErrorMessage(code?: string | null) {
+function getCredentialsErrorMessage(
+  code?: string | null,
+  emailAttempt?: string
+) {
   if (code === "login_locked") {
     return "Login dikunci 15 menit karena 3 kali percobaan gagal.";
+  }
+
+  const normalizedEmail = (emailAttempt || "").trim().toLowerCase();
+  if (normalizedEmail === "hallo@ucan.com") {
+    return "Email owner yang benar adalah hello@ucan.com (pakai huruf e).";
   }
 
   return "Email atau password tidak cocok.";
@@ -71,7 +79,7 @@ export function LoginForm({
       });
 
       if (!result || result.error) {
-        setSubmitError(getCredentialsErrorMessage(result?.code));
+        setSubmitError(getCredentialsErrorMessage(result?.code, values.email));
         return;
       }
 
@@ -91,7 +99,7 @@ export function LoginForm({
     >
       <motion.form
         onSubmit={onSubmit}
-        initial={{ opacity: 0, y: 12 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         className="space-y-4"

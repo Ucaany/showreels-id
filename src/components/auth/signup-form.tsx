@@ -91,7 +91,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
     >
       <motion.form
         onSubmit={onSubmit}
-        initial={{ opacity: 0, y: 12 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         className="space-y-4"
