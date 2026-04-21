@@ -140,6 +140,12 @@ export const videos = pgTable(
       .default(sql`'[]'::jsonb`),
     sourceUrl: text("source_url").notNull(),
     source: text("source").notNull(),
+    aspectRatio: text("aspect_ratio")
+      .$type<"landscape" | "portrait">()
+      .notNull()
+      .default("landscape"),
+    outputType: text("output_type").notNull().default(""),
+    durationLabel: text("duration_label").notNull().default(""),
     publicSlug: text("public_slug").notNull().unique(),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),

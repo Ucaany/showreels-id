@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Copy, Globe2, MessageCircle, Share2 } from "lucide-react";
+import { Copy, Globe2, Link2, MessageCircle, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSocialShareLinks } from "@/lib/video-utils";
 
@@ -34,29 +34,29 @@ export function PublicShareCard({
         <Copy className="h-4 w-4" />
         {copied ? "Link tersalin" : "Copy Link"}
       </Button>
-      <div className="grid grid-cols-2 gap-2">
-        <Link href={shareLinks.x} target="_blank">
-          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
-            <Share2 className="h-4 w-4" />
-            X
-          </Button>
-        </Link>
+      <div className="flex flex-wrap justify-center gap-2">
         <Link href={shareLinks.facebook} target="_blank">
-          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
+          <Button className="h-10 min-w-[128px] rounded-xl px-3" variant="secondary">
             <Globe2 className="h-4 w-4" />
             Facebook
           </Button>
         </Link>
         <Link href={shareLinks.whatsapp} target="_blank">
-          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
+          <Button className="h-10 min-w-[128px] rounded-xl px-3" variant="secondary">
             <MessageCircle className="h-4 w-4" />
             WhatsApp
           </Button>
         </Link>
-        <Link href={pathname} target="_blank">
-          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
-            <Globe2 className="h-4 w-4" />
-            Buka Halaman
+        <Link href={shareLinks.threads} target="_blank">
+          <Button className="h-10 min-w-[128px] rounded-xl px-3" variant="secondary">
+            <Share2 className="h-4 w-4" />
+            Threads
+          </Button>
+        </Link>
+        <Link href={shareLinks.instagram} target="_blank">
+          <Button className="h-10 min-w-[128px] rounded-xl px-3" variant="secondary">
+            <Link2 className="h-4 w-4" />
+            Instagram
           </Button>
         </Link>
       </div>

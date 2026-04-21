@@ -89,6 +89,9 @@ export async function PATCH(
       imageUrls: parsed.data.imageUrls,
       sourceUrl: parsed.data.sourceUrl.trim(),
       source,
+      aspectRatio: parsed.data.aspectRatio,
+      outputType: parsed.data.outputType.trim(),
+      durationLabel: parsed.data.durationLabel.trim(),
       publicSlug,
       updatedAt: new Date(),
     })

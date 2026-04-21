@@ -1,21 +1,13 @@
 "use client";
 
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
-import {
-  ImagePlus,
-  List,
-  MapPinHouse,
-  Pilcrow,
-  Sparkles,
-  UserRoundPen,
-} from "lucide-react";
+import { List, MapPinHouse, Pilcrow, Sparkles, UserRoundPen } from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
-import { ImageCropDialog } from "@/components/dashboard/image-crop-dialog";
 import { ProfileRichText } from "@/components/profile-rich-text";
 import { SocialLinks } from "@/components/social-links";
 import { Button } from "@/components/ui/button";
@@ -34,8 +26,24 @@ const schema = z.object({
     .min(3, "Username minimal 3 karakter.")
     .regex(/^[a-zA-Z0-9_]+$/, "Gunakan huruf, angka, atau underscore."),
   role: z.string().max(120, "Role terlalu panjang."),
-  avatarUrl: z.string().optional(),
-  coverImageUrl: z.string().optional(),
+  avatarUrl: z
+    .string()
+    .max(1200, "URL avatar terlalu panjang.")
+    .refine((value) => !String(value || "").toLowerCase().startsWith("data:"), {
+      message: "Upload file langsung tidak didukung. Gunakan URL avatar.",
+    })
+    .refine((value) => value === "" || normalizeAvatarUrl(value).startsWith("http"), {
+      message: "Gunakan URL avatar http/https yang valid.",
+    }),
+  coverImageUrl: z
+    .string()
+    .max(1200, "URL cover terlalu panjang.")
+    .refine((value) => !String(value || "").toLowerCase().startsWith("data:"), {
+      message: "Upload file langsung tidak didukung. Gunakan URL cover.",
+    })
+    .refine((value) => value === "" || normalizeAvatarUrl(value).startsWith("http"), {
+      message: "Gunakan URL cover http/https yang valid.",
+    }),
   bio: z.string().max(500, "Bio maksimal 500 karakter."),
   experience: z.string().max(700, "Pengalaman maksimal 700 karakter."),
   birthDate: z.string().optional(),
@@ -52,22 +60,6 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
-
-type CropTarget =
-  | {
-      field: "avatarUrl";
-      src: string;
-      title: string;
-      aspectRatio: number;
-      shape: "circle";
-    }
-  | {
-      field: "coverImageUrl";
-      src: string;
-      title: string;
-      aspectRatio: number;
-      shape: "rect";
-    };
 
 const USERNAME_WINDOW_DAYS = 30;
 const USERNAME_MAX_CHANGES = 3;
@@ -141,10 +133,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
   const { dictionary } = usePreferences();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [cropTarget, setCropTarget] = useState<CropTarget | null>(null);
   const [autoSaveLabel, setAutoSaveLabel] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const coverFileInputRef = useRef<HTMLInputElement | null>(null);
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const form = useForm<FormValues>({
@@ -244,70 +233,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
       shouldDirty: true,
       shouldValidate: true,
     });
-  };
-
-  const fileToDataUrl = (file: File) =>
-    new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => reject(new Error("Gagal membaca file gambar."));
-      reader.readAsDataURL(file);
-    });
-
-  const handleImageFieldChange = async (
-    event: ChangeEvent<HTMLInputElement>,
-    config: {
-      field: "avatarUrl" | "coverImageUrl";
-      title: string;
-      aspectRatio: number;
-      shape: "circle" | "rect";
-    }
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      setError("File harus berupa gambar.");
-      return;
-    }
-
-    if (file.size > 4 * 1024 * 1024) {
-      setError("Ukuran gambar maksimal 4MB.");
-      return;
-    }
-
-    try {
-      setError("");
-      setMessage("");
-      const dataUrl = await fileToDataUrl(file);
-      if (config.field === "avatarUrl") {
-        setCropTarget({
-          field: "avatarUrl",
-          src: dataUrl,
-          title: config.title,
-          aspectRatio: config.aspectRatio,
-          shape: "circle",
-        });
-      } else {
-        setCropTarget({
-          field: "coverImageUrl",
-          src: dataUrl,
-          title: config.title,
-          aspectRatio: config.aspectRatio,
-          shape: "rect",
-        });
-      }
-    } catch (uploadError) {
-      setError(
-        uploadError instanceof Error
-          ? uploadError.message
-          : "Gagal membaca file gambar."
-      );
-    } finally {
-      event.target.value = "";
-    }
   };
 
   const buildProfilePayload = (values: FormValues) => ({
@@ -487,20 +412,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       Cover Creator
                     </label>
                     <div className="space-y-3">
-                      <input
-                        ref={coverFileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(event) =>
-                          handleImageFieldChange(event, {
-                            field: "coverImageUrl",
-                            title: "Crop cover creator",
-                            aspectRatio: 16 / 6,
-                            shape: "rect",
-                          })
-                        }
-                      />
                       <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.20),_transparent_38%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(219,234,254,0.86))]">
                         <div
                           className="relative h-28 w-full sm:h-36"
@@ -523,7 +434,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                               <p className="mt-1 max-w-[13rem] text-xs leading-relaxed text-slate-700 sm:text-sm">
                                 {previewCover
                                   ? "Cover sudah siap dipakai."
-                                  : "Upload cover landscape agar profile tampil lebih rapi."}
+                                  : "Tempel URL cover landscape agar profile tampil lebih rapi."}
                               </p>
                             </div>
                             <AvatarBadge
@@ -535,14 +446,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-3">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={() => coverFileInputRef.current?.click()}
-                        >
-                          <ImagePlus className="h-4 w-4" />
-                          Upload & Crop Cover
-                        </Button>
                         {previewCover ? (
                           <Button
                             type="button"
@@ -572,9 +475,11 @@ export function ProfileForm({ user }: { user: DbUser }) {
                           },
                         })}
                       />
+                      <p className="mt-1 text-xs text-rose-600">
+                        {form.formState.errors.coverImageUrl?.message}
+                      </p>
                       <FieldHint>
-                        Upload file akan membuka cropper otomatis sebelum gambar
-                        dipakai.
+                        Gunakan URL gambar publik (http/https atau Google Drive).
                       </FieldHint>
                     </div>
                   </div>
@@ -584,29 +489,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       Avatar Profil
                     </label>
                     <div className="space-y-3">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(event) =>
-                          handleImageFieldChange(event, {
-                            field: "avatarUrl",
-                            title: "Crop avatar profil",
-                            aspectRatio: 1,
-                            shape: "circle",
-                          })
-                        }
-                      />
                       <div className="flex flex-wrap gap-3">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <ImagePlus className="h-4 w-4" />
-                          Upload & Crop Avatar
-                        </Button>
                         {previewAvatar ? (
                           <Button
                             type="button"
@@ -636,9 +519,11 @@ export function ProfileForm({ user }: { user: DbUser }) {
                           },
                         })}
                       />
+                      <p className="mt-1 text-xs text-rose-600">
+                        {form.formState.errors.avatarUrl?.message}
+                      </p>
                       <FieldHint>
-                        Avatar file akan dipotong ke rasio persegi agar
-                        konsisten di seluruh halaman.
+                        Gunakan URL avatar publik (http/https atau Google Drive).
                       </FieldHint>
                     </div>
                   </div>
@@ -1017,30 +902,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
           </Card>
         </div>
       </div>
-
-      {cropTarget ? (
-        <ImageCropDialog
-          key={`${cropTarget.field}-${cropTarget.src.slice(0, 48)}`}
-          open
-          aspectRatio={cropTarget.aspectRatio}
-          imageSrc={cropTarget.src}
-          shape={cropTarget.shape}
-          title={cropTarget.title}
-          onCancel={() => setCropTarget(null)}
-          onConfirm={(croppedImage) => {
-            form.setValue(cropTarget.field, croppedImage, {
-              shouldDirty: true,
-              shouldValidate: true,
-            });
-            setCropTarget(null);
-            setMessage(
-              cropTarget.field === "avatarUrl"
-                ? "Avatar berhasil dicrop. Klik Simpan Perubahan untuk menyimpan."
-                : "Cover berhasil dicrop. Klik Simpan Perubahan untuk menyimpan."
-            );
-          }}
-        />
-      ) : null}
     </>
   );
 }

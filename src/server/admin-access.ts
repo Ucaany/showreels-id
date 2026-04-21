@@ -15,9 +15,7 @@ export function isAdminEmail(email?: string | null) {
   const normalizedEmail = (email || "").trim().toLowerCase();
   const adminEmails = getAdminEmails();
 
-  if (!adminEmails.size) {
-    return true;
-  }
+  if (!adminEmails.size || !normalizedEmail) return false;
 
   return adminEmails.has(normalizedEmail);
 }

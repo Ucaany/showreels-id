@@ -9,13 +9,10 @@ import {
   ArrowRight,
   BriefcaseBusiness,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   CircleCheckBig,
   CircleHelp,
   LayoutGrid,
   LogOut,
-  MapPin,
   Menu,
   PlayCircle,
   Sparkles,
@@ -143,7 +140,6 @@ export function LandingPage({
   const [headerSolid, setHeaderSolid] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
   const creatorScrollRef = useRef<HTMLDivElement | null>(null);
-  const testimonialScrollRef = useRef<HTMLDivElement | null>(null);
   const year = new Date().getFullYear();
 
   const loginLabel =
@@ -315,19 +311,6 @@ export function LandingPage({
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  const slideHorizontal = (
-    ref: { current: HTMLDivElement | null },
-    direction: "left" | "right"
-  ) => {
-    const container = ref.current;
-    if (!container) return;
-    const delta = Math.max(container.clientWidth * 0.82, 280);
-    container.scrollBy({
-      left: direction === "right" ? delta : -delta,
-      behavior: "smooth",
-    });
-  };
 
   return (
     <LazyMotion features={domAnimation} strict>
@@ -606,28 +589,9 @@ export function LandingPage({
                 </p>
               </div>
 
-              <div className="mx-auto mt-5 flex max-w-6xl items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => slideHorizontal(creatorScrollRef, "left")}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
-                  aria-label="Slide creators left"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => slideHorizontal(creatorScrollRef, "right")}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
-                  aria-label="Slide creators right"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-
               <div
                 ref={creatorScrollRef}
-                className="mx-auto mt-4 flex max-w-6xl snap-x snap-mandatory gap-4 overflow-x-auto pb-2 text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className="mx-auto mt-2 flex max-w-6xl snap-x snap-mandatory gap-3 overflow-x-auto pb-2 text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
                 {featuredCreatorSlides.length === 0 ? (
                   <p className="w-full text-sm text-slate-600">
@@ -637,7 +601,7 @@ export function LandingPage({
                   featuredCreatorSlides.map((creator, index) => (
                     <m.div
                       key={creator.id}
-                      className="min-w-[86%] shrink-0 snap-start sm:min-w-[48%] lg:min-w-[32%] xl:min-w-[24%]"
+                      className="min-w-[78%] shrink-0 snap-start sm:min-w-[42%] lg:min-w-[30%] xl:min-w-[22%]"
                       initial={{ opacity: 0, y: 18 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
@@ -645,42 +609,21 @@ export function LandingPage({
                     >
                       <Link
                         href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                        className="flex h-full min-w-0 flex-col rounded-[1.5rem] border border-slate-200 bg-white/90 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_34px_rgba(37,99,235,0.1)]"
+                        className="flex h-full min-w-0 items-center gap-3 rounded-[1.2rem] border border-slate-200 bg-white/92 p-3 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_14px_26px_rgba(37,99,235,0.1)]"
                       >
-                        <div className="flex min-w-0 items-center gap-3">
-                          <AvatarBadge
-                            name={creator.name || "Creator"}
-                            avatarUrl={creator.image || ""}
-                            size="lg"
-                          />
-                          <div className="min-w-0">
-                            <p className="truncate text-base font-semibold text-slate-950">
-                              {creator.name || "Creator"}
-                            </p>
-                            <p className="truncate text-sm text-slate-500">
-                              @{creator.username || "creator"}
-                            </p>
-                          </div>
+                        <AvatarBadge
+                          name={creator.name || "Creator"}
+                          avatarUrl={creator.image || ""}
+                          size="lg"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-base font-semibold text-slate-950">
+                            {creator.name || "Creator"}
+                          </p>
+                          <p className="truncate text-sm text-slate-500">
+                            @{creator.username || "creator"}
+                          </p>
                         </div>
-                        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-600">
-                          {creator.bio || (locale === "en" ? "No bio yet." : "Bio belum ditambahkan.")}
-                        </p>
-                        <div className="mt-4 flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 pt-3 text-sm">
-                          <span className="inline-flex min-w-0 items-center gap-1 truncate text-slate-500">
-                            <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-600" />
-                            <span className="truncate">{creator.city || "Lokasi"}</span>
-                          </span>
-                          <span className="shrink-0 text-slate-500">
-                            {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
-                              month: "short",
-                              year: "numeric",
-                            }).format(creator.createdAt)}
-                          </span>
-                        </div>
-                        <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-700">
-                          {locale === "en" ? "Profile" : "Profil"}
-                          <ArrowRight className="h-4 w-4" />
-                        </span>
                       </Link>
                     </m.div>
                   ))
@@ -702,9 +645,9 @@ export function LandingPage({
                 </h2>
               </div>
 
-              <div className="mx-auto mt-6 max-w-5xl space-y-3">
+              <div className="mx-auto mt-4 grid max-w-6xl gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {latestVideoRows.length === 0 ? (
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-slate-600 sm:col-span-2 xl:col-span-3">
                     {locale === "en" ? "No video yet." : "Belum ada video."}
                   </p>
                 ) : (
@@ -733,7 +676,7 @@ export function LandingPage({
                       >
                         <Link
                           href={`/v/${video.publicSlug}`}
-                          className="group grid gap-3 rounded-[1.4rem] border border-slate-200 bg-white/92 p-3 shadow-sm transition hover:border-brand-300 hover:shadow-[0_16px_34px_rgba(37,99,235,0.12)] sm:p-4 md:grid-cols-[220px_1fr]"
+                          className="group flex h-full min-w-0 flex-col rounded-[1.2rem] border border-slate-200 bg-white/92 p-3 shadow-sm transition hover:border-brand-300 hover:shadow-[0_16px_30px_rgba(37,99,235,0.12)]"
                         >
                           <div className="overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
                             {thumbnail ? (
@@ -742,8 +685,8 @@ export function LandingPage({
                                 alt={`Thumbnail ${video.title}`}
                                 width={440}
                                 height={248}
-                                sizes="(max-width: 768px) 100vw, 220px"
-                                className="aspect-video w-full object-cover"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                                className="aspect-video h-full w-full object-cover"
                                 unoptimized
                                 loading="lazy"
                                 referrerPolicy="no-referrer"
@@ -759,7 +702,7 @@ export function LandingPage({
                           </div>
 
                           <div className="min-w-0">
-                            <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+                            <div className="flex min-w-0 items-start justify-between gap-2">
                               <div className="min-w-0">
                                 <p className="line-clamp-2 text-base font-semibold text-slate-950">
                                   {video.title}
@@ -849,29 +792,7 @@ export function LandingPage({
                   </h2>
                 </div>
 
-                <div className="mt-5 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => slideHorizontal(testimonialScrollRef, "left")}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
-                    aria-label="Slide testimonials left"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => slideHorizontal(testimonialScrollRef, "right")}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
-                    aria-label="Slide testimonials right"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div
-                  ref={testimonialScrollRef}
-                  className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                >
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {testimonials.map((item, index) => (
                     <m.article
                       key={item.name}
@@ -879,7 +800,7 @@ export function LandingPage({
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
                       transition={{ delay: index * 0.06, duration: 0.24 }}
-                      className="min-w-[86%] shrink-0 snap-start rounded-[1.2rem] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(239,246,255,0.96))] p-4 text-left sm:min-w-[46%] lg:min-w-[31%]"
+                      className="rounded-[1.1rem] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(239,246,255,0.96))] p-4 text-left"
                     >
                       <div className="flex items-center gap-3">
                         <AvatarBadge
@@ -894,7 +815,7 @@ export function LandingPage({
                           <p className="text-sm text-slate-500">{item.role}</p>
                         </div>
                       </div>
-                      <p className="mt-3 text-sm leading-relaxed text-slate-700">
+                      <p className="mt-2 text-sm leading-relaxed text-slate-700">
                         &ldquo;{item.quote}&rdquo;
                       </p>
                     </m.article>

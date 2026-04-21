@@ -2,22 +2,26 @@
 
 Next.js 16 App Router project for a video portfolio platform with:
 
-- Drizzle ORM + PostgreSQL
+- Drizzle ORM + Supabase PostgreSQL
 - Auth.js v5 beta with Credentials + Google login
 - Creator public profiles and public video pages
-- Tailwind CSS, language switcher, and full-light creator dashboard
+- Tailwind CSS and full-light creator dashboard
 - Vercel-ready deployment flow
+- URL-only media storage policy (no base64 media stored in DB)
 
 ## Local setup
 
 1. Copy `.env.example` to `.env.local`
 2. Fill these values:
    - `DATABASE_URL`
+   - `DATABASE_URL_MIGRATION` (recommended for direct migration connection)
    - `AUTH_SECRET`
-   - `AUTH_TRUST_HOST`
+   - `AUTH_TRUST_HOST=true`
    - `AUTH_GOOGLE_ID`
    - `AUTH_GOOGLE_SECRET`
-   - `ADMIN_EMAILS`
+   - `ADMIN_EMAILS=hello@ucan.com`
+   - `OWNER_EMAIL`
+   - `OWNER_PASSWORD`
    - `NEXT_PUBLIC_APP_URL`
 3. Install dependencies:
 
@@ -31,7 +35,13 @@ npm install
 npm run db:push
 ```
 
-5. Start development:
+5. Seed owner/admin account:
+
+```bash
+npm run db:seed:owner
+```
+
+6. Start development:
 
 ```bash
 npm run dev
@@ -71,6 +81,12 @@ Run generated migrations:
 npm run db:migrate
 ```
 
+Seed owner account:
+
+```bash
+npm run db:seed:owner
+```
+
 Drizzle docs: [orm.drizzle.team/docs/get-started/postgresql-new](https://orm.drizzle.team/docs/get-started/postgresql-new)
 
 ## Deploy to Vercel
@@ -79,13 +95,16 @@ Drizzle docs: [orm.drizzle.team/docs/get-started/postgresql-new](https://orm.dri
 2. Import the repo into Vercel.
 3. Add the same environment variables from `.env.local` to the Vercel project:
    - `DATABASE_URL`
+   - `DATABASE_URL_MIGRATION` (optional but recommended for CLI migration jobs)
    - `AUTH_SECRET`
    - `AUTH_TRUST_HOST=true`
    - `AUTH_GOOGLE_ID`
    - `AUTH_GOOGLE_SECRET`
    - `ADMIN_EMAILS`
+   - `OWNER_EMAIL`
+   - `OWNER_PASSWORD`
    - `NEXT_PUBLIC_APP_URL=https://your-project-name.vercel.app`
-4. Provision a PostgreSQL database, for example Neon, and set its connection string as `DATABASE_URL`.
+4. Provision a Supabase PostgreSQL project and set connection strings in `DATABASE_URL` (+ `DATABASE_URL_MIGRATION` for direct migrations).
 5. Update the Google OAuth production callback URL to your Vercel domain.
 6. Trigger a new deployment.
 
@@ -99,5 +118,8 @@ Vercel environment variable docs: [vercel.com/docs/environment-variables](https:
 
 ## Notes
 
+- Runtime will fail fast when `DATABASE_URL` is missing.
+- Admin access is fail-closed when `ADMIN_EMAILS` is empty.
+- Media URLs for avatar/cover/thumbnail/gallery are URL-only (`http/https`) to keep DB usage lean.
 - The app builds with `next build --webpack` because this machine falls back to the WASM SWC path on Windows.
 - If `npm run dev` is already using a port, start another one with `npm run dev -- --port 3003`.

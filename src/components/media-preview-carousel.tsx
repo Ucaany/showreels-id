@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Image as ImageIcon, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { detectVideoSource, getEmbedUrl } from "@/lib/video-utils";
-import type { VideoSource } from "@/lib/types";
+import type { VideoAspectRatio, VideoSource } from "@/lib/types";
 
 type MediaSlide =
   | { type: "cover"; url: string }
@@ -22,6 +22,7 @@ interface MediaPreviewCarouselProps {
   showHeading?: boolean;
   showStatusBadge?: boolean;
   preferMainVideo?: boolean;
+  aspectRatio?: VideoAspectRatio;
 }
 
 export function MediaPreviewCarousel({
@@ -34,6 +35,7 @@ export function MediaPreviewCarousel({
   showHeading = true,
   showStatusBadge = true,
   preferMainVideo = false,
+  aspectRatio = "landscape",
 }: MediaPreviewCarouselProps) {
   const [index, setIndex] = useState(0);
 
@@ -86,6 +88,10 @@ export function MediaPreviewCarousel({
   const active = slides[index] ?? slides[0];
   const canSlide = slides.length > 1;
   const headingLabel = canSlide ? "Preview Media" : "Preview Utama";
+  const frameClass =
+    aspectRatio === "portrait"
+      ? "mx-auto aspect-[9/16] w-full max-w-[360px]"
+      : "aspect-video w-full";
 
   const renderVideo = (url: string) => {
     const source = detectVideoSource(url) as VideoSource | null;
@@ -98,8 +104,8 @@ export function MediaPreviewCarousel({
     }
 
     return (
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-card">
-        <div className="aspect-video w-full">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-card">
+        <div className={frameClass}>
           <iframe
             title={title}
             src={getEmbedUrl(url, source)}
@@ -144,7 +150,7 @@ export function MediaPreviewCarousel({
             height={720}
             sizes="(max-width: 1024px) 100vw, 820px"
             unoptimized
-            className="w-full rounded-2xl border border-slate-200 object-cover shadow-card"
+            className={`rounded-2xl border border-slate-200 object-cover shadow-card ${frameClass}`}
             loading="lazy"
           />
           {active.type === "cover" && showStatusBadge ? (

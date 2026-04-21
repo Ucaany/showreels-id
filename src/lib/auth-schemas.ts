@@ -1,7 +1,10 @@
 import { z } from "zod";
+import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { normalizeSocialUrl } from "@/lib/profile-utils";
+import { normalizeAssetUrl, normalizeHttpUrl } from "@/lib/video-utils";
 
 export const videoVisibilitySchema = z.enum(["draft", "private", "public"]);
+export const videoAspectRatioSchema = z.enum(["landscape", "portrait"]);
 
 export const signInSchema = z.object({
   email: z.email("Format email belum valid."),
@@ -33,6 +36,30 @@ const socialUrlSchema = z
     message: "Masukkan URL social media yang valid.",
   });
 
+const mediaUrlSchema = z
+  .string()
+  .trim()
+  .refine((value) => !value.toLowerCase().startsWith("data:"), {
+    message: "Upload file langsung tidak didukung. Gunakan URL media.",
+  })
+  .max(1200, "URL media terlalu panjang.")
+  .transform((value) => normalizeAssetUrl(value))
+  .refine((value) => value === "" || value.startsWith("http"), {
+    message: "Gunakan URL media http/https. Upload file langsung tidak didukung.",
+  });
+
+const avatarUrlSchema = z
+  .string()
+  .trim()
+  .refine((value) => !value.toLowerCase().startsWith("data:"), {
+    message: "Upload file langsung tidak didukung. Gunakan URL avatar.",
+  })
+  .max(1200, "URL avatar terlalu panjang.")
+  .transform((value) => normalizeAvatarUrl(value))
+  .refine((value) => value === "" || value.startsWith("http"), {
+    message: "Gunakan URL avatar http/https. Upload file langsung tidak didukung.",
+  });
+
 const birthDateSchema = z
   .string()
   .trim()
@@ -47,8 +74,8 @@ export const profileSchema = z.object({
     .min(3, "Username minimal 3 karakter.")
     .regex(/^[a-zA-Z0-9_]+$/, "Gunakan huruf, angka, atau underscore."),
   role: z.string().trim().max(120, "Role terlalu panjang.").default(""),
-  avatarUrl: z.string().trim().optional().or(z.literal("")),
-  coverImageUrl: z.string().trim().optional().or(z.literal("")),
+  avatarUrl: avatarUrlSchema.default(""),
+  coverImageUrl: avatarUrlSchema.default(""),
   bio: z.string().max(500, "Bio maksimal 500 karakter."),
   experience: z.string().max(700, "Pengalaman maksimal 700 karakter."),
   birthDate: birthDateSchema.default(""),
@@ -74,9 +101,32 @@ export const profileSchema = z.object({
 export const videoSchema = z.object({
   title: z.string().min(4, "Judul minimal 4 karakter."),
   sourceUrl: z.url("Masukkan URL yang valid."),
-  thumbnailUrl: z.string().trim().optional().or(z.literal("")),
-  extraVideoUrls: z.array(z.string().url("URL video tambahan tidak valid.")).default([]),
-  imageUrls: z.array(z.string().url("URL gambar tidak valid.")).default([]),
+  aspectRatio: videoAspectRatioSchema.default("landscape"),
+  outputType: z.string().trim().max(80, "Output terlalu panjang.").default(""),
+  durationLabel: z.string().trim().max(30, "Durasi terlalu panjang.").default(""),
+  thumbnailUrl: mediaUrlSchema.default(""),
+  extraVideoUrls: z
+    .array(
+      z
+        .string()
+        .trim()
+        .transform((value) => normalizeHttpUrl(value))
+        .refine((value) => value.startsWith("http"), {
+          message: "URL video tambahan tidak valid.",
+        })
+    )
+    .default([]),
+  imageUrls: z
+    .array(
+      z
+        .string()
+        .trim()
+        .transform((value) => normalizeAssetUrl(value))
+        .refine((value) => value.startsWith("http"), {
+          message: "URL gambar tidak valid.",
+        })
+    )
+    .default([]),
   tags: z.array(z.string()).default([]),
   visibility: videoVisibilitySchema.default("public"),
   description: z.string().max(1500, "Deskripsi terlalu panjang.").optional(),

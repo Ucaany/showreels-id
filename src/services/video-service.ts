@@ -1,5 +1,6 @@
 import { createId, simulateDelay } from "@/lib/helpers";
 import type {
+  VideoAspectRatio,
   ServiceResult,
   VideoItem,
   VideoSource,
@@ -17,6 +18,9 @@ export interface CreateVideoInput {
   sourceUrl: string;
   tags: string[];
   visibility: VideoVisibility;
+  aspectRatio?: VideoAspectRatio;
+  outputType?: string;
+  durationLabel?: string;
   thumbnailUrl?: string;
   extraVideoUrls?: string[];
   imageUrls?: string[];
@@ -67,6 +71,9 @@ export const videoService = {
       imageUrls: input.imageUrls || [],
       sourceUrl: input.sourceUrl.trim(),
       source,
+      aspectRatio: input.aspectRatio || "landscape",
+      outputType: input.outputType?.trim() || "",
+      durationLabel: input.durationLabel?.trim() || "",
       publicSlug,
       createdAt: new Date().toISOString(),
     };

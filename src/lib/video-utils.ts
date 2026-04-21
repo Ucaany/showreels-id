@@ -144,7 +144,7 @@ export function normalizeAssetUrl(value: string): string {
   }
 
   if (trimmed.startsWith("data:image/")) {
-    return trimmed;
+    return "";
   }
 
   return normalizeHttpUrl(trimmed);
@@ -272,13 +272,18 @@ export function getSocialShareLinks(url: string, title: string): {
   x: string;
   facebook: string;
   whatsapp: string;
+  threads: string;
+  instagram: string;
 } {
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
+  const shareText = `${encodedTitle}%20${encodedUrl}`;
 
   return {
     x: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
+    whatsapp: `https://wa.me/?text=${shareText}`,
+    threads: `https://www.threads.net/intent/post?text=${shareText}`,
+    instagram: `https://www.instagram.com/?url=${encodedUrl}`,
   };
 }

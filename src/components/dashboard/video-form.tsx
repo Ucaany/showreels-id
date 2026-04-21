@@ -1,13 +1,12 @@
 "use client";
 
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import {
   Clapperboard,
-  ImagePlus,
   LayoutTemplate,
   Link2,
   Sparkles,
@@ -29,13 +28,81 @@ import {
   parseMultilineUrls,
   slugifyText,
 } from "@/lib/video-utils";
-import type { VideoVisibility } from "@/lib/types";
+import type { VideoAspectRatio, VideoVisibility } from "@/lib/types";
+
+function formatDurationLabel(seconds: number): string {
+  const safeSeconds = Math.max(0, Math.round(seconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const secs = safeSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${String(secs).padStart(2, "0")}`;
+}
+
+async function detectDurationFromVideoUrl(url: string): Promise<string | null> {
+  const normalizedUrl = url.trim();
+  if (!normalizedUrl) {
+    return null;
+  }
+
+  // Metadata duration detection only works for direct media URLs the browser can read.
+  const looksLikeDirectMedia = /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(normalizedUrl);
+  if (!looksLikeDirectMedia) {
+    return null;
+  }
+
+  return new Promise((resolve) => {
+    const media = document.createElement("video");
+    let settled = false;
+
+    const finalize = (value: string | null) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      media.src = "";
+      resolve(value);
+    };
+
+    const timer = window.setTimeout(() => finalize(null), 6000);
+    media.preload = "metadata";
+    media.crossOrigin = "anonymous";
+    media.onloadedmetadata = () => {
+      window.clearTimeout(timer);
+      if (!Number.isFinite(media.duration) || media.duration <= 0) {
+        finalize(null);
+        return;
+      }
+      finalize(formatDurationLabel(media.duration));
+    };
+    media.onerror = () => {
+      window.clearTimeout(timer);
+      finalize(null);
+    };
+    media.src = normalizedUrl;
+  });
+}
 
 const schema = z
   .object({
     title: z.string().min(4, "Judul minimal 4 karakter."),
     sourceUrl: z.url("Masukkan URL yang valid."),
-    thumbnailUrl: z.string().optional(),
+    aspectRatio: z.enum(["landscape", "portrait"]),
+    outputType: z.string().max(80, "Output terlalu panjang.").optional(),
+    durationLabel: z.string().max(30, "Durasi terlalu panjang.").optional(),
+    thumbnailUrl: z
+      .string()
+      .optional()
+      .refine((value) => !String(value || "").toLowerCase().startsWith("data:"), {
+        message: "Upload file langsung tidak didukung. Gunakan URL thumbnail.",
+      })
+      .refine((value) => !value || normalizeAssetUrl(value).startsWith("http"), {
+        message: "Gunakan URL thumbnail http/https yang valid.",
+      }),
     extraVideoUrls: z.string().optional(),
     imageUrls: z.string().optional(),
     tags: z.string().optional(),
@@ -55,6 +122,9 @@ interface VideoFormProps {
     id: string;
     title: string;
     sourceUrl: string;
+    aspectRatio: VideoAspectRatio;
+    outputType: string;
+    durationLabel: string;
     thumbnailUrl: string;
     extraVideoUrls: string[];
     imageUrls: string[];
@@ -75,8 +145,8 @@ export function VideoForm({
   const [success, setSuccess] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [autoSaveInfo, setAutoSaveInfo] = useState("Auto-save aktif.");
-  const thumbnailFileRef = useRef<HTMLInputElement | null>(null);
+  const [autoSaveInfo, setAutoSaveInfo] = useState("Draft otomatis aktif.");
+  const [durationInfo, setDurationInfo] = useState("");
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const storageKey = useMemo(
@@ -92,6 +162,9 @@ export function VideoForm({
     defaultValues: {
       title: initialVideo?.title || "",
       sourceUrl: initialVideo?.sourceUrl || "",
+      aspectRatio: initialVideo?.aspectRatio || "landscape",
+      outputType: initialVideo?.outputType || "",
+      durationLabel: initialVideo?.durationLabel || "",
       thumbnailUrl: initialVideo?.thumbnailUrl || "",
       extraVideoUrls: initialVideo?.extraVideoUrls.join("\n") || "",
       imageUrls: initialVideo?.imageUrls.join("\n") || "",
@@ -103,6 +176,18 @@ export function VideoForm({
 
   const watchedTitle = useWatch({ control: form.control, name: "title" });
   const watchedSourceUrl = useWatch({ control: form.control, name: "sourceUrl" });
+  const watchedAspectRatio = useWatch({
+    control: form.control,
+    name: "aspectRatio",
+  });
+  const watchedOutputType = useWatch({
+    control: form.control,
+    name: "outputType",
+  });
+  const watchedDurationLabel = useWatch({
+    control: form.control,
+    name: "durationLabel",
+  });
   const watchedThumbnailUrl = useWatch({ control: form.control, name: "thumbnailUrl" });
   const watchedExtraVideoUrls = useWatch({ control: form.control, name: "extraVideoUrls" });
   const watchedImageUrls = useWatch({ control: form.control, name: "imageUrls" });
@@ -136,6 +221,9 @@ export function VideoForm({
         {
           title: parsed.title || "",
           sourceUrl: parsed.sourceUrl || "",
+          aspectRatio: parsed.aspectRatio || "landscape",
+          outputType: parsed.outputType || "",
+          durationLabel: parsed.durationLabel || "",
           thumbnailUrl: parsed.thumbnailUrl || "",
           extraVideoUrls: parsed.extraVideoUrls || "",
           imageUrls: parsed.imageUrls || "",
@@ -153,12 +241,19 @@ export function VideoForm({
       clearTimeout(autosaveTimerRef.current);
     }
 
+    const savingTimer = setTimeout(() => {
+      setAutoSaveInfo("Menyimpan draft...");
+    }, 0);
+
     autosaveTimerRef.current = setTimeout(() => {
       window.localStorage.setItem(
         storageKey,
         JSON.stringify({
           title: watchedTitle || "",
           sourceUrl: watchedSourceUrl || "",
+          aspectRatio: watchedAspectRatio || "landscape",
+          outputType: watchedOutputType || "",
+          durationLabel: watchedDurationLabel || "",
           thumbnailUrl: watchedThumbnailUrl || "",
           extraVideoUrls: watchedExtraVideoUrls || "",
           imageUrls: watchedImageUrls || "",
@@ -167,10 +262,11 @@ export function VideoForm({
           description: form.getValues("description") || "",
         })
       );
-      setAutoSaveInfo("Draft lokal tersimpan.");
+      setAutoSaveInfo("Draft otomatis tersimpan.");
     }, 700);
 
     return () => {
+      clearTimeout(savingTimer);
       if (autosaveTimerRef.current) {
         clearTimeout(autosaveTimerRef.current);
       }
@@ -179,6 +275,9 @@ export function VideoForm({
     form,
     storageKey,
     watchedExtraVideoUrls,
+    watchedAspectRatio,
+    watchedOutputType,
+    watchedDurationLabel,
     watchedImageUrls,
     watchedSourceUrl,
     watchedTags,
@@ -186,6 +285,47 @@ export function VideoForm({
     watchedTitle,
     watchedVisibility,
   ]);
+
+  useEffect(() => {
+    const url = (watchedSourceUrl || "").trim();
+    if (!url || (watchedDurationLabel || "").trim().length > 0) {
+      return;
+    }
+
+    let cancelled = false;
+    const run = async () => {
+      const detectedDuration = await detectDurationFromVideoUrl(url);
+      if (cancelled) {
+        return;
+      }
+      if (!detectedDuration) {
+        return;
+      }
+      form.setValue("durationLabel", detectedDuration, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setDurationInfo(`Durasi terdeteksi: ${detectedDuration}`);
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [form, watchedDurationLabel, watchedSourceUrl]);
+
+  const durationHelperText = (() => {
+    if (durationInfo) {
+      return durationInfo;
+    }
+    if (!(watchedSourceUrl || "").trim()) {
+      return "Durasi otomatis akan dicoba saat URL video diisi.";
+    }
+    if ((watchedDurationLabel || "").trim().length > 0) {
+      return "Durasi manual aktif. Klik deteksi otomatis jika ingin cek ulang.";
+    }
+    return "Durasi otomatis tidak tersedia, isi durasi manual.";
+  })();
 
   const handleGenerateDescription = async () => {
     setSubmitError("");
@@ -211,44 +351,6 @@ export function VideoForm({
     setAiLoading(false);
   };
 
-  const handleThumbnailFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      setSubmitError("Thumbnail harus berupa file gambar.");
-      return;
-    }
-
-    if (file.size > 3 * 1024 * 1024) {
-      setSubmitError("Ukuran thumbnail maksimal 3MB.");
-      return;
-    }
-
-    const toDataUrl = () =>
-      new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ""));
-        reader.onerror = () => reject(new Error("Gagal membaca file thumbnail."));
-        reader.readAsDataURL(file);
-      });
-
-    try {
-      setSubmitError("");
-      const dataUrl = await toDataUrl();
-      form.setValue("thumbnailUrl", dataUrl, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    } catch {
-      setSubmitError("Gagal memproses file thumbnail.");
-    } finally {
-      event.target.value = "";
-    }
-  };
-
   const onSubmit = form.handleSubmit(async (values) => {
     setSubmitError("");
     setSuccess("");
@@ -263,6 +365,9 @@ export function VideoForm({
         body: JSON.stringify({
           title: values.title,
           sourceUrl: values.sourceUrl,
+          aspectRatio: values.aspectRatio,
+          outputType: values.outputType?.trim() || "",
+          durationLabel: values.durationLabel?.trim() || "",
           thumbnailUrl: normalizeAssetUrl(values.thumbnailUrl || ""),
           extraVideoUrls: parseMultilineUrls(values.extraVideoUrls || ""),
           imageUrls: parseMultilineUrls(values.imageUrls || ""),
@@ -397,6 +502,73 @@ export function VideoForm({
               Gunakan link YouTube, Google Drive, Instagram Reel, atau Vimeo.
             </p>
           </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-800">
+                Bentuk Video
+              </label>
+              <Select {...form.register("aspectRatio")}>
+                <option value="landscape">Landscape (16:9)</option>
+                <option value="portrait">Portrait (9:16)</option>
+              </Select>
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-800">
+                Output
+              </label>
+              <Input
+                list="video-output-type"
+                placeholder="Awareness, Reels, Film, Event..."
+                {...form.register("outputType")}
+              />
+              <datalist id="video-output-type">
+                <option value="Awareness" />
+                <option value="Reels" />
+                <option value="Film" />
+                <option value="Event" />
+                <option value="Commercial" />
+              </datalist>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-sm font-medium text-slate-800">
+                Durasi
+              </label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  const url = (form.getValues("sourceUrl") || "").trim();
+                  if (!url) {
+                    setDurationInfo("Isi URL video dulu sebelum deteksi durasi.");
+                    return;
+                  }
+                  setDurationInfo("Mencoba deteksi durasi otomatis...");
+                  const detectedDuration = await detectDurationFromVideoUrl(url);
+                  if (!detectedDuration) {
+                    setDurationInfo("Durasi otomatis tidak tersedia, isi durasi manual.");
+                    return;
+                  }
+                  form.setValue("durationLabel", detectedDuration, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                  setDurationInfo(`Durasi terdeteksi: ${detectedDuration}`);
+                }}
+              >
+                Deteksi Otomatis
+              </Button>
+            </div>
+            <Input
+              placeholder="Contoh: 01:30"
+              {...form.register("durationLabel")}
+            />
+            <p className="mt-1 text-xs text-slate-600">{durationHelperText}</p>
+          </div>
             </div>
           </div>
 
@@ -411,23 +583,7 @@ export function VideoForm({
             <label className="mb-2 block text-sm font-medium text-slate-800">
               Thumbnail (opsional)
             </label>
-            <input
-              ref={thumbnailFileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleThumbnailFileChange}
-            />
             <div className="mb-3 flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => thumbnailFileRef.current?.click()}
-              >
-                <ImagePlus className="h-4 w-4" />
-                Add File Thumbnail
-              </Button>
               {thumbnailPreview ? (
                 <Button
                   type="button"
@@ -448,8 +604,11 @@ export function VideoForm({
               placeholder="https://images.unsplash.com/..."
               {...form.register("thumbnailUrl")}
             />
+            <p className="mt-1 text-xs text-rose-600">
+              {form.formState.errors.thumbnailUrl?.message}
+            </p>
             <p className="mt-1 text-xs text-slate-600">
-              Upload file atau isi link. Jika thumbnail manual diisi, slide media akan aktif.
+              Isi URL thumbnail publik (http/https). Jika diisi, slide media akan aktif.
             </p>
             {!manualThumbnailUrl && source ? (
               <p className="mt-1 text-xs text-brand-700">
@@ -563,40 +722,37 @@ export function VideoForm({
       </Card>
 
       <Card className="h-fit space-y-4 border-border bg-surface">
-        <h2 className="font-display text-lg font-semibold text-slate-900">
-          {dictionary.publicLinkReady}
-        </h2>
-        <div className="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200">
-          <p className="text-xs font-medium text-slate-600">Slug</p>
-          <p className="mt-1 font-mono text-sm text-slate-800">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
+            Link publik
+          </p>
+          <h2 className="mt-1 font-display text-lg font-semibold text-slate-900">
+            {dictionary.publicLinkReady}
+          </h2>
+        </div>
+        <div className="rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
+          <p className="text-xs font-medium text-slate-500">Slug</p>
+          <p className="mt-1 truncate font-mono text-sm text-slate-900">
             /v/{slugPreview || "video-portofolio"}
           </p>
         </div>
-        <p className="text-sm text-slate-700">
-          Sumber terdeteksi: <span className="font-semibold">{source || "-"}</span>
-        </p>
-        <p className="text-sm text-slate-700">
-          Tag saat ini: {watchedTags || "-"}
-        </p>
-        <p className="text-sm text-slate-700">
-          Status saat ini:{" "}
-          <span className="font-semibold">{getVisibilityLabel(watchedVisibility)}</span>
-        </p>
-        <p className="text-sm text-slate-600">
-          Hanya video dengan status public yang muncul di landing page, profil creator,
-          dan link `/v/[slug]`.
-        </p>
-        <div className="rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700">
-          <p className="font-semibold text-slate-900">Logika thumbnail</p>
-          <ul className="mt-2 space-y-1 text-sm text-slate-600">
-            <li>- Tanpa thumbnail manual: sistem pakai thumbnail bawaan video utama.</li>
-            <li>- Dengan thumbnail manual: cover tampil dulu dan slider media aktif.</li>
-          </ul>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="rounded-xl bg-slate-50 px-3 py-2">
+            <p className="text-xs font-medium text-slate-500">Sumber</p>
+            <p className="mt-1 font-semibold text-slate-900">{source || "-"}</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 px-3 py-2">
+            <p className="text-xs font-medium text-slate-500">Status</p>
+            <p className="mt-1 font-semibold text-slate-900">
+              {getVisibilityLabel(watchedVisibility)}
+            </p>
+          </div>
         </div>
+        <p className="text-xs leading-relaxed text-slate-500">
+          Thumbnail otomatis dipakai jika cover manual kosong.
+        </p>
         <div className="space-y-3 border-t border-slate-200 pt-4">
-          <p className="text-sm font-semibold text-slate-900">
-            Preview Sebelum Submit
-          </p>
+          <p className="text-sm font-semibold text-slate-900">Preview</p>
           {source ? (
             <MediaPreviewCarousel
               manualThumbnailUrl={manualThumbnailUrl}
@@ -605,6 +761,7 @@ export function VideoForm({
               extraVideoUrls={extraVideoPreview}
               imageUrls={imagePreview}
               title={watchedTitle || "Preview video"}
+              aspectRatio={watchedAspectRatio || "landscape"}
             />
           ) : (
             <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600 ring-1 ring-slate-200">

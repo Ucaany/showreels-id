@@ -2,9 +2,13 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "@/db/schema";
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  "postgresql://postgres:postgres@127.0.0.1:5432/videoport_placeholder";
+const connectionString = process.env.DATABASE_URL?.trim() || "";
+
+if (!connectionString) {
+  throw new Error(
+    "DATABASE_URL is required. Set it to your Supabase PostgreSQL connection string."
+  );
+}
 
 const globalForDb = globalThis as unknown as {
   videoPortPool?: Pool;
@@ -26,4 +30,4 @@ if (process.env.NODE_ENV !== "production") {
 
 export const db = drizzle(pool, { schema });
 export { pool };
-export const isDatabaseConfigured = Boolean(process.env.DATABASE_URL);
+export const isDatabaseConfigured = Boolean(connectionString);

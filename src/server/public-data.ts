@@ -1,4 +1,4 @@
-import { and, count, desc, eq, notInArray } from "drizzle-orm";
+import { and, count, desc, eq, ne, notInArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
 import { users, videos } from "@/db/schema";
@@ -12,24 +12,24 @@ const landingStatsCache = unstable_cache(
       .split(",")
       .map((item) => item.trim().toLowerCase())
       .filter(Boolean);
-    const hideOwner = adminEmails.length > 0;
+    const creatorFilter = adminEmails.length
+      ? and(notInArray(users.email, adminEmails), ne(users.role, "owner"))
+      : ne(users.role, "owner");
 
     const [creatorCount] = await db
       .select({ value: count() })
       .from(users)
-      .where(hideOwner ? notInArray(users.email, adminEmails) : undefined);
+      .where(creatorFilter);
     const [videoCount] = await db
       .select({ value: count() })
       .from(videos)
       .innerJoin(users, eq(videos.userId, users.id))
       .where(
-        hideOwner
-          ? and(eq(videos.visibility, "public"), notInArray(users.email, adminEmails))
-          : eq(videos.visibility, "public")
+        and(eq(videos.visibility, "public"), creatorFilter)
       );
 
     const featuredCreators = await db.query.users.findMany({
-      where: hideOwner ? notInArray(users.email, adminEmails) : undefined,
+      where: creatorFilter,
       orderBy: desc(users.createdAt),
       limit: 3,
       columns: {
@@ -129,7 +129,7 @@ export async function getPublicProfile(username: string) {
     where: eq(users.username, username),
   });
 
-  if (!user || isAdminEmail(user.email)) {
+  if (!user || user.role === "owner" || isAdminEmail(user.email)) {
     return null;
   }
 
@@ -153,7 +153,11 @@ export async function getPublicVideo(slug: string) {
     },
   });
 
-  if (!video || isAdminEmail(video.author?.email)) {
+  if (
+    !video ||
+    video.author?.role === "owner" ||
+    isAdminEmail(video.author?.email)
+  ) {
     return null;
   }
 

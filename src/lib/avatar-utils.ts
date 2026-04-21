@@ -33,7 +33,7 @@ export function normalizeAvatarUrl(input: string): string {
   }
 
   if (normalized.startsWith("data:image/")) {
-    return normalized;
+    return "";
   }
 
   const googleDriveId = extractGoogleDriveFileId(normalized);
@@ -41,5 +41,18 @@ export function normalizeAvatarUrl(input: string): string {
     return `https://drive.google.com/thumbnail?id=${googleDriveId}&sz=w1000`;
   }
 
-  return normalized;
+  const withProtocol =
+    normalized.startsWith("http://") || normalized.startsWith("https://")
+      ? normalized
+      : `https://${normalized}`;
+
+  try {
+    const parsed = new URL(withProtocol);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "";
+    }
+    return parsed.toString();
+  } catch {
+    return "";
+  }
 }

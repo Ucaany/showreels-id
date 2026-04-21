@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { desc, eq, notInArray } from "drizzle-orm";
+import { and, desc, eq, ne, notInArray } from "drizzle-orm";
 import { BarChart3, Film, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,9 @@ export default async function AdminPanelPage({
   const hasAdminEmails = adminEmails.length > 0;
 
   const creators = await db.query.users.findMany({
-    where: hasAdminEmails ? notInArray(users.email, adminEmails) : undefined,
+    where: hasAdminEmails
+      ? and(notInArray(users.email, adminEmails), ne(users.role, "owner"))
+      : ne(users.role, "owner"),
     orderBy: desc(users.createdAt),
     with: {
       videos: true,
@@ -35,7 +37,11 @@ export default async function AdminPanelPage({
     },
   });
   const latestVideos = latestVideosRaw
-    .filter((video) => !adminEmails.includes((video.author?.email || "").toLowerCase()))
+    .filter(
+      (video) =>
+        video.author?.role !== "owner" &&
+        !adminEmails.includes((video.author?.email || "").toLowerCase())
+    )
     .slice(0, 8);
 
   const rawPage = Number.parseInt(resolvedSearchParams.page || "1", 10);
@@ -84,8 +90,8 @@ export default async function AdminPanelPage({
         </p>
         {!isAdminConfigured() ? (
           <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
-            `ADMIN_EMAILS` belum diatur. Saat ini semua akun login bisa membuka
-            admin panel.
+            `ADMIN_EMAILS` belum diatur. Akses admin panel ditutup sampai email
+            owner/admin dikonfigurasi.
           </div>
         ) : null}
       </Card>

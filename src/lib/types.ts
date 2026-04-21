@@ -1,5 +1,6 @@
 export type VideoSource = "youtube" | "gdrive" | "instagram" | "vimeo";
 export type VideoVisibility = "draft" | "private" | "public";
+export type VideoAspectRatio = "landscape" | "portrait";
 
 export interface AuthSession {
   token: string;
@@ -42,6 +43,9 @@ export interface VideoItem {
   imageUrls: string[];
   sourceUrl: string;
   source: VideoSource;
+  aspectRatio: VideoAspectRatio;
+  outputType: string;
+  durationLabel: string;
   publicSlug: string;
   createdAt: string;
 }
@@ -51,6 +55,9 @@ export interface VideoFormInput {
   sourceUrl: string;
   tags: string;
   visibility: VideoVisibility;
+  aspectRatio?: VideoAspectRatio;
+  outputType?: string;
+  durationLabel?: string;
   thumbnailUrl?: string;
   extraVideoUrls?: string[];
   imageUrls?: string[];
