@@ -566,9 +566,9 @@ export function LandingPage({
           <div className="relative">
             <section
               id="featured-creators"
-              className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6"
+              className="content-auto mx-auto mt-10 w-full max-w-7xl overflow-hidden px-3 sm:px-6"
             >
-              <div className="overflow-hidden rounded-[2rem] border border-border bg-white/86 p-4 shadow-card backdrop-blur-sm sm:p-8">
+              <div className="overflow-hidden rounded-[1.6rem] border border-border bg-white/86 p-3 shadow-card backdrop-blur-sm sm:rounded-[2rem] sm:p-8">
                 <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
@@ -594,6 +594,7 @@ export function LandingPage({
                     shownCreators.map((creator, index) => (
                       <m.div
                         key={creator.id}
+                        className="min-w-0"
                         initial={{ opacity: 0, y: 18 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.3 }}
@@ -601,9 +602,9 @@ export function LandingPage({
                       >
                         <Link
                           href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                          className="flex h-full min-w-0 flex-col rounded-[1.6rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)] sm:p-5"
+                          className="flex h-full min-w-0 flex-col overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)] sm:rounded-[1.6rem] sm:p-5"
                         >
-                          <div className="flex min-w-0 items-start justify-between gap-3">
+                          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="flex min-w-0 items-center gap-3">
                               <AvatarBadge
                                 name={creator.name || "Creator"}
@@ -619,9 +620,9 @@ export function LandingPage({
                                 </p>
                               </div>
                             </div>
-                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                            <span className="inline-flex w-fit max-w-full shrink-0 items-center gap-1 truncate rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
                               <MapPin className="h-3.5 w-3.5 text-brand-600" />
-                              {creator.city || "Lokasi"}
+                              <span className="truncate">{creator.city || "Lokasi"}</span>
                             </span>
                           </div>
 
@@ -629,15 +630,15 @@ export function LandingPage({
                             {creator.bio || (locale === "en" ? "No bio yet." : "Bio belum ditambahkan.")}
                           </p>
 
-                          <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-sm sm:mt-auto">
-                            <span className="text-slate-500">
+                          <div className="mt-5 flex min-w-0 items-center justify-between gap-3 border-t border-slate-100 pt-4 text-sm sm:mt-auto">
+                            <span className="shrink-0 text-slate-500">
                               {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
                                 month: "short",
                                 year: "numeric",
                               }).format(creator.createdAt)}
                             </span>
-                            <span className="inline-flex items-center gap-1 font-semibold text-brand-700">
-                              View profile
+                            <span className="inline-flex min-w-0 items-center gap-1 truncate font-semibold text-brand-700">
+                              <span className="truncate">{locale === "en" ? "Profile" : "Profil"}</span>
                               <ArrowRight className="h-4 w-4" />
                             </span>
                           </div>
