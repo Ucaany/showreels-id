@@ -92,7 +92,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
             <UserRound className="h-4 w-4 text-brand-600" />
             Nama Lengkap
@@ -103,7 +103,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
             <UserRound className="h-4 w-4 text-brand-600" />
             Username
@@ -114,7 +114,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
             <Mail className="h-4 w-4 text-brand-600" />
             Email
@@ -125,7 +125,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
             <LockKeyhole className="h-4 w-4 text-brand-600" />
             Password
@@ -136,7 +136,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
             <LockKeyhole className="h-4 w-4 text-brand-600" />
             Konfirmasi Password
@@ -192,3 +192,4 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
     </AuthShell>
   );
 }
+

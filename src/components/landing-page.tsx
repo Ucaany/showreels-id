@@ -568,7 +568,7 @@ export function LandingPage({
               id="featured-creators"
               className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6"
             >
-              <div className="rounded-[2rem] border border-border bg-white/86 p-6 shadow-card backdrop-blur-sm sm:p-8">
+              <div className="overflow-hidden rounded-[2rem] border border-border bg-white/86 p-4 shadow-card backdrop-blur-sm sm:p-8">
                 <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
@@ -585,7 +585,7 @@ export function LandingPage({
                   </p>
                 </div>
 
-                <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                <div className="mt-6 grid min-w-0 gap-4 lg:grid-cols-3">
                   {shownCreators.length === 0 ? (
                     <p className="text-sm text-slate-600">
                       {locale === "en" ? "No creator yet." : "Belum ada creator."}
@@ -601,10 +601,10 @@ export function LandingPage({
                       >
                         <Link
                           href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                          className="flex h-full flex-col rounded-[1.6rem] border border-slate-200 bg-white/92 p-5 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)]"
+                          className="flex h-full min-w-0 flex-col rounded-[1.6rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)] sm:p-5"
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
+                          <div className="flex min-w-0 items-start justify-between gap-3">
+                            <div className="flex min-w-0 items-center gap-3">
                               <AvatarBadge
                                 name={creator.name || "Creator"}
                                 avatarUrl={creator.image || ""}
@@ -614,7 +614,7 @@ export function LandingPage({
                                 <p className="truncate text-lg font-semibold text-slate-950">
                                   {creator.name || "Creator"}
                                 </p>
-                                <p className="text-sm text-slate-500">
+                                <p className="truncate text-sm text-slate-500">
                                   @{creator.username || "creator"}
                                 </p>
                               </div>
@@ -625,11 +625,11 @@ export function LandingPage({
                             </span>
                           </div>
 
-                          <p className="mt-4 min-h-[84px] line-clamp-3 text-sm leading-relaxed text-slate-600">
+                          <p className="mt-4 min-h-0 line-clamp-3 text-sm leading-relaxed text-slate-600 sm:min-h-[84px]">
                             {creator.bio || (locale === "en" ? "No bio yet." : "Bio belum ditambahkan.")}
                           </p>
 
-                          <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
+                          <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-sm sm:mt-auto">
                             <span className="text-slate-500">
                               {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
                                 month: "short",
@@ -650,7 +650,7 @@ export function LandingPage({
             </section>
 
             <section id="latest-videos" className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
-              <div className="rounded-[2rem] border border-border bg-white/88 p-6 shadow-card backdrop-blur-sm sm:p-8">
+              <div className="rounded-[2rem] border border-border bg-white/88 p-4 shadow-card backdrop-blur-sm sm:p-8">
                 <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
@@ -808,7 +808,7 @@ export function LandingPage({
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
                       Testimonial
                     </p>
-                    <h2 className="mt-2 font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
+                    <h2 className="mt-2 font-display text-xl font-semibold text-slate-950 sm:text-3xl">
                       {locale === "en" ? "What creators say" : "Kata para creator"}
                     </h2>
                   </div>
@@ -840,7 +840,7 @@ export function LandingPage({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.24 }}
-                      className="rounded-[1.8rem] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98))] p-6"
+                      className="rounded-[1.8rem] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98))] p-4 sm:p-6"
                     >
                       <div className="flex items-center gap-4">
                         <AvatarBadge
@@ -853,7 +853,7 @@ export function LandingPage({
                           <p className="text-sm text-slate-500">{activeItem.role}</p>
                         </div>
                       </div>
-                      <p className="mt-6 text-xl font-medium leading-relaxed text-slate-900 sm:text-2xl">
+                      <p className="mt-5 text-base font-medium leading-8 text-slate-900 sm:mt-6 sm:text-2xl sm:leading-relaxed">
                         &ldquo;{activeItem.quote}&rdquo;
                       </p>
                     </m.div>

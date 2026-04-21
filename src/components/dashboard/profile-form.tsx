@@ -391,10 +391,10 @@ export function ProfileForm({ user }: { user: DbUser }) {
 
   return (
     <>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="dashboard-profile-mobile grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-5">
           <Card className="overflow-hidden border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))] p-0">
-            <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
+            <div className="border-b border-slate-200 px-4 py-4 sm:px-6 sm:py-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-600">
@@ -464,9 +464,9 @@ export function ProfileForm({ user }: { user: DbUser }) {
               </div>
             </div>
 
-            <form onSubmit={onSubmit} className="space-y-5 px-5 py-5 sm:px-6">
+            <form onSubmit={onSubmit} className="space-y-5 px-4 py-4 sm:px-6 sm:py-5">
               {settingsOpen ? (
-                <div className="rounded-2xl border border-rose-200 bg-[linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(255,241,242,0.96))] p-4 shadow-sm">
+                <div className="profile-panel rounded-2xl border border-rose-200 bg-[linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(255,241,242,0.96))] p-4 shadow-sm">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="max-w-2xl">
                       <div className="mb-2 flex items-center gap-2">
@@ -490,7 +490,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                     </Button>
                   </div>
                   <div className="mt-4 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4">
                       <div className="flex items-start gap-3">
                         <CalendarClock className="mt-0.5 h-5 w-5 text-brand-600" />
                         <div>
@@ -536,7 +536,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
               ) : null}
 
               <div className="grid gap-5 lg:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="mb-4 flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-brand-600" />
                     <h2 className="text-base font-semibold text-slate-950">
@@ -705,7 +705,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="mb-4 flex items-center gap-2">
                     <UserRoundPen className="h-4 w-4 text-brand-600" />
                     <h2 className="text-base font-semibold text-slate-950">
@@ -786,7 +786,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="mb-4 flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-brand-600" />
                   <h2 className="text-base font-semibold text-slate-950">
@@ -868,7 +868,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="mb-4 flex items-center gap-2">
                   <MapPinHouse className="h-4 w-4 text-brand-600" />
                   <h2 className="text-base font-semibold text-slate-950">
@@ -1105,3 +1105,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
     </>
   );
 }
+
+
+

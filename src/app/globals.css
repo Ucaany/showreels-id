@@ -103,3 +103,25 @@ select:-webkit-autofill:focus {
     contain-intrinsic-size: 1px 720px;
   }
 }
+
+@media (max-width: 640px) {
+  .dashboard-profile-mobile {
+    gap: 1rem;
+  }
+
+  .dashboard-profile-mobile > div {
+    min-width: 0;
+  }
+
+  .dashboard-profile-mobile .profile-panel {
+    border-color: rgba(214, 226, 241, 0.7);
+    border-radius: 1.35rem;
+    box-shadow: none;
+    padding: 1rem;
+  }
+
+  .dashboard-profile-mobile input,
+  .dashboard-profile-mobile textarea {
+    font-size: 16px;
+  }
+}

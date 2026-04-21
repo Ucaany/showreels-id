@@ -104,7 +104,7 @@ export function LoginForm({
           </p>
         ) : null}
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
             <Mail className="h-4 w-4 text-brand-600" />
             Email
@@ -115,7 +115,7 @@ export function LoginForm({
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
           <div className="mb-2 flex items-center justify-between gap-3">
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
               <LockKeyhole className="h-4 w-4 text-brand-600" />
@@ -179,3 +179,4 @@ export function LoginForm({
     </AuthShell>
   );
 }
+

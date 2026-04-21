@@ -154,7 +154,7 @@ export function DashboardShell({
 
       <div
         className={cn(
-          "mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6",
+          "mx-auto grid w-full max-w-7xl gap-6 px-3 py-5 sm:px-6 sm:py-6",
           hideDesktopSidebar ? "lg:grid-cols-1" : "lg:grid-cols-[220px_1fr]"
         )}
       >
