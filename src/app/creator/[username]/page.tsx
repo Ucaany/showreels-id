@@ -207,13 +207,13 @@ export default async function CreatorProfilePage({
             </Card>
           </div>
 
-          <Card className="border-border bg-surface">
+          <section className="px-0 py-1">
             <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                   Video Portfolio
                 </p>
-                <h2 className="mt-2 font-display text-3xl font-semibold text-slate-900">
+                <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
                   Karya terbaru creator
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">
@@ -260,16 +260,16 @@ export default async function CreatorProfilePage({
                 <div
                   className={
                     currentView === "grid"
-                      ? "grid gap-5 md:grid-cols-2"
-                      : "grid gap-4"
+                      ? "grid gap-4 md:grid-cols-2"
+                      : "grid gap-3"
                   }
                 >
                   {visibleVideos.map((video) => (
                     <Link key={video.id} href={`/v/${video.publicSlug}`}>
                       <article
-                        className={`group h-full rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft ${
+                        className={`group h-full border-b border-slate-200 bg-transparent py-4 transition hover:border-brand-300 ${
                           currentView === "list"
-                            ? "sm:p-5"
+                            ? "sm:py-5"
                             : ""
                         }`}
                       >
@@ -281,8 +281,8 @@ export default async function CreatorProfilePage({
                           }
                         >
                           <div
-                            className={`overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 ${
-                              currentView === "list" ? "sm:w-[220px] sm:flex-none" : ""
+                            className={`overflow-hidden rounded-2xl bg-slate-100 ${
+                              currentView === "list" ? "sm:w-[180px] sm:flex-none" : ""
                             }`}
                           >
                             {video.thumbnailUrl ||
@@ -295,10 +295,10 @@ export default async function CreatorProfilePage({
                                 alt={`Thumbnail ${video.title}`}
                                 width={640}
                                 height={360}
-                                sizes="(max-width: 768px) 100vw, 50vw"
+                                sizes="(max-width: 768px) 100vw, 38vw"
                                 unoptimized
                                 className={`aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.02] ${
-                                  currentView === "list" ? "sm:h-full sm:min-h-[140px]" : ""
+                                  currentView === "list" ? "sm:h-full sm:min-h-[112px]" : ""
                                 }`}
                                 loading="lazy"
                               />
@@ -308,17 +308,17 @@ export default async function CreatorProfilePage({
                               </div>
                             )}
                           </div>
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             <div className="flex flex-wrap items-center gap-2">
                               <Badge>{getSourceLabel(video.source as never)}</Badge>
                               <span className="text-xs text-slate-500">
                                 {formatDateLabel(video.createdAt.toISOString())}
                               </span>
                             </div>
-                            <h3 className="text-lg font-semibold leading-snug text-slate-900">
+                            <h3 className="text-base font-semibold leading-snug text-slate-900 sm:text-lg">
                               {video.title}
                             </h3>
-                            <p className="line-clamp-3 text-sm leading-7 text-slate-600">
+                            <p className="line-clamp-2 text-sm leading-6 text-slate-600">
                               {video.description}
                             </p>
                           </div>
@@ -376,7 +376,7 @@ export default async function CreatorProfilePage({
                 ) : null}
               </div>
             )}
-          </Card>
+          </section>
         </div>
       </main>
 
