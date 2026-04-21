@@ -513,50 +513,48 @@ export function LandingPage({
         </m.section>
 
         <section id="features" className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
-          <div className="rounded-[2rem] border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(239,246,255,0.92))] p-6 shadow-[0_24px_60px_rgba(79,158,255,0.12)] sm:p-8">
-            <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
-                Features
-              </p>
-              <h2 className="mt-2 font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
-                {locale === "en"
-                  ? "Clean tools for creators who want to look more professional."
-                  : "Fitur clean untuk creator yang ingin tampil lebih profesional."}
-              </h2>
-            </div>
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
+              Features
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
+              {locale === "en"
+                ? "Clean tools for creators who want to look more professional."
+                : "Fitur clean untuk creator yang ingin tampil lebih profesional."}
+            </h2>
+          </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {features.map((item, index) => {
-                const Icon = item.icon;
-                return (
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {features.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <m.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.35 }}
+                  transition={{ delay: index * 0.06, duration: 0.28 }}
+                  whileHover={{ y: -5 }}
+                  className="rounded-[1.6rem] border border-white/70 bg-white/68 p-5 shadow-[0_18px_40px_rgba(37,99,235,0.08)] backdrop-blur-xl"
+                >
                   <m.div
-                    key={item.title}
-                    initial={{ opacity: 0, y: 14 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.35 }}
-                    transition={{ delay: index * 0.06, duration: 0.28 }}
-                    whileHover={{ y: -5 }}
-                    className="rounded-[1.6rem] border border-white/70 bg-white/68 p-5 shadow-[0_18px_40px_rgba(37,99,235,0.08)] backdrop-blur-xl"
+                    animate={{ y: [0, -5, 0], rotate: [0, 5, 0] }}
+                    transition={{
+                      duration: 4.8 + index,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-100/90 text-brand-700 shadow-inner"
                   >
-                    <m.div
-                      animate={{ y: [0, -5, 0], rotate: [0, 5, 0] }}
-                      transition={{
-                        duration: 4.8 + index,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-100/90 text-brand-700 shadow-inner"
-                    >
-                      <Icon className="h-5 w-5" />
-                    </m.div>
-                    <p className="mt-4 text-base font-semibold text-slate-950">{item.title}</p>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                      {item.description}
-                    </p>
+                    <Icon className="h-5 w-5" />
                   </m.div>
-                );
-              })}
-            </div>
+                  <p className="mt-4 text-base font-semibold text-slate-950">{item.title}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    {item.description}
+                  </p>
+                </m.div>
+              );
+            })}
           </div>
         </section>
 
@@ -568,140 +566,137 @@ export function LandingPage({
               id="featured-creators"
               className="content-auto mx-auto mt-10 w-full max-w-7xl overflow-hidden px-3 sm:px-6"
             >
-              <div className="overflow-hidden rounded-[1.6rem] border border-border bg-white/86 p-3 shadow-card backdrop-blur-sm sm:rounded-[2rem] sm:p-8">
-                <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
-                      Creators
-                    </p>
-                    <h2 className="mt-2 font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
-                      {locale === "en" ? "Featured Creators" : "Creator Pilihan"}
-                    </h2>
-                  </div>
-                  <p className="max-w-xl text-sm text-slate-600 lg:justify-self-end lg:text-right">
-                    {locale === "en"
-                      ? "Discover creators with public pages that are ready to be shared with clients."
-                      : "Lihat creator dengan halaman publik yang siap dibagikan ke klien."}
+              <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
+                    Creators
                   </p>
+                  <h2 className="mt-2 font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
+                    {locale === "en" ? "Featured Creators" : "Creator Pilihan"}
+                  </h2>
                 </div>
+                <p className="max-w-xl text-sm text-slate-600 lg:justify-self-end lg:text-right">
+                  {locale === "en"
+                    ? "Discover creators with public pages that are ready to be shared with clients."
+                    : "Lihat creator dengan halaman publik yang siap dibagikan ke klien."}
+                </p>
+              </div>
 
-                <div className="mt-6 grid min-w-0 gap-4 lg:grid-cols-3">
-                  {shownCreators.length === 0 ? (
-                    <p className="text-sm text-slate-600">
-                      {locale === "en" ? "No creator yet." : "Belum ada creator."}
-                    </p>
-                  ) : (
-                    shownCreators.map((creator, index) => (
-                      <m.div
-                        key={creator.id}
-                        className="min-w-0"
-                        initial={{ opacity: 0, y: 18 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.3 }}
-                        transition={{ delay: index * 0.08, duration: 0.28 }}
+              <div className="mt-6 grid min-w-0 gap-4 lg:grid-cols-3">
+                {shownCreators.length === 0 ? (
+                  <p className="text-sm text-slate-600">
+                    {locale === "en" ? "No creator yet." : "Belum ada creator."}
+                  </p>
+                ) : (
+                  shownCreators.map((creator, index) => (
+                    <m.div
+                      key={creator.id}
+                      className="min-w-0"
+                      initial={{ opacity: 0, y: 18 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{ delay: index * 0.08, duration: 0.28 }}
+                    >
+                      <Link
+                        href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
+                        className="flex h-full min-w-0 flex-col overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)] sm:rounded-[1.6rem] sm:p-5"
                       >
-                        <Link
-                          href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                          className="flex h-full min-w-0 flex-col overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)] sm:rounded-[1.6rem] sm:p-5"
-                        >
-                          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <AvatarBadge
-                                name={creator.name || "Creator"}
-                                avatarUrl={creator.image || ""}
-                                size="lg"
-                              />
-                              <div className="min-w-0">
-                                <p className="truncate text-lg font-semibold text-slate-950">
-                                  {creator.name || "Creator"}
-                                </p>
-                                <p className="truncate text-sm text-slate-500">
-                                  @{creator.username || "creator"}
-                                </p>
-                              </div>
+                        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <AvatarBadge
+                              name={creator.name || "Creator"}
+                              avatarUrl={creator.image || ""}
+                              size="lg"
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate text-lg font-semibold text-slate-950">
+                                {creator.name || "Creator"}
+                              </p>
+                              <p className="truncate text-sm text-slate-500">
+                                @{creator.username || "creator"}
+                              </p>
                             </div>
-                            <span className="inline-flex w-fit max-w-full shrink-0 items-center gap-1 truncate rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-                              <MapPin className="h-3.5 w-3.5 text-brand-600" />
-                              <span className="truncate">{creator.city || "Lokasi"}</span>
-                            </span>
                           </div>
+                          <span className="inline-flex w-fit max-w-full shrink-0 items-center gap-1 truncate rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                            <MapPin className="h-3.5 w-3.5 text-brand-600" />
+                            <span className="truncate">{creator.city || "Lokasi"}</span>
+                          </span>
+                        </div>
 
-                          <p className="mt-4 min-h-0 line-clamp-3 text-sm leading-relaxed text-slate-600 sm:min-h-[84px]">
-                            {creator.bio || (locale === "en" ? "No bio yet." : "Bio belum ditambahkan.")}
-                          </p>
+                        <p className="mt-4 min-h-0 line-clamp-3 text-sm leading-relaxed text-slate-600 sm:min-h-[84px]">
+                          {creator.bio || (locale === "en" ? "No bio yet." : "Bio belum ditambahkan.")}
+                        </p>
 
-                          <div className="mt-5 flex min-w-0 items-center justify-between gap-3 border-t border-slate-100 pt-4 text-sm sm:mt-auto">
-                            <span className="shrink-0 text-slate-500">
-                              {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
-                                month: "short",
-                                year: "numeric",
-                              }).format(creator.createdAt)}
-                            </span>
-                            <span className="inline-flex min-w-0 items-center gap-1 truncate font-semibold text-brand-700">
-                              <span className="truncate">{locale === "en" ? "Profile" : "Profil"}</span>
-                              <ArrowRight className="h-4 w-4" />
-                            </span>
-                          </div>
-                        </Link>
-                      </m.div>
-                    ))
-                  )}
-                </div>
+                        <div className="mt-5 flex min-w-0 items-center justify-between gap-3 border-t border-slate-100 pt-4 text-sm sm:mt-auto">
+                          <span className="shrink-0 text-slate-500">
+                            {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
+                              month: "short",
+                              year: "numeric",
+                            }).format(creator.createdAt)}
+                          </span>
+                          <span className="inline-flex min-w-0 items-center gap-1 truncate font-semibold text-brand-700">
+                            <span className="truncate">{locale === "en" ? "Profile" : "Profil"}</span>
+                            <ArrowRight className="h-4 w-4" />
+                          </span>
+                        </div>
+                      </Link>
+                    </m.div>
+                  ))
+                )}
               </div>
             </section>
 
             <section id="latest-videos" className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
-              <div className="rounded-[2rem] border border-border bg-white/88 p-4 shadow-card backdrop-blur-sm sm:p-8">
-                <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
-                      Latest Videos
-                    </p>
-                    <h2 className="mt-2 font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
-                      {locale === "en" ? "Fresh work from creators" : "Video terbaru dari creator"}
-                    </h2>
-                  </div>
-                  <p className="max-w-xl text-sm text-slate-600 lg:justify-self-end lg:text-right">
-                    {locale === "en"
-                      ? "The latest published work, presented in a simple and clean card layout."
-                      : "Karya terbaru yang sudah dipublish, ditampilkan dalam card yang sederhana dan rapi."}
+              <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
+                    Latest Videos
                   </p>
+                  <h2 className="mt-2 font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
+                    {locale === "en" ? "Fresh work from creators" : "Video terbaru dari creator"}
+                  </h2>
                 </div>
+                <p className="max-w-xl text-sm text-slate-600 lg:justify-self-end lg:text-right">
+                  {locale === "en"
+                    ? "The latest published work, presented in a simple and clean card layout."
+                    : "Karya terbaru yang sudah dipublish, ditampilkan dalam card yang sederhana dan rapi."}
+                </p>
+              </div>
 
-                <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {shownVideos.length === 0 ? (
-                    <p className="text-sm text-slate-600">
-                      {locale === "en" ? "No video yet." : "Belum ada video."}
-                    </p>
-                  ) : (
-                    shownVideos.map((video) => {
-                      const thumbnail =
-                        getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
-                      const source = detectVideoSource(video.sourceUrl);
-                      const sourceLabel =
-                        source === "gdrive"
-                          ? "Google Drive"
-                          : source === "youtube"
-                            ? "YouTube"
-                            : source === "instagram"
-                              ? "Instagram"
-                              : source === "vimeo"
-                                ? "Vimeo"
-                                : "Video";
+              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {shownVideos.length === 0 ? (
+                  <p className="text-sm text-slate-600">
+                    {locale === "en" ? "No video yet." : "Belum ada video."}
+                  </p>
+                ) : (
+                  shownVideos.map((video) => {
+                    const thumbnail =
+                      getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
+                    const source = detectVideoSource(video.sourceUrl);
+                    const sourceLabel =
+                      source === "gdrive"
+                        ? "Google Drive"
+                        : source === "youtube"
+                          ? "YouTube"
+                          : source === "instagram"
+                            ? "Instagram"
+                            : source === "vimeo"
+                              ? "Vimeo"
+                              : "Video";
 
-                      return (
-                        <m.div
-                          key={video.id}
-                          initial={{ opacity: 0, y: 18 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true, amount: 0.25 }}
-                          transition={{ duration: 0.28 }}
-                        >
-                          <Link
+                    return (
+                      <m.div
+                        key={video.id}
+                        initial={{ opacity: 0, y: 18 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.25 }}
+                        transition={{ duration: 0.28 }}
+                      >
+                        <Link
                           href={`/v/${video.publicSlug}`}
-                            className="flex h-full flex-col rounded-[1.6rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)]"
+                          className="flex h-full flex-col rounded-[1.6rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)]"
                         >
-                            <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-100">
+                          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-100">
                             {thumbnail ? (
                               <Image
                                 src={thumbnail}
@@ -723,42 +718,41 @@ export function LandingPage({
                               </div>
                             )}
                           </div>
-                            <div className="mt-4 flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="line-clamp-2 text-base font-semibold text-slate-950">
-                                  {video.title}
-                                </p>
-                                <p className="mt-1 text-sm text-slate-500">
-                                  {video.author?.name || "Creator"}
-                                </p>
-                              </div>
-                              <span className="inline-flex shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-                                {sourceLabel}
-                              </span>
+                          <div className="mt-4 flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="line-clamp-2 text-base font-semibold text-slate-950">
+                                {video.title}
+                              </p>
+                              <p className="mt-1 text-sm text-slate-500">
+                                {video.author?.name || "Creator"}
+                              </p>
                             </div>
+                            <span className="inline-flex shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                              {sourceLabel}
+                            </span>
+                          </div>
 
-                            <p className="mt-3 min-h-[48px] line-clamp-2 text-sm leading-relaxed text-slate-600">
-                              {video.description}
-                            </p>
+                          <p className="mt-3 min-h-[48px] line-clamp-2 text-sm leading-relaxed text-slate-600">
+                            {video.description}
+                          </p>
 
-                            <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
-                              <span className="text-slate-500">
-                                {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
-                                  month: "short",
-                                  year: "numeric",
-                                }).format(video.createdAt)}
-                              </span>
-                              <span className="inline-flex items-center gap-1 font-semibold text-brand-700">
-                                {locale === "en" ? "View video" : "Lihat video"}
-                                <ArrowRight className="h-4 w-4" />
-                              </span>
-                            </div>
-                          </Link>
-                        </m.div>
-                      );
-                    })
-                  )}
-                </div>
+                          <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
+                            <span className="text-slate-500">
+                              {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
+                                month: "short",
+                                year: "numeric",
+                              }).format(video.createdAt)}
+                            </span>
+                            <span className="inline-flex items-center gap-1 font-semibold text-brand-700">
+                              {locale === "en" ? "View video" : "Lihat video"}
+                              <ArrowRight className="h-4 w-4" />
+                            </span>
+                          </div>
+                        </Link>
+                      </m.div>
+                    );
+                  })
+                )}
               </div>
             </section>
 
