@@ -68,12 +68,17 @@ export async function validateCredentialsAttempt(email: string, password: string
   const user = await getUserByEmail(normalizedEmail);
 
   if (!user?.passwordHash) {
-    return { ok: false as const, error: "Email atau password tidak cocok." };
+    return {
+      ok: false as const,
+      code: "invalid_credentials" as const,
+      error: "Email atau password tidak cocok.",
+    };
   }
 
   if (user.loginLockedUntil && user.loginLockedUntil.getTime() > Date.now()) {
     return {
       ok: false as const,
+      code: "login_locked" as const,
       error: `Terlalu banyak percobaan login. Coba lagi dalam ${getRemainingLockMinutes(
         user.loginLockedUntil
       )} menit.`,
@@ -87,12 +92,14 @@ export async function validateCredentialsAttempt(email: string, password: string
     if (failed.locked && failed.lockUntil) {
       return {
         ok: false as const,
+        code: "login_locked" as const,
         error: `Login dikunci selama ${LOGIN_LOCK_MINUTES} menit karena 3 kali percobaan gagal.`,
       };
     }
 
     return {
       ok: false as const,
+      code: "invalid_credentials" as const,
       error: `Email atau password tidak cocok. Sisa percobaan: ${failed.attemptsLeft}.`,
     };
   }

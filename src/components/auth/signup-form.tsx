@@ -65,19 +65,23 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
       return;
     }
 
-    const signInResult = await signIn("credentials", {
-      email: values.email,
-      password: values.password,
-      redirect: false,
-      callbackUrl: "/dashboard",
-    });
+    try {
+      const signInResult = await signIn("credentials", {
+        email: values.email,
+        password: values.password,
+        redirect: false,
+        redirectTo: "/dashboard",
+      });
 
-    if (!signInResult || signInResult.error) {
+      if (!signInResult || signInResult.error) {
+        setSubmitError("Akun dibuat, tetapi login otomatis gagal.");
+        return;
+      }
+
+      window.location.replace(signInResult.url ?? "/dashboard");
+    } catch {
       setSubmitError("Akun dibuat, tetapi login otomatis gagal.");
-      return;
     }
-
-    window.location.assign(signInResult.url ?? "/dashboard");
   });
 
   return (

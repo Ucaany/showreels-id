@@ -34,6 +34,14 @@ function getOauthErrorMessage(code: string) {
   return "";
 }
 
+function getCredentialsErrorMessage(code?: string | null) {
+  if (code === "login_locked") {
+    return "Login dikunci 15 menit karena 3 kali percobaan gagal.";
+  }
+
+  return "Email atau password tidak cocok.";
+}
+
 export function LoginForm({
   googleEnabled,
   oauthError = "",
@@ -55,35 +63,24 @@ export function LoginForm({
 
   const onSubmit = form.handleSubmit(async (values) => {
     setSubmitError("");
-    const preflight = await fetch("/api/auth/credential-login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(values),
-    });
+    try {
+      const result = await signIn("credentials", {
+        ...values,
+        redirect: false,
+        redirectTo: "/dashboard",
+      });
 
-    const preflightPayload = (await preflight.json().catch(() => null)) as
-      | { error?: string }
-      | null;
+      if (!result || result.error) {
+        setSubmitError(getCredentialsErrorMessage(result?.code));
+        return;
+      }
 
-    if (!preflight.ok) {
-      setSubmitError(preflightPayload?.error ?? "Login gagal.");
-      return;
+      window.location.replace(result.url ?? "/dashboard");
+    } catch {
+      setSubmitError(
+        "Login belum bisa diproses. Periksa koneksi lalu coba lagi."
+      );
     }
-
-    const result = await signIn("credentials", {
-      ...values,
-      redirect: false,
-      callbackUrl: "/dashboard",
-    });
-
-    if (!result || result.error) {
-      setSubmitError("Email atau password tidak cocok.");
-      return;
-    }
-
-    window.location.assign(result.url ?? "/dashboard");
   });
 
   return (

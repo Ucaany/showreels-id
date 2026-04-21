@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import { CredentialsSignin } from "@auth/core/errors";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
@@ -12,16 +13,19 @@ import {
 } from "@/db/schema";
 import { signInSchema } from "@/lib/auth-schemas";
 import { ensureUniqueUsername } from "@/lib/username";
-import {
-  getRemainingLockMinutes,
-  getUserByEmail,
-  resetLoginAttempts,
-} from "@/server/auth-security";
-import { verifyPassword } from "@/lib/password";
+import { validateCredentialsAttempt } from "@/server/auth-security";
 
 const googleConfigured = Boolean(
   process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
 );
+
+class InvalidCredentialsError extends CredentialsSignin {
+  code = "invalid_credentials";
+}
+
+class LoginLockedError extends CredentialsSignin {
+  code = "login_locked";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -57,37 +61,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const email = parsed.data.email.trim().toLowerCase();
-        const user = await getUserByEmail(email);
-
-        if (!user?.passwordHash) {
-          return null;
-        }
-
-        if (user.loginLockedUntil && user.loginLockedUntil.getTime() > Date.now()) {
-          throw new Error(
-            `Terlalu banyak percobaan login. Coba lagi dalam ${getRemainingLockMinutes(
-              user.loginLockedUntil
-            )} menit.`
-          );
-        }
-
-        const passwordMatches = await verifyPassword(
-          parsed.data.password,
-          user.passwordHash
+        const result = await validateCredentialsAttempt(
+          parsed.data.email,
+          parsed.data.password
         );
 
-        if (!passwordMatches) {
-          return null;
+        if (!result.ok) {
+          throw result.code === "login_locked"
+            ? new LoginLockedError()
+            : new InvalidCredentialsError();
         }
 
-        await resetLoginAttempts(user.id);
-
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          image: result.user.image,
         };
       },
     }),
