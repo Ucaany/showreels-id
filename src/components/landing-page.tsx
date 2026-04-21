@@ -512,8 +512,8 @@ export function LandingPage({
           </div>
         </m.section>
 
-        <section id="features" className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
-          <div className="max-w-2xl">
+        <section id="features" className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 text-center sm:px-6">
+          <div className="mx-auto max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
               Features
             </p>
@@ -524,7 +524,7 @@ export function LandingPage({
             </h2>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-6 grid gap-4 text-left md:grid-cols-2 xl:grid-cols-4">
             {features.map((item, index) => {
               const Icon = item.icon;
               return (
@@ -564,9 +564,9 @@ export function LandingPage({
           <div className="relative">
             <section
               id="featured-creators"
-              className="content-auto mx-auto mt-10 w-full max-w-7xl overflow-hidden px-3 sm:px-6"
+              className="content-auto mx-auto mt-10 w-full max-w-7xl overflow-hidden px-4 text-center sm:px-6"
             >
-              <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
+              <div className="mx-auto max-w-2xl">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
                     Creators
@@ -575,14 +575,14 @@ export function LandingPage({
                     {locale === "en" ? "Featured Creators" : "Creator Pilihan"}
                   </h2>
                 </div>
-                <p className="max-w-xl text-sm text-slate-600 lg:justify-self-end lg:text-right">
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
                   {locale === "en"
                     ? "Discover creators with public pages that are ready to be shared with clients."
                     : "Lihat creator dengan halaman publik yang siap dibagikan ke klien."}
                 </p>
               </div>
 
-              <div className="mt-6 grid min-w-0 gap-4 lg:grid-cols-3">
+              <div className="mx-auto mt-6 grid max-w-5xl min-w-0 gap-3 text-left lg:grid-cols-3">
                 {shownCreators.length === 0 ? (
                   <p className="text-sm text-slate-600">
                     {locale === "en" ? "No creator yet." : "Belum ada creator."}
@@ -599,7 +599,7 @@ export function LandingPage({
                     >
                       <Link
                         href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                        className="flex h-full min-w-0 flex-col overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)] sm:rounded-[1.6rem] sm:p-5"
+                        className="flex h-full min-w-0 flex-col overflow-hidden border-b border-slate-200 py-4 transition hover:border-brand-300 sm:px-3"
                       >
                         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="flex min-w-0 items-center gap-3">
@@ -623,11 +623,11 @@ export function LandingPage({
                           </span>
                         </div>
 
-                        <p className="mt-4 min-h-0 line-clamp-3 text-sm leading-relaxed text-slate-600 sm:min-h-[84px]">
+                        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-600">
                           {creator.bio || (locale === "en" ? "No bio yet." : "Bio belum ditambahkan.")}
                         </p>
 
-                        <div className="mt-5 flex min-w-0 items-center justify-between gap-3 border-t border-slate-100 pt-4 text-sm sm:mt-auto">
+                        <div className="mt-4 flex min-w-0 items-center justify-between gap-3 text-sm sm:mt-auto">
                           <span className="shrink-0 text-slate-500">
                             {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
                               month: "short",

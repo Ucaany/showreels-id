@@ -122,8 +122,23 @@ select:-webkit-autofill:focus {
     padding: 1rem;
   }
 
+  .dashboard-profile-mobile .dashboard-profile-card {
+    border-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
   .dashboard-profile-mobile input,
   .dashboard-profile-mobile textarea {
     font-size: 16px;
+  }
+
+  .dashboard-clean-card {
+    border-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
   }
 }

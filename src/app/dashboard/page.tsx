@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { FolderOpen, LayoutDashboard, Video } from "lucide-react";
+import { FolderOpen, LayoutDashboard, UserRound, Video } from "lucide-react";
 import { CopyProfileLinkButton } from "@/components/dashboard/copy-profile-link-button";
 import { DashboardVideoList } from "@/components/dashboard/dashboard-video-list";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <section className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.12),_transparent_32%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))] md:col-span-2">
+        <Card className="dashboard-clean-card border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.12),_transparent_32%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))] md:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm text-slate-600">{dictionary.welcomeBack}</p>
@@ -68,7 +68,7 @@ export default async function DashboardPage() {
           </div>
         </Card>
 
-        <Card className="border-border bg-surface">
+        <Card className="dashboard-clean-card border-border bg-surface">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
               <LayoutDashboard className="h-5 w-5" />
@@ -98,11 +98,31 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
+          <div className="mt-4 hidden gap-2 sm:grid lg:hidden">
+            <Link href="/dashboard">
+              <Button variant="secondary" size="sm" className="w-full justify-start">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Button>
+            </Link>
+            <Link href="/dashboard/profile">
+              <Button variant="secondary" size="sm" className="w-full justify-start">
+                <UserRound className="h-4 w-4" />
+                Profil
+              </Button>
+            </Link>
+            <Link href="/dashboard/videos/new">
+              <Button variant="secondary" size="sm" className="w-full justify-start">
+                <Video className="h-4 w-4" />
+                Submit Video
+              </Button>
+            </Link>
+          </div>
         </Card>
       </section>
 
       <section>
-        <Card className="border-border bg-surface">
+        <Card className="dashboard-clean-card border-border bg-surface">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="font-display text-xl font-semibold text-slate-900">

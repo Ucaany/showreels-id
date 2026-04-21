@@ -2,13 +2,12 @@
 
 import { type ChangeEvent, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import {
-  CalendarClock,
   Home,
   ImagePlus,
   List,
@@ -145,6 +144,7 @@ function FieldHint({ children }: { children: React.ReactNode }) {
 
 export function ProfileForm({ user }: { user: DbUser }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { dictionary } = usePreferences();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -234,6 +234,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
     () => getUsernameQuota(user, watchedUsername || ""),
     [user, watchedUsername]
   );
+  const showSettings = settingsOpen || searchParams.get("settings") === "1";
 
   const appendTextBlock = (
     field: "bio" | "experience",
@@ -321,6 +322,17 @@ export function ProfileForm({ user }: { user: DbUser }) {
     setMessage("");
     setError("");
 
+    const currentUsername = user.username || "";
+    const nextUsername = values.username.trim();
+    if (nextUsername && nextUsername !== currentUsername) {
+      const confirmed = window.confirm(
+        `Kamu akan mengganti username dari @${currentUsername || "creator"} menjadi @${nextUsername}. Username hanya bisa diubah maksimal ${USERNAME_MAX_CHANGES} kali per ${USERNAME_WINDOW_DAYS} hari. Lanjutkan?`
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
     const response = await fetch("/api/profile", {
       method: "PATCH",
       headers: {
@@ -393,7 +405,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
     <>
       <div className="dashboard-profile-mobile grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-5">
-          <Card className="overflow-hidden border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))] p-0">
+          <Card className="dashboard-profile-card overflow-hidden border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))] p-0">
             <div className="border-b border-slate-200 px-4 py-4 sm:px-6 sm:py-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-4">
@@ -437,104 +449,10 @@ export function ProfileForm({ user }: { user: DbUser }) {
                     </Button>
                   </div>
                 </div>
-                <div className="flex w-full flex-col gap-3 sm:w-auto sm:min-w-[280px]">
-                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-                    <p className="font-semibold text-slate-900">Quota username</p>
-                    <p className="mt-1">
-                      {usernameQuota.willConsume
-                        ? `Sisa ${usernameQuota.remaining} perubahan lagi di periode ini.`
-                        : `Sisa ${usernameQuota.remaining} perubahan di periode aktif.`}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Maksimal {USERNAME_MAX_CHANGES} kali per{" "}
-                      {USERNAME_WINDOW_DAYS} hari.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="lg:hidden"
-                    onClick={() => setSettingsOpen((prev) => !prev)}
-                  >
-                    <Settings2 className="h-4 w-4" />
-                    Settings
-                  </Button>
-                </div>
               </div>
             </div>
 
             <form onSubmit={onSubmit} className="space-y-5 px-4 py-4 sm:px-6 sm:py-5">
-              {settingsOpen ? (
-                <div className="profile-panel rounded-2xl border border-rose-200 bg-[linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(255,241,242,0.96))] p-4 shadow-sm">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="max-w-2xl">
-                      <div className="mb-2 flex items-center gap-2">
-                        <ShieldAlert className="h-4 w-4 text-rose-600" />
-                        <h2 className="text-base font-semibold text-slate-950">
-                          Settings akun
-                        </h2>
-                      </div>
-                      <p className="text-sm leading-relaxed text-slate-600">
-                        Pisahkan pengaturan sensitif dari form utama supaya area
-                        edit profil tetap lebih fokus dan mudah dibaca.
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSettingsOpen(false)}
-                    >
-                      Tutup
-                    </Button>
-                  </div>
-                  <div className="mt-4 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                    <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4">
-                      <div className="flex items-start gap-3">
-                        <CalendarClock className="mt-0.5 h-5 w-5 text-brand-600" />
-                        <div>
-                          <p className="font-semibold text-slate-900">
-                            Batas perubahan username
-                          </p>
-                          <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                            Demi kestabilan link publik dan pencarian client,
-                            username hanya dapat berubah maksimal{" "}
-                            {USERNAME_MAX_CHANGES} kali dalam{" "}
-                            {USERNAME_WINDOW_DAYS} hari.
-                          </p>
-                          <p className="mt-2 text-sm font-medium text-slate-700">
-                            {usernameQuota.resetLabel
-                              ? `Reset periode: ${usernameQuota.resetLabel}`
-                              : "Periode reset akan dibuat saat kamu mengganti username pertama kali."}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4">
-                      <p className="text-sm font-semibold text-rose-700">
-                        Hapus akun
-                      </p>
-                      <p className="mt-1 text-sm leading-relaxed text-rose-600">
-                        Aksi ini permanen. Semua video, profil, dan data creator
-                        akan ikut terhapus.
-                      </p>
-                      <Button
-                        type="button"
-                        className="mt-4 w-full"
-                        variant="danger"
-                        onClick={handleDeleteAccount}
-                        disabled={deletingAccount}
-                      >
-                        {deletingAccount
-                          ? "Menghapus akun..."
-                          : "Hapus Profile / Account"}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
               <div className="grid gap-5 lg:grid-cols-2">
                 <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="mb-4 flex items-center gap-2">
@@ -564,7 +482,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       />
                       <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.20),_transparent_38%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(219,234,254,0.86))]">
                         <div
-                          className="relative h-40 w-full"
+                          className="relative h-28 w-full sm:h-36"
                           style={
                             previewCover
                               ? {
@@ -578,13 +496,13 @@ export function ProfileForm({ user }: { user: DbUser }) {
                         >
                           <div className="absolute inset-0 flex items-end justify-between gap-4 p-4">
                             <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                                Cover Preview
+                              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                                Preview
                               </p>
-                              <p className="mt-2 text-sm text-slate-700">
+                              <p className="mt-1 max-w-[13rem] text-xs leading-relaxed text-slate-700 sm:text-sm">
                                 {previewCover
-                                  ? "Cover halaman creator akan memakai rasio yang sudah dirapikan."
-                                  : "Upload cover landscape agar halaman detail creator terasa premium."}
+                                  ? "Cover sudah siap dipakai."
+                                  : "Upload cover landscape agar profile tampil lebih rapi."}
                               </p>
                             </div>
                             <AvatarBadge
@@ -974,6 +892,57 @@ export function ProfileForm({ user }: { user: DbUser }) {
               </div>
             </form>
           </Card>
+          {showSettings ? (
+            <section
+              id="settings"
+              className="rounded-2xl border border-rose-200 bg-[linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(255,241,242,0.96))] p-4 shadow-sm"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="max-w-2xl">
+                  <div className="mb-2 flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4 text-rose-600" />
+                    <h2 className="text-base font-semibold text-slate-950">
+                      Settings akun
+                    </h2>
+                  </div>
+                  <p className="text-sm leading-relaxed text-slate-600">
+                    Area ini khusus pengaturan sensitif. Hapus akun dibuat
+                    terpisah dari form edit profil agar tidak tercampur dengan
+                    perubahan data utama.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    router.replace("/dashboard/profile", { scroll: false });
+                  }}
+                >
+                  Tutup
+                </Button>
+              </div>
+              <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-4">
+                <p className="text-sm font-semibold text-rose-700">
+                  Hapus akun
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-rose-600">
+                  Aksi ini permanen. Semua video, profil, dan data creator akan
+                  ikut terhapus.
+                </p>
+                <Button
+                  type="button"
+                  className="mt-4 w-full sm:w-auto"
+                  variant="danger"
+                  onClick={handleDeleteAccount}
+                  disabled={deletingAccount}
+                >
+                  {deletingAccount ? "Menghapus akun..." : "Hapus Profile / Account"}
+                </Button>
+              </div>
+            </section>
+          ) : null}
         </div>
 
         <div className="space-y-5 xl:sticky xl:top-24 xl:h-fit">

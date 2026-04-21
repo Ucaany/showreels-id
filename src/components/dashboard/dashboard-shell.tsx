@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Home, LogOut, Menu, UserRound, Video, X } from "lucide-react";
+import { Home, LogOut, Menu, Settings2, UserRound, Video, X } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { SitePreferences } from "@/components/site-preferences";
@@ -45,6 +45,17 @@ export function DashboardShell({
             label: dictionary.submitVideo,
             icon: Video,
             matchPrefix: "/dashboard/videos",
+          },
+        ];
+  const mobileNavItems: NavItem[] =
+    mode === "admin"
+      ? navItems
+      : [
+          ...navItems,
+          {
+            href: "/dashboard/profile?settings=1",
+            label: "Settings",
+            icon: Settings2,
           },
         ];
 
@@ -106,19 +117,17 @@ export function DashboardShell({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="mb-4">
-              <SitePreferences compact />
-            </div>
             <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
               <p className="text-sm font-semibold text-slate-900">{user.name}</p>
               <p className="text-xs text-slate-600">@{user.username}</p>
             </div>
             <nav className="space-y-1">
-              {navItems.map((item) => {
+              {mobileNavItems.map((item) => {
                 const Icon = item.icon;
+                const itemPath = item.href.split("?")[0];
                 const active =
-                  pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`) ||
+                  pathname === itemPath ||
+                  pathname.startsWith(`${itemPath}/`) ||
                   (item.matchPrefix ? pathname.startsWith(item.matchPrefix) : false);
 
                 return (
