@@ -2,31 +2,28 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
 import { AnimatePresence, LazyMotion, domAnimation, m } from "framer-motion";
 import {
   ArrowRight,
   BriefcaseBusiness,
-  Camera,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleCheckBig,
   CircleHelp,
-  HardDrive,
   LayoutGrid,
   LogOut,
   MapPin,
   Menu,
   PlayCircle,
   Sparkles,
-  ThumbsUp,
   UploadCloud,
   Users,
-  Video,
   X,
 } from "lucide-react";
+import { FaFacebook, FaGoogleDrive, FaInstagram, FaVimeoV, FaYoutube } from "react-icons/fa";
 import { AppLogo } from "@/components/app-logo";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { SitePreferences } from "@/components/site-preferences";
@@ -143,9 +140,10 @@ export function LandingPage({
 }: LandingPageProps) {
   const { dictionary, locale } = usePreferences();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [headerSolid, setHeaderSolid] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
+  const creatorScrollRef = useRef<HTMLDivElement | null>(null);
+  const testimonialScrollRef = useRef<HTMLDivElement | null>(null);
   const year = new Date().getFullYear();
 
   const loginLabel =
@@ -232,11 +230,11 @@ export function LandingPage({
   ];
 
   const platforms = [
-    { name: "YouTube", icon: PlayCircle, tone: "bg-rose-100 text-rose-700" },
-    { name: "Google Drive", icon: HardDrive, tone: "bg-emerald-100 text-emerald-700" },
-    { name: "Instagram", icon: Camera, tone: "bg-fuchsia-100 text-fuchsia-700" },
-    { name: "Facebook", icon: ThumbsUp, tone: "bg-blue-100 text-blue-700" },
-    { name: "Vimeo", icon: Video, tone: "bg-sky-100 text-sky-700" },
+    { name: "YouTube", icon: FaYoutube, tone: "bg-rose-100 text-rose-600" },
+    { name: "Google Drive", icon: FaGoogleDrive, tone: "bg-emerald-100 text-emerald-600" },
+    { name: "Instagram", icon: FaInstagram, tone: "bg-fuchsia-100 text-fuchsia-600" },
+    { name: "Facebook", icon: FaFacebook, tone: "bg-blue-100 text-blue-600" },
+    { name: "Vimeo", icon: FaVimeoV, tone: "bg-sky-100 text-sky-600" },
   ];
 
   const testimonials = useMemo(
@@ -272,12 +270,41 @@ export function LandingPage({
     [featuredCreators, locale]
   );
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 5200);
-    return () => clearInterval(timer);
-  }, [testimonials.length]);
+  const featuredCreatorSlides = useMemo(() => {
+    const byStableScore = <
+      T extends {
+        id: string;
+        username: string | null;
+      },
+    >(
+      data: T[]
+    ) => {
+      const score = (value: string) => {
+        let hash = 0;
+        for (let index = 0; index < value.length; index += 1) {
+          hash = (hash * 31 + value.charCodeAt(index)) % 2147483647;
+        }
+        return hash;
+      };
+
+      return [...data].sort((a, b) => {
+        const scoreA = score(`${a.id}-${a.username || ""}`);
+        const scoreB = score(`${b.id}-${b.username || ""}`);
+        return scoreA - scoreB;
+      });
+    };
+
+    const creatorsWithBio = featuredCreators.filter(
+      (creator) => creator.bio && creator.bio.trim().length > 0
+    );
+    const creatorsWithoutBio = featuredCreators.filter(
+      (creator) => !creator.bio || creator.bio.trim().length === 0
+    );
+
+    return [...byStableScore(creatorsWithBio), ...byStableScore(creatorsWithoutBio)].slice(0, 10);
+  }, [featuredCreators]);
+
+  const latestVideoRows = useMemo(() => featuredVideos.slice(0, 4), [featuredVideos]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -289,18 +316,17 @@ export function LandingPage({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const shownCreators = featuredCreators.slice(0, 3);
-  const shownVideos = featuredVideos.slice(0, 3);
-  const activeItem = testimonials[activeTestimonial];
-
-  const nextTestimonial = () => {
-    setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-  };
-
-  const prevTestimonial = () => {
-    setActiveTestimonial((prev) =>
-      prev === 0 ? testimonials.length - 1 : prev - 1
-    );
+  const slideHorizontal = (
+    ref: { current: HTMLDivElement | null },
+    direction: "left" | "right"
+  ) => {
+    const container = ref.current;
+    if (!container) return;
+    const delta = Math.max(container.clientWidth * 0.82, 280);
+    container.scrollBy({
+      left: direction === "right" ? delta : -delta,
+      behavior: "smooth",
+    });
   };
 
   return (
@@ -446,15 +472,15 @@ export function LandingPage({
           <div className="relative mx-auto flex min-h-[92vh] w-full max-w-7xl flex-col justify-end px-4 pb-12 pt-28 sm:px-6 sm:pb-16 sm:pt-32">
             <div className="mx-auto max-w-4xl text-center">
               <div className="flex justify-center">
-                <Badge className="inline-flex items-center gap-2 bg-white/95 px-4 py-2 !text-slate-950 shadow-[0_10px_24px_rgba(15,23,42,0.12)] ring-1 ring-white/80 backdrop-blur-sm">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                <Badge className="inline-flex items-center gap-2 border border-white/60 bg-white/10 px-4 py-2 !text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/60 bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-100">
                     <span className="relative flex h-2.5 w-2.5 items-center justify-center">
                       <span className="absolute inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400/60 animate-ping" />
                       <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                     </span>
                     Live
                   </span>
-                  <span className="text-slate-950">{dictionary.landingBadge}</span>
+                  <span className="text-white">{dictionary.landingBadge}</span>
                 </Badge>
               </div>
               <h1 className="mt-6 font-display text-4xl font-semibold leading-tight text-white drop-shadow-[0_12px_28px_rgba(15,23,42,0.32)] sm:text-6xl lg:text-7xl">
@@ -497,10 +523,8 @@ export function LandingPage({
                       whileHover={{ y: -3, scale: 1.03 }}
                       className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/72 px-3 py-1.5 text-xs font-semibold text-slate-800 backdrop-blur-md"
                     >
-                      <span
-                        className={`inline-flex h-5 w-5 items-center justify-center rounded-full ${item.tone}`}
-                      >
-                        <Icon className="h-3 w-3" />
+                      <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${item.tone}`}>
+                        <Icon className="h-3.5 w-3.5" />
                       </span>
                       {item.name}
                     </m.span>
@@ -582,63 +606,81 @@ export function LandingPage({
                 </p>
               </div>
 
-              <div className="mx-auto mt-6 grid max-w-5xl min-w-0 gap-3 text-left lg:grid-cols-3">
-                {shownCreators.length === 0 ? (
-                  <p className="text-sm text-slate-600">
+              <div className="mx-auto mt-5 flex max-w-6xl items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => slideHorizontal(creatorScrollRef, "left")}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
+                  aria-label="Slide creators left"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => slideHorizontal(creatorScrollRef, "right")}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
+                  aria-label="Slide creators right"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div
+                ref={creatorScrollRef}
+                className="mx-auto mt-4 flex max-w-6xl snap-x snap-mandatory gap-4 overflow-x-auto pb-2 text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {featuredCreatorSlides.length === 0 ? (
+                  <p className="w-full text-sm text-slate-600">
                     {locale === "en" ? "No creator yet." : "Belum ada creator."}
                   </p>
                 ) : (
-                  shownCreators.map((creator, index) => (
+                  featuredCreatorSlides.map((creator, index) => (
                     <m.div
                       key={creator.id}
-                      className="min-w-0"
+                      className="min-w-[86%] shrink-0 snap-start sm:min-w-[48%] lg:min-w-[32%] xl:min-w-[24%]"
                       initial={{ opacity: 0, y: 18 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
-                      transition={{ delay: index * 0.08, duration: 0.28 }}
+                      transition={{ delay: index * 0.05, duration: 0.24 }}
                     >
                       <Link
                         href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                        className="flex h-full min-w-0 flex-col overflow-hidden border-b border-slate-200 py-4 transition hover:border-brand-300 sm:px-3"
+                        className="flex h-full min-w-0 flex-col rounded-[1.5rem] border border-slate-200 bg-white/90 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_34px_rgba(37,99,235,0.1)]"
                       >
-                        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="flex min-w-0 items-center gap-3">
-                            <AvatarBadge
-                              name={creator.name || "Creator"}
-                              avatarUrl={creator.image || ""}
-                              size="lg"
-                            />
-                            <div className="min-w-0">
-                              <p className="truncate text-lg font-semibold text-slate-950">
-                                {creator.name || "Creator"}
-                              </p>
-                              <p className="truncate text-sm text-slate-500">
-                                @{creator.username || "creator"}
-                              </p>
-                            </div>
+                        <div className="flex min-w-0 items-center gap-3">
+                          <AvatarBadge
+                            name={creator.name || "Creator"}
+                            avatarUrl={creator.image || ""}
+                            size="lg"
+                          />
+                          <div className="min-w-0">
+                            <p className="truncate text-base font-semibold text-slate-950">
+                              {creator.name || "Creator"}
+                            </p>
+                            <p className="truncate text-sm text-slate-500">
+                              @{creator.username || "creator"}
+                            </p>
                           </div>
-                          <span className="inline-flex w-fit max-w-full shrink-0 items-center gap-1 truncate rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-                            <MapPin className="h-3.5 w-3.5 text-brand-600" />
-                            <span className="truncate">{creator.city || "Lokasi"}</span>
-                          </span>
                         </div>
-
                         <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-600">
                           {creator.bio || (locale === "en" ? "No bio yet." : "Bio belum ditambahkan.")}
                         </p>
-
-                        <div className="mt-4 flex min-w-0 items-center justify-between gap-3 text-sm sm:mt-auto">
+                        <div className="mt-4 flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 pt-3 text-sm">
+                          <span className="inline-flex min-w-0 items-center gap-1 truncate text-slate-500">
+                            <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-600" />
+                            <span className="truncate">{creator.city || "Lokasi"}</span>
+                          </span>
                           <span className="shrink-0 text-slate-500">
                             {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
                               month: "short",
                               year: "numeric",
                             }).format(creator.createdAt)}
                           </span>
-                          <span className="inline-flex min-w-0 items-center gap-1 truncate font-semibold text-brand-700">
-                            <span className="truncate">{locale === "en" ? "Profile" : "Profil"}</span>
-                            <ArrowRight className="h-4 w-4" />
-                          </span>
                         </div>
+                        <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-700">
+                          {locale === "en" ? "Profile" : "Profil"}
+                          <ArrowRight className="h-4 w-4" />
+                        </span>
                       </Link>
                     </m.div>
                   ))
@@ -647,29 +689,26 @@ export function LandingPage({
             </section>
 
             <section id="latest-videos" className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
-              <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
-                    Latest Videos
-                  </p>
-                  <h2 className="mt-2 font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
-                    {locale === "en" ? "Fresh work from creators" : "Video terbaru dari creator"}
-                  </h2>
-                </div>
-                <p className="max-w-xl text-sm text-slate-600 lg:justify-self-end lg:text-right">
-                  {locale === "en"
-                    ? "The latest published work, presented in a simple and clean card layout."
-                    : "Karya terbaru yang sudah dipublish, ditampilkan dalam card yang sederhana dan rapi."}
-                </p>
+              <div className="flex justify-center">
+                <h2 className="inline-flex items-center gap-2 text-center font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
+                  {locale === "en" ? "Latest videos from creators" : "Video terbaru dari creator"}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                    <span className="relative flex h-2.5 w-2.5 items-center justify-center">
+                      <span className="absolute inline-flex h-2.5 w-2.5 animate-ping rounded-full bg-emerald-400/70" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                    </span>
+                    Live
+                  </span>
+                </h2>
               </div>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {shownVideos.length === 0 ? (
+              <div className="mx-auto mt-6 max-w-5xl space-y-3">
+                {latestVideoRows.length === 0 ? (
                   <p className="text-sm text-slate-600">
                     {locale === "en" ? "No video yet." : "Belum ada video."}
                   </p>
                 ) : (
-                  shownVideos.map((video) => {
+                  latestVideoRows.map((video) => {
                     const thumbnail =
                       getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
                     const source = detectVideoSource(video.sourceUrl);
@@ -694,16 +733,16 @@ export function LandingPage({
                       >
                         <Link
                           href={`/v/${video.publicSlug}`}
-                          className="flex h-full flex-col rounded-[1.6rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_18px_36px_rgba(37,99,235,0.1)]"
+                          className="group grid gap-3 rounded-[1.4rem] border border-slate-200 bg-white/92 p-3 shadow-sm transition hover:border-brand-300 hover:shadow-[0_16px_34px_rgba(37,99,235,0.12)] sm:p-4 md:grid-cols-[220px_1fr]"
                         >
-                          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-100">
+                          <div className="overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
                             {thumbnail ? (
                               <Image
                                 src={thumbnail}
                                 alt={`Thumbnail ${video.title}`}
-                                width={560}
-                                height={315}
-                                sizes="(max-width: 768px) 100vw, 33vw"
+                                width={440}
+                                height={248}
+                                sizes="(max-width: 768px) 100vw, 220px"
                                 className="aspect-video w-full object-cover"
                                 unoptimized
                                 loading="lazy"
@@ -718,35 +757,38 @@ export function LandingPage({
                               </div>
                             )}
                           </div>
-                          <div className="mt-4 flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="line-clamp-2 text-base font-semibold text-slate-950">
-                                {video.title}
-                              </p>
-                              <p className="mt-1 text-sm text-slate-500">
-                                {video.author?.name || "Creator"}
-                              </p>
+
+                          <div className="min-w-0">
+                            <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="line-clamp-2 text-base font-semibold text-slate-950">
+                                  {video.title}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-500">
+                                  {video.author?.name || "Creator"}
+                                </p>
+                              </div>
+                              <span className="inline-flex shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                {sourceLabel}
+                              </span>
                             </div>
-                            <span className="inline-flex shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-                              {sourceLabel}
-                            </span>
-                          </div>
 
-                          <p className="mt-3 min-h-[48px] line-clamp-2 text-sm leading-relaxed text-slate-600">
-                            {video.description}
-                          </p>
+                            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-600">
+                              {video.description}
+                            </p>
 
-                          <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4 text-sm">
-                            <span className="text-slate-500">
-                              {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
-                                month: "short",
-                                year: "numeric",
-                              }).format(video.createdAt)}
-                            </span>
-                            <span className="inline-flex items-center gap-1 font-semibold text-brand-700">
-                              {locale === "en" ? "View video" : "Lihat video"}
-                              <ArrowRight className="h-4 w-4" />
-                            </span>
+                            <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
+                              <span className="text-slate-500">
+                                {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
+                                  month: "short",
+                                  year: "numeric",
+                                }).format(video.createdAt)}
+                              </span>
+                              <span className="inline-flex items-center gap-1 font-semibold text-brand-700">
+                                {locale === "en" ? "View video" : "Lihat video"}
+                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                              </span>
+                            </div>
                           </div>
                         </Link>
                       </m.div>
@@ -798,94 +840,65 @@ export function LandingPage({
 
             <section className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
               <div className="rounded-[2rem] border border-border bg-white/88 p-6 shadow-card backdrop-blur-sm sm:p-8">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
-                      Testimonial
-                    </p>
-                    <h2 className="mt-2 font-display text-xl font-semibold text-slate-950 sm:text-3xl">
-                      {locale === "en" ? "What creators say" : "Kata para creator"}
-                    </h2>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={prevTestimonial}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700"
-                      aria-label="Previous testimonial"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={nextTestimonial}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700"
-                      aria-label="Next testimonial"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
+                <div className="text-center">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-700">
+                    Testimonial
+                  </p>
+                  <h2 className="mt-2 font-display text-xl font-semibold text-slate-950 sm:text-3xl">
+                    {locale === "en" ? "What creators say" : "Kata para creator"}
+                  </h2>
                 </div>
 
-                <div className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-                  <AnimatePresence mode="wait">
-                    <m.div
-                      key={`${activeItem.name}-${activeTestimonial}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.24 }}
-                      className="rounded-[1.8rem] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98))] p-4 sm:p-6"
+                <div className="mt-5 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => slideHorizontal(testimonialScrollRef, "left")}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
+                    aria-label="Slide testimonials left"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => slideHorizontal(testimonialScrollRef, "right")}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
+                    aria-label="Slide testimonials right"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div
+                  ref={testimonialScrollRef}
+                  className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {testimonials.map((item, index) => (
+                    <m.article
+                      key={item.name}
+                      initial={{ opacity: 0, y: 14 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{ delay: index * 0.06, duration: 0.24 }}
+                      className="min-w-[86%] shrink-0 snap-start rounded-[1.2rem] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(239,246,255,0.96))] p-4 text-left sm:min-w-[46%] lg:min-w-[31%]"
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         <AvatarBadge
-                          name={activeItem.name}
-                          avatarUrl={activeItem.image}
-                          size="lg"
+                          name={item.name}
+                          avatarUrl={item.image}
+                          size="md"
                         />
-                        <div>
-                          <p className="text-lg font-semibold text-slate-950">{activeItem.name}</p>
-                          <p className="text-sm text-slate-500">{activeItem.role}</p>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-950">
+                            {item.name}
+                          </p>
+                          <p className="text-sm text-slate-500">{item.role}</p>
                         </div>
                       </div>
-                      <p className="mt-5 text-base font-medium leading-8 text-slate-900 sm:mt-6 sm:text-2xl sm:leading-relaxed">
-                        &ldquo;{activeItem.quote}&rdquo;
+                      <p className="mt-3 text-sm leading-relaxed text-slate-700">
+                        &ldquo;{item.quote}&rdquo;
                       </p>
-                    </m.div>
-                  </AnimatePresence>
-
-                  <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                    {testimonials.map((item, index) => (
-                      <button
-                        key={item.name}
-                        type="button"
-                        onClick={() => setActiveTestimonial(index)}
-                        className={cn(
-                          "rounded-[1.4rem] border p-4 text-left transition",
-                          activeTestimonial === index
-                            ? "border-brand-300 bg-brand-50/80"
-                            : "border-slate-200 bg-white hover:border-brand-200"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <AvatarBadge
-                            name={item.name}
-                            avatarUrl={item.image}
-                            size="md"
-                          />
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-slate-950">
-                              {item.name}
-                            </p>
-                            <p className="text-xs text-slate-500">{item.role}</p>
-                          </div>
-                        </div>
-                        <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-600">
-                          {item.quote}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
+                    </m.article>
+                  ))}
                 </div>
               </div>
             </section>
@@ -893,13 +906,13 @@ export function LandingPage({
         </div>
 
         <section className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
-          <div className="rounded-[2rem] border border-brand-200 bg-[linear-gradient(135deg,rgba(37,99,235,0.97),rgba(29,78,216,0.92))] p-6 text-white shadow-[0_28px_80px_rgba(37,99,235,0.25)] sm:p-8">
+          <div className="rounded-[2rem] border border-white/70 bg-white/12 p-6 text-slate-900 shadow-[0_28px_80px_rgba(15,23,42,0.08)] backdrop-blur-md sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/80">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
                   Ready
                 </p>
-                <h2 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">
+                <h2 className="mt-2 font-display text-3xl font-semibold text-slate-950 sm:text-4xl">
                   {locale === "en"
                     ? "Publish your portfolio today."
                     : "Publish portofoliomu hari ini."}
@@ -909,20 +922,15 @@ export function LandingPage({
                 <Link href="/auth/signup">
                   <Button
                     size="lg"
-                    className="min-w-[170px] border border-white !bg-white !text-slate-950 font-semibold shadow-[0_14px_28px_rgba(15,23,42,0.18)] hover:!bg-slate-100"
+                    className="min-w-[170px] border border-brand-700 bg-brand-600 text-white shadow-[0_14px_28px_rgba(15,23,42,0.18)] hover:bg-brand-700"
                   >
                     {signupLabel}
-                  </Button>
-                </Link>
-                <Link href="/customer-service">
-                  <Button size="lg" variant="secondary">
-                    Customer Service
                   </Button>
                 </Link>
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-4 text-sm text-white/92">
+            <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-700">
               <span className="inline-flex items-center gap-1">
                 <CircleCheckBig className="h-4 w-4" />
                 YouTube and Google Drive

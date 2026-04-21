@@ -22,6 +22,21 @@ export default async function DashboardPage() {
   const publicVideosCount = myVideos.filter(
     (video) => video.visibility === "public"
   ).length;
+  const draftVideosCount = myVideos.filter(
+    (video) => video.visibility === "draft"
+  ).length;
+  const privateVideosCount = myVideos.filter(
+    (video) => video.visibility === "private"
+  ).length;
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 11
+      ? "Selamat pagi"
+      : hour < 16
+        ? "Selamat siang"
+        : hour < 19
+          ? "Selamat sore"
+          : "Selamat malam";
 
   return (
     <div className="space-y-6">
@@ -33,6 +48,7 @@ export default async function DashboardPage() {
               <h1 className="mt-1 font-display text-2xl font-semibold text-slate-900">
                 {user.name ?? "Creator"}
               </h1>
+              <p className="mt-1 text-sm font-medium text-brand-700">{greeting}</p>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-700">
                 Satu dashboard untuk mengatur profil creator, status video, dan
                 link publik yang siap dibagikan ke client.
@@ -80,7 +96,7 @@ export default async function DashboardPage() {
               </p>
             </div>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-1">
+          <div className="mt-4 grid gap-3 sm:grid-cols-3 md:grid-cols-1 xl:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                 Publik aktif
@@ -91,10 +107,18 @@ export default async function DashboardPage() {
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-3">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                Draft + private
+                Draft
               </p>
               <p className="mt-2 text-lg font-semibold text-slate-900">
-                {myVideos.length - publicVideosCount}
+                {draftVideosCount}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Private
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">
+                {privateVideosCount}
               </p>
             </div>
           </div>

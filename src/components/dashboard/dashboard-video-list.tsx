@@ -172,9 +172,8 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                   </span>
                 )}
                 <Link href={`/dashboard/videos/${video.id}`}>
-                  <Button variant="secondary" size="sm">
+                  <Button variant="secondary" size="sm" aria-label="Edit video" title="Edit video">
                     <PencilLine className="h-4 w-4" />
-                    Edit
                   </Button>
                 </Link>
                 <Button
@@ -182,9 +181,13 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                   size="sm"
                   disabled={deletingId === video.id}
                   onClick={() => handleDelete(video.id)}
+                  aria-label="Hapus video"
+                  title="Hapus video"
                 >
                   <Trash2 className="h-4 w-4" />
-                  {deletingId === video.id ? "Menghapus..." : "Hapus"}
+                  <span className="sr-only">
+                    {deletingId === video.id ? "Menghapus video" : "Hapus video"}
+                  </span>
                 </Button>
               </div>
             </div>

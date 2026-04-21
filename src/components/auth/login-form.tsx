@@ -7,7 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { Globe2, LockKeyhole, Mail } from "lucide-react";
+import { LockKeyhole, Mail } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,6 +90,7 @@ export function LoginForm({
     <AuthShell
       title={dictionary.authLoginTitle}
       subtitle="Masuk dengan tampilan yang lebih ringkas, aman, dan mudah dipahami."
+      showPreferences={false}
     >
       <motion.form
         onSubmit={onSubmit}
@@ -104,7 +105,7 @@ export function LoginForm({
           </p>
         ) : null}
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
+        <div className="space-y-2">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
             <Mail className="h-4 w-4 text-brand-600" />
             Email
@@ -115,7 +116,7 @@ export function LoginForm({
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
+        <div className="space-y-2">
           <div className="mb-2 flex items-center justify-between gap-3">
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
               <LockKeyhole className="h-4 w-4 text-brand-600" />
@@ -163,7 +164,9 @@ export function LoginForm({
                 })
               }
             >
-              <Globe2 className="h-4 w-4" />
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] font-semibold text-slate-700">
+                G
+              </span>
               {dictionary.continueGoogle}
             </Button>
           </>

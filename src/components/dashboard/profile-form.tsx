@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -151,8 +151,10 @@ export function ProfileForm({ user }: { user: DbUser }) {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [cropTarget, setCropTarget] = useState<CropTarget | null>(null);
+  const [autoSaveLabel, setAutoSaveLabel] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const coverFileInputRef = useRef<HTMLInputElement | null>(null);
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -318,6 +320,30 @@ export function ProfileForm({ user }: { user: DbUser }) {
     }
   };
 
+  const buildProfilePayload = (values: FormValues) => ({
+    fullName: values.fullName,
+    username: values.username,
+    role: values.role.trim(),
+    avatarUrl: normalizeAvatarUrl(values.avatarUrl || ""),
+    coverImageUrl: normalizeAvatarUrl(values.coverImageUrl || ""),
+    bio: values.bio,
+    experience: values.experience,
+    birthDate: values.birthDate?.trim() || "",
+    city: values.city.trim(),
+    address: values.address.trim(),
+    contactEmail: values.contactEmail.trim().toLowerCase(),
+    phoneNumber: values.phoneNumber.trim(),
+    websiteUrl: normalizeSocialUrl(values.websiteUrl || ""),
+    instagramUrl: normalizeSocialUrl(values.instagramUrl || ""),
+    youtubeUrl: normalizeSocialUrl(values.youtubeUrl || ""),
+    facebookUrl: normalizeSocialUrl(values.facebookUrl || ""),
+    threadsUrl: normalizeSocialUrl(values.threadsUrl || ""),
+    skills: values.skills
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
+  });
+
   const onSubmit = form.handleSubmit(async (values) => {
     setMessage("");
     setError("");
@@ -338,29 +364,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        fullName: values.fullName,
-        username: values.username,
-        role: values.role.trim(),
-        avatarUrl: normalizeAvatarUrl(values.avatarUrl || ""),
-        coverImageUrl: normalizeAvatarUrl(values.coverImageUrl || ""),
-        bio: values.bio,
-        experience: values.experience,
-        birthDate: values.birthDate?.trim() || "",
-        city: values.city.trim(),
-        address: values.address.trim(),
-        contactEmail: values.contactEmail.trim().toLowerCase(),
-        phoneNumber: values.phoneNumber.trim(),
-        websiteUrl: normalizeSocialUrl(values.websiteUrl || ""),
-        instagramUrl: normalizeSocialUrl(values.instagramUrl || ""),
-        youtubeUrl: normalizeSocialUrl(values.youtubeUrl || ""),
-        facebookUrl: normalizeSocialUrl(values.facebookUrl || ""),
-        threadsUrl: normalizeSocialUrl(values.threadsUrl || ""),
-        skills: values.skills
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
-      }),
+      body: JSON.stringify(buildProfilePayload(values)),
     });
 
     const payload = (await response.json().catch(() => null)) as
@@ -375,6 +379,78 @@ export function ProfileForm({ user }: { user: DbUser }) {
     setMessage("Profil dashboard berhasil diperbarui.");
     router.refresh();
   });
+
+  useEffect(() => {
+    if (!form.formState.isDirty || form.formState.isSubmitting) {
+      return;
+    }
+
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+    }
+
+    autosaveTimerRef.current = setTimeout(async () => {
+      const nextUsername = form.getValues("username").trim();
+      const currentUsername = user.username || "";
+
+      // Username tetap pakai submit manual agar ada konfirmasi kuota perubahan.
+      if (nextUsername !== currentUsername) {
+        return;
+      }
+
+      const valid = await form.trigger(undefined, { shouldFocus: false });
+      if (!valid) {
+        return;
+      }
+
+      setAutoSaveLabel("saving");
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(buildProfilePayload(form.getValues())),
+      });
+
+      if (!response.ok) {
+        setAutoSaveLabel("error");
+        return;
+      }
+
+      setAutoSaveLabel("saved");
+      setTimeout(() => setAutoSaveLabel("idle"), 1800);
+      router.refresh();
+    }, 1200);
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+      }
+    };
+  }, [
+    form,
+    form.formState.isDirty,
+    form.formState.isSubmitting,
+    router,
+    user.username,
+    watchedAddress,
+    watchedAvatar,
+    watchedBio,
+    watchedBirthDate,
+    watchedCity,
+    watchedContactEmail,
+    watchedCover,
+    watchedExperience,
+    watchedFacebook,
+    watchedInstagram,
+    watchedName,
+    watchedPhoneNumber,
+    watchedRole,
+    watchedThreads,
+    watchedUsername,
+    watchedWebsiteUrl,
+    watchedYoutube,
+  ]);
 
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
@@ -418,6 +494,15 @@ export function ProfileForm({ user }: { user: DbUser }) {
                   <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
                     Rapikan identitas creator, kontak publik, cover, dan avatar
                     dari satu halaman yang lebih rapi.
+                  </p>
+                  <p className="text-xs font-medium text-slate-500">
+                    {autoSaveLabel === "saving"
+                      ? "Auto-save: menyimpan perubahan..."
+                      : autoSaveLabel === "saved"
+                        ? "Auto-save: perubahan tersimpan."
+                        : autoSaveLabel === "error"
+                          ? "Auto-save: gagal menyimpan, cek koneksi."
+                          : "Auto-save aktif untuk perubahan profil."}
                   </p>
                   <div className="hidden flex-wrap items-center gap-2 lg:flex">
                     <Link href="/dashboard">

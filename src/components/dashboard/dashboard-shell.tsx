@@ -7,7 +7,6 @@ import { signOut } from "next-auth/react";
 import { Home, LogOut, Menu, Settings2, UserRound, Video, X } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { AvatarBadge } from "@/components/avatar-badge";
-import { SitePreferences } from "@/components/site-preferences";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { usePreferences } from "@/hooks/use-preferences";
@@ -64,8 +63,7 @@ export function DashboardShell({
       <header className="sticky top-0 z-30 border-b border-border bg-surface backdrop-blur">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <AppLogo />
-          <div className="hidden items-center gap-3 lg:flex">
-            <SitePreferences compact />
+          <div className="hidden items-center gap-3 md:flex">
             <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
               <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold text-slate-900">
@@ -77,6 +75,13 @@ export function DashboardShell({
               </div>
               <AvatarBadge name={user.name || "Creator"} avatarUrl={user.image || ""} size="sm" />
             </div>
+            {mode === "creator" ? (
+              <Link href={`/creator/${user.username || "creator"}`}>
+                <Button variant="secondary" size="sm">
+                  Lihat Profile
+                </Button>
+              </Link>
+            ) : null}
             <Button
               variant="secondary"
               size="sm"
@@ -88,7 +93,7 @@ export function DashboardShell({
           </div>
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-900 lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-900 md:hidden"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-label="Open dashboard menu"
           >
@@ -98,7 +103,7 @@ export function DashboardShell({
       </header>
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-40 bg-slate-950/30 lg:hidden">
+        <div className="fixed inset-0 z-40 bg-slate-950/30 md:hidden">
           <button
             type="button"
             className="absolute inset-0 h-full w-full cursor-default"
@@ -148,6 +153,13 @@ export function DashboardShell({
                 );
               })}
             </nav>
+            {mode === "creator" ? (
+              <Link href={`/creator/${user.username || "creator"}`} onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="secondary" size="sm" className="mt-4 w-full">
+                  Lihat Profile
+                </Button>
+              </Link>
+            ) : null}
             <Button
               variant="secondary"
               size="sm"
@@ -161,12 +173,7 @@ export function DashboardShell({
         </div>
       ) : null}
 
-      <div
-        className={cn(
-          "mx-auto grid w-full max-w-7xl gap-6 px-3 py-5 sm:px-6 sm:py-6",
-          hideDesktopSidebar ? "lg:grid-cols-1" : "lg:grid-cols-[220px_1fr]"
-        )}
-      >
+      <div className={cn("mx-auto grid w-full max-w-7xl gap-6 px-3 py-5 sm:px-6 sm:py-6", hideDesktopSidebar ? "lg:grid-cols-1" : "lg:grid-cols-[220px_1fr]")}>
         <aside
           className={cn(
             "hidden rounded-2xl border border-border bg-surface p-3 shadow-card lg:h-fit",

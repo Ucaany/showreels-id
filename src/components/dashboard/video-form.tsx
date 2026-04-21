@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -75,7 +75,17 @@ export function VideoForm({
   const [success, setSuccess] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [autoSaveInfo, setAutoSaveInfo] = useState("Auto-save aktif.");
   const thumbnailFileRef = useRef<HTMLInputElement | null>(null);
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const storageKey = useMemo(
+    () =>
+      mode === "edit" && initialVideo
+        ? `video-form-draft:${initialVideo.id}`
+        : "video-form-draft:create",
+    [initialVideo, mode]
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -109,6 +119,73 @@ export function VideoForm({
     mode === "edit" && !watchedTitle?.trim()
       ? initialVideo?.publicSlug || "video-portofolio"
       : slugifyText(watchedTitle || initialVideo?.title || "video-portofolio");
+
+  useEffect(() => {
+    if (mode !== "create") {
+      return;
+    }
+
+    const rawDraft = window.localStorage.getItem(storageKey);
+    if (!rawDraft) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(rawDraft) as Partial<FormValues>;
+      form.reset(
+        {
+          title: parsed.title || "",
+          sourceUrl: parsed.sourceUrl || "",
+          thumbnailUrl: parsed.thumbnailUrl || "",
+          extraVideoUrls: parsed.extraVideoUrls || "",
+          imageUrls: parsed.imageUrls || "",
+          tags: parsed.tags || "",
+          visibility: parsed.visibility || "public",
+          description: parsed.description || "",
+        },
+        { keepDirty: false }
+      );
+    } catch {}
+  }, [form, mode, storageKey]);
+
+  useEffect(() => {
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+    }
+
+    autosaveTimerRef.current = setTimeout(() => {
+      window.localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          title: watchedTitle || "",
+          sourceUrl: watchedSourceUrl || "",
+          thumbnailUrl: watchedThumbnailUrl || "",
+          extraVideoUrls: watchedExtraVideoUrls || "",
+          imageUrls: watchedImageUrls || "",
+          tags: watchedTags || "",
+          visibility: watchedVisibility || "public",
+          description: form.getValues("description") || "",
+        })
+      );
+      setAutoSaveInfo("Draft lokal tersimpan.");
+    }, 700);
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+      }
+    };
+  }, [
+    form,
+    storageKey,
+    watchedExtraVideoUrls,
+    watchedImageUrls,
+    watchedSourceUrl,
+    watchedTags,
+    watchedThumbnailUrl,
+    watchedTitle,
+    watchedVisibility,
+  ]);
 
   const handleGenerateDescription = async () => {
     setSubmitError("");
@@ -215,6 +292,7 @@ export function VideoForm({
     }
 
     setSuccess("Video berhasil disimpan.");
+    window.localStorage.removeItem(storageKey);
     router.push(
       values.visibility === "public"
         ? `/v/${payload?.video?.publicSlug ?? ""}`
@@ -273,6 +351,7 @@ export function VideoForm({
                 ? "Perbarui detail video, thumbnail, dan tampilan publik yang akan dilihat client."
                 : "Isi data video dengan urutan yang rapi, lalu cek preview sebelum disimpan."}
             </p>
+            <p className="mt-1 text-xs font-medium text-slate-500">{autoSaveInfo}</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
             <p className="font-semibold text-slate-900">Status preview</p>
