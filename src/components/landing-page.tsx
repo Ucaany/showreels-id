@@ -169,7 +169,7 @@ export function LandingPage({
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
   const [creatorDeviceSeed, setCreatorDeviceSeed] = useState("creator-seed-default");
   const [creatorTimeBucket, setCreatorTimeBucket] = useState(0);
-  const [latestVideosView, setLatestVideosView] = useState<"grid" | "list">("grid");
+  const [latestVideosView, setLatestVideosView] = useState<"grid" | "list">("list");
   const supabase = createClient();
   const year = new Date().getFullYear();
 
@@ -315,7 +315,7 @@ export function LandingPage({
     return [...shuffledWithBio, ...shuffledWithoutBio].slice(0, 10);
   }, [featuredCreators, creatorDeviceSeed, creatorTimeBucket]);
 
-  const latestVideoRows = useMemo(() => featuredVideos.slice(0, 3), [featuredVideos]);
+  const latestVideoRows = useMemo(() => featuredVideos.slice(0, 6), [featuredVideos]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -325,6 +325,17 @@ export function LandingPage({
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const desktopQuery = window.matchMedia("(min-width: 768px)");
+    const syncDesktopDefault = window.setTimeout(() => {
+      if (desktopQuery.matches) {
+        setLatestVideosView("grid");
+      }
+    }, 0);
+
+    return () => window.clearTimeout(syncDesktopDefault);
   }, []);
 
   useEffect(() => {
@@ -747,7 +758,7 @@ export function LandingPage({
                 className={cn(
                   "mx-auto mt-4 max-w-6xl",
                   latestVideosView === "grid"
-                    ? "grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+                    ? "grid grid-cols-2 gap-3 xl:grid-cols-3"
                     : "space-y-3"
                 )}
               >
@@ -776,52 +787,20 @@ export function LandingPage({
                           href={`/v/${video.publicSlug}`}
                           aria-label={`${locale === "en" ? "View video" : "Lihat video"} ${video.title}`}
                           className={cn(
-                            "group flex min-w-0 flex-col gap-3 rounded-[1.2rem] border border-slate-200 bg-white/92 px-4 py-4 shadow-sm transition hover:border-brand-300 hover:shadow-[0_16px_30px_rgba(37,99,235,0.12)] sm:px-5 sm:py-5",
+                            "group min-w-0 rounded-[1.2rem] border border-slate-200 bg-white/92 shadow-sm transition hover:border-brand-300 hover:shadow-[0_16px_30px_rgba(37,99,235,0.12)]",
                             latestVideosView === "grid"
-                              ? "h-full min-h-[392px]"
-                              : ""
+                              ? "flex h-full min-h-[292px] flex-col gap-2 px-3 py-3 sm:min-h-[360px] sm:gap-3 sm:px-5 sm:py-5"
+                              : "grid grid-cols-[112px_minmax(0,1fr)] items-stretch gap-3 px-3 py-3 sm:grid-cols-[160px_minmax(0,1fr)] sm:px-4 sm:py-4"
                           )}
                         >
-                          <div className="flex min-w-0 items-start justify-between gap-3">
-                            <p className="line-clamp-2 min-w-0 text-base font-semibold text-slate-950">
-                              {video.title}
-                            </p>
-                            <span
-                              className={cn(
-                                "inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
-                                sourceMeta.className
-                              )}
-                            >
-                              {sourceMeta.label}
-                            </span>
-                          </div>
-
-                          <div className="flex min-w-0 items-center justify-between gap-3">
-                            <AvatarBadge
-                              name={video.author?.name || "Creator"}
-                              avatarUrl={video.author?.image || ""}
-                              size="sm"
-                            />
-                            <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-slate-700">
-                                  {video.author?.name || "Creator"}
-                                </p>
-                                <p className="truncate text-xs text-slate-500">
-                                  @{video.author?.username || "creator"}
-                                </p>
-                              </div>
-                              <span className="shrink-0 text-xs text-slate-500">
-                                {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                }).format(video.createdAt)}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
+                          <div
+                            className={cn(
+                              "overflow-hidden rounded-xl border border-slate-100 bg-slate-100",
+                              latestVideosView === "list"
+                                ? "h-full min-h-[92px]"
+                                : ""
+                            )}
+                          >
                             {thumbnail ? (
                               <Image
                                 src={thumbnail}
@@ -829,13 +808,25 @@ export function LandingPage({
                                 width={440}
                                 height={248}
                                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                                className="aspect-video h-full w-full object-cover"
+                                className={cn(
+                                  "h-full w-full object-cover",
+                                  latestVideosView === "grid"
+                                    ? "aspect-video"
+                                    : "aspect-[4/5] sm:aspect-video"
+                                )}
                                 unoptimized
                                 loading="lazy"
                                 referrerPolicy="no-referrer"
                               />
                             ) : (
-                              <div className="flex aspect-video items-center justify-center bg-slate-100 text-sm font-medium text-slate-500">
+                              <div
+                                className={cn(
+                                  "flex h-full w-full items-center justify-center bg-slate-100 text-sm font-medium text-slate-500",
+                                  latestVideosView === "grid"
+                                    ? "aspect-video"
+                                    : "aspect-[4/5] sm:aspect-video"
+                                )}
+                              >
                                 <span className="inline-flex items-center gap-1">
                                   <PlayCircle className="h-4 w-4 text-brand-600" />
                                   Video
@@ -844,25 +835,86 @@ export function LandingPage({
                             )}
                           </div>
 
-                          <p className="line-clamp-2 text-sm leading-relaxed text-slate-600">
-                            {video.description}
-                          </p>
-
-                          <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
-                            <div className="flex min-w-0 items-center gap-2 text-xs font-medium text-slate-600">
-                              <span className="rounded-full bg-slate-100 px-2.5 py-1">
-                                Durasi: {video.durationLabel || "-"}
-                              </span>
-                              <span className="rounded-full bg-slate-100 px-2.5 py-1">
-                                Output: {video.outputType || "-"}
+                          <div className="flex min-w-0 flex-col">
+                            <div className="flex min-w-0 items-start justify-between gap-2">
+                              <p
+                                className={cn(
+                                  "line-clamp-2 min-w-0 font-semibold text-slate-950",
+                                  latestVideosView === "grid"
+                                    ? "text-sm sm:text-base"
+                                    : "text-sm sm:text-base"
+                                )}
+                              >
+                                {video.title}
+                              </p>
+                              <span
+                                className={cn(
+                                  "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:px-2.5 sm:py-1 sm:text-xs",
+                                  sourceMeta.className
+                                )}
+                              >
+                                {sourceMeta.label}
                               </span>
                             </div>
-                            <span
-                              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white shadow-sm transition group-hover:bg-brand-700"
-                              title={locale === "en" ? "View video" : "Lihat video"}
+
+                            <div
+                              className={cn(
+                                "mt-2 flex min-w-0 items-center gap-2",
+                                latestVideosView === "grid" ? "sm:gap-3" : ""
+                              )}
                             >
-                              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                            </span>
+                              <AvatarBadge
+                                name={video.author?.name || "Creator"}
+                                avatarUrl={video.author?.image || ""}
+                                size="sm"
+                              />
+                              <div className="min-w-0">
+                                <p className="truncate text-xs font-semibold text-slate-700 sm:text-sm">
+                                  {video.author?.name || "Creator"}
+                                </p>
+                                <p className="truncate text-[11px] text-slate-500 sm:text-xs">
+                                  @{video.author?.username || "creator"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <p
+                              className={cn(
+                                "mt-2 text-sm leading-relaxed text-slate-600",
+                                latestVideosView === "grid"
+                                  ? "line-clamp-2 max-sm:hidden"
+                                  : "hidden sm:line-clamp-2 sm:block"
+                              )}
+                            >
+                              {video.description}
+                            </p>
+
+                            <div
+                              className={cn(
+                                "mt-auto flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 pt-2 text-sm",
+                                latestVideosView === "list" ? "max-sm:border-t-0 max-sm:pt-1" : "sm:pt-3"
+                              )}
+                            >
+                              <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-600 sm:text-xs">
+                                <span className="rounded-full bg-slate-100 px-2 py-0.5 sm:px-2.5 sm:py-1">
+                                  {video.durationLabel || "-"}
+                                </span>
+                                <span className="rounded-full bg-slate-100 px-2 py-0.5 sm:px-2.5 sm:py-1">
+                                  {video.outputType || "-"}
+                                </span>
+                              </div>
+                              <span
+                                className={cn(
+                                  "inline-flex shrink-0 items-center justify-center rounded-full bg-brand-600 text-white shadow-sm transition group-hover:bg-brand-700",
+                                  latestVideosView === "grid"
+                                    ? "h-8 w-8 sm:h-10 sm:w-10"
+                                    : "h-8 w-8"
+                                )}
+                                title={locale === "en" ? "View video" : "Lihat video"}
+                              >
+                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                              </span>
+                            </div>
                           </div>
                         </Link>
                       </m.div>
