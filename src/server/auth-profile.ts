@@ -1,4 +1,3 @@
-import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { users, videos } from "@/db/schema";
@@ -6,7 +5,13 @@ import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { ensureUniqueUsername, sanitizeUsername } from "@/lib/username";
 import { isAdminEmail } from "@/server/admin-access";
 
-function getPreferredName(user: SupabaseUser) {
+export type AuthProfileUserLike = {
+  id: string;
+  email?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+};
+
+function getPreferredName(user: AuthProfileUserLike) {
   const metadata = user.user_metadata || {};
   const emailPrefix = user.email?.split("@")[0] || "creator";
 
@@ -18,7 +23,7 @@ function getPreferredName(user: SupabaseUser) {
   ).toString();
 }
 
-function getPreferredUsername(user: SupabaseUser) {
+function getPreferredUsername(user: AuthProfileUserLike) {
   const metadata = user.user_metadata || {};
   const emailPrefix = user.email?.split("@")[0] || user.id.slice(0, 8);
 
@@ -35,7 +40,7 @@ function getPreferredUsername(user: SupabaseUser) {
   );
 }
 
-function getPreferredAvatar(user: SupabaseUser) {
+function getPreferredAvatar(user: AuthProfileUserLike) {
   const metadata = user.user_metadata || {};
 
   return (
@@ -51,7 +56,7 @@ function getPreferredAvatar(user: SupabaseUser) {
   );
 }
 
-export async function syncUserProfile(authUser: SupabaseUser) {
+export async function syncUserProfile(authUser: AuthProfileUserLike) {
   const email = authUser.email?.trim().toLowerCase();
   if (!email) {
     throw new Error("Authenticated user does not have an email address.");

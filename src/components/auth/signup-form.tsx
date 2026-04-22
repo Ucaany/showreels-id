@@ -33,6 +33,29 @@ const signupSchema = z
 
 type SignupValues = z.infer<typeof signupSchema>;
 
+async function finalizeSignedInSession() {
+  const response = await fetch("/api/auth/bootstrap", {
+    method: "POST",
+  });
+  const payload = (await response.json().catch(() => null)) as
+    | { error?: string; redirectTo?: string }
+    | null;
+
+  if (!response.ok) {
+    return {
+      ok: false as const,
+      message:
+        payload?.error ||
+        "Akun berhasil dibuat, tetapi profilnya belum bisa disiapkan.",
+    };
+  }
+
+  return {
+    ok: true as const,
+    redirectTo: payload?.redirectTo || "/dashboard",
+  };
+}
+
 export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
@@ -86,6 +109,19 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         return;
       }
 
+      const bootstrapResult = await finalizeSignedInSession();
+
+      if (!bootstrapResult.ok) {
+        await supabase.auth.signOut();
+        setSubmitError(bootstrapResult.message);
+        void showFeedbackAlert({
+          title: "Profil belum siap",
+          text: bootstrapResult.message,
+          icon: "warning",
+        });
+        return;
+      }
+
       await showFeedbackAlert({
         title: "Akun berhasil dibuat",
         text: "Kamu akan diarahkan ke dashboard.",
@@ -93,7 +129,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         confirmButtonText: "Lanjut",
         timer: 900,
       });
-      window.location.replace("/dashboard");
+      window.location.replace(bootstrapResult.redirectTo);
     } catch {
       const message = "Registrasi belum bisa diproses. Periksa koneksi lalu coba lagi.";
       setSubmitError(message);
@@ -207,7 +243,13 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
                 });
 
                 if (error) {
-                  setSubmitError("Google login belum berhasil.");
+                  const message = "Google login belum berhasil.";
+                  setSubmitError(message);
+                  void showFeedbackAlert({
+                    title: "Google login gagal",
+                    text: message,
+                    icon: "error",
+                  });
                   return;
                 }
 

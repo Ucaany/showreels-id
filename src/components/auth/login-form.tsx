@@ -33,6 +33,9 @@ function getOauthErrorMessage(code: string) {
   if (normalized === "callback") {
     return "Proses callback Google bermasalah. Coba lagi beberapa saat.";
   }
+  if (normalized === "account_sync") {
+    return "Login berhasil, tetapi profil akun belum bisa disiapkan. Coba lagi beberapa saat.";
+  }
   return "";
 }
 
@@ -50,6 +53,29 @@ function getCredentialsErrorMessage(
   }
 
   return "Email atau password tidak cocok.";
+}
+
+async function finalizeSignedInSession() {
+  const response = await fetch("/api/auth/bootstrap", {
+    method: "POST",
+  });
+  const payload = (await response.json().catch(() => null)) as
+    | { error?: string; redirectTo?: string; code?: string }
+    | null;
+
+  if (!response.ok) {
+    return {
+      ok: false as const,
+      message:
+        payload?.error ||
+        "Login berhasil, tetapi akun belum bisa masuk ke aplikasi.",
+    };
+  }
+
+  return {
+    ok: true as const,
+    redirectTo: payload?.redirectTo || "/dashboard",
+  };
 }
 
 export function LoginForm({
@@ -91,7 +117,20 @@ export function LoginForm({
         return;
       }
 
-      window.location.replace("/dashboard");
+      const bootstrapResult = await finalizeSignedInSession();
+
+      if (!bootstrapResult.ok) {
+        await supabase.auth.signOut();
+        setSubmitError(bootstrapResult.message);
+        void showFeedbackAlert({
+          title: "Login tertahan",
+          text: bootstrapResult.message,
+          icon: "warning",
+        });
+        return;
+      }
+
+      window.location.replace(bootstrapResult.redirectTo);
     } catch {
       const message = "Login belum bisa diproses. Periksa koneksi lalu coba lagi.";
       setSubmitError(message);
@@ -199,7 +238,13 @@ export function LoginForm({
                 });
 
                 if (error) {
-                  setSubmitError("Google login belum berhasil.");
+                  const message = "Google login belum berhasil.";
+                  setSubmitError(message);
+                  void showFeedbackAlert({
+                    title: "Google login gagal",
+                    text: message,
+                    icon: "error",
+                  });
                   return;
                 }
 

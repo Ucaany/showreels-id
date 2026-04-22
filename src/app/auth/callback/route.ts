@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { syncUserProfile } from "@/server/auth-profile";
 
 function getSafeNextPath(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -18,7 +19,29 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return NextResponse.redirect(new URL(next, request.url));
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        return NextResponse.redirect(
+          new URL("/auth/login?error=callback", request.url)
+        );
+      }
+
+      try {
+        const profile = await syncUserProfile(user);
+        const destination = profile.role === "owner" ? "/admin" : next;
+
+        return NextResponse.redirect(new URL(destination, request.url));
+      } catch (syncError) {
+        console.error("Failed to sync profile during auth callback", syncError);
+        await supabase.auth.signOut();
+
+        return NextResponse.redirect(
+          new URL("/auth/login?error=account_sync", request.url)
+        );
+      }
     }
   }
 

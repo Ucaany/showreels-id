@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
+import { isGoogleAuthEnabled } from "@/lib/auth-config";
 import { getCurrentUser } from "@/server/current-user";
 
 export default async function LoginPage({
@@ -9,10 +10,7 @@ export default async function LoginPage({
 }) {
   const resolvedSearchParams = await searchParams;
   const user = await getCurrentUser();
-  const googleEnabled = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  );
+  const googleEnabled = isGoogleAuthEnabled();
 
   if (user?.id) {
     redirect(user.role === "owner" ? "/admin" : "/dashboard");

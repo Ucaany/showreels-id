@@ -14,9 +14,10 @@ Next.js 16 App Router project for a video portfolio platform with:
 1. Copy `.env.example` to `.env.local`
 2. Fill these values:
    - `DATABASE_URL`
-   - `DATABASE_URL_MIGRATION` (recommended for direct migration connection)
+   - `DATABASE_URL_MIGRATION` (direct migration connection)
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH`
    - `ADMIN_EMAILS=hello@ucan.com`
    - `OWNER_EMAIL`
    - `OWNER_PASSWORD`
@@ -59,7 +60,7 @@ Configure these URLs in the Supabase Auth dashboard:
 
 Enable email/password auth, disable email confirmation for immediate login, and enable Google provider with the project's Google OAuth client.
 
-Google login button otomatis muncul ketika `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` terisi.
+Google login button hanya muncul ketika `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=true`.
 
 ## Database workflow
 
@@ -98,11 +99,14 @@ Drizzle docs: [orm.drizzle.team/docs/get-started/postgresql-new](https://orm.dri
    - `DATABASE_URL_MIGRATION` (optional but recommended for CLI migration jobs)
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH`
    - `ADMIN_EMAILS`
    - `OWNER_EMAIL`
    - `OWNER_PASSWORD`
    - `NEXT_PUBLIC_APP_URL=https://your-project-name.vercel.app`
-4. Provision a Supabase PostgreSQL project and set connection strings in `DATABASE_URL` (+ `DATABASE_URL_MIGRATION` for direct migrations).
+4. Provision a Supabase PostgreSQL project and set connection strings:
+   - `DATABASE_URL` for runtime should use the Supabase pooler connection string
+   - `DATABASE_URL_MIGRATION` should keep using the direct database host for migrations and backfills
 5. Configure Supabase Auth site URL, redirect URLs, and Google provider for your Vercel domain.
 6. Trigger a new deployment.
 
@@ -117,6 +121,7 @@ Vercel environment variable docs: [vercel.com/docs/environment-variables](https:
 ## Notes
 
 - Runtime will fail fast when `DATABASE_URL` is missing.
+- Runtime on Vercel should use the pooler connection string, not the direct `db.<project-ref>.supabase.co` host.
 - Admin access is fail-closed when `ADMIN_EMAILS` is empty.
 - Media URLs for avatar/cover/thumbnail/gallery are URL-only (`http/https`) to keep DB usage lean.
 - The app builds with `next build --webpack` because this machine falls back to the WASM SWC path on Windows.
