@@ -677,16 +677,16 @@ export function LandingPage({
                     >
                       <Link
                         href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                        className="flex h-full min-h-[184px] min-w-0 flex-col rounded-[1.2rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_14px_26px_rgba(37,99,235,0.1)] sm:min-h-[190px]"
+                        className="flex h-full min-w-0 flex-col rounded-[1.1rem] border border-slate-200 bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(239,246,255,0.96))] p-4 shadow-sm transition hover:border-brand-300 hover:shadow-[0_12px_22px_rgba(37,99,235,0.09)]"
                       >
                         <div className="flex min-w-0 items-center gap-3">
                           <AvatarBadge
                             name={creator.name || "Creator"}
                             avatarUrl={creator.image || ""}
-                            size="lg"
+                            size="md"
                           />
                           <div className="min-w-0">
-                            <p className="truncate text-base font-semibold text-slate-950">
+                            <p className="truncate text-sm font-semibold text-slate-950">
                               {creator.name || "Creator"}
                             </p>
                             <p className="truncate text-sm text-slate-500">

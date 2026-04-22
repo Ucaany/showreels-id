@@ -318,11 +318,11 @@ export function LoginForm({
         ) : null}
       </motion.form>
 
-      <div className="mt-5 space-y-2 text-center text-sm text-slate-600">
-        <p>{dictionary.noAccount}</p>
+      <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-50/70 p-3 text-center text-sm text-slate-700">
+        <p className="font-medium">{dictionary.noAccount}</p>
         <Link
           href="/auth/signup"
-          className="inline-flex h-11 min-w-[170px] items-center justify-center rounded-xl border border-brand-700 bg-brand-600 px-5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-700"
+          className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl border border-brand-700 bg-brand-600 px-5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-300 focus:ring-offset-2"
         >
           {dictionary.signup}
         </Link>
