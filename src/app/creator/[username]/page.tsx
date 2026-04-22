@@ -62,6 +62,12 @@ export default async function CreatorProfilePage({
   const joinedMonthYear = formatJoinedMonthYear(profile.user.createdAt, locale);
   const cleanedPhone = (profile.user.phoneNumber || "").replace(/[^\d+]/g, "");
   const bioExcerpt = createExcerpt(profile.user.bio || "", 210);
+  const autoCoverImage =
+    profile.videos[0]?.thumbnailUrl ||
+    (profile.videos[0]?.sourceUrl
+      ? getAutoThumbnailFromVideoUrl(profile.videos[0].sourceUrl)
+      : "");
+  const coverImage = profile.user.coverImageUrl || autoCoverImage;
   const hireMeLink = profile.user.contactEmail
     ? `mailto:${profile.user.contactEmail}`
     : cleanedPhone
@@ -77,21 +83,21 @@ export default async function CreatorProfilePage({
   return (
     <div className="min-h-screen bg-canvas">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
-        <Card className="overflow-hidden border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.18),_transparent_28%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))] p-0">
-          <div className="relative overflow-hidden border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.18),_transparent_42%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(219,234,254,0.9))]">
-            {profile.user.coverImageUrl ? (
+        <Card className="overflow-hidden border-border bg-surface p-0">
+          <div className="relative overflow-hidden border-b border-slate-200">
+            {coverImage ? (
               <div
-                className="absolute inset-x-0 top-0 h-28 opacity-30 sm:h-40"
+                className="absolute inset-0"
                 style={{
-                  backgroundImage: `linear-gradient(180deg, rgba(15,23,42,0.06), rgba(15,23,42,0.20)), url(${profile.user.coverImageUrl})`,
+                  backgroundImage: `linear-gradient(145deg, rgba(15,23,42,0.20), rgba(15,23,42,0.34)), url(${coverImage})`,
                   backgroundPosition: "center",
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "cover",
                 }}
               />
             ) : null}
-            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-t from-white via-white/78 to-white/20 sm:h-40" />
-            <div className="relative flex flex-col justify-between gap-6 p-5 sm:gap-8 sm:p-8">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.44),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.72),_rgba(255,255,255,0.92))]" />
+            <div className="relative flex min-h-[250px] flex-col justify-between gap-6 p-5 sm:min-h-[300px] sm:gap-8 sm:p-8">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <Badge className="w-fit">
                   <Sparkles className="mr-1 h-3.5 w-3.5" />
@@ -101,7 +107,7 @@ export default async function CreatorProfilePage({
 
               <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                  <div className="rounded-full border-4 border-white/90 bg-white shadow-[0_18px_40px_rgba(37,99,235,0.18)]">
+                  <div className="inline-flex shrink-0 self-start rounded-full border-4 border-white/90 bg-white shadow-[0_18px_40px_rgba(37,99,235,0.18)]">
                     <AvatarBadge
                       name={profile.user.name || "Creator"}
                       avatarUrl={profile.user.image || ""}

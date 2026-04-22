@@ -14,14 +14,16 @@ const globalForDb = globalThis as unknown as {
   videoPortPool?: Pool;
 };
 
+const requiresSsl =
+  process.env.NODE_ENV === "production" ||
+  connectionString.includes("sslmode=require") ||
+  connectionString.includes("supabase.co");
+
 const pool =
   globalForDb.videoPortPool ||
   new Pool({
     connectionString,
-    ssl:
-      process.env.NODE_ENV === "production"
-        ? { rejectUnauthorized: false }
-        : false,
+    ssl: requiresSsl ? { rejectUnauthorized: false } : false,
   });
 
 if (process.env.NODE_ENV !== "production") {

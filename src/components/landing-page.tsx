@@ -12,6 +12,7 @@ import {
   CircleCheckBig,
   CircleHelp,
   LayoutGrid,
+  List,
   LogOut,
   Menu,
   PlayCircle,
@@ -28,7 +29,32 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/cn";
-import { detectVideoSource, getThumbnailCandidates } from "@/lib/video-utils";
+import { getThumbnailCandidates } from "@/lib/video-utils";
+import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
+
+const CREATOR_ROTATION_INTERVAL_MS = 10 * 60 * 1000;
+const CREATOR_DEVICE_SEED_KEY = "videoport-featured-creator-seed-v1";
+
+function createSeededHash(value: string) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function seededShuffle<T extends { id: string }>(items: T[], seed: string): T[] {
+  const result = [...items];
+
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const hash = createSeededHash(`${seed}-${result[index].id}-${index}`);
+    const swapIndex = hash % (index + 1);
+    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+  }
+
+  return result;
+}
 
 interface LandingPageProps {
   creatorCount: number;
@@ -50,6 +76,8 @@ interface LandingPageProps {
     createdAt: Date;
     sourceUrl: string;
     thumbnailUrl: string;
+    outputType: string;
+    durationLabel: string;
     author: {
       username: string | null;
       name: string | null;
@@ -139,6 +167,9 @@ export function LandingPage({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [headerSolid, setHeaderSolid] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
+  const [creatorDeviceSeed, setCreatorDeviceSeed] = useState("creator-seed-default");
+  const [creatorTimeBucket, setCreatorTimeBucket] = useState(0);
+  const [latestVideosView, setLatestVideosView] = useState<"grid" | "list">("grid");
   const creatorScrollRef = useRef<HTMLDivElement | null>(null);
   const year = new Date().getFullYear();
 
@@ -267,29 +298,6 @@ export function LandingPage({
   );
 
   const featuredCreatorSlides = useMemo(() => {
-    const byStableScore = <
-      T extends {
-        id: string;
-        username: string | null;
-      },
-    >(
-      data: T[]
-    ) => {
-      const score = (value: string) => {
-        let hash = 0;
-        for (let index = 0; index < value.length; index += 1) {
-          hash = (hash * 31 + value.charCodeAt(index)) % 2147483647;
-        }
-        return hash;
-      };
-
-      return [...data].sort((a, b) => {
-        const scoreA = score(`${a.id}-${a.username || ""}`);
-        const scoreB = score(`${b.id}-${b.username || ""}`);
-        return scoreA - scoreB;
-      });
-    };
-
     const creatorsWithBio = featuredCreators.filter(
       (creator) => creator.bio && creator.bio.trim().length > 0
     );
@@ -297,10 +305,22 @@ export function LandingPage({
       (creator) => !creator.bio || creator.bio.trim().length === 0
     );
 
-    return [...byStableScore(creatorsWithBio), ...byStableScore(creatorsWithoutBio)].slice(0, 10);
-  }, [featuredCreators]);
+    const seedBase = `${creatorDeviceSeed}-${creatorTimeBucket}`;
+    const shuffledWithBio = seededShuffle(creatorsWithBio, `${seedBase}-with-bio`);
+    const shuffledWithoutBio = seededShuffle(
+      creatorsWithoutBio,
+      `${seedBase}-without-bio`
+    );
 
-  const latestVideoRows = useMemo(() => featuredVideos.slice(0, 4), [featuredVideos]);
+    return [...shuffledWithBio, ...shuffledWithoutBio].slice(0, 10);
+  }, [featuredCreators, creatorDeviceSeed, creatorTimeBucket]);
+
+  const featuredCreatorsDesktop = useMemo(
+    () => featuredCreatorSlides.slice(0, 3),
+    [featuredCreatorSlides]
+  );
+
+  const latestVideoRows = useMemo(() => featuredVideos.slice(0, 3), [featuredVideos]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -310,6 +330,42 @@ export function LandingPage({
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const syncSeed = () => {
+      const fromStorage = window.localStorage.getItem(CREATOR_DEVICE_SEED_KEY);
+      if (fromStorage) {
+        setCreatorDeviceSeed(fromStorage);
+        return;
+      }
+
+      const nextSeed =
+        window.crypto?.randomUUID?.() ||
+        `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      window.localStorage.setItem(CREATOR_DEVICE_SEED_KEY, nextSeed);
+      setCreatorDeviceSeed(nextSeed);
+    };
+
+    const timeout = window.setTimeout(syncSeed, 0);
+    return () => window.clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    const rotate = () => {
+      setCreatorTimeBucket(Math.floor(Date.now() / CREATOR_ROTATION_INTERVAL_MS));
+    };
+
+    const initialSync = window.setTimeout(rotate, 0);
+    const timer = window.setInterval(rotate, CREATOR_ROTATION_INTERVAL_MS);
+    return () => {
+      window.clearTimeout(initialSync);
+      window.clearInterval(timer);
+    };
   }, []);
 
   return (
@@ -589,9 +645,55 @@ export function LandingPage({
                 </p>
               </div>
 
+              <div className="mx-auto mt-3 hidden max-w-6xl gap-4 text-left lg:grid lg:grid-cols-3">
+                {featuredCreatorsDesktop.length === 0 ? (
+                  <p className="col-span-3 text-sm text-slate-600">
+                    {locale === "en" ? "No creator yet." : "Belum ada creator."}
+                  </p>
+                ) : (
+                  featuredCreatorsDesktop.map((creator, index) => (
+                    <m.div
+                      key={`desktop-${creator.id}`}
+                      className="h-full"
+                      initial={{ opacity: 0, y: 18 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{ delay: index * 0.06, duration: 0.24 }}
+                    >
+                      <Link
+                        href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
+                        className="flex h-full min-h-[190px] min-w-0 flex-col rounded-[1.2rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_14px_26px_rgba(37,99,235,0.1)]"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <AvatarBadge
+                            name={creator.name || "Creator"}
+                            avatarUrl={creator.image || ""}
+                            size="lg"
+                          />
+                          <div className="min-w-0">
+                            <p className="truncate text-base font-semibold text-slate-950">
+                              {creator.name || "Creator"}
+                            </p>
+                            <p className="truncate text-sm text-slate-500">
+                              @{creator.username || "creator"}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-600">
+                          {creator.bio?.trim() ||
+                            (locale === "en"
+                              ? "Bio has not been added yet."
+                              : "Bio belum ditambahkan.")}
+                        </p>
+                      </Link>
+                    </m.div>
+                  ))
+                )}
+              </div>
+
               <div
                 ref={creatorScrollRef}
-                className="mx-auto mt-2 flex max-w-6xl snap-x snap-mandatory gap-3 overflow-x-auto pb-2 text-left [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className="mt-3 flex w-full snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pr-4 text-left [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
               >
                 {featuredCreatorSlides.length === 0 ? (
                   <p className="w-full text-sm text-slate-600">
@@ -601,7 +703,7 @@ export function LandingPage({
                   featuredCreatorSlides.map((creator, index) => (
                     <m.div
                       key={creator.id}
-                      className="min-w-[78%] shrink-0 snap-start sm:min-w-[42%] lg:min-w-[30%] xl:min-w-[22%]"
+                      className="min-w-[64%] shrink-0 snap-start sm:min-w-[48%] md:min-w-[42%]"
                       initial={{ opacity: 0, y: 18 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
@@ -609,21 +711,29 @@ export function LandingPage({
                     >
                       <Link
                         href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                        className="flex h-full min-w-0 items-center gap-3 rounded-[1.2rem] border border-slate-200 bg-white/92 p-3 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_14px_26px_rgba(37,99,235,0.1)]"
+                        className="flex h-full min-h-[184px] min-w-0 flex-col rounded-[1.2rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_14px_26px_rgba(37,99,235,0.1)]"
                       >
-                        <AvatarBadge
-                          name={creator.name || "Creator"}
-                          avatarUrl={creator.image || ""}
-                          size="lg"
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate text-base font-semibold text-slate-950">
-                            {creator.name || "Creator"}
-                          </p>
-                          <p className="truncate text-sm text-slate-500">
-                            @{creator.username || "creator"}
-                          </p>
+                        <div className="flex min-w-0 items-center gap-3">
+                          <AvatarBadge
+                            name={creator.name || "Creator"}
+                            avatarUrl={creator.image || ""}
+                            size="lg"
+                          />
+                          <div className="min-w-0">
+                            <p className="truncate text-base font-semibold text-slate-950">
+                              {creator.name || "Creator"}
+                            </p>
+                            <p className="truncate text-sm text-slate-500">
+                              @{creator.username || "creator"}
+                            </p>
+                          </div>
                         </div>
+                        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-600">
+                          {creator.bio?.trim() ||
+                            (locale === "en"
+                              ? "Bio has not been added yet."
+                              : "Bio belum ditambahkan.")}
+                        </p>
                       </Link>
                     </m.div>
                   ))
@@ -632,8 +742,8 @@ export function LandingPage({
             </section>
 
             <section id="latest-videos" className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 sm:px-6">
-              <div className="flex justify-center">
-                <h2 className="inline-flex items-center gap-2 text-center font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
+              <div className="flex flex-wrap items-center justify-center gap-3 text-center">
+                <h2 className="inline-flex items-center gap-2 font-display text-2xl font-semibold text-slate-950 sm:text-3xl">
                   {locale === "en" ? "Latest videos from creators" : "Video terbaru dari creator"}
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
                     <span className="relative flex h-2.5 w-2.5 items-center justify-center">
@@ -645,26 +755,56 @@ export function LandingPage({
                 </h2>
               </div>
 
-              <div className="mx-auto mt-4 grid max-w-6xl gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-3 flex justify-center">
+                <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/90 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setLatestVideosView("grid")}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition",
+                      latestVideosView === "grid"
+                        ? "bg-brand-600 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100"
+                    )}
+                    aria-label={locale === "en" ? "Grid view" : "Mode grid"}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                    Grid
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLatestVideosView("list")}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition",
+                      latestVideosView === "list"
+                        ? "bg-brand-600 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100"
+                    )}
+                    aria-label={locale === "en" ? "List view" : "Mode list"}
+                  >
+                    <List className="h-4 w-4" />
+                    List
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className={cn(
+                  "mx-auto mt-4 max-w-6xl",
+                  latestVideosView === "grid"
+                    ? "grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+                    : "space-y-3"
+                )}
+              >
                 {latestVideoRows.length === 0 ? (
-                  <p className="text-sm text-slate-600 sm:col-span-2 xl:col-span-3">
+                  <p className="text-center text-sm text-slate-600">
                     {locale === "en" ? "No video yet." : "Belum ada video."}
                   </p>
                 ) : (
-                  latestVideoRows.map((video) => {
+                  latestVideoRows.map((video, index) => {
                     const thumbnail =
                       getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
-                    const source = detectVideoSource(video.sourceUrl);
-                    const sourceLabel =
-                      source === "gdrive"
-                        ? "Google Drive"
-                        : source === "youtube"
-                          ? "YouTube"
-                          : source === "instagram"
-                            ? "Instagram"
-                            : source === "vimeo"
-                              ? "Vimeo"
-                              : "Video";
+                    const sourceMeta = getVideoSourceBadgeMeta(video.sourceUrl);
 
                     return (
                       <m.div
@@ -673,11 +813,60 @@ export function LandingPage({
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.25 }}
                         transition={{ duration: 0.28 }}
+                        className={cn(
+                          latestVideosView === "grid" ? "h-full" : "",
+                          index > 1 ? "max-md:hidden" : ""
+                        )}
                       >
                         <Link
                           href={`/v/${video.publicSlug}`}
-                          className="group flex h-full min-w-0 flex-col rounded-[1.2rem] border border-slate-200 bg-white/92 p-3 shadow-sm transition hover:border-brand-300 hover:shadow-[0_16px_30px_rgba(37,99,235,0.12)]"
+                          aria-label={`${locale === "en" ? "View video" : "Lihat video"} ${video.title}`}
+                          className={cn(
+                            "group flex min-w-0 flex-col gap-3 rounded-[1.2rem] border border-slate-200 bg-white/92 px-4 py-4 shadow-sm transition hover:border-brand-300 hover:shadow-[0_16px_30px_rgba(37,99,235,0.12)] sm:px-5 sm:py-5",
+                            latestVideosView === "grid"
+                              ? "h-full min-h-[392px]"
+                              : ""
+                          )}
                         >
+                          <div className="flex min-w-0 items-start justify-between gap-3">
+                            <p className="line-clamp-2 min-w-0 text-base font-semibold text-slate-950">
+                              {video.title}
+                            </p>
+                            <span
+                              className={cn(
+                                "inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
+                                sourceMeta.className
+                              )}
+                            >
+                              {sourceMeta.label}
+                            </span>
+                          </div>
+
+                          <div className="flex min-w-0 items-center justify-between gap-3">
+                            <AvatarBadge
+                              name={video.author?.name || "Creator"}
+                              avatarUrl={video.author?.image || ""}
+                              size="sm"
+                            />
+                            <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-slate-700">
+                                  {video.author?.name || "Creator"}
+                                </p>
+                                <p className="truncate text-xs text-slate-500">
+                                  @{video.author?.username || "creator"}
+                                </p>
+                              </div>
+                              <span className="shrink-0 text-xs text-slate-500">
+                                {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                }).format(video.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+
                           <div className="overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
                             {thumbnail ? (
                               <Image
@@ -701,43 +890,40 @@ export function LandingPage({
                             )}
                           </div>
 
-                          <div className="min-w-0">
-                            <div className="flex min-w-0 items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <p className="line-clamp-2 text-base font-semibold text-slate-950">
-                                  {video.title}
-                                </p>
-                                <p className="mt-1 text-sm text-slate-500">
-                                  {video.author?.name || "Creator"}
-                                </p>
-                              </div>
-                              <span className="inline-flex shrink-0 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
-                                {sourceLabel}
+                          <p className="line-clamp-2 text-sm leading-relaxed text-slate-600">
+                            {video.description}
+                          </p>
+
+                          <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
+                            <div className="flex min-w-0 items-center gap-2 text-xs font-medium text-slate-600">
+                              <span className="rounded-full bg-slate-100 px-2.5 py-1">
+                                Durasi: {video.durationLabel || "-"}
+                              </span>
+                              <span className="rounded-full bg-slate-100 px-2.5 py-1">
+                                Output: {video.outputType || "-"}
                               </span>
                             </div>
-
-                            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-600">
-                              {video.description}
-                            </p>
-
-                            <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
-                              <span className="text-slate-500">
-                                {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "id-ID", {
-                                  month: "short",
-                                  year: "numeric",
-                                }).format(video.createdAt)}
-                              </span>
-                              <span className="inline-flex items-center gap-1 font-semibold text-brand-700">
-                                {locale === "en" ? "View video" : "Lihat video"}
-                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                              </span>
-                            </div>
+                            <span
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white shadow-sm transition group-hover:bg-brand-700"
+                              title={locale === "en" ? "View video" : "Lihat video"}
+                            >
+                              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                            </span>
                           </div>
                         </Link>
                       </m.div>
                     );
                   })
                 )}
+              </div>
+
+              <div className="mt-4 flex justify-center">
+                <Link href="/videos">
+                  <Button className="min-w-[190px] border border-brand-700 bg-brand-600 text-white shadow-soft hover:bg-brand-700">
+                    {locale === "en" ? "View all videos" : "Lihat semua"}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
               </div>
             </section>
 

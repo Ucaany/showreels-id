@@ -29,6 +29,13 @@
       "when": 1776738000000,
       "tag": "0003_clear_video_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776816000000,
+      "tag": "0004_owner_admin_controls",
+      "breakpoints": true
     }
   ]
 }

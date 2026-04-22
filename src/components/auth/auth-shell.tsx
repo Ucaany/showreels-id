@@ -20,7 +20,7 @@ export function AuthShell({
       <div className="pointer-events-none absolute -left-24 top-0 h-80 w-80 rounded-full bg-brand-200/50 blur-3xl" />
       <div className="pointer-events-none absolute -right-28 bottom-0 h-96 w-96 rounded-full bg-cyan-200/50 blur-3xl" />
 
-      <div className="relative w-full max-w-lg bg-transparent p-0 sm:rounded-[32px] sm:border sm:border-slate-200 sm:bg-white/95 sm:p-7 sm:shadow-[0_24px_90px_rgba(15,23,42,0.10)] sm:backdrop-blur">
+      <div className="relative w-full max-w-lg rounded-[28px] border border-slate-200 bg-white/95 p-5 shadow-[0_24px_90px_rgba(15,23,42,0.10)] backdrop-blur sm:rounded-[32px] sm:p-7">
         <div className="mb-6 space-y-4 sm:mb-7">
           <div
             className={`flex items-center ${showPreferences ? "justify-between" : "justify-center"}`}

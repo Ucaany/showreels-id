@@ -7,11 +7,13 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { Globe2, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { LockKeyhole, Mail, UserRound } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/hooks/use-preferences";
+import { showFeedbackAlert } from "@/lib/feedback-alert";
 
 const signupSchema = z
   .object({
@@ -48,24 +50,30 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
 
   const onSubmit = form.handleSubmit(async (values) => {
     setSubmitError("");
-    const response = await fetch("/api/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(values),
-    });
-
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: string }
-      | null;
-
-    if (!response.ok) {
-      setSubmitError(payload?.error ?? "Gagal membuat akun.");
-      return;
-    }
-
     try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+
+      if (!response.ok) {
+        const message = payload?.error ?? "Gagal membuat akun.";
+        setSubmitError(message);
+        void showFeedbackAlert({
+          title: "Daftar akun gagal",
+          text: message,
+          icon: "error",
+        });
+        return;
+      }
+
       const signInResult = await signIn("credentials", {
         email: values.email,
         password: values.password,
@@ -74,13 +82,32 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
       });
 
       if (!signInResult || signInResult.error) {
-        setSubmitError("Akun dibuat, tetapi login otomatis gagal.");
+        const message = "Akun dibuat, tetapi login otomatis gagal.";
+        setSubmitError(message);
+        void showFeedbackAlert({
+          title: "Akun berhasil dibuat",
+          text: "Silakan login manual dengan email dan password yang baru dibuat.",
+          icon: "warning",
+        });
         return;
       }
 
+      await showFeedbackAlert({
+        title: "Akun berhasil dibuat",
+        text: "Kamu akan diarahkan ke dashboard.",
+        icon: "success",
+        confirmButtonText: "Lanjut",
+        timer: 900,
+      });
       window.location.replace(signInResult.url ?? "/dashboard");
     } catch {
-      setSubmitError("Akun dibuat, tetapi login otomatis gagal.");
+      const message = "Registrasi belum bisa diproses. Periksa koneksi lalu coba lagi.";
+      setSubmitError(message);
+      void showFeedbackAlert({
+        title: "Koneksi bermasalah",
+        text: message,
+        icon: "error",
+      });
     }
   });
 
@@ -180,19 +207,22 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
                 })
               }
             >
-              <Globe2 className="h-4 w-4" />
+              <FcGoogle className="h-5 w-5" />
               {dictionary.continueGoogle}
             </Button>
           </>
         ) : null}
       </motion.form>
 
-      <p className="mt-5 text-center text-sm text-slate-600">
-        {dictionary.hasAccount}{" "}
-        <Link href="/auth/login" className="font-semibold text-brand-600">
+      <div className="mt-5 space-y-2 text-center text-sm text-slate-600">
+        <p>{dictionary.hasAccount}</p>
+        <Link
+          href="/auth/login"
+          className="inline-flex h-11 min-w-[170px] items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50"
+        >
           {dictionary.login}
         </Link>
-      </p>
+      </div>
     </AuthShell>
   );
 }

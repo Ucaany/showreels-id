@@ -27,6 +27,10 @@ class LoginLockedError extends CredentialsSignin {
   code = "login_locked";
 }
 
+class AccountBlockedError extends CredentialsSignin {
+  code = "account_blocked";
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   adapter: DrizzleAdapter(db, {
@@ -67,9 +71,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!result.ok) {
-          throw result.code === "login_locked"
-            ? new LoginLockedError()
-            : new InvalidCredentialsError();
+          if (result.code === "login_locked") {
+            throw new LoginLockedError();
+          }
+          if (result.code === "account_blocked") {
+            throw new AccountBlockedError();
+          }
+          throw new InvalidCredentialsError();
         }
 
         return {
@@ -96,10 +104,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: true,
           image: true,
           username: true,
+          isBlocked: true,
         },
       });
 
       if (!currentUser) {
+        return token;
+      }
+
+      if (currentUser.isBlocked) {
+        token.sub = "";
+        token.email = currentUser.email;
+        token.name = currentUser.name;
+        token.picture = currentUser.image;
+        token.username = null;
         return token;
       }
 
@@ -129,10 +147,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return false;
       }
 
+      const userEmail = user.email.trim().toLowerCase();
+
+      const signedInUser = user.id
+        ? await db.query.users.findFirst({
+            where: eq(users.id, user.id as string),
+          })
+        : await db.query.users.findFirst({
+            where: eq(users.email, userEmail),
+          });
+
+      if (signedInUser?.isBlocked) {
+        return false;
+      }
+
       if (account?.provider === "google") {
-        const currentUser = await db.query.users.findFirst({
-          where: eq(users.id, user.id as string),
-        });
+        const currentUser = signedInUser;
 
         if (currentUser && !currentUser.username) {
           const baseName =

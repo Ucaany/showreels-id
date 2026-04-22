@@ -15,8 +15,10 @@ import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getCurrentUser } from "@/server/current-user";
 import { getPublicVideo } from "@/server/public-data";
 import { getAutoThumbnailFromVideoUrl, getSourceLabel } from "@/lib/video-utils";
+import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
 
 function truncateWords(value: string, limit: number): string {
   const words = value.trim().split(/\s+/).filter(Boolean);
@@ -33,6 +35,7 @@ export default async function PublicVideoPage({
 }) {
   const { slug } = await params;
   const video = await getPublicVideo(slug);
+  const currentUser = await getCurrentUser();
 
   if (!video || !video.author) {
     notFound();
@@ -51,21 +54,24 @@ export default async function PublicVideoPage({
     video.author.bio || "Bio belum ditambahkan.",
     30
   );
+  const sourceMeta = getVideoSourceBadgeMeta(video.sourceUrl);
 
   return (
     <div className="min-h-screen bg-canvas">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           <Card className="overflow-hidden border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.11),_transparent_32%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))]">
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge>{getSourceLabel(video.source as never)}</Badge>
-                  <Badge className="bg-slate-100 text-slate-700 shadow-none">
+                  <Badge className={`${sourceMeta.className} shadow-none`}>
+                    {getSourceLabel(video.source as never)}
+                  </Badge>
+                  <Badge className="bg-slate-900 text-white shadow-none">
                     <CalendarDays className="mr-1 h-3.5 w-3.5" />
                     {postedDateLabel}
                   </Badge>
-                  <Badge className="bg-slate-100 text-slate-700 shadow-none">
+                  <Badge className="bg-slate-800 text-white shadow-none">
                     <Clock3 className="mr-1 h-3.5 w-3.5" />
                     {postedTimeLabel}
                   </Badge>
@@ -79,14 +85,14 @@ export default async function PublicVideoPage({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-brand-50 text-brand-700 shadow-none">
+                <Badge className="bg-brand-700 text-white shadow-none">
                   <LayoutTemplate className="mr-1 h-3.5 w-3.5" />
                   {video.aspectRatio === "portrait" ? "Portrait 9:16" : "Landscape 16:9"}
                 </Badge>
-                <Badge className="bg-slate-100 text-slate-700 shadow-none">
+                <Badge className="bg-slate-900 text-white shadow-none">
                   Output: {video.outputType || "General"}
                 </Badge>
-                <Badge className="bg-slate-100 text-slate-700 shadow-none">
+                <Badge className="bg-slate-800 text-white shadow-none">
                   Durasi: {video.durationLabel || "-"}
                 </Badge>
               </div>
@@ -102,18 +108,20 @@ export default async function PublicVideoPage({
                 </div>
               </div>
 
-              <MediaPreviewCarousel
-                manualThumbnailUrl={video.thumbnailUrl}
-                fallbackThumbnailUrl={getAutoThumbnailFromVideoUrl(video.sourceUrl)}
-                mainVideoUrl={video.sourceUrl}
-                extraVideoUrls={video.extraVideoUrls}
-                imageUrls={video.imageUrls}
-                title={video.title}
-                showHeading={false}
-                showStatusBadge={Boolean(video.thumbnailUrl)}
-                preferMainVideo
-                aspectRatio={video.aspectRatio}
-              />
+              <div className="pt-1">
+                <MediaPreviewCarousel
+                  manualThumbnailUrl={video.thumbnailUrl}
+                  fallbackThumbnailUrl={getAutoThumbnailFromVideoUrl(video.sourceUrl)}
+                  mainVideoUrl={video.sourceUrl}
+                  extraVideoUrls={video.extraVideoUrls}
+                  imageUrls={video.imageUrls}
+                  title={video.title}
+                  showHeading={false}
+                  showStatusBadge={Boolean(video.thumbnailUrl)}
+                  preferMainVideo
+                  aspectRatio={video.aspectRatio}
+                />
+              </div>
             </div>
           </Card>
 
@@ -164,12 +172,23 @@ export default async function PublicVideoPage({
                 threadsUrl={video.author.threadsUrl}
               />
               {video.author.username ? (
-                <Link href={`/creator/${video.author.username}`}>
-                  <Button className="w-full">
-                    <UserRound className="h-4 w-4" />
-                    Lihat semua video creator
-                  </Button>
-                </Link>
+                <div className="space-y-2">
+                  <Link href={`/creator/${video.author.username}`}>
+                    <Button className="w-full border border-brand-700 bg-brand-600 text-white shadow-soft hover:bg-brand-700">
+                      <UserRound className="h-4 w-4" />
+                      Lihat semua video creator
+                    </Button>
+                  </Link>
+                  {!currentUser ? (
+                    <div className="flex justify-center">
+                      <Link href="/dashboard">
+                        <Button variant="secondary" size="sm">
+                          Kembali Ke Dashboard
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : null}
+                </div>
               ) : null}
             </Card>
 

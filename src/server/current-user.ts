@@ -12,7 +12,7 @@ export async function getCurrentUser() {
 
   return db.query.users.findFirst({
     where: eq(users.id, session.user.id),
-  });
+  }).then((user) => (user?.isBlocked ? null : user));
 }
 
 export async function requireCurrentUser() {

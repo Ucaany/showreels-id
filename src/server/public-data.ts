@@ -3,18 +3,131 @@ import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
 import { users, videos } from "@/db/schema";
 import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
+import { getThumbnailCandidates } from "@/lib/video-utils";
+
+export interface PublicShowcaseVideo {
+  id: string;
+  title: string;
+  publicSlug: string;
+  description: string;
+  createdAt: Date;
+  sourceUrl: string;
+  thumbnailUrl: string;
+  outputType: string;
+  durationLabel: string;
+  author: {
+    username: string | null;
+    name: string | null;
+    image: string | null;
+  };
+}
+
+function sanitizeMediaUrl(url: string | null) {
+  return url && url.startsWith("data:") ? "" : url;
+}
+
+function parseAdminEmails(adminEmailsCsv: string) {
+  return adminEmailsCsv
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function buildCreatorFilter(adminEmails: string[]) {
+  return adminEmails.length
+    ? and(notInArray(users.email, adminEmails), ne(users.role, "owner"))
+    : ne(users.role, "owner");
+}
+
+async function fetchCompletePublicVideos(
+  adminEmailsCsv: string,
+  limit: number
+): Promise<PublicShowcaseVideo[]> {
+  const safeLimit = Math.max(1, limit);
+  const queryLimit = Math.min(Math.max(safeLimit * 4, 40), 220);
+
+  const latestVideos = await db.query.videos.findMany({
+    where: eq(videos.visibility, "public"),
+    orderBy: desc(videos.createdAt),
+    limit: queryLimit,
+    columns: {
+      id: true,
+      title: true,
+      publicSlug: true,
+      description: true,
+      createdAt: true,
+      sourceUrl: true,
+      thumbnailUrl: true,
+      outputType: true,
+      durationLabel: true,
+    },
+    with: {
+      author: {
+        columns: {
+          username: true,
+          name: true,
+          image: true,
+          email: true,
+          role: true,
+        },
+      },
+    },
+  });
+
+  return latestVideos
+    .filter((video) => {
+      if (!video.author) {
+        return false;
+      }
+
+      if (video.author.role === "owner" || isAdminEmail(video.author.email)) {
+        return false;
+      }
+
+      const hasTitle = Boolean(video.title.trim());
+      const hasDescription = Boolean(video.description.trim());
+      const hasSlug = Boolean(video.publicSlug.trim());
+      const hasSourceUrl = Boolean(video.sourceUrl.trim());
+      const hasAuthorIdentity = Boolean(
+        (video.author.name || "").trim() || (video.author.username || "").trim()
+      );
+      const hasThumbnailCandidate = getThumbnailCandidates(
+        video.sourceUrl,
+        video.thumbnailUrl
+      ).length > 0;
+
+      return (
+        hasTitle &&
+        hasDescription &&
+        hasSlug &&
+        hasSourceUrl &&
+        hasAuthorIdentity &&
+        hasThumbnailCandidate
+      );
+    })
+    .slice(0, safeLimit)
+    .map((video) => ({
+      id: video.id,
+      title: video.title,
+      publicSlug: video.publicSlug,
+      description: video.description,
+      createdAt: video.createdAt,
+      sourceUrl: video.sourceUrl,
+      thumbnailUrl: sanitizeMediaUrl(video.thumbnailUrl) || "",
+      outputType: video.outputType,
+      durationLabel: video.durationLabel,
+      author: {
+        username: video.author?.username || null,
+        name: video.author?.name || null,
+        image: sanitizeMediaUrl(video.author?.image || null) || null,
+      },
+    }));
+}
 
 const landingStatsCache = unstable_cache(
   async (adminEmailsCsv: string) => {
-    const sanitizeMediaUrl = (url: string | null) =>
-      url && url.startsWith("data:") ? "" : url;
-    const adminEmails = adminEmailsCsv
-      .split(",")
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean);
-    const creatorFilter = adminEmails.length
-      ? and(notInArray(users.email, adminEmails), ne(users.role, "owner"))
-      : ne(users.role, "owner");
+    const adminEmails = parseAdminEmails(adminEmailsCsv);
+    const creatorFilter = buildCreatorFilter(adminEmails);
 
     const [creatorCount] = await db
       .select({ value: count() })
@@ -43,43 +156,10 @@ const landingStatsCache = unstable_cache(
       },
     });
 
-    const latestVideos = await db.query.videos.findMany({
-      where: eq(videos.visibility, "public"),
-      orderBy: desc(videos.createdAt),
-      limit: 15,
-      columns: {
-        id: true,
-        title: true,
-        publicSlug: true,
-        description: true,
-        createdAt: true,
-        sourceUrl: true,
-        thumbnailUrl: true,
-      },
-      with: {
-        author: {
-          columns: {
-            username: true,
-            name: true,
-            image: true,
-            email: true,
-          },
-        },
-      },
-    });
-    const featuredVideos = latestVideos
-      .filter((video) => !isAdminEmail(video.author?.email))
-      .slice(0, 3)
-      .map((video) => ({
-        ...video,
-        thumbnailUrl: sanitizeMediaUrl(video.thumbnailUrl) || "",
-        author: video.author
-          ? {
-              ...video.author,
-              image: sanitizeMediaUrl(video.author.image) || null,
-            }
-          : video.author,
-      }));
+    const featuredVideos = (await fetchCompletePublicVideos(adminEmailsCsv, 12)).slice(
+      0,
+      6
+    );
 
     return {
       creatorCount: creatorCount?.value ?? 0,
@@ -91,7 +171,14 @@ const landingStatsCache = unstable_cache(
       featuredVideos,
     };
   },
-  ["landing-stats-v2"],
+  ["landing-stats-v3"],
+  { revalidate: 60 }
+);
+
+const showcaseVideosCache = unstable_cache(
+  async (adminEmailsCsv: string, limit: number) =>
+    fetchCompletePublicVideos(adminEmailsCsv, limit),
+  ["public-showcase-videos-v1"],
   { revalidate: 60 }
 );
 
@@ -118,6 +205,19 @@ export async function getLandingStats() {
       createdAt: new Date(video.createdAt),
     })),
   };
+}
+
+export async function getPublicShowcaseVideos(limit = 30) {
+  if (!isDatabaseConfigured) {
+    return [] as PublicShowcaseVideo[];
+  }
+
+  const adminEmailsCsv = Array.from(getAdminEmails()).sort().join(",");
+  const cached = await showcaseVideosCache(adminEmailsCsv, limit);
+  return cached.map((video) => ({
+    ...video,
+    createdAt: new Date(video.createdAt),
+  }));
 }
 
 export async function getPublicProfile(username: string) {

@@ -7,6 +7,10 @@ export function getAdminEmails() {
   return new Set(emails);
 }
 
+export function getAdminEmailList() {
+  return Array.from(getAdminEmails());
+}
+
 export function isAdminConfigured() {
   return getAdminEmails().size > 0;
 }
@@ -18,4 +22,11 @@ export function isAdminEmail(email?: string | null) {
   if (!adminEmails.size || !normalizedEmail) return false;
 
   return adminEmails.has(normalizedEmail);
+}
+
+export function isProtectedOwnerTarget(input: {
+  email?: string | null;
+  role?: string | null;
+}) {
+  return input.role === "owner" || isAdminEmail(input.email);
 }

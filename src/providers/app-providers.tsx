@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { SessionProvider } from "next-auth/react";
 import { type Locale } from "@/lib/i18n";
 import { SessionActivityManager } from "@/components/session-activity-manager";
+import { SiteMaintenanceGate } from "@/components/site-maintenance-gate";
+import { VisitorTracker } from "@/components/visitor-tracker";
 import { PreferencesProvider } from "@/providers/preferences-provider";
 
 export function AppProviders({
@@ -24,6 +26,8 @@ export function AppProviders({
     <SessionProvider refetchOnWindowFocus={false} refetchInterval={0}>
       <PreferencesProvider initialLocale={initialLocale}>
         <SessionActivityManager />
+        <VisitorTracker />
+        <SiteMaintenanceGate />
         {children}
       </PreferencesProvider>
     </SessionProvider>

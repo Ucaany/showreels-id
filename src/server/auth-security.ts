@@ -75,6 +75,16 @@ export async function validateCredentialsAttempt(email: string, password: string
     };
   }
 
+  if (user.isBlocked) {
+    return {
+      ok: false as const,
+      code: "account_blocked" as const,
+      error:
+        user.blockedReason ||
+        "Akun ini sedang diblokir oleh owner. Hubungi admin untuk bantuan.",
+    };
+  }
+
   if (user.loginLockedUntil && user.loginLockedUntil.getTime() > Date.now()) {
     return {
       ok: false as const,

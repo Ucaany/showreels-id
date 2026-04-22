@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { Eye, FileText, FolderOpen, LockKeyhole } from "lucide-react";
+import { DashboardGreetingCard } from "@/components/dashboard/dashboard-greeting-card";
 import { DashboardVideoList } from "@/components/dashboard/dashboard-video-list";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,23 +28,6 @@ export default async function DashboardPage() {
   const privateVideosCount = myVideos.filter(
     (video) => video.visibility === "private"
   ).length;
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 11
-      ? "Selamat pagi"
-      : hour < 16
-        ? "Selamat siang"
-        : hour < 19
-          ? "Selamat sore"
-          : "Selamat malam";
-  const greetingEmoji =
-    hour < 11
-      ? "\u2600\uFE0F"
-      : hour < 16
-        ? "\uD83C\uDF24\uFE0F"
-        : hour < 19
-          ? "\uD83C\uDF07"
-          : "\uD83C\uDF19";
   const stats = [
     {
       label: "Publik",
@@ -67,49 +51,39 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Card className="dashboard-clean-card overflow-hidden border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.13),_transparent_32%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(241,245,249,0.96))]">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-slate-600">
-              {dictionary.welcomeBack}
-            </p>
-            <h1 className="mt-2 font-display text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
-              {greeting}, {user.name ?? "Creator"}{" "}
-              <span aria-hidden="true">{greetingEmoji}</span>
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-700 sm:text-base">
-              Kelola karya, pantau status video, dan rapikan portofolio dari
-              satu ruang kerja yang lebih fokus.
-            </p>
-          </div>
-        </Card>
+      <section className="grid gap-4 md:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
+        <DashboardGreetingCard
+          locale={locale}
+          welcomeLabel={dictionary.welcomeBack}
+          userName={user.name ?? "Creator"}
+        />
 
-        <Card className="dashboard-clean-card border-border bg-surface">
+        <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
           <div>
             <p className="text-sm font-medium text-slate-600">Status video</p>
-            <h2 className="mt-1 font-display text-2xl font-semibold text-slate-950">
+            <h2 className="mt-1 font-display text-xl font-semibold text-slate-950 sm:text-2xl">
               Pantau visibilitas karya
             </h2>
           </div>
-          <div className="mt-5 grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
             {stats.map((item) => {
               const Icon = item.icon;
               return (
                 <div
                   key={item.label}
-                  className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3"
+                  className="rounded-xl bg-slate-50 px-2 py-3 text-center sm:rounded-2xl sm:px-3"
                 >
-                  <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex items-center justify-center gap-1.5">
                     <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${item.className}`}
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${item.className} sm:h-8 sm:w-8`}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </span>
-                    <span className="truncate text-sm font-semibold text-slate-700">
+                    <span className="truncate text-xs font-semibold text-slate-700 sm:text-sm">
                       {item.label}
                     </span>
                   </div>
-                  <p className="font-display text-xl font-semibold text-slate-950">
+                  <p className="mt-1 font-display text-xl font-semibold text-slate-950 sm:text-2xl">
                     {item.value}
                   </p>
                 </div>

@@ -45,19 +45,19 @@ export default async function CreatorAboutPage({
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
         <Card className="overflow-hidden border-border bg-surface p-0">
-          <div className="relative min-h-[260px] border-b border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.24),_transparent_42%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(219,234,254,0.92))] sm:min-h-[320px]">
+          <div className="relative min-h-[260px] border-b border-border sm:min-h-[320px]">
             {coverImage ? (
               <div
-                className="absolute inset-0 opacity-30"
+                className="absolute inset-0"
                 style={{
-                  backgroundImage: `linear-gradient(135deg, rgba(15,23,42,0.08), rgba(15,23,42,0.24)), url(${coverImage})`,
+                  backgroundImage: `linear-gradient(145deg, rgba(15,23,42,0.20), rgba(15,23,42,0.34)), url(${coverImage})`,
                   backgroundPosition: "center",
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "cover",
                 }}
               />
             ) : null}
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/55 to-white/10" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.44),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.72),_rgba(255,255,255,0.92))]" />
             <div className="relative flex h-full flex-col justify-between gap-8 p-5 sm:p-8">
               <div className="flex justify-between gap-3">
                 <Badge className="w-fit">Profil Lengkap Creator</Badge>
@@ -70,7 +70,7 @@ export default async function CreatorAboutPage({
 
               <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                  <div className="rounded-full border-4 border-white/90 bg-white shadow-[0_18px_40px_rgba(37,99,235,0.18)]">
+                  <div className="inline-flex shrink-0 self-start rounded-full border-4 border-white/90 bg-white shadow-[0_18px_40px_rgba(37,99,235,0.18)]">
                     <AvatarBadge
                       name={profile.user.name || "Creator"}
                       avatarUrl={profile.user.image || ""}

@@ -27,7 +27,7 @@ export function AvatarBadge({
   return (
     <div
       className={cn(
-        "inline-flex items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-700 ring-1 ring-brand-200",
+        "inline-flex aspect-square shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 font-semibold text-brand-700 ring-1 ring-brand-200",
         sizeClasses[size]
       )}
       style={

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { z } from "zod";
@@ -8,10 +8,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { LockKeyhole, Mail } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/hooks/use-preferences";
+import { showFeedbackAlert } from "@/lib/feedback-alert";
 
 const loginSchema = z.object({
   email: z.email("Format email belum valid."),
@@ -40,6 +42,9 @@ function getCredentialsErrorMessage(
 ) {
   if (code === "login_locked") {
     return "Login dikunci 15 menit karena 3 kali percobaan gagal.";
+  }
+  if (code === "account_blocked") {
+    return "Akun ini sedang diblokir oleh owner. Hubungi admin untuk membuka akses.";
   }
 
   const normalizedEmail = (emailAttempt || "").trim().toLowerCase();
@@ -79,17 +84,47 @@ export function LoginForm({
       });
 
       if (!result || result.error) {
-        setSubmitError(getCredentialsErrorMessage(result?.code, values.email));
+        const message = getCredentialsErrorMessage(result?.code, values.email);
+        setSubmitError(message);
+        void showFeedbackAlert({
+          title:
+            result?.code === "login_locked"
+              ? "Login sementara dikunci"
+              : result?.code === "account_blocked"
+                ? "Akun diblokir"
+                : "Login gagal",
+          text: message,
+          icon:
+            result?.code === "login_locked" || result?.code === "account_blocked"
+              ? "warning"
+              : "error",
+        });
         return;
       }
 
       window.location.replace(result.url ?? "/dashboard");
     } catch {
-      setSubmitError(
-        "Login belum bisa diproses. Periksa koneksi lalu coba lagi."
-      );
+      const message = "Login belum bisa diproses. Periksa koneksi lalu coba lagi.";
+      setSubmitError(message);
+      void showFeedbackAlert({
+        title: "Koneksi bermasalah",
+        text: message,
+        icon: "error",
+      });
     }
   });
+
+  useEffect(() => {
+    if (!oauthErrorMessage) {
+      return;
+    }
+
+    void showFeedbackAlert({
+      title: "Login Google belum berhasil",
+      text: oauthErrorMessage,
+      icon: "warning",
+    });
+  }, [oauthErrorMessage]);
 
   return (
     <AuthShell
@@ -169,21 +204,22 @@ export function LoginForm({
                 })
               }
             >
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] font-semibold text-slate-700">
-                G
-              </span>
+              <FcGoogle className="h-5 w-5" />
               {dictionary.continueGoogle}
             </Button>
           </>
         ) : null}
       </motion.form>
 
-      <p className="mt-5 text-center text-sm text-slate-600">
-        {dictionary.noAccount}{" "}
-        <Link href="/auth/signup" className="font-semibold text-brand-600">
+      <div className="mt-5 space-y-2 text-center text-sm text-slate-600">
+        <p>{dictionary.noAccount}</p>
+        <Link
+          href="/auth/signup"
+          className="inline-flex h-11 min-w-[170px] items-center justify-center rounded-xl border border-brand-700 bg-brand-600 px-5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-700"
+        >
           {dictionary.signup}
         </Link>
-      </p>
+      </div>
     </AuthShell>
   );
 }

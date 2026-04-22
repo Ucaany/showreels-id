@@ -44,6 +44,9 @@ export const users = pgTable(
     loginLockedUntil: timestamp("login_locked_until", { mode: "date" }),
     passwordResetToken: text("password_reset_token"),
     passwordResetExpires: timestamp("password_reset_expires", { mode: "date" }),
+    isBlocked: boolean("is_blocked").notNull().default(false),
+    blockedAt: timestamp("blocked_at", { mode: "date" }),
+    blockedReason: text("blocked_reason").notNull().default(""),
     usernameChangeCount: integer("username_change_count").notNull().default(0),
     usernameChangeWindowStart: timestamp("username_change_window_start", {
       mode: "date",
@@ -156,6 +159,32 @@ export const videos = pgTable(
   })
 );
 
+export const siteSettings = pgTable("site_settings", {
+  id: text("id").primaryKey().default("global"),
+  maintenanceEnabled: boolean("maintenance_enabled").notNull().default(false),
+  pauseEnabled: boolean("pause_enabled").notNull().default(false),
+  maintenanceMessage: text("maintenance_message")
+    .notNull()
+    .default("Website sedang dalam maintenance sementara. Silakan kembali beberapa saat lagi."),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const visitorEvents = pgTable(
+  "visitor_events",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    visitorId: text("visitor_id").notNull(),
+    path: text("path").notNull().default("/"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => ({
+    visitorIdIdx: index("visitor_events_visitor_id_idx").on(table.visitorId),
+    createdAtIdx: index("visitor_events_created_at_idx").on(table.createdAt),
+  })
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
@@ -173,3 +202,7 @@ export type DbUser = typeof users.$inferSelect;
 export type NewDbUser = typeof users.$inferInsert;
 export type DbVideo = typeof videos.$inferSelect;
 export type NewDbVideo = typeof videos.$inferInsert;
+export type DbSiteSettings = typeof siteSettings.$inferSelect;
+export type NewDbSiteSettings = typeof siteSettings.$inferInsert;
+export type DbVisitorEvent = typeof visitorEvents.$inferSelect;
+export type NewDbVisitorEvent = typeof visitorEvents.$inferInsert;
