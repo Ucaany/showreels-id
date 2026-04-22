@@ -12,7 +12,9 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { useAuthAttemptLock } from "@/hooks/use-auth-attempt-lock";
 import { usePreferences } from "@/hooks/use-preferences";
+import { getAuthRedirectUrl } from "@/lib/auth-redirect-url";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 
 const signupSchema = z
@@ -59,6 +61,7 @@ async function finalizeSignedInSession() {
 export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
+  const authLock = useAuthAttemptLock();
   const supabase = createClient();
 
   const form = useForm<SignupValues>({
@@ -72,7 +75,31 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
     },
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  const onInvalidSubmit = () => {
+    const attempt = authLock.registerFailure();
+    const message = attempt.isLocked
+      ? attempt.message
+      : "Periksa kembali data pendaftaran yang diisi.";
+
+    setSubmitError(message);
+    void showFeedbackAlert({
+      title: attempt.isLocked ? "Daftar dikunci sementara" : "Input belum valid",
+      text: message,
+      icon: attempt.isLocked ? "warning" : "error",
+    });
+  };
+
+  const onSubmit = async (values: SignupValues) => {
+    if (authLock.isLocked) {
+      setSubmitError(authLock.lockMessage);
+      void showFeedbackAlert({
+        title: "Daftar dikunci sementara",
+        text: authLock.lockMessage,
+        icon: "warning",
+      });
+      return;
+    }
+
     setSubmitError("");
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -83,22 +110,27 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             full_name: values.fullName,
             username: values.username,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=%2Fdashboard`,
+          emailRedirectTo: getAuthRedirectUrl("/dashboard"),
         },
       });
 
       if (error) {
+        const attempt = authLock.registerFailure();
         const message = error.message || "Gagal membuat akun.";
-        setSubmitError(message);
+        const visibleMessage = attempt.isLocked ? attempt.message : message;
+        setSubmitError(visibleMessage);
         void showFeedbackAlert({
-          title: "Daftar akun gagal",
-          text: message,
-          icon: "error",
+          title: attempt.isLocked
+            ? "Daftar dikunci sementara"
+            : "Daftar akun gagal",
+          text: visibleMessage,
+          icon: attempt.isLocked ? "warning" : "error",
         });
         return;
       }
 
       if (!data.session) {
+        authLock.clearFailures();
         const message = "Akun dibuat, tetapi login otomatis gagal.";
         setSubmitError(message);
         void showFeedbackAlert({
@@ -122,12 +154,12 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         return;
       }
 
+      authLock.clearFailures();
       await showFeedbackAlert({
-        title: "Akun berhasil dibuat",
-        text: "Kamu akan diarahkan ke dashboard.",
+        title: "Berhasil Daftar",
+        text: "Kamu akan diarahkan ke halaman terkait.",
         icon: "success",
         confirmButtonText: "Lanjut",
-        timer: 900,
       });
       window.location.replace(bootstrapResult.redirectTo);
     } catch {
@@ -139,7 +171,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         icon: "error",
       });
     }
-  });
+  };
 
   return (
     <AuthShell
@@ -147,7 +179,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
       subtitle="Buat akun creator dengan tampilan yang lebih bersih dan alur registrasi yang sederhana."
     >
       <motion.form
-        onSubmit={onSubmit}
+        onSubmit={form.handleSubmit(onSubmit, onInvalidSubmit)}
         initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -208,14 +240,22 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        {submitError ? (
+        {authLock.lockMessage || submitError ? (
           <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {submitError}
+            {authLock.lockMessage || submitError}
           </p>
         ) : null}
 
-        <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Membuat akun..." : dictionary.signup}
+        <Button
+          className="w-full"
+          type="submit"
+          disabled={form.formState.isSubmitting || authLock.isLocked}
+        >
+          {authLock.isLocked
+            ? "Daftar terkunci"
+            : form.formState.isSubmitting
+              ? "Membuat akun..."
+              : dictionary.signup}
         </Button>
 
         {googleEnabled ? (
@@ -229,13 +269,23 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             <Button
               type="button"
               variant="secondary"
-              className="w-full"
+              className="w-full border border-slate-300 bg-white text-slate-950 shadow-sm hover:bg-white"
+              disabled={authLock.isLocked}
               onClick={async () => {
-                const origin = window.location.origin;
+                if (authLock.isLocked) {
+                  setSubmitError(authLock.lockMessage);
+                  void showFeedbackAlert({
+                    title: "Daftar dikunci sementara",
+                    text: authLock.lockMessage,
+                    icon: "warning",
+                  });
+                  return;
+                }
+
                 const { data, error } = await supabase.auth.signInWithOAuth({
                   provider: "google",
                   options: {
-                    redirectTo: `${origin}/auth/callback?next=%2Fdashboard`,
+                    redirectTo: getAuthRedirectUrl("/dashboard"),
                     queryParams: {
                       prompt: "select_account",
                     },
@@ -243,12 +293,16 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
                 });
 
                 if (error) {
+                  const attempt = authLock.registerFailure();
                   const message = "Google login belum berhasil.";
-                  setSubmitError(message);
+                  const visibleMessage = attempt.isLocked ? attempt.message : message;
+                  setSubmitError(visibleMessage);
                   void showFeedbackAlert({
-                    title: "Google login gagal",
-                    text: message,
-                    icon: "error",
+                    title: attempt.isLocked
+                      ? "Daftar dikunci sementara"
+                      : "Google login gagal",
+                    text: visibleMessage,
+                    icon: attempt.isLocked ? "warning" : "error",
                   });
                   return;
                 }

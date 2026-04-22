@@ -10,6 +10,7 @@ import { Mail } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getAuthRedirectUrl } from "@/lib/auth-redirect-url";
 import { createClient } from "@/lib/supabase/client";
 
 const schema = z.object({
@@ -33,7 +34,7 @@ export default function ForgotPasswordPage() {
     setMessage("");
 
     const { error: requestError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=%2Fauth%2Freset-password`,
+      redirectTo: getAuthRedirectUrl("/auth/reset-password"),
     });
 
     if (requestError) {

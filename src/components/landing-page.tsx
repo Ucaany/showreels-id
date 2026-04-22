@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, LazyMotion, domAnimation, m } from "framer-motion";
 import {
   ArrowRight,
@@ -32,7 +32,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getThumbnailCandidates } from "@/lib/video-utils";
 import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
 
-const CREATOR_ROTATION_INTERVAL_MS = 10 * 60 * 1000;
+const CREATOR_ROTATION_INTERVAL_MS = 5 * 60 * 1000;
 const CREATOR_DEVICE_SEED_KEY = "videoport-featured-creator-seed-v1";
 
 function createSeededHash(value: string) {
@@ -171,7 +171,6 @@ export function LandingPage({
   const [creatorTimeBucket, setCreatorTimeBucket] = useState(0);
   const [latestVideosView, setLatestVideosView] = useState<"grid" | "list">("grid");
   const supabase = createClient();
-  const creatorScrollRef = useRef<HTMLDivElement | null>(null);
   const year = new Date().getFullYear();
 
   const loginLabel =
@@ -298,7 +297,7 @@ export function LandingPage({
     [featuredCreators, locale]
   );
 
-  const featuredCreatorSlides = useMemo(() => {
+  const featuredCreatorCards = useMemo(() => {
     const creatorsWithBio = featuredCreators.filter(
       (creator) => creator.bio && creator.bio.trim().length > 0
     );
@@ -315,11 +314,6 @@ export function LandingPage({
 
     return [...shuffledWithBio, ...shuffledWithoutBio].slice(0, 10);
   }, [featuredCreators, creatorDeviceSeed, creatorTimeBucket]);
-
-  const featuredCreatorsDesktop = useMemo(
-    () => featuredCreatorSlides.slice(0, 3),
-    [featuredCreatorSlides]
-  );
 
   const latestVideoRows = useMemo(() => featuredVideos.slice(0, 3), [featuredVideos]);
 
@@ -637,7 +631,7 @@ export function LandingPage({
           <div className="relative">
             <section
               id="featured-creators"
-              className="content-auto mx-auto mt-10 w-full max-w-7xl overflow-hidden px-4 text-center sm:px-6"
+              className="content-auto mx-auto mt-10 w-full max-w-7xl px-4 text-center sm:px-6"
             >
               <div className="mx-auto max-w-2xl">
                 <div className="min-w-0">
@@ -655,16 +649,16 @@ export function LandingPage({
                 </p>
               </div>
 
-              <div className="mx-auto mt-3 hidden max-w-6xl gap-4 text-left lg:grid lg:grid-cols-3">
-                {featuredCreatorsDesktop.length === 0 ? (
-                  <p className="col-span-3 text-sm text-slate-600">
+              <div className="mx-auto mt-4 grid max-w-6xl grid-cols-1 gap-3 text-left sm:grid-cols-2 lg:grid-cols-3">
+                {featuredCreatorCards.length === 0 ? (
+                  <p className="text-center text-sm text-slate-600 sm:col-span-2 lg:col-span-3">
                     {locale === "en" ? "No creator yet." : "Belum ada creator."}
                   </p>
                 ) : (
-                  featuredCreatorsDesktop.map((creator, index) => (
+                  featuredCreatorCards.map((creator, index) => (
                     <m.div
-                      key={`desktop-${creator.id}`}
-                      className="h-full"
+                      key={creator.id}
+                      className="h-full min-w-0"
                       initial={{ opacity: 0, y: 18 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
@@ -672,56 +666,7 @@ export function LandingPage({
                     >
                       <Link
                         href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                        className="flex h-full min-h-[190px] min-w-0 flex-col rounded-[1.2rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_14px_26px_rgba(37,99,235,0.1)]"
-                      >
-                        <div className="flex min-w-0 items-center gap-3">
-                          <AvatarBadge
-                            name={creator.name || "Creator"}
-                            avatarUrl={creator.image || ""}
-                            size="lg"
-                          />
-                          <div className="min-w-0">
-                            <p className="truncate text-base font-semibold text-slate-950">
-                              {creator.name || "Creator"}
-                            </p>
-                            <p className="truncate text-sm text-slate-500">
-                              @{creator.username || "creator"}
-                            </p>
-                          </div>
-                        </div>
-                        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-600">
-                          {creator.bio?.trim() ||
-                            (locale === "en"
-                              ? "Bio has not been added yet."
-                              : "Bio belum ditambahkan.")}
-                        </p>
-                      </Link>
-                    </m.div>
-                  ))
-                )}
-              </div>
-
-              <div
-                ref={creatorScrollRef}
-                className="mt-3 flex w-full snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pr-4 text-left [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
-              >
-                {featuredCreatorSlides.length === 0 ? (
-                  <p className="w-full text-sm text-slate-600">
-                    {locale === "en" ? "No creator yet." : "Belum ada creator."}
-                  </p>
-                ) : (
-                  featuredCreatorSlides.map((creator, index) => (
-                    <m.div
-                      key={creator.id}
-                      className="min-w-[64%] shrink-0 snap-start sm:min-w-[48%] md:min-w-[42%]"
-                      initial={{ opacity: 0, y: 18 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.3 }}
-                      transition={{ delay: index * 0.05, duration: 0.24 }}
-                    >
-                      <Link
-                        href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                        className="flex h-full min-h-[184px] min-w-0 flex-col rounded-[1.2rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_14px_26px_rgba(37,99,235,0.1)]"
+                        className="flex h-full min-h-[184px] min-w-0 flex-col rounded-[1.2rem] border border-slate-200 bg-white/92 p-4 shadow-sm transition hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_14px_26px_rgba(37,99,235,0.1)] sm:min-h-[190px]"
                       >
                         <div className="flex min-w-0 items-center gap-3">
                           <AvatarBadge
@@ -811,7 +756,7 @@ export function LandingPage({
                     {locale === "en" ? "No video yet." : "Belum ada video."}
                   </p>
                 ) : (
-                  latestVideoRows.map((video, index) => {
+                  latestVideoRows.map((video) => {
                     const thumbnail =
                       getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
                     const sourceMeta = getVideoSourceBadgeMeta(video.sourceUrl);
@@ -824,8 +769,7 @@ export function LandingPage({
                         viewport={{ once: true, amount: 0.25 }}
                         transition={{ duration: 0.28 }}
                         className={cn(
-                          latestVideosView === "grid" ? "h-full" : "",
-                          index > 1 ? "max-md:hidden" : ""
+                          latestVideosView === "grid" ? "h-full" : ""
                         )}
                       >
                         <Link

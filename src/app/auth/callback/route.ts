@@ -10,6 +10,12 @@ function getSafeNextPath(value: string | null) {
   return value;
 }
 
+function getAuthSuccessUrl(destination: string, requestUrl: string) {
+  const url = new URL(destination, requestUrl);
+  url.searchParams.set("auth", "login");
+  return url;
+}
+
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const next = getSafeNextPath(request.nextUrl.searchParams.get("next"));
@@ -33,7 +39,9 @@ export async function GET(request: NextRequest) {
         const profile = await syncUserProfile(user);
         const destination = profile.role === "owner" ? "/admin" : next;
 
-        return NextResponse.redirect(new URL(destination, request.url));
+        return NextResponse.redirect(
+          getAuthSuccessUrl(destination, request.url)
+        );
       } catch (syncError) {
         console.error("Failed to sync profile during auth callback", syncError);
         await supabase.auth.signOut();

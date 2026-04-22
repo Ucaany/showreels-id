@@ -3,14 +3,9 @@ import { NextResponse } from "next/server";
 import { and, eq, gte } from "drizzle-orm";
 import { db } from "@/db";
 import { visitorEvents } from "@/db/schema";
+import { getWibDayStartUtc } from "@/lib/visitor-time";
 
 const VISITOR_COOKIE = "videoport_visitor_id";
-
-function getTodayStart() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
-}
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
@@ -22,7 +17,7 @@ export async function POST(request: Request) {
   const existingEvent = await db.query.visitorEvents.findFirst({
     where: and(
       eq(visitorEvents.visitorId, visitorId),
-      gte(visitorEvents.createdAt, getTodayStart())
+      gte(visitorEvents.createdAt, getWibDayStartUtc())
     ),
     columns: { id: true },
   });

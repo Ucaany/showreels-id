@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Home, LogOut, Menu, Settings2, UserRound, Video, X } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { showFeedbackAlert } from "@/lib/feedback-alert";
 import { createClient } from "@/lib/supabase/client";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { DbUser } from "@/db/schema";
@@ -22,6 +23,10 @@ export function DashboardShell({
   mode?: "creator" | "admin";
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const authStatus = searchParams.get("auth");
+  const searchParamsValue = searchParams.toString();
   const { dictionary } = usePreferences();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const supabase = createClient();
@@ -57,6 +62,23 @@ export function DashboardShell({
       : [
           ...navItems,
         ];
+
+  useEffect(() => {
+    if (authStatus !== "login") return;
+
+    void showFeedbackAlert({
+      title: "Berhasil Login",
+      text: "Akun berhasil masuk. Kamu akan tetap berada di dashboard.",
+      icon: "success",
+      confirmButtonText: "Lanjut",
+      timer: 1800,
+    }).finally(() => {
+      const params = new URLSearchParams(searchParamsValue);
+      params.delete("auth");
+      const nextUrl = params.toString() ? `${pathname}?${params}` : pathname;
+      router.replace(nextUrl, { scroll: false });
+    });
+  }, [authStatus, pathname, router, searchParamsValue]);
 
   return (
     <div className="min-h-screen bg-canvas text-slate-950">

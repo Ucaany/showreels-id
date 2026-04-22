@@ -1,10 +1,12 @@
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -128,6 +130,23 @@ export const visitorEvents = pgTable(
   })
 );
 
+export const visitorDailyStats = pgTable(
+  "visitor_daily_stats",
+  {
+    day: date("day", { mode: "string" }).notNull(),
+    path: text("path").notNull().default("/"),
+    totalEvents: integer("total_events").notNull().default(0),
+    uniqueVisitors: integer("unique_visitors").notNull().default(0),
+  },
+  (table) => ({
+    pk: primaryKey({
+      name: "visitor_daily_stats_day_path_pk",
+      columns: [table.day, table.path],
+    }),
+    dayIdx: index("visitor_daily_stats_day_idx").on(table.day),
+  })
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   videos: many(videos),
 }));
@@ -147,3 +166,5 @@ export type DbSiteSettings = typeof siteSettings.$inferSelect;
 export type NewDbSiteSettings = typeof siteSettings.$inferInsert;
 export type DbVisitorEvent = typeof visitorEvents.$inferSelect;
 export type NewDbVisitorEvent = typeof visitorEvents.$inferInsert;
+export type DbVisitorDailyStats = typeof visitorDailyStats.$inferSelect;
+export type NewDbVisitorDailyStats = typeof visitorDailyStats.$inferInsert;

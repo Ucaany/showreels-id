@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { requireAdminSession } from "@/server/admin-guard";
+import { getDatabaseStorageInfo } from "@/server/database-storage";
 
 export async function GET() {
   const admin = await requireAdminSession();
@@ -12,10 +13,14 @@ export async function GET() {
   const startedAt = performance.now();
 
   try {
-    await db.execute(sql`select 1`);
+    const [, storage] = await Promise.all([
+      db.execute(sql`select 1`),
+      getDatabaseStorageInfo(),
+    ]);
     return NextResponse.json({
       ok: true,
       latencyMs: Math.round(performance.now() - startedAt),
+      storage,
       checkedAt: new Date().toISOString(),
     });
   } catch (error) {

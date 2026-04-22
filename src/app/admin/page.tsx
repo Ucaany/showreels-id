@@ -1,38 +1,55 @@
-import { and, count, desc, eq, gte, ilike, ne, notInArray, or, sql } from "drizzle-orm";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  lt,
+  ne,
+  notInArray,
+  or,
+  sql,
+} from "drizzle-orm";
 import {
   AdminPanelClient,
   type AdminUserItem,
   type AdminVideoItem,
 } from "@/components/admin/admin-panel-client";
 import { db } from "@/db";
-import { users, videos, visitorEvents } from "@/db/schema";
+import { users, videos, visitorDailyStats, visitorEvents } from "@/db/schema";
 import { getAdminEmailList } from "@/server/admin-access";
 import { getSiteSettings } from "@/server/site-settings";
+import {
+  getPreviousWibDateString,
+  getWibDateString,
+  getWibDayStartUtc,
+} from "@/lib/visitor-time";
+import { getDatabaseStorageInfo } from "@/server/database-storage";
 
 async function getDatabaseHealth() {
   const startedAt = Date.now();
 
   try {
-    await db.execute(sql`select 1`);
+    const [, storage] = await Promise.all([
+      db.execute(sql`select 1`),
+      getDatabaseStorageInfo(),
+    ]);
     const latencyMs = Date.now() - startedAt;
     return {
       ok: true,
       message: `Database sehat (${latencyMs}ms)`,
       latencyMs,
+      storage,
     };
   } catch (error) {
     return {
       ok: false,
       message: error instanceof Error ? error.message : "Database tidak merespons.",
       latencyMs: 0,
+      storage: null,
     };
   }
-}
-
-function getTodayStart() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
 }
 
 export default async function AdminPanelPage({
@@ -77,6 +94,9 @@ export default async function AdminPanelPage({
         )
       )
     : videoBaseFilter;
+  const currentWibDay = getWibDateString();
+  const yesterdayWibDay = getPreviousWibDateString();
+  const sevenDaysAgoWibDay = getPreviousWibDateString(7);
 
   const [
     totalUsersRow,
@@ -85,6 +105,8 @@ export default async function AdminPanelPage({
     draftVideosRow,
     privateVideosRow,
     visitorTodayRow,
+    visitorYesterdayRow,
+    visitorLast7DaysRow,
     userRows,
     videoRows,
     settings,
@@ -116,7 +138,28 @@ export default async function AdminPanelPage({
         value: sql<number>`count(distinct ${visitorEvents.visitorId})`.mapWith(Number),
       })
       .from(visitorEvents)
-      .where(gte(visitorEvents.createdAt, getTodayStart())),
+      .where(gte(visitorEvents.createdAt, getWibDayStartUtc())),
+    db
+      .select({
+        value: sql<number>`coalesce(sum(${visitorDailyStats.uniqueVisitors}), 0)`.mapWith(
+          Number
+        ),
+      })
+      .from(visitorDailyStats)
+      .where(eq(visitorDailyStats.day, yesterdayWibDay)),
+    db
+      .select({
+        value: sql<number>`coalesce(sum(${visitorDailyStats.uniqueVisitors}), 0)`.mapWith(
+          Number
+        ),
+      })
+      .from(visitorDailyStats)
+      .where(
+        and(
+          gte(visitorDailyStats.day, sevenDaysAgoWibDay),
+          lt(visitorDailyStats.day, currentWibDay)
+        )
+      ),
     db.query.users.findMany({
       where: userWhere,
       orderBy: desc(users.createdAt),
@@ -198,6 +241,8 @@ export default async function AdminPanelPage({
         draftVideos: draftVideosRow[0]?.value ?? 0,
         privateVideos: privateVideosRow[0]?.value ?? 0,
         visitorToday: visitorTodayRow[0]?.value ?? 0,
+        visitorYesterday: visitorYesterdayRow[0]?.value ?? 0,
+        visitorLast7Days: visitorLast7DaysRow[0]?.value ?? 0,
       }}
       dbHealth={dbHealth}
       settings={{

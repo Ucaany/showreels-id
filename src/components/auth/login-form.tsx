@@ -12,7 +12,9 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { useAuthAttemptLock } from "@/hooks/use-auth-attempt-lock";
 import { usePreferences } from "@/hooks/use-preferences";
+import { getAuthRedirectUrl } from "@/lib/auth-redirect-url";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 
 const loginSchema = z.object({
@@ -87,6 +89,7 @@ export function LoginForm({
 }) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
+  const authLock = useAuthAttemptLock();
   const supabase = createClient();
   const oauthErrorMessage = getOauthErrorMessage(oauthError);
 
@@ -98,7 +101,31 @@ export function LoginForm({
     },
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  const onInvalidSubmit = () => {
+    const attempt = authLock.registerFailure();
+    const message = attempt.isLocked
+      ? attempt.message
+      : "Periksa kembali email dan password yang diisi.";
+
+    setSubmitError(message);
+    void showFeedbackAlert({
+      title: attempt.isLocked ? "Login dikunci sementara" : "Input belum valid",
+      text: message,
+      icon: attempt.isLocked ? "warning" : "error",
+    });
+  };
+
+  const onSubmit = async (values: LoginValues) => {
+    if (authLock.isLocked) {
+      setSubmitError(authLock.lockMessage);
+      void showFeedbackAlert({
+        title: "Login dikunci sementara",
+        text: authLock.lockMessage,
+        icon: "warning",
+      });
+      return;
+    }
+
     setSubmitError("");
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -107,12 +134,14 @@ export function LoginForm({
       });
 
       if (error) {
+        const attempt = authLock.registerFailure();
         const message = getCredentialsErrorMessage(error.message, values.email);
-        setSubmitError(message);
+        const visibleMessage = attempt.isLocked ? attempt.message : message;
+        setSubmitError(visibleMessage);
         void showFeedbackAlert({
-          title: "Login gagal",
-          text: message,
-          icon: "error",
+          title: attempt.isLocked ? "Login dikunci sementara" : "Login gagal",
+          text: visibleMessage,
+          icon: attempt.isLocked ? "warning" : "error",
         });
         return;
       }
@@ -130,6 +159,13 @@ export function LoginForm({
         return;
       }
 
+      authLock.clearFailures();
+      await showFeedbackAlert({
+        title: "Berhasil Login",
+        text: "Kamu akan diarahkan ke halaman terkait.",
+        icon: "success",
+        confirmButtonText: "Lanjut",
+      });
       window.location.replace(bootstrapResult.redirectTo);
     } catch {
       const message = "Login belum bisa diproses. Periksa koneksi lalu coba lagi.";
@@ -140,7 +176,7 @@ export function LoginForm({
         icon: "error",
       });
     }
-  });
+  };
 
   useEffect(() => {
     if (!oauthErrorMessage) {
@@ -161,7 +197,7 @@ export function LoginForm({
       showPreferences={false}
     >
       <motion.form
-        onSubmit={onSubmit}
+        onSubmit={form.handleSubmit(onSubmit, onInvalidSubmit)}
         initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -203,14 +239,22 @@ export function LoginForm({
           </p>
         </div>
 
-        {submitError ? (
+        {authLock.lockMessage || submitError ? (
           <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {submitError}
+            {authLock.lockMessage || submitError}
           </p>
         ) : null}
 
-        <Button className="w-full" type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Memproses..." : dictionary.login}
+        <Button
+          className="w-full"
+          type="submit"
+          disabled={form.formState.isSubmitting || authLock.isLocked}
+        >
+          {authLock.isLocked
+            ? "Login terkunci"
+            : form.formState.isSubmitting
+              ? "Memproses..."
+              : dictionary.login}
         </Button>
 
         {googleEnabled ? (
@@ -224,13 +268,23 @@ export function LoginForm({
             <Button
               type="button"
               variant="secondary"
-              className="w-full"
+              className="w-full border border-slate-300 bg-white text-slate-950 shadow-sm hover:bg-white"
+              disabled={authLock.isLocked}
               onClick={async () => {
-                const origin = window.location.origin;
+                if (authLock.isLocked) {
+                  setSubmitError(authLock.lockMessage);
+                  void showFeedbackAlert({
+                    title: "Login dikunci sementara",
+                    text: authLock.lockMessage,
+                    icon: "warning",
+                  });
+                  return;
+                }
+
                 const { data, error } = await supabase.auth.signInWithOAuth({
                   provider: "google",
                   options: {
-                    redirectTo: `${origin}/auth/callback?next=%2Fdashboard`,
+                    redirectTo: getAuthRedirectUrl("/dashboard"),
                     queryParams: {
                       prompt: "select_account",
                     },
@@ -238,12 +292,16 @@ export function LoginForm({
                 });
 
                 if (error) {
+                  const attempt = authLock.registerFailure();
                   const message = "Google login belum berhasil.";
-                  setSubmitError(message);
+                  const visibleMessage = attempt.isLocked ? attempt.message : message;
+                  setSubmitError(visibleMessage);
                   void showFeedbackAlert({
-                    title: "Google login gagal",
-                    text: message,
-                    icon: "error",
+                    title: attempt.isLocked
+                      ? "Login dikunci sementara"
+                      : "Google login gagal",
+                    text: visibleMessage,
+                    icon: attempt.isLocked ? "warning" : "error",
                   });
                   return;
                 }
