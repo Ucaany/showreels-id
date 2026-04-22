@@ -36,6 +36,10 @@ export const users = pgTable(
     youtubeUrl: text("youtube_url").notNull().default(""),
     facebookUrl: text("facebook_url").notNull().default(""),
     threadsUrl: text("threads_url").notNull().default(""),
+    profileVisibility: text("profile_visibility")
+      .$type<"private" | "semi_private" | "public">()
+      .notNull()
+      .default("public"),
     skills: jsonb("skills")
       .$type<string[]>()
       .notNull()
@@ -74,7 +78,7 @@ export const videos = pgTable(
       .notNull()
       .default(sql`'[]'::jsonb`),
     visibility: text("visibility")
-      .$type<"draft" | "private" | "public">()
+      .$type<"draft" | "private" | "semi_private" | "public">()
       .notNull()
       .default("public"),
     thumbnailUrl: text("thumbnail_url").notNull().default(""),

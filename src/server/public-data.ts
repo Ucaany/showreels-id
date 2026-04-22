@@ -34,9 +34,14 @@ function parseAdminEmails(adminEmailsCsv: string) {
 }
 
 function buildCreatorFilter(adminEmails: string[]) {
+  const visibilityFilter = eq(users.profileVisibility, "public");
   return adminEmails.length
-    ? and(notInArray(users.email, adminEmails), ne(users.role, "owner"))
-    : ne(users.role, "owner");
+    ? and(
+        notInArray(users.email, adminEmails),
+        ne(users.role, "owner"),
+        visibilityFilter
+      )
+    : and(ne(users.role, "owner"), visibilityFilter);
 }
 
 async function fetchCompletePublicVideos(
@@ -69,6 +74,7 @@ async function fetchCompletePublicVideos(
           image: true,
           email: true,
           role: true,
+          profileVisibility: true,
         },
       },
     },
@@ -81,6 +87,9 @@ async function fetchCompletePublicVideos(
       }
 
       if (video.author.role === "owner" || isAdminEmail(video.author.email)) {
+        return false;
+      }
+      if (video.author.profileVisibility !== "public") {
         return false;
       }
 
@@ -235,7 +244,10 @@ export async function getPublicShowcaseVideos(limit = 30) {
   }
 }
 
-export async function getPublicProfile(username: string) {
+export async function getPublicProfile(
+  username: string,
+  viewerUserId?: string | null
+) {
   if (!isDatabaseConfigured) {
     return null;
   }
@@ -246,6 +258,11 @@ export async function getPublicProfile(username: string) {
     });
 
     if (!user || user.role === "owner" || isAdminEmail(user.email)) {
+      return null;
+    }
+
+    const isOwner = Boolean(viewerUserId && viewerUserId === user.id);
+    if (user.profileVisibility === "private" && !isOwner) {
       return null;
     }
 
@@ -261,14 +278,14 @@ export async function getPublicProfile(username: string) {
   }
 }
 
-export async function getPublicVideo(slug: string) {
+export async function getPublicVideo(slug: string, viewerUserId?: string | null) {
   if (!isDatabaseConfigured) {
     return null;
   }
 
   try {
     const video = await db.query.videos.findFirst({
-      where: and(eq(videos.publicSlug, slug), eq(videos.visibility, "public")),
+      where: eq(videos.publicSlug, slug),
       with: {
         author: true,
       },
@@ -280,6 +297,15 @@ export async function getPublicVideo(slug: string) {
       isAdminEmail(video.author?.email)
     ) {
       return null;
+    }
+
+    const isOwner = Boolean(viewerUserId && viewerUserId === video.author.id);
+    if (video.author.profileVisibility === "private" && !isOwner) {
+      return null;
+    }
+
+    if (video.visibility === "draft" || video.visibility === "private") {
+      return isOwner ? video : null;
     }
 
     return video;

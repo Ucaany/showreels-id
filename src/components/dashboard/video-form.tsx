@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { usePreferences } from "@/hooks/use-preferences";
+import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
 import {
   buildAiDescription,
   detectVideoSource,
@@ -106,7 +107,7 @@ const schema = z
     extraVideoUrls: z.string().optional(),
     imageUrls: z.string().optional(),
     tags: z.string().optional(),
-    visibility: z.enum(["draft", "private", "public"]),
+    visibility: z.enum(["draft", "private", "semi_private", "public"]),
     description: z.string().max(1500, "Deskripsi terlalu panjang.").optional(),
   })
   .refine((value) => detectVideoSource(value.sourceUrl) !== null, {
@@ -338,7 +339,11 @@ export function VideoForm({
     const detectedSource = detectVideoSource(sourceUrl);
 
     if (!title || !detectedSource) {
-      setSubmitError("Isi judul dan URL video yang valid dulu.");
+      await showFeedbackAlert({
+        title: "Data belum lengkap",
+        text: "Isi judul dan URL video yang valid dulu.",
+        icon: "warning",
+      });
       return;
     }
 
@@ -349,6 +354,12 @@ export function VideoForm({
       { shouldValidate: true }
     );
     setAiLoading(false);
+    await showFeedbackAlert({
+      title: "Draft deskripsi AI siap",
+      text: "Silakan review lalu sesuaikan dengan kebutuhan project.",
+      icon: "success",
+      timer: 1200,
+    });
   };
 
   const onSubmit = form.handleSubmit(async (values) => {
@@ -386,20 +397,32 @@ export function VideoForm({
       | null;
 
     if (!response.ok) {
-      setSubmitError(payload?.error ?? "Gagal menyimpan video.");
+      await showFeedbackAlert({
+        title: "Gagal menyimpan video",
+        text: payload?.error ?? "Coba lagi dalam beberapa saat.",
+        icon: "error",
+      });
       return;
     }
 
     if (mode === "edit") {
-      setSuccess("Video berhasil diperbarui.");
+      await showFeedbackAlert({
+        title: "Video berhasil diperbarui",
+        icon: "success",
+        timer: 1200,
+      });
       router.refresh();
       return;
     }
 
-    setSuccess("Video berhasil disimpan.");
+    await showFeedbackAlert({
+      title: "Video berhasil disimpan",
+      icon: "success",
+      timer: 1200,
+    });
     window.localStorage.removeItem(storageKey);
     router.push(
-      values.visibility === "public"
+      values.visibility === "public" || values.visibility === "semi_private"
         ? `/v/${payload?.video?.publicSlug ?? ""}`
         : "/dashboard"
     );
@@ -411,9 +434,12 @@ export function VideoForm({
       return;
     }
 
-    const confirmed = window.confirm(
-      "Yakin ingin menghapus video ini? Tindakan ini tidak bisa dibatalkan."
-    );
+    const confirmed = await confirmFeedbackAction({
+      title: "Hapus video ini?",
+      text: "Tindakan ini tidak bisa dibatalkan.",
+      confirmButtonText: "Hapus",
+      icon: "warning",
+    });
 
     if (!confirmed) {
       return;
@@ -431,11 +457,20 @@ export function VideoForm({
     });
 
     if (!response.ok) {
-      setSubmitError("Gagal menghapus video.");
+      await showFeedbackAlert({
+        title: "Gagal menghapus video",
+        text: "Coba lagi dalam beberapa saat.",
+        icon: "error",
+      });
       setDeleteLoading(false);
       return;
     }
 
+    await showFeedbackAlert({
+      title: "Video berhasil dihapus",
+      icon: "success",
+      timer: 1000,
+    });
     router.push("/dashboard");
     router.refresh();
   };
@@ -670,12 +705,13 @@ export function VideoForm({
             <Select {...form.register("visibility")}>
               <option value="draft">Draft - belum siap ditinjau klien</option>
               <option value="private">Private - hanya tersimpan di dashboard</option>
+              <option value="semi_private">Semi Private - hanya yang punya link</option>
               <option value="public">Public - tampil di profil dan link publik</option>
             </Select>
           </div>
 
           <div>
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <label className="block text-sm font-medium text-slate-800">
                 Deskripsi
               </label>
@@ -683,6 +719,7 @@ export function VideoForm({
                 type="button"
                 variant="secondary"
                 size="sm"
+                className="rounded-full border border-brand-200 bg-gradient-to-r from-brand-50 to-white px-4 text-brand-700 hover:from-brand-100 hover:to-brand-50"
                 onClick={handleGenerateDescription}
                 disabled={aiLoading}
               >

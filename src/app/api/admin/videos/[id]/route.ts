@@ -14,7 +14,7 @@ import { requireAdminSession } from "@/server/admin-guard";
 const adminVideoUpdateSchema = z.object({
   title: z.string().trim().min(4, "Judul minimal 4 karakter.").max(180),
   description: z.string().trim().max(1500).default(""),
-  visibility: z.enum(["public", "draft", "private"]),
+  visibility: z.enum(["public", "semi_private", "draft", "private"]),
   sourceUrl: z
     .url("URL sumber belum valid.")
     .transform((value) => normalizeHttpUrl(value)),

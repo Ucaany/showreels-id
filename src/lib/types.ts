@@ -1,5 +1,6 @@
 export type VideoSource = "youtube" | "gdrive" | "instagram" | "vimeo";
-export type VideoVisibility = "draft" | "private" | "public";
+export type VideoVisibility = "draft" | "private" | "semi_private" | "public";
+export type ProfileVisibility = "private" | "semi_private" | "public";
 export type VideoAspectRatio = "landscape" | "portrait";
 
 export interface AuthSession {
@@ -28,6 +29,7 @@ export interface UserProfile {
   facebookUrl: string;
   threadsUrl: string;
   skills: string[];
+  profileVisibility: ProfileVisibility;
   createdAt: string;
 }
 

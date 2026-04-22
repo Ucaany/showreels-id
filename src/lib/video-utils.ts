@@ -112,6 +112,7 @@ export function getSourceLabel(source: VideoSource): string {
 export function getVisibilityLabel(visibility: VideoVisibility): string {
   if (visibility === "draft") return "Draft";
   if (visibility === "private") return "Private";
+  if (visibility === "semi_private") return "Semi Private";
   return "Public";
 }
 

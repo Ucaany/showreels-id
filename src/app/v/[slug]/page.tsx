@@ -34,8 +34,8 @@ export default async function PublicVideoPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const video = await getPublicVideo(slug);
   const currentUser = await getCurrentUser();
+  const video = await getPublicVideo(slug, currentUser?.id);
 
   if (!video || !video.author) {
     notFound();
@@ -55,6 +55,9 @@ export default async function PublicVideoPage({
     30
   );
   const sourceMeta = getVideoSourceBadgeMeta(video.sourceUrl);
+  const isVideoOwner = Boolean(
+    currentUser && video.author && currentUser.id === video.author.id
+  );
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -84,23 +87,22 @@ export default async function PublicVideoPage({
                 </Link>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-brand-700 text-white shadow-none">
-                  <LayoutTemplate className="mr-1 h-3.5 w-3.5" />
-                  {video.aspectRatio === "portrait" ? "Portrait 9:16" : "Landscape 16:9"}
-                </Badge>
-                <Badge className="bg-slate-900 text-white shadow-none">
-                  Output: {video.outputType || "General"}
-                </Badge>
-                <Badge className="bg-slate-800 text-white shadow-none">
-                  Durasi: {video.durationLabel || "-"}
-                </Badge>
-              </div>
-
               <div className="space-y-3">
                 <h1 className="font-display text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">
                   {video.title}
                 </h1>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="bg-brand-700 text-white shadow-none">
+                    <LayoutTemplate className="mr-1 h-3.5 w-3.5" />
+                    {video.aspectRatio === "portrait" ? "Portrait 9:16" : "Landscape 16:9"}
+                  </Badge>
+                  <Badge className="bg-slate-900 text-white shadow-none">
+                    Output: {video.outputType || "General"}
+                  </Badge>
+                  <Badge className="bg-slate-800 text-white shadow-none">
+                    Durasi: {video.durationLabel || "-"}
+                  </Badge>
+                </div>
                 <div className="rounded-2xl border border-slate-200 bg-white/70 p-4">
                   <p className="whitespace-pre-line text-sm leading-7 text-slate-700 sm:text-base">
                     {video.description}
@@ -179,11 +181,11 @@ export default async function PublicVideoPage({
                       Lihat semua video creator
                     </Button>
                   </Link>
-                  {!currentUser ? (
+                  {isVideoOwner ? (
                     <div className="flex justify-center">
                       <Link href="/dashboard">
                         <Button variant="secondary" size="sm">
-                          Kembali Ke Dashboard
+                          Kembali ke dashboard
                         </Button>
                       </Link>
                     </div>

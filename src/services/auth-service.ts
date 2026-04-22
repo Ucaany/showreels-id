@@ -97,6 +97,7 @@ export const authService = {
       facebookUrl: "",
       threadsUrl: "",
       skills: [],
+      profileVisibility: "public",
       createdAt: new Date().toISOString(),
     };
 

@@ -102,6 +102,7 @@ export default async function AdminPanelPage({
     totalUsersRow,
     totalVideosRow,
     publicVideosRow,
+    semiPrivateVideosRow,
     draftVideosRow,
     privateVideosRow,
     visitorTodayRow,
@@ -123,6 +124,11 @@ export default async function AdminPanelPage({
       .from(videos)
       .innerJoin(users, eq(videos.userId, users.id))
       .where(and(videoBaseFilter, eq(videos.visibility, "public"))),
+    db
+      .select({ value: count(videos.id) })
+      .from(videos)
+      .innerJoin(users, eq(videos.userId, users.id))
+      .where(and(videoBaseFilter, eq(videos.visibility, "semi_private"))),
     db
       .select({ value: count(videos.id) })
       .from(videos)
@@ -238,6 +244,7 @@ export default async function AdminPanelPage({
         totalUsers: totalUsersRow[0]?.value ?? 0,
         totalVideos: totalVideosRow[0]?.value ?? 0,
         publicVideos: publicVideosRow[0]?.value ?? 0,
+        semiPrivateVideos: semiPrivateVideosRow[0]?.value ?? 0,
         draftVideos: draftVideosRow[0]?.value ?? 0,
         privateVideos: privateVideosRow[0]?.value ?? 0,
         visitorToday: visitorTodayRow[0]?.value ?? 0,

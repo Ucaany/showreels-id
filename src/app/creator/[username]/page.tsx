@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/card";
 import { formatDateLabel } from "@/lib/helpers";
 import { formatJoinedMonthYear } from "@/lib/profile-utils";
 import { getPublicProfile } from "@/server/public-data";
+import { getCurrentUser } from "@/server/current-user";
 import { getRequestLocale } from "@/server/request-locale";
 import { getAutoThumbnailFromVideoUrl, getSourceLabel } from "@/lib/video-utils";
 
@@ -44,7 +45,8 @@ export default async function CreatorProfilePage({
   const locale = await getRequestLocale();
   const { username } = await params;
   const resolvedSearchParams = await searchParams;
-  const profile = await getPublicProfile(username);
+  const currentUser = await getCurrentUser();
+  const profile = await getPublicProfile(username, currentUser?.id);
 
   if (!profile) {
     notFound();
@@ -89,15 +91,15 @@ export default async function CreatorProfilePage({
               <div
                 className="absolute inset-0"
                 style={{
-                  backgroundImage: `linear-gradient(145deg, rgba(15,23,42,0.20), rgba(15,23,42,0.34)), url(${coverImage})`,
+                  backgroundImage: `linear-gradient(145deg, rgba(15,23,42,0.10), rgba(15,23,42,0.18)), url(${coverImage})`,
                   backgroundPosition: "center",
                   backgroundRepeat: "no-repeat",
                   backgroundSize: "cover",
                 }}
               />
             ) : null}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.44),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.72),_rgba(255,255,255,0.92))]" />
-            <div className="relative flex min-h-[250px] flex-col justify-between gap-6 p-5 sm:min-h-[300px] sm:gap-8 sm:p-8">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.58),_transparent_36%),linear-gradient(180deg,_rgba(255,255,255,0.80),_rgba(255,255,255,0.94))]" />
+            <div className="relative flex min-h-[280px] flex-col justify-between gap-6 p-5 sm:min-h-[340px] sm:gap-8 sm:p-8 lg:min-h-[380px]">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <Badge className="w-fit">
                   <Sparkles className="mr-1 h-3.5 w-3.5" />
@@ -270,68 +272,104 @@ export default async function CreatorProfilePage({
                       : "grid gap-3"
                   }
                 >
-                  {visibleVideos.map((video) => (
-                    <Link key={video.id} href={`/v/${video.publicSlug}`}>
-                      <article
-                        className={`group h-full border-b border-slate-200 bg-transparent py-4 transition hover:border-brand-300 ${
-                          currentView === "list"
-                            ? "sm:py-5"
-                            : ""
-                        }`}
-                      >
-                        <div
-                          className={
+                  {visibleVideos.map((video) => {
+                    const sourceLabel = getSourceLabel(video.source as never);
+                    const aspectLabel =
+                      video.aspectRatio === "portrait"
+                        ? "Portrait 9:16"
+                        : "Landscape 16:9";
+                    const outputLabel = video.outputType.trim() || "General";
+                    const durationLabel = video.durationLabel.trim() || "-";
+                    const postedLabel = formatDateLabel(video.createdAt.toISOString());
+
+                    return (
+                      <Link key={video.id} href={`/v/${video.publicSlug}`}>
+                        <article
+                          className={`group h-full border-b border-slate-200 bg-transparent py-4 transition hover:border-brand-300 ${
                             currentView === "list"
-                              ? "flex h-full flex-col gap-4 sm:flex-row sm:items-start"
-                              : "flex h-full flex-col gap-4"
-                          }
+                              ? "sm:py-5"
+                              : ""
+                          }`}
                         >
                           <div
-                            className={`overflow-hidden rounded-2xl bg-slate-100 ${
-                              currentView === "list" ? "sm:w-[180px] sm:flex-none" : ""
-                            }`}
+                            className={
+                              currentView === "list"
+                                ? "flex h-full flex-col gap-4 sm:flex-row sm:items-start"
+                                : "flex h-full flex-col gap-4"
+                            }
                           >
-                            {video.thumbnailUrl ||
-                            getAutoThumbnailFromVideoUrl(video.sourceUrl) ? (
-                              <Image
-                                src={
-                                  video.thumbnailUrl ||
-                                  getAutoThumbnailFromVideoUrl(video.sourceUrl)
-                                }
-                                alt={`Thumbnail ${video.title}`}
-                                width={640}
-                                height={360}
-                                sizes="(max-width: 768px) 100vw, 38vw"
-                                unoptimized
-                                className={`aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.02] ${
-                                  currentView === "list" ? "sm:h-full sm:min-h-[112px]" : ""
-                                }`}
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="flex aspect-video items-center justify-center text-sm font-medium text-slate-500">
-                                Thumbnail belum diisi
-                              </div>
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <Badge>{getSourceLabel(video.source as never)}</Badge>
-                              <span className="text-xs text-slate-500">
-                                {formatDateLabel(video.createdAt.toISOString())}
-                              </span>
+                            <div
+                              className={`overflow-hidden rounded-2xl bg-slate-100 ${
+                                currentView === "list" ? "sm:w-[180px] sm:flex-none" : ""
+                              }`}
+                            >
+                              {video.thumbnailUrl ||
+                              getAutoThumbnailFromVideoUrl(video.sourceUrl) ? (
+                                <Image
+                                  src={
+                                    video.thumbnailUrl ||
+                                    getAutoThumbnailFromVideoUrl(video.sourceUrl)
+                                  }
+                                  alt={`Thumbnail ${video.title}`}
+                                  width={640}
+                                  height={360}
+                                  sizes="(max-width: 768px) 100vw, 38vw"
+                                  unoptimized
+                                  className={`aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.02] ${
+                                    currentView === "list" ? "sm:h-full sm:min-h-[112px]" : ""
+                                  }`}
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="flex aspect-video items-center justify-center text-sm font-medium text-slate-500">
+                                  Thumbnail belum diisi
+                                </div>
+                              )}
                             </div>
-                            <h3 className="text-base font-semibold leading-snug text-slate-900 sm:text-lg">
-                              {video.title}
-                            </h3>
-                            <p className="line-clamp-2 text-sm leading-6 text-slate-600">
-                              {video.description}
-                            </p>
+                            <div className="space-y-3">
+                              {currentView === "grid" ? (
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                  <Badge>{sourceLabel}</Badge>
+                                  <span className="text-xs text-slate-500">
+                                    {postedLabel}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                  <Badge>{sourceLabel}</Badge>
+                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                    Output: {outputLabel}
+                                  </span>
+                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-500">
+                                    {postedLabel}
+                                  </span>
+                                </div>
+                              )}
+                              <h3 className="text-base font-semibold leading-snug text-slate-900 sm:text-lg">
+                                {video.title}
+                              </h3>
+                              {currentView === "grid" ? (
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                  <span className="inline-flex items-center rounded-full bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white">
+                                    {aspectLabel}
+                                  </span>
+                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                    Output: {outputLabel}
+                                  </span>
+                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600">
+                                    Durasi: {durationLabel}
+                                  </span>
+                                </div>
+                              ) : null}
+                              <p className="line-clamp-2 text-sm leading-6 text-slate-600">
+                                {video.description}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </article>
-                    </Link>
-                  ))}
+                        </article>
+                      </Link>
+                    );
+                  })}
                 </div>
 
                 {totalPages > 1 ? (

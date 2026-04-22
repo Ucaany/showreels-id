@@ -3,7 +3,8 @@ import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { normalizeSocialUrl } from "@/lib/profile-utils";
 import { normalizeAssetUrl, normalizeHttpUrl } from "@/lib/video-utils";
 
-export const videoVisibilitySchema = z.enum(["draft", "private", "public"]);
+export const profileVisibilitySchema = z.enum(["private", "semi_private", "public"]);
+export const videoVisibilitySchema = z.enum(["draft", "private", "semi_private", "public"]);
 export const videoAspectRatioSchema = z.enum(["landscape", "portrait"]);
 
 export const signInSchema = z.object({
@@ -97,6 +98,35 @@ export const profileSchema = z.object({
   threadsUrl: socialUrlSchema.default(""),
   skills: z.array(z.string()).default([]),
 });
+
+export const profileVisibilityUpdateSchema = z.object({
+  profileVisibility: profileVisibilitySchema,
+});
+
+export const passwordRecoveryVerifySchema = z.object({
+  fullName: z.string().trim().min(2, "Nama lengkap minimal 2 karakter."),
+  username: z
+    .string()
+    .trim()
+    .min(3, "Username minimal 3 karakter.")
+    .regex(/^[a-zA-Z0-9_]+$/, "Gunakan huruf, angka, atau underscore."),
+  birthDate: z
+    .string()
+    .trim()
+    .refine((value) => /^\d{4}-\d{2}-\d{2}$/.test(value), {
+      message: "Format tanggal lahir harus YYYY-MM-DD.",
+    }),
+});
+
+export const passwordRecoveryResetSchema = z
+  .object({
+    password: z.string().trim().min(8, "Password minimal 8 karakter."),
+    confirmPassword: z.string().trim(),
+  })
+  .refine((value) => value.password === value.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Konfirmasi password tidak sama.",
+  });
 
 export const videoSchema = z.object({
   title: z.string().min(4, "Judul minimal 4 karakter."),

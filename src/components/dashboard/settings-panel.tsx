@@ -6,20 +6,79 @@ import { ShieldAlert } from "lucide-react";
 import { CopyProfileLinkButton } from "@/components/dashboard/copy-profile-link-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
+import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
 import { createClient } from "@/lib/supabase/client";
+import type { ProfileVisibility } from "@/lib/types";
 
 interface SettingsPanelProps {
   username: string;
+  profileVisibility: ProfileVisibility;
 }
 
-export function SettingsPanel({ username }: SettingsPanelProps) {
+export function SettingsPanel({ username, profileVisibility }: SettingsPanelProps) {
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [savingVisibility, setSavingVisibility] = useState(false);
+  const [savedVisibility, setSavedVisibility] = useState<ProfileVisibility>(profileVisibility);
+  const [visibility, setVisibility] = useState<ProfileVisibility>(profileVisibility);
   const supabase = createClient();
 
+  const visibilityDescription =
+    visibility === "public"
+      ? "Profil creator dan video public akan tampil di beranda serta halaman publik."
+      : visibility === "semi_private"
+        ? "Profil tidak muncul di listing publik, tapi tetap bisa dibuka oleh yang punya link."
+        : "Profil hanya bisa diakses creator sendiri (mode pribadi).";
+
+  const handleSaveProfileVisibility = async () => {
+    const confirmed = await confirmFeedbackAction({
+      title: "Simpan privasi akun?",
+      text: "Perubahan ini langsung memengaruhi akses profil dan discoverability video.",
+      confirmButtonText: "Simpan",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    setSavingVisibility(true);
+    const response = await fetch("/api/profile/visibility", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ profileVisibility: visibility }),
+    });
+    setSavingVisibility(false);
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      await showFeedbackAlert({
+        title: "Gagal menyimpan privasi akun",
+        text: payload?.error || "Coba lagi dalam beberapa saat.",
+        icon: "error",
+      });
+      return;
+    }
+
+    await showFeedbackAlert({
+      title: "Privasi akun tersimpan",
+      icon: "success",
+      timer: 1200,
+    });
+    setSavedVisibility(visibility);
+  };
+
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      "Yakin ingin menghapus akun secara permanen? Semua data profil dan video akan ikut terhapus."
-    );
+    const confirmed = await confirmFeedbackAction({
+      title: "Hapus akun secara permanen?",
+      text: "Semua data profil creator dan video akan ikut terhapus.",
+      confirmButtonText: "Hapus akun",
+      icon: "warning",
+    });
+
     if (!confirmed) {
       return;
     }
@@ -30,11 +89,23 @@ export function SettingsPanel({ username }: SettingsPanelProps) {
     });
 
     if (!response.ok) {
-      window.alert("Gagal menghapus akun. Coba lagi.");
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      await showFeedbackAlert({
+        title: "Gagal menghapus akun",
+        text: payload?.error || "Coba lagi dalam beberapa saat.",
+        icon: "error",
+      });
       setDeletingAccount(false);
       return;
     }
 
+    await showFeedbackAlert({
+      title: "Akun berhasil dihapus",
+      icon: "success",
+      timer: 1000,
+    });
     await supabase.auth.signOut();
     window.location.replace("/");
   };
@@ -52,6 +123,38 @@ export function SettingsPanel({ username }: SettingsPanelProps) {
           <p className="text-sm text-slate-600">
             Atur link profil publik dan penghapusan akun dari halaman terpisah agar tetap rapi.
           </p>
+        </div>
+      </Card>
+
+      <Card className="dashboard-clean-card border-border bg-surface">
+        <h2 className="text-base font-semibold text-slate-900">Privasi akun creator</h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Atur siapa yang bisa mengakses profil dan video melalui halaman publik.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-800">
+              Mode privasi akun
+            </label>
+            <Select
+              value={visibility}
+              onChange={(event) =>
+                setVisibility(event.target.value as ProfileVisibility)
+              }
+            >
+              <option value="private">Private - hanya creator</option>
+              <option value="semi_private">Semi Private - hanya via link</option>
+              <option value="public">Public - tampil di seluruh website</option>
+            </Select>
+            <p className="mt-2 text-xs text-slate-600">{visibilityDescription}</p>
+          </div>
+          <Button
+            type="button"
+            onClick={handleSaveProfileVisibility}
+            disabled={savingVisibility || visibility === savedVisibility}
+          >
+            {savingVisibility ? "Menyimpan..." : "Simpan Privasi"}
+          </Button>
         </div>
       </Card>
 

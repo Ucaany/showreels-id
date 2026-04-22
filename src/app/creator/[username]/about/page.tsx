@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatJoinedMonthYear } from "@/lib/profile-utils";
 import { getAutoThumbnailFromVideoUrl } from "@/lib/video-utils";
+import { getCurrentUser } from "@/server/current-user";
 import { getRequestLocale } from "@/server/request-locale";
 import { getPublicProfile } from "@/server/public-data";
 
@@ -19,7 +20,8 @@ export default async function CreatorAboutPage({
 }) {
   const locale = await getRequestLocale();
   const { username } = await params;
-  const profile = await getPublicProfile(username);
+  const currentUser = await getCurrentUser();
+  const profile = await getPublicProfile(username, currentUser?.id);
 
   if (!profile) {
     notFound();

@@ -36,7 +36,7 @@ interface DashboardVideoListProps {
   }>;
 }
 
-type VideoFilter = "all" | "draft" | "success";
+type VideoFilter = "all" | "draft" | "public" | "semi_private" | "private";
 type ViewMode = "grid" | "list";
 
 const ITEMS_PER_PAGE = 6;
@@ -51,11 +51,9 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
 
   const filteredVideos = useMemo(() => {
     const filteredByStatus =
-      filter === "draft"
-        ? videos.filter((video) => video.visibility === "draft")
-        : filter === "success"
-          ? videos.filter((video) => video.visibility === "public")
-          : videos;
+      filter === "all"
+        ? videos
+        : videos.filter((video) => video.visibility === filter);
 
     const query = searchQuery.trim().toLowerCase();
     if (!query) {
@@ -73,7 +71,13 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
   const paginatedVideos = filteredVideos.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const draftCount = videos.filter((video) => video.visibility === "draft").length;
-  const successCount = videos.filter((video) => video.visibility === "public").length;
+  const publicCount = videos.filter((video) => video.visibility === "public").length;
+  const semiPrivateCount = videos.filter(
+    (video) => video.visibility === "semi_private"
+  ).length;
+  const privateCount = videos.filter(
+    (video) => video.visibility === "private"
+  ).length;
 
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm(
@@ -134,17 +138,47 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
             <button
               type="button"
               onClick={() => {
-                setFilter("success");
+                setFilter("public");
                 setPage(1);
               }}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
-                filter === "success"
+                filter === "public"
                   ? "bg-brand-600 text-white"
                   : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
               )}
             >
-              Sukses ({successCount})
+              Public ({publicCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFilter("semi_private");
+                setPage(1);
+              }}
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                filter === "semi_private"
+                  ? "bg-brand-600 text-white"
+                  : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+              )}
+            >
+              Semi Private ({semiPrivateCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFilter("private");
+                setPage(1);
+              }}
+              className={cn(
+                "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                filter === "private"
+                  ? "bg-brand-600 text-white"
+                  : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+              )}
+            >
+              Private ({privateCount})
             </button>
           </div>
           <p className="text-xs font-medium text-slate-600">
@@ -268,6 +302,8 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                         className={
                           video.visibility === "public"
                             ? "bg-emerald-600"
+                            : video.visibility === "semi_private"
+                              ? "bg-blue-600"
                             : video.visibility === "private"
                               ? "bg-amber-500 text-slate-950"
                               : "bg-slate-700"
@@ -282,7 +318,8 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                     </p>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2 sm:justify-end">
-                      {video.visibility === "public" ? (
+                      {video.visibility === "public" ||
+                      video.visibility === "semi_private" ? (
                         <Link href={`/v/${video.publicSlug}`}>
                           <Button
                             variant="secondary"

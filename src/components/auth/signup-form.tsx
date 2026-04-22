@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { LockKeyhole, Mail, UserRound } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { WhatsappSharingCard } from "@/components/auth/whatsapp-sharing-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
@@ -328,6 +329,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           {dictionary.login}
         </Link>
       </div>
+      <WhatsappSharingCard />
     </AuthShell>
   );
 }

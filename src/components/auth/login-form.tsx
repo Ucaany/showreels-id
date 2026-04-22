@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { LockKeyhole, Mail } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { WhatsappSharingCard } from "@/components/auth/whatsapp-sharing-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
@@ -264,69 +265,78 @@ export function LoginForm({
               <span>atau</span>
               <span className="h-px bg-slate-200" />
             </div>
+            <p className="pt-1 text-center text-sm text-slate-600">{dictionary.noAccount}</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full border border-slate-300 bg-white text-slate-950 shadow-sm hover:bg-white"
+                disabled={authLock.isLocked}
+                onClick={async () => {
+                  if (authLock.isLocked) {
+                    setSubmitError(authLock.lockMessage);
+                    void showFeedbackAlert({
+                      title: "Login dikunci sementara",
+                      text: authLock.lockMessage,
+                      icon: "warning",
+                    });
+                    return;
+                  }
 
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full border border-slate-300 bg-white text-slate-950 shadow-sm hover:bg-white"
-              disabled={authLock.isLocked}
-              onClick={async () => {
-                if (authLock.isLocked) {
-                  setSubmitError(authLock.lockMessage);
-                  void showFeedbackAlert({
-                    title: "Login dikunci sementara",
-                    text: authLock.lockMessage,
-                    icon: "warning",
-                  });
-                  return;
-                }
-
-                const { data, error } = await supabase.auth.signInWithOAuth({
-                  provider: "google",
-                  options: {
-                    redirectTo: getAuthRedirectUrl("/dashboard"),
-                    queryParams: {
-                      prompt: "select_account",
+                  const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: "google",
+                    options: {
+                      redirectTo: getAuthRedirectUrl("/dashboard"),
+                      queryParams: {
+                        prompt: "select_account",
+                      },
                     },
-                  },
-                });
-
-                if (error) {
-                  const attempt = authLock.registerFailure();
-                  const message = "Google login belum berhasil.";
-                  const visibleMessage = attempt.isLocked ? attempt.message : message;
-                  setSubmitError(visibleMessage);
-                  void showFeedbackAlert({
-                    title: attempt.isLocked
-                      ? "Login dikunci sementara"
-                      : "Google login gagal",
-                    text: visibleMessage,
-                    icon: attempt.isLocked ? "warning" : "error",
                   });
-                  return;
-                }
 
-                if (data.url) {
-                  window.location.assign(data.url);
-                }
-              }}
-            >
-              <FcGoogle className="h-5 w-5" />
-              {dictionary.continueGoogle}
-            </Button>
+                  if (error) {
+                    const attempt = authLock.registerFailure();
+                    const message = "Google login belum berhasil.";
+                    const visibleMessage = attempt.isLocked ? attempt.message : message;
+                    setSubmitError(visibleMessage);
+                    void showFeedbackAlert({
+                      title: attempt.isLocked
+                        ? "Login dikunci sementara"
+                        : "Google login gagal",
+                      text: visibleMessage,
+                      icon: attempt.isLocked ? "warning" : "error",
+                    });
+                    return;
+                  }
+
+                  if (data.url) {
+                    window.location.assign(data.url);
+                  }
+                }}
+              >
+                <FcGoogle className="h-5 w-5" />
+                {dictionary.continueGoogle}
+              </Button>
+              <Link
+                href="/auth/signup"
+                className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
+              >
+                {dictionary.signup}
+              </Link>
+            </div>
           </>
-        ) : null}
+        ) : (
+          <div className="pt-1 text-center">
+            <p className="text-sm text-slate-600">{dictionary.noAccount}</p>
+            <Link
+              href="/auth/signup"
+              className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
+            >
+              {dictionary.signup}
+            </Link>
+          </div>
+        )}
       </motion.form>
-
-      <div className="mt-5 rounded-2xl border border-brand-100 bg-brand-50/70 p-3 text-center text-sm text-slate-700">
-        <p className="font-medium">{dictionary.noAccount}</p>
-        <Link
-          href="/auth/signup"
-          className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl border border-brand-700 bg-brand-600 px-5 text-sm font-semibold text-white shadow-soft transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-300 focus:ring-offset-2"
-        >
-          {dictionary.signup}
-        </Link>
-      </div>
+      <WhatsappSharingCard />
     </AuthShell>
   );
 }

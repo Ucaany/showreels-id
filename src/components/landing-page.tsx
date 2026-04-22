@@ -170,6 +170,7 @@ export function LandingPage({
   const [creatorDeviceSeed, setCreatorDeviceSeed] = useState("creator-seed-default");
   const [creatorTimeBucket, setCreatorTimeBucket] = useState(0);
   const [latestVideosView, setLatestVideosView] = useState<"grid" | "list">("list");
+  const [isDesktop, setIsDesktop] = useState(false);
   const supabase = createClient();
   const year = new Date().getFullYear();
 
@@ -316,6 +317,12 @@ export function LandingPage({
   }, [featuredCreators, creatorDeviceSeed, creatorTimeBucket]);
 
   const latestVideoRows = useMemo(() => featuredVideos.slice(0, 6), [featuredVideos]);
+  const maxVisibleVideos = isDesktop ? 3 : 2;
+  const effectiveLatestVideosView = isDesktop ? "grid" : latestVideosView;
+  const visibleLatestVideos = useMemo(
+    () => latestVideoRows.slice(0, maxVisibleVideos),
+    [latestVideoRows, maxVisibleVideos]
+  );
 
   useEffect(() => {
     const onScroll = () => {
@@ -328,14 +335,13 @@ export function LandingPage({
   }, []);
 
   useEffect(() => {
-    const desktopQuery = window.matchMedia("(min-width: 768px)");
-    const syncDesktopDefault = window.setTimeout(() => {
-      if (desktopQuery.matches) {
-        setLatestVideosView("grid");
-      }
-    }, 0);
+    const syncViewport = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
 
-    return () => window.clearTimeout(syncDesktopDefault);
+    syncViewport();
+    window.addEventListener("resize", syncViewport);
+    return () => window.removeEventListener("resize", syncViewport);
   }, []);
 
   useEffect(() => {
@@ -728,7 +734,7 @@ export function LandingPage({
                     onClick={() => setLatestVideosView("grid")}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition",
-                      latestVideosView === "grid"
+                      effectiveLatestVideosView === "grid"
                         ? "bg-brand-600 text-white shadow-sm"
                         : "text-slate-600 hover:bg-slate-100"
                     )}
@@ -742,7 +748,7 @@ export function LandingPage({
                     onClick={() => setLatestVideosView("list")}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition",
-                      latestVideosView === "list"
+                      effectiveLatestVideosView === "list"
                         ? "bg-brand-600 text-white shadow-sm"
                         : "text-slate-600 hover:bg-slate-100"
                     )}
@@ -756,18 +762,18 @@ export function LandingPage({
 
               <div
                 className={cn(
-                  "mx-auto mt-4 max-w-6xl",
-                  latestVideosView === "grid"
-                    ? "grid grid-cols-2 gap-3 xl:grid-cols-3"
-                    : "space-y-3"
+                  "mx-auto mt-5 max-w-6xl",
+                  effectiveLatestVideosView === "grid"
+                    ? "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3"
+                    : "space-y-4 sm:space-y-5"
                 )}
               >
-                {latestVideoRows.length === 0 ? (
+                {visibleLatestVideos.length === 0 ? (
                   <p className="text-center text-sm text-slate-600">
                     {locale === "en" ? "No video yet." : "Belum ada video."}
                   </p>
                 ) : (
-                  latestVideoRows.map((video) => {
+                  visibleLatestVideos.map((video) => {
                     const thumbnail =
                       getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
                     const sourceMeta = getVideoSourceBadgeMeta(video.sourceUrl);
@@ -780,7 +786,7 @@ export function LandingPage({
                         viewport={{ once: true, amount: 0.25 }}
                         transition={{ duration: 0.28 }}
                         className={cn(
-                          latestVideosView === "grid" ? "h-full" : ""
+                          effectiveLatestVideosView === "grid" ? "h-full" : ""
                         )}
                       >
                         <Link
@@ -788,16 +794,16 @@ export function LandingPage({
                           aria-label={`${locale === "en" ? "View video" : "Lihat video"} ${video.title}`}
                           className={cn(
                             "group min-w-0 rounded-[1.2rem] border border-slate-200 bg-white/92 shadow-sm transition hover:border-brand-300 hover:shadow-[0_16px_30px_rgba(37,99,235,0.12)]",
-                            latestVideosView === "grid"
-                              ? "flex h-full min-h-[292px] flex-col gap-2 px-3 py-3 sm:min-h-[360px] sm:gap-3 sm:px-5 sm:py-5"
-                              : "grid grid-cols-[112px_minmax(0,1fr)] items-stretch gap-3 px-3 py-3 sm:grid-cols-[160px_minmax(0,1fr)] sm:px-4 sm:py-4"
+                            effectiveLatestVideosView === "grid"
+                              ? "flex h-full min-h-[308px] flex-col gap-3 px-4 py-4 sm:min-h-[360px] sm:gap-4 sm:px-5 sm:py-5"
+                              : "grid grid-cols-[124px_minmax(0,1fr)] items-stretch gap-4 px-4 py-4 sm:grid-cols-[188px_minmax(0,1fr)] sm:gap-5 sm:px-5 sm:py-5"
                           )}
                         >
                           <div
                             className={cn(
                               "overflow-hidden rounded-xl border border-slate-100 bg-slate-100",
-                              latestVideosView === "list"
-                                ? "h-full min-h-[92px]"
+                              effectiveLatestVideosView === "list"
+                                ? "h-full min-h-[96px]"
                                 : ""
                             )}
                           >
@@ -810,9 +816,9 @@ export function LandingPage({
                                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                                 className={cn(
                                   "h-full w-full object-cover",
-                                  latestVideosView === "grid"
+                                  effectiveLatestVideosView === "grid"
                                     ? "aspect-video"
-                                    : "aspect-[4/5] sm:aspect-video"
+                                    : "aspect-video h-full min-h-[96px] sm:min-h-[108px]"
                                 )}
                                 unoptimized
                                 loading="lazy"
@@ -822,9 +828,9 @@ export function LandingPage({
                               <div
                                 className={cn(
                                   "flex h-full w-full items-center justify-center bg-slate-100 text-sm font-medium text-slate-500",
-                                  latestVideosView === "grid"
+                                  effectiveLatestVideosView === "grid"
                                     ? "aspect-video"
-                                    : "aspect-[4/5] sm:aspect-video"
+                                    : "aspect-video h-full min-h-[96px] sm:min-h-[108px]"
                                 )}
                               >
                                 <span className="inline-flex items-center gap-1">
@@ -835,12 +841,12 @@ export function LandingPage({
                             )}
                           </div>
 
-                          <div className="flex min-w-0 flex-col">
-                            <div className="flex min-w-0 items-start justify-between gap-2">
+                          <div className="flex h-full min-w-0 flex-col gap-3 sm:gap-4">
+                            <div className="flex min-w-0 items-start justify-between gap-3">
                               <p
                                 className={cn(
                                   "line-clamp-2 min-w-0 font-semibold text-slate-950",
-                                  latestVideosView === "grid"
+                                  effectiveLatestVideosView === "grid"
                                     ? "text-sm sm:text-base"
                                     : "text-sm sm:text-base"
                                 )}
@@ -859,8 +865,8 @@ export function LandingPage({
 
                             <div
                               className={cn(
-                                "mt-2 flex min-w-0 items-center gap-2",
-                                latestVideosView === "grid" ? "sm:gap-3" : ""
+                                "flex min-w-0 items-center gap-2.5 sm:gap-3",
+                                effectiveLatestVideosView === "grid" ? "sm:gap-3" : ""
                               )}
                             >
                               <AvatarBadge
@@ -880,10 +886,8 @@ export function LandingPage({
 
                             <p
                               className={cn(
-                                "mt-2 text-sm leading-relaxed text-slate-600",
-                                latestVideosView === "grid"
-                                  ? "line-clamp-2 max-sm:hidden"
-                                  : "hidden sm:line-clamp-2 sm:block"
+                                "line-clamp-2 text-sm leading-relaxed text-slate-600",
+                                effectiveLatestVideosView === "grid" ? "sm:line-clamp-2" : ""
                               )}
                             >
                               {video.description}
@@ -891,8 +895,8 @@ export function LandingPage({
 
                             <div
                               className={cn(
-                                "mt-auto flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 pt-2 text-sm",
-                                latestVideosView === "list" ? "max-sm:border-t-0 max-sm:pt-1" : "sm:pt-3"
+                                "mt-auto flex min-w-0 min-h-10 items-center justify-between gap-3 border-t border-slate-100 pt-3 text-sm",
+                                effectiveLatestVideosView === "grid" ? "sm:pt-3" : ""
                               )}
                             >
                               <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-600 sm:text-xs">
@@ -906,9 +910,7 @@ export function LandingPage({
                               <span
                                 className={cn(
                                   "inline-flex shrink-0 items-center justify-center rounded-full bg-brand-600 text-white shadow-sm transition group-hover:bg-brand-700",
-                                  latestVideosView === "grid"
-                                    ? "h-8 w-8 sm:h-10 sm:w-10"
-                                    : "h-8 w-8"
+                                  "h-9 w-9 sm:h-10 sm:w-10"
                                 )}
                                 title={locale === "en" ? "View video" : "Lihat video"}
                               >
@@ -1118,6 +1120,7 @@ export function LandingPage({
     </LazyMotion>
   );
 }
+
 
 
 

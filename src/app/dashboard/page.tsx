@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { Eye, FileText, FolderOpen, LockKeyhole } from "lucide-react";
+import { Eye, FileText, FolderOpen, Link2, LockKeyhole } from "lucide-react";
 import { DashboardGreetingCard } from "@/components/dashboard/dashboard-greeting-card";
 import { DashboardVideoList } from "@/components/dashboard/dashboard-video-list";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,9 @@ export default async function DashboardPage() {
   const privateVideosCount = myVideos.filter(
     (video) => video.visibility === "private"
   ).length;
+  const semiPrivateVideosCount = myVideos.filter(
+    (video) => video.visibility === "semi_private"
+  ).length;
   const stats = [
     {
       label: "Publik",
@@ -40,6 +43,12 @@ export default async function DashboardPage() {
       value: draftVideosCount,
       icon: FileText,
       className: "bg-amber-50 text-amber-700",
+    },
+    {
+      label: "Semi Private",
+      value: semiPrivateVideosCount,
+      icon: Link2,
+      className: "bg-blue-50 text-blue-700",
     },
     {
       label: "Private",
@@ -65,7 +74,7 @@ export default async function DashboardPage() {
               Pantau visibilitas karya
             </h2>
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
             {stats.map((item) => {
               const Icon = item.icon;
               return (
@@ -100,7 +109,7 @@ export default async function DashboardPage() {
               {dictionary.myVideos}
             </h2>
             <p className="text-sm text-slate-600">
-              Kelola video public, private, dan draft dari satu tempat.
+              Kelola video public, semi-private, private, dan draft dari satu tempat.
             </p>
           </div>
 

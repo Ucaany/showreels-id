@@ -20,6 +20,7 @@ const demoUser: UserProfile = {
   facebookUrl: "",
   threadsUrl: "https://threads.net/@videocreator",
   skills: ["Video Editing", "Storytelling", "Color Grading", "Motion Graphics"],
+  profileVisibility: "public",
   createdAt: "2026-01-12T04:30:00.000Z",
 };
 

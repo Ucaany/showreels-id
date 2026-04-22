@@ -8,6 +8,7 @@ import {
   Database,
   Film,
   HardDrive,
+  Link2,
   Loader2,
   PauseCircle,
   Search,
@@ -49,7 +50,7 @@ export type AdminVideoItem = {
   id: string;
   title: string;
   description: string;
-  visibility: "public" | "draft" | "private";
+  visibility: "public" | "draft" | "private" | "semi_private";
   source: string;
   sourceUrl: string;
   thumbnailUrl: string;
@@ -68,6 +69,7 @@ type AdminPanelClientProps = {
     totalUsers: number;
     totalVideos: number;
     publicVideos: number;
+    semiPrivateVideos: number;
     draftVideos: number;
     privateVideos: number;
     visitorToday: number;
@@ -519,6 +521,12 @@ export function AdminPanelClient({
         <StatCard icon={Users} label="Total pengguna" value={stats.totalUsers} />
         <StatCard icon={Film} label="Total video" value={stats.totalVideos} />
         <StatCard icon={CheckCircle2} label="Public" value={stats.publicVideos} tone="emerald" />
+        <StatCard
+          icon={Link2}
+          label="Semi Private"
+          value={stats.semiPrivateVideos}
+          tone="brand"
+        />
         <StatCard icon={PauseCircle} label="Draft" value={stats.draftVideos} tone="amber" />
         <StatCard icon={ShieldCheck} label="Visitor hari ini" value={stats.visitorToday} />
         <StatCard
@@ -729,6 +737,7 @@ export function AdminPanelClient({
                       <Badge
                         className={cn(
                           video.visibility === "public" && "bg-emerald-600",
+                          video.visibility === "semi_private" && "bg-blue-600",
                           video.visibility === "draft" && "bg-amber-600",
                           video.visibility === "private" && "bg-slate-700"
                         )}
@@ -762,6 +771,7 @@ export function AdminPanelClient({
                 <Textarea name="description" defaultValue={video.description} placeholder="Deskripsi" className="lg:col-span-2" />
                 <Select name="visibility" defaultValue={video.visibility}>
                   <option value="public">Public</option>
+                  <option value="semi_private">Semi Private</option>
                   <option value="draft">Draft</option>
                   <option value="private">Private</option>
                 </Select>
