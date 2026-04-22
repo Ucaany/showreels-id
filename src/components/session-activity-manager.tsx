@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { signOut, useSession } from "next-auth/react";
+import { createClient } from "@/lib/supabase/client";
 
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 const IDLE_CHECK_MS = 15 * 1000;
@@ -26,20 +26,15 @@ function writeLastActivity() {
 }
 
 export function SessionActivityManager() {
-  const { status } = useSession();
   const signingOutRef = useRef(false);
+  const authenticatedRef = useRef(false);
 
   useEffect(() => {
-    if (status === "unauthenticated" && typeof window !== "undefined") {
-      window.localStorage.removeItem(LAST_ACTIVITY_KEY);
-      signingOutRef.current = false;
-    }
-  }, [status]);
-
-  useEffect(() => {
-    if (status !== "authenticated" || typeof window === "undefined") {
+    if (typeof window === "undefined") {
       return;
     }
+
+    const supabase = createClient();
 
     const forceSignOut = async () => {
       if (signingOutRef.current) {
@@ -47,10 +42,20 @@ export function SessionActivityManager() {
       }
 
       signingOutRef.current = true;
-      await signOut({ callbackUrl: "/auth/login" });
+      await supabase.auth.signOut();
+      window.localStorage.removeItem(LAST_ACTIVITY_KEY);
+      window.location.replace("/auth/login");
     };
 
-    const ensureActiveSession = async () => {
+    const ensureActiveSession = async (isAuthenticated: boolean) => {
+      authenticatedRef.current = isAuthenticated;
+
+      if (!isAuthenticated) {
+        window.localStorage.removeItem(LAST_ACTIVITY_KEY);
+        signingOutRef.current = false;
+        return;
+      }
+
       const lastActivity = readLastActivity();
       if (Date.now() - lastActivity >= IDLE_TIMEOUT_MS) {
         await forceSignOut();
@@ -60,13 +65,25 @@ export function SessionActivityManager() {
       writeLastActivity();
     };
 
-    void ensureActiveSession();
+    void supabase.auth.getUser().then(({ data }) => {
+      void ensureActiveSession(Boolean(data.user));
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void ensureActiveSession(Boolean(session?.user));
+    });
 
     const registerActivity = () => {
       writeLastActivity();
     };
 
     const interval = window.setInterval(() => {
+      if (!authenticatedRef.current) {
+        return;
+      }
+
       const lastActivity = readLastActivity();
       if (Date.now() - lastActivity >= IDLE_TIMEOUT_MS) {
         void forceSignOut();
@@ -86,21 +103,22 @@ export function SessionActivityManager() {
     });
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        void ensureActiveSession();
+      if (document.visibilityState === "visible" && authenticatedRef.current) {
+        void ensureActiveSession(true);
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
+      subscription.unsubscribe();
       window.clearInterval(interval);
       events.forEach((eventName) => {
         window.removeEventListener(eventName, registerActivity);
       });
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [status]);
+  }, []);
 
   return null;
 }

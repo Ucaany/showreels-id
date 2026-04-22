@@ -1,21 +1,22 @@
 import { NextResponse } from "next/server";
 import { and, eq, ne } from "drizzle-orm";
-import { auth } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { profileSchema } from "@/lib/auth-schemas";
 import { sanitizeUsername } from "@/lib/username";
 import { isAdminEmail } from "@/server/admin-access";
+import { deleteUserAccount } from "@/server/auth-profile";
+import { getCurrentUser } from "@/server/current-user";
 
 const USERNAME_CHANGE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 export async function PATCH(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (isAdminEmail(session.user.email)) {
+  if (isAdminEmail(currentUser.email)) {
     return NextResponse.json(
       { error: "Akun owner tidak menggunakan profil creator." },
       { status: 403 }
@@ -33,25 +34,8 @@ export async function PATCH(request: Request) {
   }
 
   const username = sanitizeUsername(parsed.data.username);
-  const currentUser = await db.query.users.findFirst({
-    where: eq(users.id, session.user.id),
-    columns: {
-      id: true,
-      username: true,
-      usernameChangeCount: true,
-      usernameChangeWindowStart: true,
-    },
-  });
-
-  if (!currentUser) {
-    return NextResponse.json(
-      { error: "Akun tidak ditemukan." },
-      { status: 404 }
-    );
-  }
-
   const existingUser = await db.query.users.findFirst({
-    where: and(eq(users.username, username), ne(users.id, session.user.id)),
+    where: and(eq(users.username, username), ne(users.id, currentUser.id)),
     columns: { id: true },
   });
 
@@ -124,32 +108,25 @@ export async function PATCH(request: Request) {
       usernameChangeWindowStart,
       updatedAt: new Date(),
     })
-    .where(eq(users.id, session.user.id))
+    .where(eq(users.id, currentUser.id))
     .returning();
 
   return NextResponse.json({ user: updated });
 }
 
 export async function DELETE() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (isAdminEmail(session.user.email)) {
+  if (isAdminEmail(currentUser.email)) {
     return NextResponse.json(
       { error: "Akun owner tidak menggunakan profil creator." },
       { status: 403 }
     );
   }
 
-  const [deletedUser] = await db
-    .delete(users)
-    .where(eq(users.id, session.user.id))
-    .returning({ id: users.id });
-
-  if (!deletedUser) {
-    return NextResponse.json({ error: "Akun tidak ditemukan." }, { status: 404 });
-  }
+  await deleteUserAccount(currentUser.id);
 
   return NextResponse.json({ ok: true });
 }

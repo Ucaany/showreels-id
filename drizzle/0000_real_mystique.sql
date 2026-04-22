@@ -1,32 +1,19 @@
-CREATE TABLE "accounts" (
-	"user_id" text NOT NULL,
-	"type" text NOT NULL,
-	"provider" text NOT NULL,
-	"provider_account_id" text NOT NULL,
-	"refresh_token" text,
-	"access_token" text,
-	"expires_at" integer,
-	"token_type" text,
-	"scope" text,
-	"id_token" text,
-	"session_state" text,
-	CONSTRAINT "accounts_provider_provider_account_id_pk" PRIMARY KEY("provider","provider_account_id")
-);
---> statement-breakpoint
-CREATE TABLE "sessions" (
-	"session_token" text PRIMARY KEY NOT NULL,
-	"user_id" text NOT NULL,
-	"expires" timestamp NOT NULL
+CREATE TABLE "site_settings" (
+	"id" text PRIMARY KEY DEFAULT 'global' NOT NULL,
+	"maintenance_enabled" boolean DEFAULT false NOT NULL,
+	"pause_enabled" boolean DEFAULT false NOT NULL,
+	"maintenance_message" text DEFAULT 'Website sedang dalam maintenance sementara. Silakan kembali beberapa saat lagi.' NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
-	"id" text PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY NOT NULL,
 	"name" text,
 	"email" text NOT NULL,
-	"email_verified" timestamp,
 	"image" text,
 	"cover_image_url" text DEFAULT '' NOT NULL,
 	"username" text,
+	"role" text DEFAULT '' NOT NULL,
 	"bio" text DEFAULT '' NOT NULL,
 	"experience" text DEFAULT '' NOT NULL,
 	"birth_date" text DEFAULT '' NOT NULL,
@@ -40,7 +27,9 @@ CREATE TABLE "users" (
 	"facebook_url" text DEFAULT '' NOT NULL,
 	"threads_url" text DEFAULT '' NOT NULL,
 	"skills" jsonb DEFAULT '[]'::jsonb NOT NULL,
-	"password_hash" text,
+	"is_blocked" boolean DEFAULT false NOT NULL,
+	"blocked_at" timestamp,
+	"blocked_reason" text DEFAULT '' NOT NULL,
 	"username_change_count" integer DEFAULT 0 NOT NULL,
 	"username_change_window_start" timestamp,
 	"locale" text DEFAULT 'id' NOT NULL,
@@ -51,16 +40,9 @@ CREATE TABLE "users" (
 	CONSTRAINT "users_username_unique" UNIQUE("username")
 );
 --> statement-breakpoint
-CREATE TABLE "verification_tokens" (
-	"identifier" text NOT NULL,
-	"token" text NOT NULL,
-	"expires" timestamp NOT NULL,
-	CONSTRAINT "verification_tokens_identifier_token_pk" PRIMARY KEY("identifier","token")
-);
---> statement-breakpoint
 CREATE TABLE "videos" (
 	"id" text PRIMARY KEY NOT NULL,
-	"user_id" text NOT NULL,
+	"user_id" uuid NOT NULL,
 	"title" text NOT NULL,
 	"description" text DEFAULT '' NOT NULL,
 	"tags" jsonb DEFAULT '[]'::jsonb NOT NULL,
@@ -70,18 +52,27 @@ CREATE TABLE "videos" (
 	"image_urls" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"source_url" text NOT NULL,
 	"source" text NOT NULL,
+	"aspect_ratio" text DEFAULT 'landscape' NOT NULL,
+	"output_type" text DEFAULT '' NOT NULL,
+	"duration_label" text DEFAULT '' NOT NULL,
 	"public_slug" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "videos_public_slug_unique" UNIQUE("public_slug")
 );
 --> statement-breakpoint
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "videos" ADD CONSTRAINT "videos_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "accounts_user_id_idx" ON "accounts" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "sessions_user_id_idx" ON "sessions" USING btree ("user_id");--> statement-breakpoint
+CREATE TABLE "visitor_events" (
+	"id" text PRIMARY KEY NOT NULL,
+	"visitor_id" text NOT NULL,
+	"path" text DEFAULT '/' NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_id_auth_users_id_fk" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "users_email_idx" ON "users" USING btree ("email");--> statement-breakpoint
 CREATE INDEX "users_username_idx" ON "users" USING btree ("username");--> statement-breakpoint
+ALTER TABLE "videos" ADD CONSTRAINT "videos_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "videos_user_id_idx" ON "videos" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "videos_public_slug_idx" ON "videos" USING btree ("public_slug");
+CREATE INDEX "videos_public_slug_idx" ON "videos" USING btree ("public_slug");--> statement-breakpoint
+CREATE INDEX "visitor_events_visitor_id_idx" ON "visitor_events" USING btree ("visitor_id");--> statement-breakpoint
+CREATE INDEX "visitor_events_created_at_idx" ON "visitor_events" USING btree ("created_at");

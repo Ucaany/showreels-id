@@ -3,7 +3,7 @@
 Next.js 16 App Router project for a video portfolio platform with:
 
 - Drizzle ORM + Supabase PostgreSQL
-- Auth.js v5 beta with Credentials + Google login
+- Supabase Auth (email/password + Google login)
 - Creator public profiles and public video pages
 - Tailwind CSS and full-light creator dashboard
 - Vercel-ready deployment flow
@@ -15,10 +15,8 @@ Next.js 16 App Router project for a video portfolio platform with:
 2. Fill these values:
    - `DATABASE_URL`
    - `DATABASE_URL_MIGRATION` (recommended for direct migration connection)
-   - `AUTH_SECRET`
-   - `AUTH_TRUST_HOST=true`
-   - `AUTH_GOOGLE_ID`
-   - `AUTH_GOOGLE_SECRET`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `ADMIN_EMAILS=hello@ucan.com`
    - `OWNER_EMAIL`
    - `OWNER_PASSWORD`
@@ -47,19 +45,21 @@ npm run db:seed:owner
 npm run dev
 ```
 
-Open `http://localhost:3000`
+Open `http://localhost:3002`
 
-## Google OAuth callback URLs
+## Supabase Auth setup
 
-Use these callback URLs in Google Cloud Console:
+Configure these URLs in the Supabase Auth dashboard:
 
-- Local: `http://localhost:3000/api/auth/callback/google`
-- Production: `https://your-domain.com/api/auth/callback/google`
+- Site URL: `https://video-port-id.vercel.app`
+- Redirect URL local reset: `http://localhost:3002/auth/reset-password`
+- Redirect URL production reset: `https://video-port-id.vercel.app/auth/reset-password`
+- Redirect URL local callback: `http://localhost:3002/auth/callback`
+- Redirect URL production callback: `https://video-port-id.vercel.app/auth/callback`
 
-Auth.js deployment guidance: [authjs.dev/getting-started/deployment](https://authjs.dev/getting-started/deployment)  
-Google provider guidance: [authjs.dev/getting-started/providers/google](https://authjs.dev/getting-started/providers/google)
+Enable email/password auth, disable email confirmation for immediate login, and enable Google provider with the project's Google OAuth client.
 
-Google login button otomatis muncul ketika `AUTH_GOOGLE_ID` dan `AUTH_GOOGLE_SECRET` terisi.
+Google login button otomatis muncul ketika `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` terisi.
 
 ## Database workflow
 
@@ -96,16 +96,14 @@ Drizzle docs: [orm.drizzle.team/docs/get-started/postgresql-new](https://orm.dri
 3. Add the same environment variables from `.env.local` to the Vercel project:
    - `DATABASE_URL`
    - `DATABASE_URL_MIGRATION` (optional but recommended for CLI migration jobs)
-   - `AUTH_SECRET`
-   - `AUTH_TRUST_HOST=true`
-   - `AUTH_GOOGLE_ID`
-   - `AUTH_GOOGLE_SECRET`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `ADMIN_EMAILS`
    - `OWNER_EMAIL`
    - `OWNER_PASSWORD`
    - `NEXT_PUBLIC_APP_URL=https://your-project-name.vercel.app`
 4. Provision a Supabase PostgreSQL project and set connection strings in `DATABASE_URL` (+ `DATABASE_URL_MIGRATION` for direct migrations).
-5. Update the Google OAuth production callback URL to your Vercel domain.
+5. Configure Supabase Auth site URL, redirect URLs, and Google provider for your Vercel domain.
 6. Trigger a new deployment.
 
 If you use the Vercel CLI locally, pull env vars with:

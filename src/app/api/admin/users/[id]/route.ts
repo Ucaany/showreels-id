@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { normalizeSocialUrl } from "@/lib/profile-utils";
 import { sanitizeUsername } from "@/lib/username";
+import { deleteUserAccount } from "@/server/auth-profile";
 import { isProtectedOwnerTarget } from "@/server/admin-access";
 import { requireAdminSession } from "@/server/admin-guard";
 
@@ -133,14 +134,7 @@ export async function DELETE(
     return NextResponse.json({ error: editable.error }, { status: editable.status });
   }
 
-  const [deleted] = await db
-    .delete(users)
-    .where(eq(users.id, id))
-    .returning({ id: users.id });
-
-  if (!deleted) {
-    return NextResponse.json({ error: "User tidak ditemukan." }, { status: 404 });
-  }
+  await deleteUserAccount(id);
 
   return NextResponse.json({ ok: true });
 }

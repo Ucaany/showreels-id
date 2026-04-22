@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -11,6 +11,7 @@ import { LockKeyhole } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
 
 const schema = z
   .object({
@@ -25,10 +26,11 @@ const schema = z
 type FormValues = z.infer<typeof schema>;
 
 export default function ResetPasswordPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token") || "";
+  const router = useRouter();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [ready, setReady] = useState(false);
+  const supabase = createClient();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -38,29 +40,43 @@ export default function ResetPasswordPage() {
     },
   });
 
+  useEffect(() => {
+    let active = true;
+
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!active) {
+        return;
+      }
+
+      if (!data.user) {
+        setError("Sesi reset password tidak valid atau sudah berakhir.");
+      }
+
+      setReady(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [supabase]);
+
   const onSubmit = form.handleSubmit(async ({ password }) => {
     setError("");
     setMessage("");
 
-    const response = await fetch("/api/auth/reset-password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ token, password }),
+    const { error: updateError } = await supabase.auth.updateUser({
+      password,
     });
 
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: string; notice?: string }
-      | null;
-
-    if (!response.ok) {
-      setError(payload?.error ?? "Gagal reset password.");
+    if (updateError) {
+      setError(updateError.message || "Gagal reset password.");
       return;
     }
 
-    setMessage(payload?.notice ?? "Password berhasil direset.");
+    setMessage("Password berhasil diperbarui. Silakan login kembali.");
     form.reset();
+    await supabase.auth.signOut();
+    setTimeout(() => router.replace("/auth/login"), 900);
   });
 
   return (
@@ -75,9 +91,15 @@ export default function ResetPasswordPage() {
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
-        {!token ? (
+        {!ready ? (
+          <p className="rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-700">
+            Menyiapkan sesi reset password...
+          </p>
+        ) : null}
+
+        {ready && error && !message ? (
           <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
-            Token reset password tidak ditemukan. Ulangi dari menu lupa password.
+            {error}
           </p>
         ) : null}
 
@@ -112,7 +134,7 @@ export default function ResetPasswordPage() {
             {message}
           </p>
         ) : null}
-        {error ? (
+        {error && !message ? (
           <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
             {error}
           </p>
@@ -121,7 +143,7 @@ export default function ResetPasswordPage() {
         <Button
           className="w-full"
           type="submit"
-          disabled={form.formState.isSubmitting || !token}
+          disabled={form.formState.isSubmitting || !ready || Boolean(error && !message)}
         >
           {form.formState.isSubmitting ? "Menyimpan..." : "Simpan Password Baru"}
         </Button>

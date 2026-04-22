@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { createClient } from "@supabase/supabase-js";
+import { eq, sql } from "drizzle-orm";
 import { users } from "@/db/schema";
-import { hashPassword } from "@/lib/password";
 
 export const DEFAULT_OWNER_EMAIL = "hello@ucan.com";
 export const DEFAULT_OWNER_PASSWORD = "masuk123";
@@ -23,42 +23,102 @@ export function getOwnerConfig() {
   return { email, password, name, username };
 }
 
+function createSupabaseAuthClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!url || !key) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are required."
+    );
+  }
+
+  return createClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+export async function ensureAuthUser(input: {
+  email: string;
+  password: string;
+  name: string;
+  username: string;
+}) {
+  const { db } = await import("@/db");
+  const existing = await db.execute<{ id: string }>(
+    sql`select id::text as id from auth.users where email = ${input.email} limit 1`
+  );
+
+  const existingId = existing.rows[0]?.id;
+  if (existingId) {
+    return { id: existingId, created: false };
+  }
+
+  const supabase = createSupabaseAuthClient();
+  const { data, error } = await supabase.auth.signUp({
+    email: input.email,
+    password: input.password,
+    options: {
+      data: {
+        full_name: input.name,
+        username: input.username,
+      },
+      emailRedirectTo:
+        process.env.NEXT_PUBLIC_APP_URL || "https://video-port-id.vercel.app",
+    },
+  });
+
+  if (error || !data.user) {
+    throw new Error(error?.message || "Failed to create Supabase auth user.");
+  }
+
+  return { id: data.user.id, created: true };
+}
+
 export async function upsertOwnerAccount() {
   const { db } = await import("@/db");
+  const { ensureUniqueUsername } = await import("@/lib/username");
   const { email, password, name, username } = getOwnerConfig();
-  const passwordHash = await hashPassword(password);
+  const authUser = await ensureAuthUser({
+    email,
+    password,
+    name,
+    username,
+  });
 
   const existing = await db.query.users.findFirst({
-    where: eq(users.email, email),
-    columns: { id: true },
+    where: eq(users.id, authUser.id),
   });
 
   if (existing) {
     await db
       .update(users)
       .set({
+        email,
         name,
-        username,
+        username: existing.username || username,
         role: "owner",
-        passwordHash,
-        failedLoginAttempts: 0,
-        loginLockedUntil: null,
         updatedAt: new Date(),
       })
       .where(eq(users.id, existing.id));
     return { id: existing.id, email, created: false };
   }
 
+  const uniqueUsername = await ensureUniqueUsername(username);
   const [created] = await db
     .insert(users)
     .values({
+      id: authUser.id,
       email,
       name,
-      username,
+      username: uniqueUsername,
       role: "owner",
-      passwordHash,
     })
     .returning({ id: users.id });
 
-  return { id: created.id, email, created: true };
+  return { id: created.id, email, created: authUser.created };
 }

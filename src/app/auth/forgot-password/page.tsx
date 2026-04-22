@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -11,6 +10,7 @@ import { Mail } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
 
 const schema = z.object({
   email: z.email("Format email belum valid."),
@@ -19,9 +19,9 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const supabase = createClient();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -32,34 +32,22 @@ export default function ForgotPasswordPage() {
     setError("");
     setMessage("");
 
-    const response = await fetch("/api/auth/forgot-password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email }),
+    const { error: requestError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=%2Fauth%2Freset-password`,
     });
 
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: string; notice?: string; resetPath?: string }
-      | null;
-
-    if (!response.ok) {
-      setError(payload?.error ?? "Gagal memproses reset password.");
+    if (requestError) {
+      setError(requestError.message || "Gagal memproses reset password.");
       return;
     }
 
-    setMessage(payload?.notice ?? "Link reset berhasil disiapkan.");
-
-    if (payload?.resetPath) {
-      setTimeout(() => router.push(payload.resetPath as string), 900);
-    }
+    setMessage("Jika email terdaftar, link reset password sudah dikirim.");
   });
 
   return (
     <AuthShell
       title="Lupa password"
-      subtitle="Masukkan email akunmu. Untuk fase ini, link reset akan langsung diarahkan di browser."
+      subtitle="Masukkan email akunmu. Kami akan mengirim link reset password ke email tersebut."
     >
       <motion.form
         onSubmit={onSubmit}

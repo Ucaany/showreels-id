@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { signOut } from "next-auth/react";
 import { AnimatePresence, LazyMotion, domAnimation, m } from "framer-motion";
 import {
   ArrowRight,
@@ -29,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/cn";
+import { createClient } from "@/lib/supabase/client";
 import { getThumbnailCandidates } from "@/lib/video-utils";
 import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
 
@@ -170,6 +170,7 @@ export function LandingPage({
   const [creatorDeviceSeed, setCreatorDeviceSeed] = useState("creator-seed-default");
   const [creatorTimeBucket, setCreatorTimeBucket] = useState(0);
   const [latestVideosView, setLatestVideosView] = useState<"grid" | "list">("grid");
+  const supabase = createClient();
   const creatorScrollRef = useRef<HTMLDivElement | null>(null);
   const year = new Date().getFullYear();
 
@@ -400,7 +401,13 @@ export function LandingPage({
                     @{currentUser.username || "creator"}
                   </p>
                 </div>
-                <Button variant="danger" onClick={() => signOut({ callbackUrl: "/" })}>
+                <Button
+                  variant="danger"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    window.location.replace("/");
+                  }}
+                >
                   <LogOut className="h-4 w-4" />
                   Sign out
                 </Button>
@@ -462,7 +469,10 @@ export function LandingPage({
                   <Button
                     variant="danger"
                     className="w-full"
-                    onClick={() => signOut({ callbackUrl: "/" })}
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      window.location.replace("/");
+                    }}
                   >
                     <LogOut className="h-4 w-4" />
                     Sign out

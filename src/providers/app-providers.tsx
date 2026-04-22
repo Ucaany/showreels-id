@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { SessionProvider } from "next-auth/react";
 import { type Locale } from "@/lib/i18n";
 import { SessionActivityManager } from "@/components/session-activity-manager";
 import { SiteMaintenanceGate } from "@/components/site-maintenance-gate";
@@ -23,13 +22,11 @@ export function AppProviders({
   }, []);
 
   return (
-    <SessionProvider refetchOnWindowFocus={false} refetchInterval={0}>
-      <PreferencesProvider initialLocale={initialLocale}>
-        <SessionActivityManager />
-        <VisitorTracker />
-        <SiteMaintenanceGate />
-        {children}
-      </PreferencesProvider>
-    </SessionProvider>
+    <PreferencesProvider initialLocale={initialLocale}>
+      <SessionActivityManager />
+      <VisitorTracker />
+      <SiteMaintenanceGate />
+      {children}
+    </PreferencesProvider>
   );
 }

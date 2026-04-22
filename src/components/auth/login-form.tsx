@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,6 +11,7 @@ import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
 import { usePreferences } from "@/hooks/use-preferences";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 
@@ -37,19 +37,16 @@ function getOauthErrorMessage(code: string) {
 }
 
 function getCredentialsErrorMessage(
-  code?: string | null,
+  message?: string | null,
   emailAttempt?: string
 ) {
-  if (code === "login_locked") {
-    return "Login dikunci 15 menit karena 3 kali percobaan gagal.";
-  }
-  if (code === "account_blocked") {
-    return "Akun ini sedang diblokir oleh owner. Hubungi admin untuk membuka akses.";
-  }
-
   const normalizedEmail = (emailAttempt || "").trim().toLowerCase();
   if (normalizedEmail === "hallo@ucan.com") {
     return "Email owner yang benar adalah hello@ucan.com (pakai huruf e).";
+  }
+
+  if (message?.toLowerCase().includes("email not confirmed")) {
+    return "Email belum terverifikasi.";
   }
 
   return "Email atau password tidak cocok.";
@@ -64,6 +61,7 @@ export function LoginForm({
 }) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
+  const supabase = createClient();
   const oauthErrorMessage = getOauthErrorMessage(oauthError);
 
   const form = useForm<LoginValues>({
@@ -77,32 +75,23 @@ export function LoginForm({
   const onSubmit = form.handleSubmit(async (values) => {
     setSubmitError("");
     try {
-      const result = await signIn("credentials", {
-        ...values,
-        redirect: false,
-        redirectTo: "/dashboard",
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
       });
 
-      if (!result || result.error) {
-        const message = getCredentialsErrorMessage(result?.code, values.email);
+      if (error) {
+        const message = getCredentialsErrorMessage(error.message, values.email);
         setSubmitError(message);
         void showFeedbackAlert({
-          title:
-            result?.code === "login_locked"
-              ? "Login sementara dikunci"
-              : result?.code === "account_blocked"
-                ? "Akun diblokir"
-                : "Login gagal",
+          title: "Login gagal",
           text: message,
-          icon:
-            result?.code === "login_locked" || result?.code === "account_blocked"
-              ? "warning"
-              : "error",
+          icon: "error",
         });
         return;
       }
 
-      window.location.replace(result.url ?? "/dashboard");
+      window.location.replace("/dashboard");
     } catch {
       const message = "Login belum bisa diproses. Periksa koneksi lalu coba lagi.";
       setSubmitError(message);
@@ -197,12 +186,27 @@ export function LoginForm({
               type="button"
               variant="secondary"
               className="w-full"
-              onClick={() =>
-                signIn("google", {
-                  callbackUrl: "/dashboard",
-                  prompt: "select_account",
-                })
-              }
+              onClick={async () => {
+                const origin = window.location.origin;
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                  provider: "google",
+                  options: {
+                    redirectTo: `${origin}/auth/callback?next=%2Fdashboard`,
+                    queryParams: {
+                      prompt: "select_account",
+                    },
+                  },
+                });
+
+                if (error) {
+                  setSubmitError("Google login belum berhasil.");
+                  return;
+                }
+
+                if (data.url) {
+                  window.location.assign(data.url);
+                }
+              }}
             >
               <FcGoogle className="h-5 w-5" />
               {dictionary.continueGoogle}

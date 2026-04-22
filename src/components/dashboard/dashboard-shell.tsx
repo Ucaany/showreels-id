@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { Home, LogOut, Menu, Settings2, UserRound, Video, X } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { createClient } from "@/lib/supabase/client";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { DbUser } from "@/db/schema";
 
@@ -24,6 +24,7 @@ export function DashboardShell({
   const pathname = usePathname();
   const { dictionary } = usePreferences();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const supabase = createClient();
   const displayUsername = user.username ? `@${user.username}` : "@creator";
   type NavItem = {
     href: string;
@@ -72,7 +73,10 @@ export function DashboardShell({
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.replace("/");
+              }}
             >
               <LogOut className="h-4 w-4" />
               {dictionary.logout}
@@ -148,7 +152,10 @@ export function DashboardShell({
               variant="secondary"
               size="sm"
               className="mt-4 w-full"
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.replace("/");
+              }}
             >
               <LogOut className="h-4 w-4" />
               {dictionary.logout}

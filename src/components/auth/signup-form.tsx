@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,6 +11,7 @@ import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
 import { usePreferences } from "@/hooks/use-preferences";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 
@@ -36,6 +36,7 @@ type SignupValues = z.infer<typeof signupSchema>;
 export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
+  const supabase = createClient();
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
@@ -51,20 +52,20 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const onSubmit = form.handleSubmit(async (values) => {
     setSubmitError("");
     try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            full_name: values.fullName,
+            username: values.username,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=%2Fdashboard`,
         },
-        body: JSON.stringify(values),
       });
 
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: string }
-        | null;
-
-      if (!response.ok) {
-        const message = payload?.error ?? "Gagal membuat akun.";
+      if (error) {
+        const message = error.message || "Gagal membuat akun.";
         setSubmitError(message);
         void showFeedbackAlert({
           title: "Daftar akun gagal",
@@ -74,14 +75,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         return;
       }
 
-      const signInResult = await signIn("credentials", {
-        email: values.email,
-        password: values.password,
-        redirect: false,
-        redirectTo: "/dashboard",
-      });
-
-      if (!signInResult || signInResult.error) {
+      if (!data.session) {
         const message = "Akun dibuat, tetapi login otomatis gagal.";
         setSubmitError(message);
         void showFeedbackAlert({
@@ -99,7 +93,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         confirmButtonText: "Lanjut",
         timer: 900,
       });
-      window.location.replace(signInResult.url ?? "/dashboard");
+      window.location.replace("/dashboard");
     } catch {
       const message = "Registrasi belum bisa diproses. Periksa koneksi lalu coba lagi.";
       setSubmitError(message);
@@ -200,12 +194,27 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
               type="button"
               variant="secondary"
               className="w-full"
-              onClick={() =>
-                signIn("google", {
-                  callbackUrl: "/dashboard",
-                  prompt: "select_account",
-                })
-              }
+              onClick={async () => {
+                const origin = window.location.origin;
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                  provider: "google",
+                  options: {
+                    redirectTo: `${origin}/auth/callback?next=%2Fdashboard`,
+                    queryParams: {
+                      prompt: "select_account",
+                    },
+                  },
+                });
+
+                if (error) {
+                  setSubmitError("Google login belum berhasil.");
+                  return;
+                }
+
+                if (data.url) {
+                  window.location.assign(data.url);
+                }
+              }}
             >
               <FcGoogle className="h-5 w-5" />
               {dictionary.continueGoogle}

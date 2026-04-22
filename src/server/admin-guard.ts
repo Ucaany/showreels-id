@@ -1,13 +1,13 @@
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/server/current-user";
 import { isAdminEmail } from "@/server/admin-access";
 
 export async function requireAdminSession() {
-  const session = await auth();
-  const email = session?.user?.email;
+  const user = await getCurrentUser();
+  const email = user?.email;
 
-  if (!session?.user?.id || !isAdminEmail(email)) {
+  if (!user?.id || !isAdminEmail(email)) {
     return null;
   }
 
-  return session.user;
+  return user;
 }

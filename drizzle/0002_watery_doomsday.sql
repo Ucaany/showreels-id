@@ -1,4 +1,0 @@
-ALTER TABLE "users" ADD COLUMN "failed_login_attempts" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "login_locked_until" timestamp;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "password_reset_token" text;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "password_reset_expires" timestamp;

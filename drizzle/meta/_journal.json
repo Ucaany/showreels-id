@@ -5,36 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1776729135162,
-      "tag": "0000_absent_maximus",
+      "when": 1776859722052,
+      "tag": "0000_real_mystique",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1776730076048,
-      "tag": "0001_busy_firebrand",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1776732543463,
-      "tag": "0002_watery_doomsday",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1776738000000,
-      "tag": "0003_clear_video_metadata",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1776816000000,
-      "tag": "0004_owner_admin_controls",
+      "when": 1776861900000,
+      "tag": "0001_auto_confirm_auth_users",
       "breakpoints": true
     }
   ]

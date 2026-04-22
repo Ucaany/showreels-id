@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { and, eq, ne } from "drizzle-orm";
-import { auth } from "@/auth";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { videoSchema } from "@/lib/auth-schemas";
 import { isAdminEmail } from "@/server/admin-access";
+import { getCurrentUser } from "@/server/current-user";
 import {
   buildAiDescription,
   createPublicSlug,
@@ -16,11 +16,11 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (isAdminEmail(session.user.email)) {
+  if (isAdminEmail(currentUser.email)) {
     return NextResponse.json(
       { error: "Akun owner hanya untuk admin panel, tidak untuk kelola video creator." },
       { status: 403 }
@@ -29,7 +29,7 @@ export async function PATCH(
 
   const { id } = await context.params;
   const existingVideo = await db.query.videos.findFirst({
-    where: and(eq(videos.id, id), eq(videos.userId, session.user.id)),
+    where: and(eq(videos.id, id), eq(videos.userId, currentUser.id)),
   });
 
   if (!existingVideo) {
@@ -95,7 +95,7 @@ export async function PATCH(
       publicSlug,
       updatedAt: new Date(),
     })
-    .where(and(eq(videos.id, id), eq(videos.userId, session.user.id)))
+    .where(and(eq(videos.id, id), eq(videos.userId, currentUser.id)))
     .returning();
 
   return NextResponse.json({ video });
@@ -105,11 +105,11 @@ export async function DELETE(
   _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (isAdminEmail(session.user.email)) {
+  if (isAdminEmail(currentUser.email)) {
     return NextResponse.json(
       { error: "Akun owner hanya untuk admin panel, tidak untuk kelola video creator." },
       { status: 403 }
@@ -119,7 +119,7 @@ export async function DELETE(
   const { id } = await context.params;
   const [deleted] = await db
     .delete(videos)
-    .where(and(eq(videos.id, id), eq(videos.userId, session.user.id)))
+    .where(and(eq(videos.id, id), eq(videos.userId, currentUser.id)))
     .returning({ id: videos.id });
 
   if (!deleted) {

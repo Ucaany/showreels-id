@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
 import { ShieldAlert } from "lucide-react";
 import { CopyProfileLinkButton } from "@/components/dashboard/copy-profile-link-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { createClient } from "@/lib/supabase/client";
 
 interface SettingsPanelProps {
   username: string;
@@ -14,6 +14,7 @@ interface SettingsPanelProps {
 
 export function SettingsPanel({ username }: SettingsPanelProps) {
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const supabase = createClient();
 
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
@@ -34,7 +35,8 @@ export function SettingsPanel({ username }: SettingsPanelProps) {
       return;
     }
 
-    await signOut({ callbackUrl: "/" });
+    await supabase.auth.signOut();
+    window.location.replace("/");
   };
 
   return (

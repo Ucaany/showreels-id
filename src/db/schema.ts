@@ -5,20 +5,19 @@ import {
   integer,
   jsonb,
   pgTable,
-  primaryKey,
   text,
   timestamp,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable(
   "users",
   {
-    id: text("id")
+    id: uuid("id")
       .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
+      .notNull(),
     name: text("name"),
     email: text("email").notNull().unique(),
-    emailVerified: timestamp("email_verified", { mode: "date" }),
     image: text("image"),
     coverImageUrl: text("cover_image_url").notNull().default(""),
     username: text("username").unique(),
@@ -39,11 +38,6 @@ export const users = pgTable(
       .$type<string[]>()
       .notNull()
       .default(sql`'[]'::jsonb`),
-    passwordHash: text("password_hash"),
-    failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
-    loginLockedUntil: timestamp("login_locked_until", { mode: "date" }),
-    passwordResetToken: text("password_reset_token"),
-    passwordResetExpires: timestamp("password_reset_expires", { mode: "date" }),
     isBlocked: boolean("is_blocked").notNull().default(false),
     blockedAt: timestamp("blocked_at", { mode: "date" }),
     blockedReason: text("blocked_reason").notNull().default(""),
@@ -62,64 +56,13 @@ export const users = pgTable(
   })
 );
 
-export const accounts = pgTable(
-  "accounts",
-  {
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    type: text("type").notNull(),
-    provider: text("provider").notNull(),
-    providerAccountId: text("provider_account_id").notNull(),
-    refresh_token: text("refresh_token"),
-    access_token: text("access_token"),
-    expires_at: integer("expires_at"),
-    token_type: text("token_type"),
-    scope: text("scope"),
-    id_token: text("id_token"),
-    session_state: text("session_state"),
-  },
-  (table) => ({
-    compoundKey: primaryKey({
-      columns: [table.provider, table.providerAccountId],
-    }),
-    userIdIdx: index("accounts_user_id_idx").on(table.userId),
-  })
-);
-
-export const sessions = pgTable(
-  "sessions",
-  {
-    sessionToken: text("session_token").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    expires: timestamp("expires", { mode: "date" }).notNull(),
-  },
-  (table) => ({
-    userIdIdx: index("sessions_user_id_idx").on(table.userId),
-  })
-);
-
-export const verificationTokens = pgTable(
-  "verification_tokens",
-  {
-    identifier: text("identifier").notNull(),
-    token: text("token").notNull(),
-    expires: timestamp("expires", { mode: "date" }).notNull(),
-  },
-  (table) => ({
-    compoundKey: primaryKey({ columns: [table.identifier, table.token] }),
-  })
-);
-
 export const videos = pgTable(
   "videos",
   {
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
@@ -186,8 +129,6 @@ export const visitorEvents = pgTable(
 );
 
 export const usersRelations = relations(users, ({ many }) => ({
-  accounts: many(accounts),
-  sessions: many(sessions),
   videos: many(videos),
 }));
 

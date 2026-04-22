@@ -1,16 +1,16 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
 import { SignupForm } from "@/components/auth/signup-form";
-import { isAdminEmail } from "@/server/admin-access";
+import { getCurrentUser } from "@/server/current-user";
 
 export default async function SignupPage() {
-  const session = await auth();
+  const user = await getCurrentUser();
   const googleEnabled = Boolean(
-    process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   );
 
-  if (session?.user) {
-    redirect(isAdminEmail(session.user.email) ? "/admin" : "/dashboard");
+  if (user?.id) {
+    redirect(user.role === "owner" ? "/admin" : "/dashboard");
   }
 
   return <SignupForm googleEnabled={googleEnabled} />;

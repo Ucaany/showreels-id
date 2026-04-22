@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { videoSchema } from "@/lib/auth-schemas";
 import { isAdminEmail } from "@/server/admin-access";
+import { getCurrentUser } from "@/server/current-user";
 import {
   buildAiDescription,
   createPublicSlug,
@@ -12,11 +12,11 @@ import {
 } from "@/lib/video-utils";
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (isAdminEmail(session.user.email)) {
+  if (isAdminEmail(currentUser.email)) {
     return NextResponse.json(
       { error: "Akun owner hanya untuk admin panel, tidak untuk submit video." },
       { status: 403 }
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   const [video] = await db
     .insert(videos)
     .values({
-      userId: session.user.id,
+      userId: currentUser.id,
       title: parsed.data.title.trim(),
       description:
         parsed.data.description?.trim() ||
