@@ -192,19 +192,29 @@ export async function getLandingStats() {
     };
   }
 
-  const adminEmailsCsv = Array.from(getAdminEmails()).sort().join(",");
-  const cached = await landingStatsCache(adminEmailsCsv);
-  return {
-    ...cached,
-    featuredCreators: cached.featuredCreators.map((creator) => ({
-      ...creator,
-      createdAt: new Date(creator.createdAt),
-    })),
-    featuredVideos: cached.featuredVideos.map((video) => ({
-      ...video,
-      createdAt: new Date(video.createdAt),
-    })),
-  };
+  try {
+    const adminEmailsCsv = Array.from(getAdminEmails()).sort().join(",");
+    const cached = await landingStatsCache(adminEmailsCsv);
+    return {
+      ...cached,
+      featuredCreators: cached.featuredCreators.map((creator) => ({
+        ...creator,
+        createdAt: new Date(creator.createdAt),
+      })),
+      featuredVideos: cached.featuredVideos.map((video) => ({
+        ...video,
+        createdAt: new Date(video.createdAt),
+      })),
+    };
+  } catch (error) {
+    console.error("Failed to load landing stats", error);
+    return {
+      creatorCount: 0,
+      videoCount: 0,
+      featuredCreators: [],
+      featuredVideos: [],
+    };
+  }
 }
 
 export async function getPublicShowcaseVideos(limit = 30) {
@@ -212,12 +222,17 @@ export async function getPublicShowcaseVideos(limit = 30) {
     return [] as PublicShowcaseVideo[];
   }
 
-  const adminEmailsCsv = Array.from(getAdminEmails()).sort().join(",");
-  const cached = await showcaseVideosCache(adminEmailsCsv, limit);
-  return cached.map((video) => ({
-    ...video,
-    createdAt: new Date(video.createdAt),
-  }));
+  try {
+    const adminEmailsCsv = Array.from(getAdminEmails()).sort().join(",");
+    const cached = await showcaseVideosCache(adminEmailsCsv, limit);
+    return cached.map((video) => ({
+      ...video,
+      createdAt: new Date(video.createdAt),
+    }));
+  } catch (error) {
+    console.error("Failed to load public showcase videos", error);
+    return [];
+  }
 }
 
 export async function getPublicProfile(username: string) {
@@ -225,20 +240,25 @@ export async function getPublicProfile(username: string) {
     return null;
   }
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.username, username),
-  });
+  try {
+    const user = await db.query.users.findFirst({
+      where: eq(users.username, username),
+    });
 
-  if (!user || user.role === "owner" || isAdminEmail(user.email)) {
+    if (!user || user.role === "owner" || isAdminEmail(user.email)) {
+      return null;
+    }
+
+    const profileVideos = await db.query.videos.findMany({
+      where: and(eq(videos.userId, user.id), eq(videos.visibility, "public")),
+      orderBy: desc(videos.createdAt),
+    });
+
+    return { user, videos: profileVideos };
+  } catch (error) {
+    console.error("Failed to load public profile", error);
     return null;
   }
-
-  const profileVideos = await db.query.videos.findMany({
-    where: and(eq(videos.userId, user.id), eq(videos.visibility, "public")),
-    orderBy: desc(videos.createdAt),
-  });
-
-  return { user, videos: profileVideos };
 }
 
 export async function getPublicVideo(slug: string) {
@@ -246,20 +266,25 @@ export async function getPublicVideo(slug: string) {
     return null;
   }
 
-  const video = await db.query.videos.findFirst({
-    where: and(eq(videos.publicSlug, slug), eq(videos.visibility, "public")),
-    with: {
-      author: true,
-    },
-  });
+  try {
+    const video = await db.query.videos.findFirst({
+      where: and(eq(videos.publicSlug, slug), eq(videos.visibility, "public")),
+      with: {
+        author: true,
+      },
+    });
 
-  if (
-    !video ||
-    video.author?.role === "owner" ||
-    isAdminEmail(video.author?.email)
-  ) {
+    if (
+      !video ||
+      video.author?.role === "owner" ||
+      isAdminEmail(video.author?.email)
+    ) {
+      return null;
+    }
+
+    return video;
+  } catch (error) {
+    console.error("Failed to load public video", error);
     return null;
   }
-
-  return video;
 }
