@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatDateLabel } from "@/lib/helpers";
+import { getBackgroundImageCropStyle } from "@/lib/image-crop";
 import { formatJoinedMonthYear } from "@/lib/profile-utils";
 import { getPublicProfile } from "@/server/public-data";
 import { getCurrentUser } from "@/server/current-user";
@@ -89,15 +90,18 @@ export default async function CreatorProfilePage({
         <Card className="overflow-hidden border-border bg-surface p-0">
           <div className="relative overflow-hidden border-b border-slate-200">
             {coverImage ? (
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `linear-gradient(145deg, rgba(15,23,42,0.10), rgba(15,23,42,0.18)), url(${coverImage})`,
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat",
-                  backgroundSize: "cover",
-                }}
-              />
+                <div
+                  className="absolute inset-0"
+                  style={getBackgroundImageCropStyle(
+                    coverImage,
+                    {
+                      x: profile.user.coverCropX,
+                      y: profile.user.coverCropY,
+                      zoom: profile.user.coverCropZoom,
+                    },
+                    "linear-gradient(145deg, rgba(15,23,42,0.10), rgba(15,23,42,0.18))"
+                  )}
+                />
             ) : null}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.58),_transparent_36%),linear-gradient(180deg,_rgba(255,255,255,0.80),_rgba(255,255,255,0.94))]" />
             <div className="relative flex min-h-[240px] flex-col justify-between gap-4 p-4 sm:min-h-[290px] sm:gap-6 sm:p-6 lg:min-h-[320px]">
@@ -115,6 +119,11 @@ export default async function CreatorProfilePage({
                     <AvatarBadge
                       name={profile.user.name || "Creator"}
                       avatarUrl={profile.user.image || ""}
+                      crop={{
+                        x: profile.user.avatarCropX,
+                        y: profile.user.avatarCropY,
+                        zoom: profile.user.avatarCropZoom,
+                      }}
                       size="lg"
                     />
                   </div>

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import { getBackgroundImageCropStyle, type ImageCropValues } from "@/lib/image-crop";
 
 type AvatarSize = "sm" | "md" | "lg";
 
@@ -11,10 +12,12 @@ const sizeClasses: Record<AvatarSize, string> = {
 export function AvatarBadge({
   name,
   avatarUrl,
+  crop,
   size = "md",
 }: {
   name: string;
   avatarUrl?: string;
+  crop?: ImageCropValues;
   size?: AvatarSize;
 }) {
   const initials = name
@@ -33,9 +36,7 @@ export function AvatarBadge({
       style={
         avatarUrl
           ? {
-              backgroundImage: `url(${avatarUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
+              ...getBackgroundImageCropStyle(avatarUrl, crop),
               color: "transparent",
             }
           : undefined

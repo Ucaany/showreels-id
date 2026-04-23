@@ -255,6 +255,34 @@ export async function getPublicProfile(
   try {
     const user = await db.query.users.findFirst({
       where: eq(users.username, username),
+      columns: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        avatarCropX: true,
+        avatarCropY: true,
+        avatarCropZoom: true,
+        coverImageUrl: true,
+        coverCropX: true,
+        coverCropY: true,
+        coverCropZoom: true,
+        username: true,
+        role: true,
+        bio: true,
+        experience: true,
+        city: true,
+        contactEmail: true,
+        phoneNumber: true,
+        websiteUrl: true,
+        instagramUrl: true,
+        youtubeUrl: true,
+        facebookUrl: true,
+        threadsUrl: true,
+        profileVisibility: true,
+        skills: true,
+        createdAt: true,
+      },
     });
 
     if (!user || user.role === "owner" || isAdminEmail(user.email)) {
@@ -269,6 +297,22 @@ export async function getPublicProfile(
     const profileVideos = await db.query.videos.findMany({
       where: and(eq(videos.userId, user.id), eq(videos.visibility, "public")),
       orderBy: desc(videos.createdAt),
+      columns: {
+        id: true,
+        title: true,
+        description: true,
+        visibility: true,
+        thumbnailUrl: true,
+        extraVideoUrls: true,
+        imageUrls: true,
+        sourceUrl: true,
+        source: true,
+        aspectRatio: true,
+        outputType: true,
+        durationLabel: true,
+        publicSlug: true,
+        createdAt: true,
+      },
     });
 
     return { user, videos: profileVideos };
@@ -286,8 +330,47 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
   try {
     const video = await db.query.videos.findFirst({
       where: eq(videos.publicSlug, slug),
+      columns: {
+        id: true,
+        userId: true,
+        title: true,
+        description: true,
+        tags: true,
+        visibility: true,
+        thumbnailUrl: true,
+        extraVideoUrls: true,
+        imageUrls: true,
+        sourceUrl: true,
+        source: true,
+        aspectRatio: true,
+        outputType: true,
+        durationLabel: true,
+        publicSlug: true,
+        createdAt: true,
+      },
       with: {
-        author: true,
+        author: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            avatarCropX: true,
+            avatarCropY: true,
+            avatarCropZoom: true,
+            username: true,
+            role: true,
+            bio: true,
+            city: true,
+            contactEmail: true,
+            phoneNumber: true,
+            instagramUrl: true,
+            youtubeUrl: true,
+            facebookUrl: true,
+            threadsUrl: true,
+            profileVisibility: true,
+          },
+        },
       },
     });
 

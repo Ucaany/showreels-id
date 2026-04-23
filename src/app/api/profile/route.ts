@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { profileSchema } from "@/lib/auth-schemas";
+import { normalizeImageCrop } from "@/lib/image-crop";
 import { sanitizeUsername } from "@/lib/username";
 import { isAdminEmail } from "@/server/admin-access";
 import { deleteUserAccount } from "@/server/auth-profile";
@@ -83,6 +84,17 @@ export async function PATCH(request: Request) {
     }
   }
 
+  const avatarCrop = normalizeImageCrop({
+    x: parsed.data.avatarCropX,
+    y: parsed.data.avatarCropY,
+    zoom: parsed.data.avatarCropZoom,
+  });
+  const coverCrop = normalizeImageCrop({
+    x: parsed.data.coverCropX,
+    y: parsed.data.coverCropY,
+    zoom: parsed.data.coverCropZoom,
+  });
+
   const [updated] = await db
     .update(users)
     .set({
@@ -91,6 +103,12 @@ export async function PATCH(request: Request) {
       role: parsed.data.role.trim(),
       image: normalizeAvatarUrl(parsed.data.avatarUrl?.trim() || "") || null,
       coverImageUrl: normalizeAvatarUrl(parsed.data.coverImageUrl?.trim() || ""),
+      avatarCropX: avatarCrop.x,
+      avatarCropY: avatarCrop.y,
+      avatarCropZoom: avatarCrop.zoom,
+      coverCropX: coverCrop.x,
+      coverCropY: coverCrop.y,
+      coverCropZoom: coverCrop.zoom,
       bio: parsed.data.bio.trim(),
       experience: parsed.data.experience.trim(),
       birthDate: parsed.data.birthDate.trim(),

@@ -29,6 +29,13 @@
       "when": 1776903720000,
       "tag": "0003_profile_visibility_and_semi_private",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776997800000,
+      "tag": "0004_profile_image_crop_fields",
+      "breakpoints": true
     }
   ]
 }

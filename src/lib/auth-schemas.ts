@@ -68,6 +68,18 @@ const birthDateSchema = z
     message: "Format tanggal lahir harus YYYY-MM-DD.",
   });
 
+const cropPercentSchema = z.coerce
+  .number()
+  .min(-100, "Posisi crop terlalu kecil.")
+  .max(100, "Posisi crop terlalu besar.")
+  .default(0);
+
+const cropZoomSchema = z.coerce
+  .number()
+  .min(100, "Zoom crop minimal 100%.")
+  .max(300, "Zoom crop maksimal 300%.")
+  .default(100);
+
 export const profileSchema = z.object({
   fullName: z.string().min(2, "Nama minimal 2 karakter."),
   username: z
@@ -97,6 +109,12 @@ export const profileSchema = z.object({
   facebookUrl: socialUrlSchema.default(""),
   threadsUrl: socialUrlSchema.default(""),
   skills: z.array(z.string()).default([]),
+  avatarCropX: cropPercentSchema,
+  avatarCropY: cropPercentSchema,
+  avatarCropZoom: cropZoomSchema,
+  coverCropX: cropPercentSchema,
+  coverCropY: cropPercentSchema,
+  coverCropZoom: cropZoomSchema,
 });
 
 export const profileVisibilityUpdateSchema = z.object({

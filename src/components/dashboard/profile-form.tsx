@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { DbUser } from "@/db/schema";
 import { normalizeAvatarUrl } from "@/lib/avatar-utils";
+import { getBackgroundImageCropStyle, normalizeImageCrop } from "@/lib/image-crop";
 import { getAgeFromBirthDate, normalizeSocialUrl } from "@/lib/profile-utils";
 
 const schema = z.object({
@@ -58,6 +59,12 @@ const schema = z.object({
   facebookUrl: z.string().max(300, "URL terlalu panjang."),
   threadsUrl: z.string().max(300, "URL terlalu panjang."),
   skills: z.string().max(300, "Skills terlalu panjang."),
+  avatarCropX: z.number().min(-100).max(100),
+  avatarCropY: z.number().min(-100).max(100),
+  avatarCropZoom: z.number().min(100).max(300),
+  coverCropX: z.number().min(-100).max(100),
+  coverCropY: z.number().min(-100).max(100),
+  coverCropZoom: z.number().min(100).max(300),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -136,14 +143,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
   const [error, setError] = useState("");
   const [autoSaveLabel, setAutoSaveLabel] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [activeCropTarget, setActiveCropTarget] = useState<"cover" | "avatar" | null>(null);
-  const [coverCropPreview, setCoverCropPreview] = useState<{
-    sourceUrl: string;
-    croppedImage: string;
-  } | null>(null);
-  const [avatarCropPreview, setAvatarCropPreview] = useState<{
-    sourceUrl: string;
-    croppedImage: string;
-  } | null>(null);
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const form = useForm<FormValues>({
@@ -154,6 +153,12 @@ export function ProfileForm({ user }: { user: DbUser }) {
       role: user.role || "",
       avatarUrl: normalizeAvatarUrl(user.image || ""),
       coverImageUrl: normalizeAvatarUrl(user.coverImageUrl || ""),
+      avatarCropX: user.avatarCropX ?? 0,
+      avatarCropY: user.avatarCropY ?? 0,
+      avatarCropZoom: user.avatarCropZoom ?? 100,
+      coverCropX: user.coverCropX ?? 0,
+      coverCropY: user.coverCropY ?? 0,
+      coverCropZoom: user.coverCropZoom ?? 100,
       bio: user.bio || "",
       experience: user.experience || "",
       birthDate: user.birthDate || "",
@@ -217,17 +222,45 @@ export function ProfileForm({ user }: { user: DbUser }) {
     control: form.control,
     name: "threadsUrl",
   });
+  const watchedAvatarCropX = useWatch({
+    control: form.control,
+    name: "avatarCropX",
+  });
+  const watchedAvatarCropY = useWatch({
+    control: form.control,
+    name: "avatarCropY",
+  });
+  const watchedAvatarCropZoom = useWatch({
+    control: form.control,
+    name: "avatarCropZoom",
+  });
+  const watchedCoverCropX = useWatch({
+    control: form.control,
+    name: "coverCropX",
+  });
+  const watchedCoverCropY = useWatch({
+    control: form.control,
+    name: "coverCropY",
+  });
+  const watchedCoverCropZoom = useWatch({
+    control: form.control,
+    name: "coverCropZoom",
+  });
 
   const normalizedWatchedAvatar = normalizeAvatarUrl(watchedAvatar || "");
   const normalizedWatchedCover = normalizeAvatarUrl(watchedCover || "");
-  const previewAvatar =
-    avatarCropPreview?.sourceUrl === normalizedWatchedAvatar
-      ? avatarCropPreview.croppedImage
-      : normalizedWatchedAvatar;
-  const previewCover =
-    coverCropPreview?.sourceUrl === normalizedWatchedCover
-      ? coverCropPreview.croppedImage
-      : normalizedWatchedCover;
+  const avatarCrop = normalizeImageCrop({
+    x: watchedAvatarCropX,
+    y: watchedAvatarCropY,
+    zoom: watchedAvatarCropZoom,
+  });
+  const coverCrop = normalizeImageCrop({
+    x: watchedCoverCropX,
+    y: watchedCoverCropY,
+    zoom: watchedCoverCropZoom,
+  });
+  const previewAvatar = normalizedWatchedAvatar;
+  const previewCover = normalizedWatchedCover;
   const age = getAgeFromBirthDate(watchedBirthDate || user.birthDate || "");
   const publicProfileHref = `/creator/${watchedUsername || user.username}`;
   const usernameQuota = useMemo(
@@ -253,29 +286,48 @@ export function ProfileForm({ user }: { user: DbUser }) {
     });
   };
 
-  const buildProfilePayload = (values: FormValues) => ({
-    fullName: values.fullName,
-    username: values.username,
-    role: values.role.trim(),
-    avatarUrl: normalizeAvatarUrl(values.avatarUrl || ""),
-    coverImageUrl: normalizeAvatarUrl(values.coverImageUrl || ""),
-    bio: values.bio,
-    experience: values.experience,
-    birthDate: values.birthDate?.trim() || "",
-    city: values.city.trim(),
-    address: values.address.trim(),
-    contactEmail: values.contactEmail.trim().toLowerCase(),
-    phoneNumber: values.phoneNumber.trim(),
-    websiteUrl: normalizeSocialUrl(values.websiteUrl || ""),
-    instagramUrl: normalizeSocialUrl(values.instagramUrl || ""),
-    youtubeUrl: normalizeSocialUrl(values.youtubeUrl || ""),
-    facebookUrl: normalizeSocialUrl(values.facebookUrl || ""),
-    threadsUrl: normalizeSocialUrl(values.threadsUrl || ""),
-    skills: values.skills
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean),
-  });
+  const buildProfilePayload = (values: FormValues) => {
+    const avatarCropValues = normalizeImageCrop({
+      x: values.avatarCropX,
+      y: values.avatarCropY,
+      zoom: values.avatarCropZoom,
+    });
+    const coverCropValues = normalizeImageCrop({
+      x: values.coverCropX,
+      y: values.coverCropY,
+      zoom: values.coverCropZoom,
+    });
+
+    return {
+      fullName: values.fullName,
+      username: values.username,
+      role: values.role.trim(),
+      avatarUrl: normalizeAvatarUrl(values.avatarUrl || ""),
+      coverImageUrl: normalizeAvatarUrl(values.coverImageUrl || ""),
+      bio: values.bio,
+      experience: values.experience,
+      birthDate: values.birthDate?.trim() || "",
+      city: values.city.trim(),
+      address: values.address.trim(),
+      contactEmail: values.contactEmail.trim().toLowerCase(),
+      phoneNumber: values.phoneNumber.trim(),
+      websiteUrl: normalizeSocialUrl(values.websiteUrl || ""),
+      instagramUrl: normalizeSocialUrl(values.instagramUrl || ""),
+      youtubeUrl: normalizeSocialUrl(values.youtubeUrl || ""),
+      facebookUrl: normalizeSocialUrl(values.facebookUrl || ""),
+      threadsUrl: normalizeSocialUrl(values.threadsUrl || ""),
+      avatarCropX: avatarCropValues.x,
+      avatarCropY: avatarCropValues.y,
+      avatarCropZoom: avatarCropValues.zoom,
+      coverCropX: coverCropValues.x,
+      coverCropY: coverCropValues.y,
+      coverCropZoom: coverCropValues.zoom,
+      skills: values.skills
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+    };
+  };
 
   const onSubmit = form.handleSubmit(async (values) => {
     setMessage("");
@@ -435,12 +487,11 @@ export function ProfileForm({ user }: { user: DbUser }) {
                           className="relative h-28 w-full sm:h-36"
                           style={
                             previewCover
-                              ? {
-                                  backgroundImage: `linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.22)), url(${previewCover})`,
-                                  backgroundPosition: "center",
-                                  backgroundRepeat: "no-repeat",
-                                  backgroundSize: "cover",
-                                }
+                              ? getBackgroundImageCropStyle(
+                                  previewCover,
+                                  coverCrop,
+                                  "linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.22))"
+                                )
                               : undefined
                           }
                         >
@@ -458,17 +509,19 @@ export function ProfileForm({ user }: { user: DbUser }) {
                             <AvatarBadge
                               name={watchedName || user.name || "Creator"}
                               avatarUrl={previewAvatar}
+                              crop={avatarCrop}
                               size="lg"
                             />
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                         {previewCover ? (
                           <Button
                             type="button"
                             variant="secondary"
                             onClick={() => setActiveCropTarget("cover")}
+                            className="w-full sm:w-auto"
                           >
                             Crop Cover
                           </Button>
@@ -477,12 +530,15 @@ export function ProfileForm({ user }: { user: DbUser }) {
                           <Button
                             type="button"
                             variant="ghost"
+                            className="w-full sm:w-auto"
                             onClick={() => {
-                              setCoverCropPreview(null);
                               form.setValue("coverImageUrl", "", {
                                 shouldDirty: true,
                                 shouldValidate: true,
                               });
+                              form.setValue("coverCropX", 0, { shouldDirty: true });
+                              form.setValue("coverCropY", 0, { shouldDirty: true });
+                              form.setValue("coverCropZoom", 100, { shouldDirty: true });
                             }}
                           >
                             Hapus Cover
@@ -496,10 +552,17 @@ export function ProfileForm({ user }: { user: DbUser }) {
                             const normalized = normalizeAvatarUrl(
                               event.target.value
                             );
+                            const hasChanged =
+                              normalized !== normalizeAvatarUrl(watchedCover || "");
                             form.setValue("coverImageUrl", normalized, {
                               shouldDirty: true,
                               shouldValidate: true,
                             });
+                            if (hasChanged) {
+                              form.setValue("coverCropX", 0, { shouldDirty: true });
+                              form.setValue("coverCropY", 0, { shouldDirty: true });
+                              form.setValue("coverCropZoom", 100, { shouldDirty: true });
+                            }
                           },
                         })}
                       />
@@ -520,12 +583,13 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       Avatar Profil
                     </label>
                     <div className="space-y-3">
-                      <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                         {previewAvatar ? (
                           <Button
                             type="button"
                             variant="secondary"
                             onClick={() => setActiveCropTarget("avatar")}
+                            className="w-full sm:w-auto"
                           >
                             Crop Avatar
                           </Button>
@@ -534,12 +598,15 @@ export function ProfileForm({ user }: { user: DbUser }) {
                           <Button
                             type="button"
                             variant="ghost"
+                            className="w-full sm:w-auto"
                             onClick={() => {
-                              setAvatarCropPreview(null);
                               form.setValue("avatarUrl", "", {
                                 shouldDirty: true,
                                 shouldValidate: true,
                               });
+                              form.setValue("avatarCropX", 0, { shouldDirty: true });
+                              form.setValue("avatarCropY", 0, { shouldDirty: true });
+                              form.setValue("avatarCropZoom", 100, { shouldDirty: true });
                             }}
                           >
                             Hapus Avatar
@@ -553,10 +620,17 @@ export function ProfileForm({ user }: { user: DbUser }) {
                             const normalized = normalizeAvatarUrl(
                               event.target.value
                             );
+                            const hasChanged =
+                              normalized !== normalizeAvatarUrl(watchedAvatar || "");
                             form.setValue("avatarUrl", normalized, {
                               shouldDirty: true,
                               shouldValidate: true,
                             });
+                            if (hasChanged) {
+                              form.setValue("avatarCropX", 0, { shouldDirty: true });
+                              form.setValue("avatarCropY", 0, { shouldDirty: true });
+                              form.setValue("avatarCropZoom", 100, { shouldDirty: true });
+                            }
                           },
                         })}
                       />
@@ -946,35 +1020,41 @@ export function ProfileForm({ user }: { user: DbUser }) {
           </Card>
         </div>
       </div>
-      <ImageCropDialog
-        open={activeCropTarget === "cover" && Boolean(normalizedWatchedCover)}
-        title="Crop Cover"
-        aspectRatio={16 / 9}
-        imageSrc={normalizedWatchedCover}
-        onCancel={() => setActiveCropTarget(null)}
-        onConfirm={(croppedImage) => {
-          setCoverCropPreview({
-            sourceUrl: normalizedWatchedCover,
-            croppedImage,
-          });
-          setActiveCropTarget(null);
-        }}
-      />
-      <ImageCropDialog
-        open={activeCropTarget === "avatar" && Boolean(normalizedWatchedAvatar)}
-        title="Crop Avatar"
-        aspectRatio={1}
-        shape="circle"
-        imageSrc={normalizedWatchedAvatar}
-        onCancel={() => setActiveCropTarget(null)}
-        onConfirm={(croppedImage) => {
-          setAvatarCropPreview({
-            sourceUrl: normalizedWatchedAvatar,
-            croppedImage,
-          });
-          setActiveCropTarget(null);
-        }}
-      />
+      {activeCropTarget === "cover" && normalizedWatchedCover ? (
+        <ImageCropDialog
+          key={`cover-${normalizedWatchedCover}-${coverCrop.x}-${coverCrop.y}-${coverCrop.zoom}`}
+          open
+          title="Crop Cover"
+          aspectRatio={16 / 9}
+          imageSrc={normalizedWatchedCover}
+          initialCrop={coverCrop}
+          onCancel={() => setActiveCropTarget(null)}
+          onConfirm={(crop) => {
+            form.setValue("coverCropX", crop.x, { shouldDirty: true });
+            form.setValue("coverCropY", crop.y, { shouldDirty: true });
+            form.setValue("coverCropZoom", crop.zoom, { shouldDirty: true });
+            setActiveCropTarget(null);
+          }}
+        />
+      ) : null}
+      {activeCropTarget === "avatar" && normalizedWatchedAvatar ? (
+        <ImageCropDialog
+          key={`avatar-${normalizedWatchedAvatar}-${avatarCrop.x}-${avatarCrop.y}-${avatarCrop.zoom}`}
+          open
+          title="Crop Avatar"
+          aspectRatio={1}
+          shape="circle"
+          imageSrc={normalizedWatchedAvatar}
+          initialCrop={avatarCrop}
+          onCancel={() => setActiveCropTarget(null)}
+          onConfirm={(crop) => {
+            form.setValue("avatarCropX", crop.x, { shouldDirty: true });
+            form.setValue("avatarCropY", crop.y, { shouldDirty: true });
+            form.setValue("avatarCropZoom", crop.zoom, { shouldDirty: true });
+            setActiveCropTarget(null);
+          }}
+        />
+      ) : null}
     </>
   );
 }

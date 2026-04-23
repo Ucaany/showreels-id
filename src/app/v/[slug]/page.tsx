@@ -123,6 +123,11 @@ export default async function PublicVideoPage({
                 <AvatarBadge
                   name={video.author.name || "Creator"}
                   avatarUrl={video.author.image || ""}
+                  crop={{
+                    x: video.author.avatarCropX,
+                    y: video.author.avatarCropY,
+                    zoom: video.author.avatarCropZoom,
+                  }}
                   size="lg"
                 />
                 <div className="min-w-0 space-y-2">

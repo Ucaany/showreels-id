@@ -3,6 +3,12 @@ export type VideoVisibility = "draft" | "private" | "semi_private" | "public";
 export type ProfileVisibility = "private" | "semi_private" | "public";
 export type VideoAspectRatio = "landscape" | "portrait";
 
+export interface StoredImageCrop {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
 export interface AuthSession {
   token: string;
   userId: string;
@@ -17,6 +23,8 @@ export interface UserProfile {
   fullName: string;
   role: string;
   avatarUrl: string;
+  avatarCrop?: StoredImageCrop;
+  coverCrop?: StoredImageCrop;
   bio: string;
   experience: string;
   birthDate: string;

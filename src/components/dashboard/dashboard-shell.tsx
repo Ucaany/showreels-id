@@ -63,6 +63,18 @@ export function DashboardShell({
           ...navItems,
         ];
 
+  const isNavItemActive = (item: NavItem) => {
+    if (item.matchPrefix) {
+      return pathname.startsWith(item.matchPrefix);
+    }
+
+    if (item.href === "/dashboard" || item.href === "/admin") {
+      return pathname === item.href;
+    }
+
+    return pathname === item.href || pathname.startsWith(`${item.href}/`);
+  };
+
   useEffect(() => {
     if (authStatus !== "login") return;
 
@@ -90,7 +102,16 @@ export function DashboardShell({
               <p className="max-w-[180px] truncate whitespace-nowrap text-sm font-semibold text-slate-900">
                 {displayUsername}
               </p>
-              <AvatarBadge name={user.name || "Creator"} avatarUrl={user.image || ""} size="sm" />
+              <AvatarBadge
+                name={user.name || "Creator"}
+                avatarUrl={user.image || ""}
+                crop={{
+                  x: user.avatarCropX,
+                  y: user.avatarCropY,
+                  zoom: user.avatarCropZoom,
+                }}
+                size="sm"
+              />
             </div>
             <Button
               variant="secondary"
@@ -137,7 +158,16 @@ export function DashboardShell({
             </div>
             <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
               <div className="flex items-center gap-2">
-                <AvatarBadge name={user.name || "Creator"} avatarUrl={user.image || ""} size="sm" />
+                <AvatarBadge
+                  name={user.name || "Creator"}
+                  avatarUrl={user.image || ""}
+                  crop={{
+                    x: user.avatarCropX,
+                    y: user.avatarCropY,
+                    zoom: user.avatarCropZoom,
+                  }}
+                  size="sm"
+                />
                 <p className="min-w-0 truncate whitespace-nowrap text-sm font-semibold text-slate-900">
                   {displayUsername}
                 </p>
@@ -146,11 +176,7 @@ export function DashboardShell({
             <nav className="space-y-1">
               {mobileNavItems.map((item) => {
                 const Icon = item.icon;
-                const itemPath = item.href.split("?")[0];
-                const active =
-                  pathname === itemPath ||
-                  pathname.startsWith(`${itemPath}/`) ||
-                  (item.matchPrefix ? pathname.startsWith(item.matchPrefix) : false);
+                const active = isNavItemActive(item);
 
                 return (
                   <Link
@@ -193,10 +219,7 @@ export function DashboardShell({
           <nav className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const active =
-                pathname === item.href ||
-                pathname.startsWith(`${item.href}/`) ||
-                (item.matchPrefix ? pathname.startsWith(item.matchPrefix) : false);
+              const active = isNavItemActive(item);
 
               return (
                 <Link

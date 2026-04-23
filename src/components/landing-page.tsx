@@ -802,7 +802,7 @@ export function LandingPage({
                           className={cn(
                             "group min-w-0 rounded-[1.2rem] border border-slate-200 bg-white/92 shadow-sm transition hover:border-brand-300 hover:shadow-[0_16px_30px_rgba(37,99,235,0.12)]",
                             latestVideosView === "grid"
-                              ? "flex h-full min-h-[292px] flex-col gap-2.5 px-4 py-4 sm:min-h-[328px] sm:gap-3 sm:px-5"
+                              ? "flex h-full flex-col gap-2 px-4 py-4 sm:gap-2.5 sm:px-5"
                               : "grid grid-cols-[124px_minmax(0,1fr)] items-stretch gap-3 px-4 py-4 sm:grid-cols-[170px_minmax(0,1fr)] sm:gap-4 sm:px-5"
                           )}
                         >
@@ -848,7 +848,7 @@ export function LandingPage({
                             )}
                           </div>
 
-                          <div className="flex h-full min-w-0 flex-col gap-2.5 sm:gap-3">
+                          <div className="flex h-full min-w-0 flex-col gap-2 sm:gap-2.5">
                             <div className="flex min-w-0 items-start justify-between gap-3">
                               <p
                                 className={cn(
@@ -890,7 +890,7 @@ export function LandingPage({
                               {video.description}
                             </p>
 
-                            <div className="mt-auto flex min-w-0 items-center justify-between gap-3 border-t border-slate-100 pt-2 text-sm">
+                            <div className="flex min-w-0 items-center justify-between gap-3 border-t border-slate-100 pt-1.5 text-sm">
                               <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-600 sm:text-xs">
                                 <span className="rounded-full bg-slate-100 px-2 py-0.5 sm:px-2.5 sm:py-1">
                                   {video.durationLabel || "-"}

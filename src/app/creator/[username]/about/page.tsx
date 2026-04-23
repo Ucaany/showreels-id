@@ -7,6 +7,7 @@ import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getBackgroundImageCropStyle } from "@/lib/image-crop";
 import { formatJoinedMonthYear } from "@/lib/profile-utils";
 import { getAutoThumbnailFromVideoUrl } from "@/lib/video-utils";
 import { getCurrentUser } from "@/server/current-user";
@@ -49,15 +50,18 @@ export default async function CreatorAboutPage({
         <Card className="overflow-hidden border-border bg-surface p-0">
           <div className="relative min-h-[260px] border-b border-border sm:min-h-[320px]">
             {coverImage ? (
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `linear-gradient(145deg, rgba(15,23,42,0.20), rgba(15,23,42,0.34)), url(${coverImage})`,
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat",
-                  backgroundSize: "cover",
-                }}
-              />
+                <div
+                  className="absolute inset-0"
+                  style={getBackgroundImageCropStyle(
+                    coverImage,
+                    {
+                      x: profile.user.coverCropX,
+                      y: profile.user.coverCropY,
+                      zoom: profile.user.coverCropZoom,
+                    },
+                    "linear-gradient(145deg, rgba(15,23,42,0.20), rgba(15,23,42,0.34))"
+                  )}
+                />
             ) : null}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.44),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.72),_rgba(255,255,255,0.92))]" />
             <div className="relative flex h-full flex-col justify-between gap-8 p-5 sm:p-8">
@@ -76,6 +80,11 @@ export default async function CreatorAboutPage({
                     <AvatarBadge
                       name={profile.user.name || "Creator"}
                       avatarUrl={profile.user.image || ""}
+                      crop={{
+                        x: profile.user.avatarCropX,
+                        y: profile.user.avatarCropY,
+                        zoom: profile.user.avatarCropZoom,
+                      }}
                       size="lg"
                     />
                   </div>
