@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import { List, MapPinHouse, Pilcrow, Sparkles, UserRoundPen } from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
+import { ImageCropDialog } from "@/components/dashboard/image-crop-dialog";
 import { ProfileRichText } from "@/components/profile-rich-text";
 import { SocialLinks } from "@/components/social-links";
 import { Button } from "@/components/ui/button";
@@ -134,6 +135,15 @@ export function ProfileForm({ user }: { user: DbUser }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [autoSaveLabel, setAutoSaveLabel] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [activeCropTarget, setActiveCropTarget] = useState<"cover" | "avatar" | null>(null);
+  const [coverCropPreview, setCoverCropPreview] = useState<{
+    sourceUrl: string;
+    croppedImage: string;
+  } | null>(null);
+  const [avatarCropPreview, setAvatarCropPreview] = useState<{
+    sourceUrl: string;
+    croppedImage: string;
+  } | null>(null);
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const form = useForm<FormValues>({
@@ -208,8 +218,16 @@ export function ProfileForm({ user }: { user: DbUser }) {
     name: "threadsUrl",
   });
 
-  const previewAvatar = normalizeAvatarUrl(watchedAvatar || "");
-  const previewCover = normalizeAvatarUrl(watchedCover || "");
+  const normalizedWatchedAvatar = normalizeAvatarUrl(watchedAvatar || "");
+  const normalizedWatchedCover = normalizeAvatarUrl(watchedCover || "");
+  const previewAvatar =
+    avatarCropPreview?.sourceUrl === normalizedWatchedAvatar
+      ? avatarCropPreview.croppedImage
+      : normalizedWatchedAvatar;
+  const previewCover =
+    coverCropPreview?.sourceUrl === normalizedWatchedCover
+      ? coverCropPreview.croppedImage
+      : normalizedWatchedCover;
   const age = getAgeFromBirthDate(watchedBirthDate || user.birthDate || "");
   const publicProfileHref = `/creator/${watchedUsername || user.username}`;
   const usernameQuota = useMemo(
@@ -449,13 +467,23 @@ export function ProfileForm({ user }: { user: DbUser }) {
                         {previewCover ? (
                           <Button
                             type="button"
+                            variant="secondary"
+                            onClick={() => setActiveCropTarget("cover")}
+                          >
+                            Crop Cover
+                          </Button>
+                        ) : null}
+                        {previewCover ? (
+                          <Button
+                            type="button"
                             variant="ghost"
-                            onClick={() =>
+                            onClick={() => {
+                              setCoverCropPreview(null);
                               form.setValue("coverImageUrl", "", {
                                 shouldDirty: true,
                                 shouldValidate: true,
-                              })
-                            }
+                              });
+                            }}
                           >
                             Hapus Cover
                           </Button>
@@ -481,6 +509,9 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       <FieldHint>
                         Gunakan URL gambar publik (http/https atau Google Drive).
                       </FieldHint>
+                      <FieldHint>
+                        Crop Cover menyesuaikan framing preview sebelum submit.
+                      </FieldHint>
                     </div>
                   </div>
 
@@ -493,13 +524,23 @@ export function ProfileForm({ user }: { user: DbUser }) {
                         {previewAvatar ? (
                           <Button
                             type="button"
+                            variant="secondary"
+                            onClick={() => setActiveCropTarget("avatar")}
+                          >
+                            Crop Avatar
+                          </Button>
+                        ) : null}
+                        {previewAvatar ? (
+                          <Button
+                            type="button"
                             variant="ghost"
-                            onClick={() =>
+                            onClick={() => {
+                              setAvatarCropPreview(null);
                               form.setValue("avatarUrl", "", {
                                 shouldDirty: true,
                                 shouldValidate: true,
-                              })
-                            }
+                              });
+                            }}
                           >
                             Hapus Avatar
                           </Button>
@@ -524,6 +565,9 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       </p>
                       <FieldHint>
                         Gunakan URL avatar publik (http/https atau Google Drive).
+                      </FieldHint>
+                      <FieldHint>
+                        Crop Avatar menyesuaikan framing preview sebelum submit.
                       </FieldHint>
                     </div>
                   </div>
@@ -902,6 +946,35 @@ export function ProfileForm({ user }: { user: DbUser }) {
           </Card>
         </div>
       </div>
+      <ImageCropDialog
+        open={activeCropTarget === "cover" && Boolean(normalizedWatchedCover)}
+        title="Crop Cover"
+        aspectRatio={16 / 9}
+        imageSrc={normalizedWatchedCover}
+        onCancel={() => setActiveCropTarget(null)}
+        onConfirm={(croppedImage) => {
+          setCoverCropPreview({
+            sourceUrl: normalizedWatchedCover,
+            croppedImage,
+          });
+          setActiveCropTarget(null);
+        }}
+      />
+      <ImageCropDialog
+        open={activeCropTarget === "avatar" && Boolean(normalizedWatchedAvatar)}
+        title="Crop Avatar"
+        aspectRatio={1}
+        shape="circle"
+        imageSrc={normalizedWatchedAvatar}
+        onCancel={() => setActiveCropTarget(null)}
+        onConfirm={(croppedImage) => {
+          setAvatarCropPreview({
+            sourceUrl: normalizedWatchedAvatar,
+            croppedImage,
+          });
+          setActiveCropTarget(null);
+        }}
+      />
     </>
   );
 }

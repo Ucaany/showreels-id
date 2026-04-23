@@ -112,7 +112,7 @@ const schema = z
   })
   .refine((value) => detectVideoSource(value.sourceUrl) !== null, {
     path: ["sourceUrl"],
-    message: "Gunakan URL YouTube, Google Drive, Instagram, atau Vimeo.",
+    message: "Gunakan URL YouTube, Google Drive, Instagram, Facebook, atau Vimeo.",
   });
 
 type FormValues = z.infer<typeof schema>;
@@ -534,7 +534,7 @@ export function VideoForm({
               {form.formState.errors.sourceUrl?.message}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              Gunakan link YouTube, Google Drive, Instagram Reel, atau Vimeo.
+              Gunakan link YouTube, Google Drive, Instagram, Facebook, atau Vimeo.
             </p>
           </div>
 
@@ -688,53 +688,55 @@ export function VideoForm({
                 Detail publik
               </h2>
             </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-800">
-              Tags
-            </label>
-            <Input {...form.register("tags")} />
-            <p className="mt-1 text-xs text-slate-600">
-              Pisahkan tag dengan koma. Tag membantu deskripsi AI jadi lebih relevan.
-            </p>
-          </div>
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-800">
+                  Tags
+                </label>
+                <Input {...form.register("tags")} />
+                <p className="mt-1 text-xs text-slate-600">
+                  Pisahkan tag dengan koma. Tag membantu deskripsi AI jadi lebih relevan.
+                </p>
+              </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-800">
-              Status Video
-            </label>
-            <Select {...form.register("visibility")}>
-              <option value="draft">Draft - belum siap ditinjau klien</option>
-              <option value="private">Private - hanya tersimpan di dashboard</option>
-              <option value="semi_private">Semi Private - hanya yang punya link</option>
-              <option value="public">Public - tampil di profil dan link publik</option>
-            </Select>
-          </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-800">
+                  Status Video
+                </label>
+                <Select {...form.register("visibility")}>
+                  <option value="draft">Draft - belum siap ditinjau klien</option>
+                  <option value="private">Private - hanya tersimpan di dashboard</option>
+                  <option value="semi_private">Semi Private - hanya yang punya link</option>
+                  <option value="public">Public - tampil di profil dan link publik</option>
+                </Select>
+              </div>
 
-          <div>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <label className="block text-sm font-medium text-slate-800">
-                Deskripsi
-              </label>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className="rounded-full border border-brand-200 bg-gradient-to-r from-brand-50 to-white px-4 text-brand-700 hover:from-brand-100 hover:to-brand-50"
-                onClick={handleGenerateDescription}
-                disabled={aiLoading}
-              >
-                <Sparkles className="h-4 w-4" />
-                {aiLoading ? "Generating..." : "Generated with AI"}
-              </Button>
+              <div>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                  <label className="block text-sm font-medium text-slate-800">
+                    Deskripsi
+                  </label>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="rounded-full border border-brand-200 bg-gradient-to-r from-brand-50 to-white px-4 text-brand-700 hover:from-brand-100 hover:to-brand-50"
+                    onClick={handleGenerateDescription}
+                    disabled={aiLoading}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {aiLoading ? "Generating..." : "Generated with AI"}
+                  </Button>
+                </div>
+                <Textarea
+                  placeholder="Tulis ringkasan project, tujuan video, style editing, dan highlight hasil akhir."
+                  {...form.register("description")}
+                />
+                <p className="mt-1 text-xs text-slate-600">
+                  Gunakan tombol AI untuk membuat draft deskripsi yang lebih natural, lalu edit sesuai project.
+                </p>
+              </div>
             </div>
-            <Textarea
-              placeholder="Tulis ringkasan project, tujuan video, style editing, dan highlight hasil akhir."
-              {...form.register("description")}
-            />
-            <p className="mt-1 text-xs text-slate-600">
-              Gunakan tombol AI untuk membuat draft deskripsi yang lebih natural, lalu edit sesuai project.
-            </p>
-          </div>
           </div>
 
           {submitError ? (

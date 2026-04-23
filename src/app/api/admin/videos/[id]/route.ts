@@ -4,9 +4,9 @@ import { z } from "zod";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import {
-  detectVideoSource,
   normalizeAssetUrl,
   normalizeHttpUrl,
+  validateEmbedReadyVideoUrl,
 } from "@/lib/video-utils";
 import { isProtectedOwnerTarget } from "@/server/admin-access";
 import { requireAdminSession } from "@/server/admin-guard";
@@ -73,13 +73,14 @@ export async function PATCH(
     );
   }
 
-  const source = detectVideoSource(parsed.data.sourceUrl);
-  if (!source) {
+  const sourceValidation = validateEmbedReadyVideoUrl(parsed.data.sourceUrl);
+  if (!sourceValidation.ok || !sourceValidation.source || !sourceValidation.canonicalUrl) {
     return NextResponse.json(
-      { error: "Gunakan URL YouTube, Google Drive, Instagram, atau Vimeo." },
+      { error: sourceValidation.error || "URL video belum embed-ready." },
       { status: 400 }
     );
   }
+  const source = sourceValidation.source;
 
   const [updated] = await db
     .update(videos)
@@ -87,7 +88,7 @@ export async function PATCH(
       title: parsed.data.title,
       description: parsed.data.description,
       visibility: parsed.data.visibility,
-      sourceUrl: parsed.data.sourceUrl,
+      sourceUrl: sourceValidation.canonicalUrl,
       source,
       thumbnailUrl: parsed.data.thumbnailUrl,
       outputType: parsed.data.outputType,

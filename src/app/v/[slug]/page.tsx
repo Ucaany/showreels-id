@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  CalendarDays,
-  Clock3,
   ExternalLink,
   LayoutTemplate,
   MapPin,
@@ -10,6 +8,7 @@ import {
 } from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { MediaPreviewCarousel } from "@/components/media-preview-carousel";
+import { PublicVideoMeta } from "@/components/public-video-meta";
 import { PublicShareCard } from "@/components/public-share-card";
 import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
@@ -41,15 +40,6 @@ export default async function PublicVideoPage({
     notFound();
   }
 
-  const postedDateLabel = new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(video.createdAt);
-  const postedTimeLabel = new Intl.DateTimeFormat("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(video.createdAt);
   const creatorBio = truncateWords(
     video.author.bio || "Bio belum ditambahkan.",
     30
@@ -65,20 +55,7 @@ export default async function PublicVideoPage({
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           <Card className="overflow-hidden border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.11),_transparent_32%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))]">
             <div className="space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge className={`${sourceMeta.className} shadow-none`}>
-                    {getSourceLabel(video.source as never)}
-                  </Badge>
-                  <Badge className="bg-slate-900 text-white shadow-none">
-                    <CalendarDays className="mr-1 h-3.5 w-3.5" />
-                    {postedDateLabel}
-                  </Badge>
-                  <Badge className="bg-slate-800 text-white shadow-none">
-                    <Clock3 className="mr-1 h-3.5 w-3.5" />
-                    {postedTimeLabel}
-                  </Badge>
-                </div>
+              <div className="flex flex-wrap items-center justify-end gap-3">
                 <Link href={video.sourceUrl} target="_blank">
                   <Button variant="secondary" size="sm">
                     <ExternalLink className="h-4 w-4" />
@@ -103,7 +80,12 @@ export default async function PublicVideoPage({
                     Durasi: {video.durationLabel || "-"}
                   </Badge>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-white/70 p-4">
+                <div className="space-y-3 rounded-2xl border border-slate-200 bg-white/70 p-4">
+                  <PublicVideoMeta
+                    sourceBadgeClassName={sourceMeta.className}
+                    sourceLabel={getSourceLabel(video.source as never)}
+                    createdAt={video.createdAt.toISOString()}
+                  />
                   <p className="whitespace-pre-line text-sm leading-7 text-slate-700 sm:text-base">
                     {video.description}
                   </p>
@@ -167,7 +149,8 @@ export default async function PublicVideoPage({
                 </div>
               </div>
               <SocialLinks
-                className="justify-center"
+                balanced
+                className="w-full"
                 instagramUrl={video.author.instagramUrl}
                 youtubeUrl={video.author.youtubeUrl}
                 facebookUrl={video.author.facebookUrl}
@@ -182,9 +165,9 @@ export default async function PublicVideoPage({
                     </Button>
                   </Link>
                   {isVideoOwner ? (
-                    <div className="flex justify-center">
-                      <Link href="/dashboard">
-                        <Button variant="secondary" size="sm">
+                    <div className="flex">
+                      <Link href="/dashboard" className="w-full">
+                        <Button variant="secondary" className="w-full">
                           Kembali ke dashboard
                         </Button>
                       </Link>

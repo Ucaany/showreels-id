@@ -6,7 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { LockKeyhole, Mail } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { WhatsappSharingCard } from "@/components/auth/whatsapp-sharing-card";
@@ -90,9 +90,12 @@ export function LoginForm({
 }) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const authLock = useAuthAttemptLock();
   const supabase = createClient();
   const oauthErrorMessage = getOauthErrorMessage(oauthError);
+  const altActionClassName =
+    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -210,6 +213,8 @@ export function LoginForm({
           </p>
         ) : null}
 
+        <WhatsappSharingCard compact />
+
         <div className="space-y-2">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
             <Mail className="h-4 w-4 text-brand-600" />
@@ -234,7 +239,22 @@ export function LoginForm({
               Lupa password?
             </Link>
           </div>
-          <Input type="password" placeholder="********" {...form.register("password")} />
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="********"
+              className="pr-11"
+              {...form.register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-slate-500 transition hover:text-slate-700"
+              aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           <p className="mt-1 text-xs text-rose-600">
             {form.formState.errors.password?.message}
           </p>
@@ -258,85 +278,68 @@ export function LoginForm({
               : dictionary.login}
         </Button>
 
-        {googleEnabled ? (
-          <>
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-slate-500">
-              <span className="h-px bg-slate-200" />
-              <span>atau</span>
-              <span className="h-px bg-slate-200" />
-            </div>
-            <p className="pt-1 text-center text-sm text-slate-600">{dictionary.noAccount}</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full border border-slate-300 bg-white text-slate-950 shadow-sm hover:bg-white"
-                disabled={authLock.isLocked}
-                onClick={async () => {
-                  if (authLock.isLocked) {
-                    setSubmitError(authLock.lockMessage);
-                    void showFeedbackAlert({
-                      title: "Login dikunci sementara",
-                      text: authLock.lockMessage,
-                      icon: "warning",
-                    });
-                    return;
-                  }
-
-                  const { data, error } = await supabase.auth.signInWithOAuth({
-                    provider: "google",
-                    options: {
-                      redirectTo: getAuthRedirectUrl("/dashboard"),
-                      queryParams: {
-                        prompt: "select_account",
-                      },
-                    },
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-slate-500">
+          <span className="h-px bg-slate-200" />
+          <span>atau</span>
+          <span className="h-px bg-slate-200" />
+        </div>
+        <p className="pt-1 text-center text-sm text-slate-600">{dictionary.noAccount}</p>
+        <div className="space-y-2">
+          {googleEnabled ? (
+            <button
+              type="button"
+              className={altActionClassName}
+              disabled={authLock.isLocked}
+              onClick={async () => {
+                if (authLock.isLocked) {
+                  setSubmitError(authLock.lockMessage);
+                  void showFeedbackAlert({
+                    title: "Login dikunci sementara",
+                    text: authLock.lockMessage,
+                    icon: "warning",
                   });
+                  return;
+                }
 
-                  if (error) {
-                    const attempt = authLock.registerFailure();
-                    const message = "Google login belum berhasil.";
-                    const visibleMessage = attempt.isLocked ? attempt.message : message;
-                    setSubmitError(visibleMessage);
-                    void showFeedbackAlert({
-                      title: attempt.isLocked
-                        ? "Login dikunci sementara"
-                        : "Google login gagal",
-                      text: visibleMessage,
-                      icon: attempt.isLocked ? "warning" : "error",
-                    });
-                    return;
-                  }
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                  provider: "google",
+                  options: {
+                    redirectTo: getAuthRedirectUrl("/dashboard"),
+                    queryParams: {
+                      prompt: "select_account",
+                    },
+                  },
+                });
 
-                  if (data.url) {
-                    window.location.assign(data.url);
-                  }
-                }}
-              >
-                <FcGoogle className="h-5 w-5" />
-                {dictionary.continueGoogle}
-              </Button>
-              <Link
-                href="/auth/signup"
-                className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
-              >
-                {dictionary.signup}
-              </Link>
-            </div>
-          </>
-        ) : (
-          <div className="pt-1 text-center">
-            <p className="text-sm text-slate-600">{dictionary.noAccount}</p>
-            <Link
-              href="/auth/signup"
-              className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
+                if (error) {
+                  const attempt = authLock.registerFailure();
+                  const message = "Google login belum berhasil.";
+                  const visibleMessage = attempt.isLocked ? attempt.message : message;
+                  setSubmitError(visibleMessage);
+                  void showFeedbackAlert({
+                    title: attempt.isLocked
+                      ? "Login dikunci sementara"
+                      : "Google login gagal",
+                    text: visibleMessage,
+                    icon: attempt.isLocked ? "warning" : "error",
+                  });
+                  return;
+                }
+
+                if (data.url) {
+                  window.location.assign(data.url);
+                }
+              }}
             >
-              {dictionary.signup}
-            </Link>
-          </div>
-        )}
+              <FcGoogle className="h-5 w-5" />
+              {dictionary.continueGoogle}
+            </button>
+          ) : null}
+          <Link href="/auth/signup" className={altActionClassName}>
+            {dictionary.signup}
+          </Link>
+        </div>
       </motion.form>
-      <WhatsappSharingCard />
     </AuthShell>
   );
 }

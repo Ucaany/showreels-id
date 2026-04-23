@@ -6,7 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { LockKeyhole, Mail, UserRound } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { WhatsappSharingCard } from "@/components/auth/whatsapp-sharing-card";
@@ -62,8 +62,12 @@ async function finalizeSignedInSession() {
 export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const authLock = useAuthAttemptLock();
   const supabase = createClient();
+  const altActionClassName =
+    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
@@ -208,6 +212,8 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
+        <WhatsappSharingCard compact />
+
         <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
             <Mail className="h-4 w-4 text-brand-600" />
@@ -224,7 +230,21 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             <LockKeyhole className="h-4 w-4 text-brand-600" />
             Password
           </label>
-          <Input type="password" {...form.register("password")} />
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              className="pr-11"
+              {...form.register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-slate-500 transition hover:text-slate-700"
+              aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           <p className="mt-1 text-xs text-rose-600">
             {form.formState.errors.password?.message}
           </p>
@@ -235,7 +255,25 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             <LockKeyhole className="h-4 w-4 text-brand-600" />
             Konfirmasi Password
           </label>
-          <Input type="password" {...form.register("confirmPassword")} />
+          <div className="relative">
+            <Input
+              type={showConfirmPassword ? "text" : "password"}
+              className="pr-11"
+              {...form.register("confirmPassword")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-slate-500 transition hover:text-slate-700"
+              aria-label={showConfirmPassword ? "Sembunyikan password" : "Lihat password"}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
           <p className="mt-1 text-xs text-rose-600">
             {form.formState.errors.confirmPassword?.message}
           </p>
@@ -259,18 +297,16 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
               : dictionary.signup}
         </Button>
 
-        {googleEnabled ? (
-          <>
-            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-slate-500">
-              <span className="h-px bg-slate-200" />
-              <span>atau</span>
-              <span className="h-px bg-slate-200" />
-            </div>
-
-            <Button
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-slate-500">
+          <span className="h-px bg-slate-200" />
+          <span>atau</span>
+          <span className="h-px bg-slate-200" />
+        </div>
+        <div className="space-y-2">
+          {googleEnabled ? (
+            <button
               type="button"
-              variant="secondary"
-              className="w-full border border-slate-300 bg-white text-slate-950 shadow-sm hover:bg-white"
+              className={altActionClassName}
               disabled={authLock.isLocked}
               onClick={async () => {
                 if (authLock.isLocked) {
@@ -315,21 +351,13 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             >
               <FcGoogle className="h-5 w-5" />
               {dictionary.continueGoogle}
-            </Button>
-          </>
-        ) : null}
+            </button>
+          ) : null}
+          <Link href="/auth/login" className={altActionClassName}>
+            {dictionary.login}
+          </Link>
+        </div>
       </motion.form>
-
-      <div className="mt-5 space-y-2 text-center text-sm text-slate-600">
-        <p>{dictionary.hasAccount}</p>
-        <Link
-          href="/auth/login"
-          className="inline-flex h-11 min-w-[170px] items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50"
-        >
-          {dictionary.login}
-        </Link>
-      </div>
-      <WhatsappSharingCard />
     </AuthShell>
   );
 }

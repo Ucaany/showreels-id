@@ -34,27 +34,27 @@ export function PublicShareCard({
         <Copy className="h-4 w-4" />
         {copied ? "Link tersalin" : "Copy Link"}
       </Button>
-      <div className="flex flex-wrap justify-center gap-2">
-        <Link href={shareLinks.facebook} target="_blank">
-          <Button className="h-10 min-w-[128px] rounded-xl px-3" variant="secondary">
+      <div className="grid grid-cols-2 gap-2">
+        <Link href={shareLinks.facebook} target="_blank" className="w-full">
+          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
             <Globe2 className="h-4 w-4" />
             Facebook
           </Button>
         </Link>
-        <Link href={shareLinks.whatsapp} target="_blank">
-          <Button className="h-10 min-w-[128px] rounded-xl px-3" variant="secondary">
+        <Link href={shareLinks.whatsapp} target="_blank" className="w-full">
+          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
             <MessageCircle className="h-4 w-4" />
             WhatsApp
           </Button>
         </Link>
-        <Link href={shareLinks.threads} target="_blank">
-          <Button className="h-10 min-w-[128px] rounded-xl px-3" variant="secondary">
+        <Link href={shareLinks.threads} target="_blank" className="w-full">
+          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
             <Share2 className="h-4 w-4" />
             Threads
           </Button>
         </Link>
-        <Link href={shareLinks.instagram} target="_blank">
-          <Button className="h-10 min-w-[128px] rounded-xl px-3" variant="secondary">
+        <Link href={shareLinks.instagram} target="_blank" className="w-full">
+          <Button className="h-10 w-full rounded-xl px-3" variant="secondary">
             <Link2 className="h-4 w-4" />
             Instagram
           </Button>

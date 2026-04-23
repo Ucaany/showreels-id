@@ -45,7 +45,7 @@ export const videoService = {
       return {
         ok: false,
         error:
-          "URL belum didukung. Gunakan link YouTube, Google Drive, Instagram, atau Vimeo.",
+          "URL belum didukung. Gunakan link YouTube, Google Drive, Instagram, Facebook, atau Vimeo.",
       };
     }
 

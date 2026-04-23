@@ -169,7 +169,7 @@ export function LandingPage({
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
   const [creatorDeviceSeed, setCreatorDeviceSeed] = useState("creator-seed-default");
   const [creatorTimeBucket, setCreatorTimeBucket] = useState(0);
-  const [latestVideosView, setLatestVideosView] = useState<"grid" | "list">("list");
+  const [latestVideosView, setLatestVideosView] = useState<"grid" | "list">("grid");
   const [isDesktop, setIsDesktop] = useState(false);
   const supabase = createClient();
   const year = new Date().getFullYear();
@@ -318,7 +318,6 @@ export function LandingPage({
 
   const latestVideoRows = useMemo(() => featuredVideos.slice(0, 6), [featuredVideos]);
   const maxVisibleVideos = isDesktop ? 3 : 2;
-  const effectiveLatestVideosView = isDesktop ? "grid" : latestVideosView;
   const visibleLatestVideos = useMemo(
     () => latestVideoRows.slice(0, maxVisibleVideos),
     [latestVideoRows, maxVisibleVideos]
@@ -734,7 +733,7 @@ export function LandingPage({
                     onClick={() => setLatestVideosView("grid")}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition",
-                      effectiveLatestVideosView === "grid"
+                      latestVideosView === "grid"
                         ? "bg-brand-600 text-white shadow-sm"
                         : "text-slate-600 hover:bg-slate-100"
                     )}
@@ -748,7 +747,7 @@ export function LandingPage({
                     onClick={() => setLatestVideosView("list")}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition",
-                      effectiveLatestVideosView === "list"
+                      latestVideosView === "list"
                         ? "bg-brand-600 text-white shadow-sm"
                         : "text-slate-600 hover:bg-slate-100"
                     )}
@@ -763,7 +762,7 @@ export function LandingPage({
               <div
                 className={cn(
                   "mx-auto mt-5 max-w-6xl",
-                  effectiveLatestVideosView === "grid"
+                  latestVideosView === "grid"
                     ? "grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3"
                     : "space-y-4 sm:space-y-5"
                 )}
@@ -777,6 +776,14 @@ export function LandingPage({
                     const thumbnail =
                       getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
                     const sourceMeta = getVideoSourceBadgeMeta(video.sourceUrl);
+                    const postedDateLabel = new Intl.DateTimeFormat(
+                      locale === "en" ? "en-US" : "id-ID",
+                      {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      }
+                    ).format(new Date(video.createdAt));
 
                     return (
                       <m.div
@@ -786,7 +793,7 @@ export function LandingPage({
                         viewport={{ once: true, amount: 0.25 }}
                         transition={{ duration: 0.28 }}
                         className={cn(
-                          effectiveLatestVideosView === "grid" ? "h-full" : ""
+                          latestVideosView === "grid" ? "h-full" : ""
                         )}
                       >
                         <Link
@@ -794,15 +801,15 @@ export function LandingPage({
                           aria-label={`${locale === "en" ? "View video" : "Lihat video"} ${video.title}`}
                           className={cn(
                             "group min-w-0 rounded-[1.2rem] border border-slate-200 bg-white/92 shadow-sm transition hover:border-brand-300 hover:shadow-[0_16px_30px_rgba(37,99,235,0.12)]",
-                            effectiveLatestVideosView === "grid"
-                              ? "flex h-full min-h-[308px] flex-col gap-3 px-4 py-4 sm:min-h-[360px] sm:gap-4 sm:px-5 sm:py-5"
-                              : "grid grid-cols-[124px_minmax(0,1fr)] items-stretch gap-4 px-4 py-4 sm:grid-cols-[188px_minmax(0,1fr)] sm:gap-5 sm:px-5 sm:py-5"
+                            latestVideosView === "grid"
+                              ? "flex h-full min-h-[292px] flex-col gap-2.5 px-4 py-4 sm:min-h-[328px] sm:gap-3 sm:px-5"
+                              : "grid grid-cols-[124px_minmax(0,1fr)] items-stretch gap-3 px-4 py-4 sm:grid-cols-[170px_minmax(0,1fr)] sm:gap-4 sm:px-5"
                           )}
                         >
                           <div
                             className={cn(
                               "overflow-hidden rounded-xl border border-slate-100 bg-slate-100",
-                              effectiveLatestVideosView === "list"
+                              latestVideosView === "list"
                                 ? "h-full min-h-[96px]"
                                 : ""
                             )}
@@ -816,7 +823,7 @@ export function LandingPage({
                                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                                 className={cn(
                                   "h-full w-full object-cover",
-                                  effectiveLatestVideosView === "grid"
+                                  latestVideosView === "grid"
                                     ? "aspect-video"
                                     : "aspect-video h-full min-h-[96px] sm:min-h-[108px]"
                                 )}
@@ -828,7 +835,7 @@ export function LandingPage({
                               <div
                                 className={cn(
                                   "flex h-full w-full items-center justify-center bg-slate-100 text-sm font-medium text-slate-500",
-                                  effectiveLatestVideosView === "grid"
+                                  latestVideosView === "grid"
                                     ? "aspect-video"
                                     : "aspect-video h-full min-h-[96px] sm:min-h-[108px]"
                                 )}
@@ -841,12 +848,12 @@ export function LandingPage({
                             )}
                           </div>
 
-                          <div className="flex h-full min-w-0 flex-col gap-3 sm:gap-4">
+                          <div className="flex h-full min-w-0 flex-col gap-2.5 sm:gap-3">
                             <div className="flex min-w-0 items-start justify-between gap-3">
                               <p
                                 className={cn(
                                   "line-clamp-2 min-w-0 font-semibold text-slate-950",
-                                  effectiveLatestVideosView === "grid"
+                                  latestVideosView === "grid"
                                     ? "text-sm sm:text-base"
                                     : "text-sm sm:text-base"
                                 )}
@@ -863,12 +870,7 @@ export function LandingPage({
                               </span>
                             </div>
 
-                            <div
-                              className={cn(
-                                "flex min-w-0 items-center gap-2.5 sm:gap-3",
-                                effectiveLatestVideosView === "grid" ? "sm:gap-3" : ""
-                              )}
-                            >
+                            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
                               <AvatarBadge
                                 name={video.author?.name || "Creator"}
                                 avatarUrl={video.author?.image || ""}
@@ -884,24 +886,17 @@ export function LandingPage({
                               </div>
                             </div>
 
-                            <p
-                              className={cn(
-                                "line-clamp-2 text-sm leading-relaxed text-slate-600",
-                                effectiveLatestVideosView === "grid" ? "sm:line-clamp-2" : ""
-                              )}
-                            >
+                            <p className="line-clamp-2 text-sm leading-relaxed text-slate-600">
                               {video.description}
                             </p>
 
-                            <div
-                              className={cn(
-                                "mt-auto flex min-w-0 min-h-10 items-center justify-between gap-3 border-t border-slate-100 pt-3 text-sm",
-                                effectiveLatestVideosView === "grid" ? "sm:pt-3" : ""
-                              )}
-                            >
+                            <div className="mt-auto flex min-w-0 items-center justify-between gap-3 border-t border-slate-100 pt-2 text-sm">
                               <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-600 sm:text-xs">
                                 <span className="rounded-full bg-slate-100 px-2 py-0.5 sm:px-2.5 sm:py-1">
                                   {video.durationLabel || "-"}
+                                </span>
+                                <span className="rounded-full bg-slate-100 px-2 py-0.5 sm:px-2.5 sm:py-1">
+                                  {postedDateLabel}
                                 </span>
                                 <span className="rounded-full bg-slate-100 px-2 py-0.5 sm:px-2.5 sm:py-1">
                                   {video.outputType || "-"}
@@ -1120,6 +1115,7 @@ export function LandingPage({
     </LazyMotion>
   );
 }
+
 
 
 

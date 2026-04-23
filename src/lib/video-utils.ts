@@ -1,48 +1,241 @@
 import type { VideoSource, VideoVisibility } from "@/lib/types";
 import { extractGoogleDriveFileId } from "@/lib/avatar-utils";
 
-const YOUTUBE_REGEX =
-  /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{6,})/i;
-const GDRIVE_REGEX =
-  /(drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^#]*&)?id=|thumbnail\?(?:[^#]*&)?id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/i;
-const INSTAGRAM_REGEX =
-  /instagram\.com\/(?:p|reel|tv)\/([a-zA-Z0-9_-]+)/i;
-const VIMEO_REGEX = /vimeo\.com\/(?:video\/)?([0-9]+)/i;
+const YOUTUBE_ID_REGEX = /^[a-zA-Z0-9_-]{6,15}$/;
+const INSTAGRAM_ID_REGEX = /^[a-zA-Z0-9._-]{5,}$/;
+const NUMERIC_ID_REGEX = /^[0-9]{5,}$/;
+
+type EmbedReadyVideoUrl = {
+  source: VideoSource;
+  id: string;
+  canonicalUrl: string;
+  embedUrl: string;
+};
+
+function toUrl(input: string): URL | null {
+  const normalized = normalizeHttpUrl(input);
+  if (!normalized) {
+    return null;
+  }
+
+  try {
+    return new URL(normalized);
+  } catch {
+    return null;
+  }
+}
+
+function normalizeHost(host: string): string {
+  return host.toLowerCase().replace(/^www\./, "").replace(/^m\./, "");
+}
 
 function extractYoutubeId(url: string): string | null {
-  const match = url.match(YOUTUBE_REGEX);
-  return match?.[1] || null;
+  const parsed = toUrl(url);
+  if (!parsed) {
+    return null;
+  }
+
+  const host = normalizeHost(parsed.hostname);
+  if (host === "youtu.be") {
+    const id = parsed.pathname.split("/").filter(Boolean)[0] || "";
+    return YOUTUBE_ID_REGEX.test(id) ? id : null;
+  }
+
+  if (host !== "youtube.com") {
+    return null;
+  }
+
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  if (segments[0] === "watch") {
+    const id = parsed.searchParams.get("v") || "";
+    return YOUTUBE_ID_REGEX.test(id) ? id : null;
+  }
+
+  if (segments[0] === "shorts" || segments[0] === "embed") {
+    const id = segments[1] || "";
+    return YOUTUBE_ID_REGEX.test(id) ? id : null;
+  }
+
+  const fromQuery = parsed.searchParams.get("v") || "";
+  return YOUTUBE_ID_REGEX.test(fromQuery) ? fromQuery : null;
 }
 
 function extractGdriveId(url: string): string | null {
   return extractGoogleDriveFileId(url);
 }
 
-function extractVimeoId(url: string): string | null {
-  const match = url.match(VIMEO_REGEX);
-  return match?.[1] || null;
+function extractInstagramId(url: string): { id: string; type: "p" | "reel" | "tv" } | null {
+  const parsed = toUrl(url);
+  if (!parsed) {
+    return null;
+  }
+
+  const host = normalizeHost(parsed.hostname);
+  if (host !== "instagram.com") {
+    return null;
+  }
+
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  const type = segments[0];
+  const id = segments[1] || "";
+  if ((type === "p" || type === "reel" || type === "tv") && INSTAGRAM_ID_REGEX.test(id)) {
+    return { id, type };
+  }
+
+  return null;
 }
 
-export function detectVideoSource(url: string): VideoSource | null {
-  const normalized = url.trim();
+function extractVimeoId(url: string): string | null {
+  const parsed = toUrl(url);
+  if (!parsed) {
+    return null;
+  }
+
+  const host = normalizeHost(parsed.hostname);
+  if (host !== "vimeo.com" && host !== "player.vimeo.com") {
+    return null;
+  }
+
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  for (let index = segments.length - 1; index >= 0; index -= 1) {
+    const candidate = segments[index];
+    if (NUMERIC_ID_REGEX.test(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+function extractFacebookId(url: string): string | null {
+  const parsed = toUrl(url);
+  if (!parsed) {
+    return null;
+  }
+
+  const host = normalizeHost(parsed.hostname);
+  const segments = parsed.pathname.split("/").filter(Boolean);
+
+  if (host === "fb.watch") {
+    const id = segments[0] || "";
+    return id ? id.replace(/[^a-zA-Z0-9_-]/g, "") : null;
+  }
+
+  if (host !== "facebook.com") {
+    return null;
+  }
+
+  const fromWatch = parsed.searchParams.get("v") || "";
+  if (fromWatch && /^[a-zA-Z0-9_-]{6,}$/.test(fromWatch)) {
+    return fromWatch;
+  }
+
+  if (segments[0] === "reel" && segments[1] && NUMERIC_ID_REGEX.test(segments[1])) {
+    return segments[1];
+  }
+
+  if (segments[0] === "video.php") {
+    const videoId = parsed.searchParams.get("v") || "";
+    return videoId && /^[a-zA-Z0-9_-]{6,}$/.test(videoId) ? videoId : null;
+  }
+
+  const videosIndex = segments.findIndex((segment) => segment === "videos");
+  if (videosIndex >= 0 && segments[videosIndex + 1]) {
+    const id = segments[videosIndex + 1];
+    return /^[a-zA-Z0-9_-]{6,}$/.test(id) ? id : null;
+  }
+
+  return null;
+}
+
+export function getEmbedReadyVideoUrl(url: string): EmbedReadyVideoUrl | null {
+  const normalized = normalizeHttpUrl(url);
   if (!normalized) {
     return null;
   }
 
-  if (YOUTUBE_REGEX.test(normalized)) {
-    return "youtube";
+  const youtubeId = extractYoutubeId(normalized);
+  if (youtubeId) {
+    return {
+      source: "youtube",
+      id: youtubeId,
+      canonicalUrl: `https://www.youtube.com/watch?v=${youtubeId}`,
+      embedUrl: `https://www.youtube.com/embed/${youtubeId}`,
+    };
   }
-  if (GDRIVE_REGEX.test(normalized)) {
-    return "gdrive";
+
+  const gdriveId = extractGdriveId(normalized);
+  if (gdriveId) {
+    return {
+      source: "gdrive",
+      id: gdriveId,
+      canonicalUrl: `https://drive.google.com/file/d/${gdriveId}/view`,
+      embedUrl: `https://drive.google.com/file/d/${gdriveId}/preview`,
+    };
   }
-  if (INSTAGRAM_REGEX.test(normalized)) {
-    return "instagram";
+
+  const instagram = extractInstagramId(normalized);
+  if (instagram) {
+    return {
+      source: "instagram",
+      id: instagram.id,
+      canonicalUrl: `https://www.instagram.com/${instagram.type}/${instagram.id}/`,
+      embedUrl: `https://www.instagram.com/${instagram.type}/${instagram.id}/embed`,
+    };
   }
-  if (VIMEO_REGEX.test(normalized)) {
-    return "vimeo";
+
+  const vimeoId = extractVimeoId(normalized);
+  if (vimeoId) {
+    return {
+      source: "vimeo",
+      id: vimeoId,
+      canonicalUrl: `https://vimeo.com/${vimeoId}`,
+      embedUrl: `https://player.vimeo.com/video/${vimeoId}`,
+    };
+  }
+
+  const facebookId = extractFacebookId(normalized);
+  if (facebookId) {
+    const canonicalUrl = `https://www.facebook.com/watch/?v=${facebookId}`;
+    return {
+      source: "facebook",
+      id: facebookId,
+      canonicalUrl,
+      embedUrl: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
+        canonicalUrl
+      )}&show_text=0`,
+    };
   }
 
   return null;
+}
+
+export function validateEmbedReadyVideoUrl(url: string): {
+  ok: boolean;
+  source?: VideoSource;
+  canonicalUrl?: string;
+  embedUrl?: string;
+  error?: string;
+} {
+  const parsed = getEmbedReadyVideoUrl(url);
+  if (!parsed) {
+    return {
+      ok: false,
+      error:
+        "URL video belum embed-ready. Gunakan link YouTube, Google Drive, Instagram, Facebook, atau Vimeo yang langsung mengarah ke konten video.",
+    };
+  }
+
+  return {
+    ok: true,
+    source: parsed.source,
+    canonicalUrl: parsed.canonicalUrl,
+    embedUrl: parsed.embedUrl,
+  };
+}
+
+export function detectVideoSource(url: string): VideoSource | null {
+  return getEmbedReadyVideoUrl(url)?.source || null;
 }
 
 export function isSupportedVideoUrl(url: string): boolean {
@@ -76,36 +269,19 @@ export function createPublicSlug(
 }
 
 export function getEmbedUrl(sourceUrl: string, source: VideoSource): string {
-  switch (source) {
-    case "youtube": {
-      const id = extractYoutubeId(sourceUrl);
-      return id ? `https://www.youtube.com/embed/${id}` : sourceUrl;
-    }
-    case "gdrive": {
-      const id = extractGdriveId(sourceUrl);
-      return id
-        ? `https://drive.google.com/file/d/${id}/preview`
-        : sourceUrl;
-    }
-    case "instagram": {
-      const match = sourceUrl.match(INSTAGRAM_REGEX);
-      return match
-        ? `https://www.instagram.com/p/${match[1]}/embed`
-        : sourceUrl;
-    }
-    case "vimeo": {
-      const id = extractVimeoId(sourceUrl);
-      return id ? `https://player.vimeo.com/video/${id}` : sourceUrl;
-    }
-    default:
-      return sourceUrl;
+  const parsed = getEmbedReadyVideoUrl(sourceUrl);
+  if (parsed && parsed.source === source) {
+    return parsed.embedUrl;
   }
+
+  return sourceUrl;
 }
 
 export function getSourceLabel(source: VideoSource): string {
   if (source === "youtube") return "YouTube";
   if (source === "gdrive") return "Google Drive";
   if (source === "instagram") return "Instagram";
+  if (source === "facebook") return "Facebook";
   return "Vimeo";
 }
 
@@ -180,8 +356,11 @@ export function getAutoThumbnailFromVideoUrl(sourceUrl: string): string {
   }
 
   if (source === "instagram") {
-    const match = sourceUrl.match(INSTAGRAM_REGEX);
-    return match ? `https://www.instagram.com/p/${match[1]}/media/?size=l` : "";
+    const parsed = getEmbedReadyVideoUrl(sourceUrl);
+    if (parsed?.source === "instagram") {
+      return `https://www.instagram.com/p/${parsed.id}/media/?size=l`;
+    }
+    return "";
   }
 
   return "";
@@ -236,9 +415,9 @@ export function getThumbnailCandidates(
   }
 
   if (source === "instagram") {
-    const match = sourceUrl.match(INSTAGRAM_REGEX);
-    if (match) {
-      addCandidate(`https://www.instagram.com/p/${match[1]}/media/?size=l`);
+    const parsed = getEmbedReadyVideoUrl(sourceUrl);
+    if (parsed?.source === "instagram") {
+      addCandidate(`https://www.instagram.com/p/${parsed.id}/media/?size=l`);
     }
   }
 
@@ -262,8 +441,10 @@ export function buildAiDescription({
       ? "Video ini disiapkan untuk tampil rapi di kanal YouTube dan kebutuhan presentasi client."
       : source === "gdrive"
         ? "File utama disimpan melalui Google Drive agar mudah direview dan dibagikan ke client."
-        : source === "instagram"
+      : source === "instagram"
           ? "Format konten ini cocok untuk distribusi sosial media dengan durasi yang ringkas dan visual yang cepat ditangkap."
+      : source === "facebook"
+        ? "Konten ini disiapkan agar tetap nyaman diputar langsung dari Facebook saat dibuka client."
           : "Video ini disusun dengan format presentasi yang tetap nyaman saat dibuka lintas perangkat.";
 
   return `Project "${title}" menampilkan pendekatan editing yang fokus pada alur cerita yang jelas, ritme visual yang bersih, dan hasil akhir yang siap dipresentasikan. ${sourceSummary} ${tagSummary}`;

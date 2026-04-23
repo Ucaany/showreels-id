@@ -8,8 +8,8 @@ import { getCurrentUser } from "@/server/current-user";
 import {
   buildAiDescription,
   createPublicSlug,
-  detectVideoSource,
   normalizeAssetUrl,
+  validateEmbedReadyVideoUrl,
 } from "@/lib/video-utils";
 
 export async function PATCH(
@@ -49,13 +49,14 @@ export async function PATCH(
     );
   }
 
-  const source = detectVideoSource(parsed.data.sourceUrl);
-  if (!source) {
+  const sourceValidation = validateEmbedReadyVideoUrl(parsed.data.sourceUrl);
+  if (!sourceValidation.ok || !sourceValidation.source || !sourceValidation.canonicalUrl) {
     return NextResponse.json(
-      { error: "Gunakan URL YouTube, Google Drive, Instagram, atau Vimeo." },
+      { error: sourceValidation.error || "URL video belum embed-ready." },
       { status: 400 }
     );
   }
+  const source = sourceValidation.source;
 
   const trimmedTitle = parsed.data.title.trim();
   const existingSlugs = await db.query.videos.findMany({
@@ -87,7 +88,7 @@ export async function PATCH(
       thumbnailUrl: normalizeAssetUrl(parsed.data.thumbnailUrl || ""),
       extraVideoUrls: parsed.data.extraVideoUrls,
       imageUrls: parsed.data.imageUrls,
-      sourceUrl: parsed.data.sourceUrl.trim(),
+      sourceUrl: sourceValidation.canonicalUrl,
       source,
       aspectRatio: parsed.data.aspectRatio,
       outputType: parsed.data.outputType.trim(),

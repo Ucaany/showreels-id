@@ -18,7 +18,7 @@ export function getVideoSourceBadgeMeta(sourceUrl: string): SourceBadgeMeta {
   if (source === "gdrive") {
     return {
       label: "Google Drive",
-      className: "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200",
+      className: "bg-emerald-600 text-white ring-1 ring-emerald-700/30",
     };
   }
   if (source === "instagram") {

@@ -11,6 +11,7 @@ import {
   Video,
 } from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
+import { CreatorBackButton } from "@/components/creator-back-button";
 import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -99,12 +100,13 @@ export default async function CreatorProfilePage({
               />
             ) : null}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.58),_transparent_36%),linear-gradient(180deg,_rgba(255,255,255,0.80),_rgba(255,255,255,0.94))]" />
-            <div className="relative flex min-h-[280px] flex-col justify-between gap-6 p-5 sm:min-h-[340px] sm:gap-8 sm:p-8 lg:min-h-[380px]">
+            <div className="relative flex min-h-[240px] flex-col justify-between gap-4 p-4 sm:min-h-[290px] sm:gap-6 sm:p-6 lg:min-h-[320px]">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <Badge className="w-fit">
                   <Sparkles className="mr-1 h-3.5 w-3.5" />
                   Creator Profile
                 </Badge>
+                <CreatorBackButton />
               </div>
 
               <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
@@ -137,9 +139,6 @@ export default async function CreatorProfilePage({
                       </span>
                       <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-sm font-medium text-slate-600">
                         Bergabung {joinedMonthYear}
-                      </span>
-                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-sm font-medium text-slate-600">
-                        {profile.videos.length} video publik
                       </span>
                     </div>
                   </div>

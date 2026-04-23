@@ -87,6 +87,7 @@ export function MediaPreviewCarousel({
 
   const active = slides[index] ?? slides[0];
   const canSlide = slides.length > 1;
+  const shouldCenterSlideControls = Boolean(manualThumbnailUrl) && canSlide;
   const headingLabel = canSlide ? "Preview Media" : "Preview Utama";
   const frameClass =
     aspectRatio === "portrait"
@@ -162,7 +163,11 @@ export function MediaPreviewCarousel({
       )}
 
       {canSlide ? (
-        <div className="flex items-center justify-between gap-3">
+        <div
+          className={`flex items-center gap-3 ${
+            shouldCenterSlideControls ? "justify-center" : "justify-between"
+          }`}
+        >
           <Button
             type="button"
             variant="secondary"

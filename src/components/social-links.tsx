@@ -7,6 +7,7 @@ interface SocialLinksProps {
   facebookUrl?: string;
   threadsUrl?: string;
   className?: string;
+  balanced?: boolean;
 }
 
 const baseLinkClass =
@@ -18,6 +19,7 @@ export function SocialLinks({
   facebookUrl,
   threadsUrl,
   className = "",
+  balanced = false,
 }: SocialLinksProps) {
   const items = [
     { key: "instagram", label: "Instagram", href: instagramUrl, icon: Globe2 },
@@ -31,7 +33,11 @@ export function SocialLinks({
   }
 
   return (
-    <div className={`flex flex-wrap gap-2 ${className}`.trim()}>
+    <div
+      className={`${
+        balanced ? "grid grid-cols-2 gap-2" : "flex flex-wrap gap-2"
+      } ${className}`.trim()}
+    >
       {items.map((item) => {
         const Icon = item.icon;
         return (
@@ -40,7 +46,7 @@ export function SocialLinks({
             href={item.href as string}
             target="_blank"
             rel="noopener noreferrer"
-            className={baseLinkClass}
+            className={`${baseLinkClass} ${balanced ? "w-full justify-center" : ""}`.trim()}
           >
             <Icon className="h-3.5 w-3.5" />
             {item.label}
