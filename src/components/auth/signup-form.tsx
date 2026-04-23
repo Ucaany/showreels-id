@@ -9,7 +9,6 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { WhatsappSharingCard } from "@/components/auth/whatsapp-sharing-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
@@ -211,8 +210,6 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             {form.formState.errors.username?.message}
           </p>
         </div>
-
-        <WhatsappSharingCard compact />
 
         <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">

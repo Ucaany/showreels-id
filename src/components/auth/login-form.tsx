@@ -9,7 +9,6 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { WhatsappSharingCard } from "@/components/auth/whatsapp-sharing-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
@@ -212,8 +211,6 @@ export function LoginForm({
             {oauthErrorMessage}
           </p>
         ) : null}
-
-        <WhatsappSharingCard compact />
 
         <div className="space-y-2">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
