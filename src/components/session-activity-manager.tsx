@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 const IDLE_CHECK_MS = 15 * 1000;
-const LAST_ACTIVITY_KEY = "videoport:last-activity";
+const LAST_ACTIVITY_KEY = "showreels:last-activity";
 
 function readLastActivity(): number {
   if (typeof window === "undefined") {

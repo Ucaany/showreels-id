@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const AUTH_ATTEMPT_KEY = "videoport_auth_attempt_lock";
+const AUTH_ATTEMPT_KEY = "showreels_auth_attempt_lock";
 const MAX_FAILED_ATTEMPTS = 3;
 const LOCK_DURATION_MS = 10 * 60 * 1000;
 

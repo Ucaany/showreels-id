@@ -2,7 +2,7 @@ import type { AppState, UserProfile, VideoItem } from "@/lib/types";
 
 const demoUser: UserProfile = {
   id: "usr_demo_1",
-  email: "demo@videoport.ai",
+  email: "demo@showreels.id",
   username: "videocreator",
   fullName: "Demo Creator",
   role: "Videografer & Video Editor",
@@ -46,7 +46,7 @@ const demoVideos: VideoItem[] = [
   },
 ];
 
-export const storageKey = "videoport-mock-state-v1";
+export const storageKey = "showreels-mock-state-v1";
 
 export const seedState: AppState = {
   session: null,

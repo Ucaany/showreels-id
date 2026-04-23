@@ -4,8 +4,8 @@ import { users } from "@/db/schema";
 
 export const DEFAULT_OWNER_EMAIL = "hello@ucan.com";
 export const DEFAULT_OWNER_PASSWORD = "masuk123";
-export const DEFAULT_OWNER_NAME = "Owner VideoPort";
-export const DEFAULT_OWNER_USERNAME = "owner_videoport";
+export const DEFAULT_OWNER_NAME = "Owner showreels.id";
+export const DEFAULT_OWNER_USERNAME = "owner_showreels";
 
 export function getOwnerConfig() {
   const email = (process.env.OWNER_EMAIL || DEFAULT_OWNER_EMAIL).trim().toLowerCase();
@@ -68,7 +68,7 @@ export async function ensureAuthUser(input: {
         username: input.username,
       },
       emailRedirectTo:
-        process.env.NEXT_PUBLIC_APP_URL || "https://video-port-id.vercel.app",
+        process.env.NEXT_PUBLIC_APP_URL || "https://showreels.id",
     },
   });
 

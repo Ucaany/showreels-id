@@ -33,7 +33,7 @@ import { getThumbnailCandidates } from "@/lib/video-utils";
 import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
 
 const CREATOR_ROTATION_INTERVAL_MS = 5 * 60 * 1000;
-const CREATOR_DEVICE_SEED_KEY = "videoport-featured-creator-seed-v1";
+const CREATOR_DEVICE_SEED_KEY = "showreels-featured-creator-seed-v1";
 
 function createSeededHash(value: string) {
   let hash = 2166136261;
@@ -242,8 +242,8 @@ export function LandingPage({
           : "Apakah saya perlu website terpisah untuk portfolio saya?",
       answer:
         locale === "en"
-          ? "No. VideoPort AI Hub is designed so creators can start with one clean public profile without building a custom website first."
-          : "Tidak perlu. VideoPort AI Hub dirancang agar creator bisa langsung punya profil publik yang rapi tanpa harus bikin website sendiri dulu.",
+          ? "No. showreels.id is designed so creators can start with one clean public profile without building a custom website first."
+          : "Tidak perlu. showreels.id dirancang agar creator bisa langsung punya profil publik yang rapi tanpa harus bikin website sendiri dulu.",
     },
     {
       question:
@@ -1073,8 +1073,8 @@ export function LandingPage({
             <AppLogo />
             <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
               {locale === "en"
-                ? "VideoPort AI Hub helps content creators present their best work with cleaner, client-ready public pages."
-                : "VideoPort AI Hub membantu content creator menampilkan karya terbaik lewat halaman publik yang rapi dan siap untuk klien."}
+                ? "showreels.id helps content creators present their best work with cleaner, client-ready public pages."
+                : "showreels.id membantu content creator menampilkan karya terbaik lewat halaman publik yang rapi dan siap untuk klien."}
             </p>
           </div>
           <div>
@@ -1108,7 +1108,7 @@ export function LandingPage({
         </div>
         <div className="border-t border-slate-200">
           <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 text-sm text-slate-500 sm:px-6">
-            <p>Copyright {year} VideoPort AI Hub. All rights reserved.</p>
+            <p>Copyright {year} showreels.id. All rights reserved.</p>
             <p className="inline-flex items-center gap-1">
               <Sparkles className="h-4 w-4" />
               Creator-first platform

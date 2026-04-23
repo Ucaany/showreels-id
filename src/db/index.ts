@@ -11,7 +11,7 @@ if (!connectionString) {
 }
 
 const globalForDb = globalThis as unknown as {
-  videoPortPool?: Pool;
+  showreelsPool?: Pool;
 };
 
 const requiresSsl =
@@ -20,14 +20,14 @@ const requiresSsl =
   connectionString.includes("supabase.co");
 
 const pool =
-  globalForDb.videoPortPool ||
+  globalForDb.showreelsPool ||
   new Pool({
     connectionString,
     ssl: requiresSsl ? { rejectUnauthorized: false } : false,
   });
 
 if (process.env.NODE_ENV !== "production") {
-  globalForDb.videoPortPool = pool;
+  globalForDb.showreelsPool = pool;
 }
 
 export const db = drizzle(pool, { schema });

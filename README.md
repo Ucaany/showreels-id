@@ -1,4 +1,4 @@
-# VideoPort AI Hub
+# showreels.id
 
 Next.js 16 App Router project for a video portfolio platform with:
 
@@ -52,11 +52,11 @@ Open `http://localhost:3002`
 
 Configure these URLs in the Supabase Auth dashboard:
 
-- Site URL: `https://video-port-id.vercel.app`
+- Site URL: `https://showreels.id`
 - Redirect URL local reset: `http://localhost:3002/auth/reset-password`
-- Redirect URL production reset: `https://video-port-id.vercel.app/auth/reset-password`
+- Redirect URL production reset: `https://showreels.id/auth/reset-password`
 - Redirect URL local callback: `http://localhost:3002/auth/callback`
-- Redirect URL production callback: `https://video-port-id.vercel.app/auth/callback`
+- Redirect URL production callback: `https://showreels.id/auth/callback`
 
 Enable email/password auth, disable email confirmation for immediate login, and enable Google provider with the project's Google OAuth client.
 

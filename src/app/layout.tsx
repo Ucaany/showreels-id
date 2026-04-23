@@ -15,7 +15,7 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "VideoPort AI Hub",
+  title: "showreels.id",
   description: "Platform portfolio video sederhana, cepat, dan siap dibagikan.",
 };
 

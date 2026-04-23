@@ -16,7 +16,7 @@ export const dictionaries = {
     landingBadge: "Creator Portfolio Platform",
     landingTitle: "Tampilkan karya video terbaikmu dalam halaman yang terasa premium.",
     landingDescription:
-      "VideoPort AI Hub membantu kreator, editor, dan videografer membuat profil profesional, menyimpan video ke database, lalu membagikannya lewat public page yang mudah dijelajahi klien.",
+      "showreels.id membantu kreator, editor, dan videografer membuat profil profesional, menyimpan video ke database, lalu membagikannya lewat public page yang mudah dijelajahi klien.",
     landingCtaPrimary: "Mulai Bangun Portfolio",
     landingCtaSecondary: "Masuk ke Dashboard",
     statCreators: "Kreator aktif",
@@ -57,7 +57,7 @@ export const dictionaries = {
     landingBadge: "Creator Portfolio Platform",
     landingTitle: "Showcase your best video work on a premium-feeling public site.",
     landingDescription:
-      "VideoPort AI Hub helps creators, editors, and videographers build a professional profile, save videos to a real database, and share them through public pages clients can explore easily.",
+      "showreels.id helps creators, editors, and videographers build a professional profile, save videos to a real database, and share them through public pages clients can explore easily.",
     landingCtaPrimary: "Start Building Your Portfolio",
     landingCtaSecondary: "Go to Dashboard",
     statCreators: "Active creators",

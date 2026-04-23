@@ -57,7 +57,7 @@ export default function PublicVideoClientPage({ slug }: { slug: string }) {
   const currentUrl =
     typeof window !== "undefined"
       ? window.location.href
-      : `https://videoport.app/v/${video.publicSlug}`;
+      : `https://showreels.id/v/${video.publicSlug}`;
   const shareLinks = getSocialShareLinks(currentUrl, video.title);
 
   return (

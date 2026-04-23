@@ -2,8 +2,12 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
-const PRODUCTION_HOST = "video-port-id.vercel.app";
-const LEGACY_HOSTS = new Set(["videoport-id.vercel.app"]);
+const PRODUCTION_HOST = "showreels.id";
+const LEGACY_HOSTS = new Set([
+  "showreels-id.vercel.app",
+  "video-port-id.vercel.app",
+  "videoport-id.vercel.app",
+]);
 
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl.clone();

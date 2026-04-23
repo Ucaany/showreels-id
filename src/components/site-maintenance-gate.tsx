@@ -57,7 +57,7 @@ export function SiteMaintenanceGate() {
         </h2>
         <p className="mt-3 text-sm leading-6 text-slate-600">
           {status.maintenanceMessage ||
-            "VideoPort AI Hub sedang dirapikan. Silakan kembali beberapa saat lagi."}
+            "showreels.id sedang dirapikan. Silakan kembali beberapa saat lagi."}
         </p>
       </div>
     </div>

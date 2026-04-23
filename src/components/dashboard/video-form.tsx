@@ -203,8 +203,8 @@ export function VideoForm({
   const galleryEnabled = Boolean(manualThumbnailUrl);
   const slugPreview =
     mode === "edit" && !watchedTitle?.trim()
-      ? initialVideo?.publicSlug || "video-portofolio"
-      : slugifyText(watchedTitle || initialVideo?.title || "video-portofolio");
+      ? initialVideo?.publicSlug || "showreels-portofolio"
+      : slugifyText(watchedTitle || initialVideo?.title || "showreels-portofolio");
 
   useEffect(() => {
     if (mode !== "create") {
@@ -770,7 +770,7 @@ export function VideoForm({
         <div className="rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
           <p className="text-xs font-medium text-slate-500">Slug</p>
           <p className="mt-1 truncate font-mono text-sm text-slate-900">
-            /v/{slugPreview || "video-portofolio"}
+            /v/{slugPreview || "showreels-portofolio"}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 text-sm">

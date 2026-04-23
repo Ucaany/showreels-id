@@ -1,7 +1,7 @@
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 
 const TOKEN_TTL_SECONDS = 10 * 60;
-export const PASSWORD_RECOVERY_COOKIE = "videoport_pw_recovery";
+export const PASSWORD_RECOVERY_COOKIE = "showreels_pw_recovery";
 
 type PasswordRecoveryPayload = {
   userId: string;

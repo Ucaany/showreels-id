@@ -29,7 +29,7 @@ export function AppLogo({
           darkTone ? "text-slate-900" : "text-slate-100"
         )}
       >
-        VideoPort AI Hub
+        showreels.id
       </span>
     </Link>
   );

@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { visitorEvents } from "@/db/schema";
 import { getWibDayStartUtc } from "@/lib/visitor-time";
 
-const VISITOR_COOKIE = "videoport_visitor_id";
+const VISITOR_COOKIE = "showreels_visitor_id";
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();

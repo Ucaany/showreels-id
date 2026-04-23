@@ -30,7 +30,7 @@ export default function CustomerServicePage() {
             <h2 className="mt-3 font-display text-xl font-semibold text-slate-900">
               Email
             </h2>
-            <p className="mt-2 text-sm text-slate-600">support@videoport-ai-hub.com</p>
+            <p className="mt-2 text-sm text-slate-600">support@showreels.id</p>
             <p className="mt-1 text-xs text-slate-500">Respons 1x24 jam kerja.</p>
           </Card>
           <Card className="border-border bg-surface">
@@ -68,7 +68,7 @@ export default function CustomerServicePage() {
               <Button variant="secondary">Buka Dashboard</Button>
             </Link>
             <Link href="/about">
-              <Button variant="ghost">Tentang VideoPort</Button>
+              <Button variant="ghost">Tentang showreels.id</Button>
             </Link>
           </div>
         </Card>

@@ -63,7 +63,7 @@ export function createPublicSlug(
   title: string,
   existingSlugs: string[] = []
 ): string {
-  const base = slugifyText(title) || "video-portofolio";
+  const base = slugifyText(title) || "showreels-portofolio";
   if (!existingSlugs.includes(base)) {
     return base;
   }

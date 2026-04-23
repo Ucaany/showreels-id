@@ -152,11 +152,11 @@ async function resetAndSeedDummy() {
   await db.delete(videos);
   await db.delete(users).where(ne(users.id, owner.id));
   await db.execute(
-    sql`delete from auth.users where email like '%@dummy.videoport.ai' and id <> ${owner.id}::uuid`
+    sql`delete from auth.users where email like '%@dummy.showreels.id' and id <> ${owner.id}::uuid`
   );
 
   for (const creator of dummyCreators) {
-    const email = `${creator.username}@dummy.videoport.ai`;
+    const email = `${creator.username}@dummy.showreels.id`;
     const authUser = await ensureAuthUser({
       email,
       password: "masuk123",

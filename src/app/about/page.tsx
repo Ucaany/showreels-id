@@ -11,13 +11,13 @@ export default function AboutPage() {
       <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6">
         <Card className="border-border bg-surface">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">
-            About VideoPort AI Hub
+            About showreels.id
           </p>
           <h1 className="mt-2 font-display text-3xl font-semibold text-slate-950 sm:text-4xl">
             Platform portofolio kreator untuk tampil lebih meyakinkan di depan klien.
           </h1>
           <p className="mt-4 max-w-4xl text-sm leading-relaxed text-slate-700 sm:text-base">
-            VideoPort AI Hub dibuat untuk membantu content creator, editor, dan
+            showreels.id dibuat untuk membantu content creator, editor, dan
             videographer mengelola karya dalam format yang lebih profesional.
             Fokus kami adalah membuat creator lebih mudah menyiapkan profil, submit
             video, dan membagikannya ke klien lewat halaman publik yang clean.

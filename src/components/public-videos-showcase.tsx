@@ -11,7 +11,7 @@ import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
 import { getThumbnailCandidates } from "@/lib/video-utils";
 
 const VIDEO_ROTATION_INTERVAL_MS = 10 * 60 * 1000;
-const VIDEO_DEVICE_SEED_KEY = "videoport-all-video-seed-v1";
+const VIDEO_DEVICE_SEED_KEY = "showreels-all-video-seed-v1";
 
 type ShowcaseVideo = {
   id: string;
