@@ -2,9 +2,8 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
-const PRODUCTION_HOST = "showreels.id";
+const PRODUCTION_HOST = "showreels-id.vercel.app";
 const LEGACY_HOSTS = new Set([
-  "showreels-id.vercel.app",
   "video-port-id.vercel.app",
   "videoport-id.vercel.app",
 ]);

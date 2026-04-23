@@ -68,7 +68,7 @@ export async function ensureAuthUser(input: {
         username: input.username,
       },
       emailRedirectTo:
-        process.env.NEXT_PUBLIC_APP_URL || "https://showreels.id",
+        process.env.NEXT_PUBLIC_APP_URL || "https://showreels-id.vercel.app",
     },
   });
 

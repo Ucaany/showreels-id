@@ -57,7 +57,7 @@ export default function PublicVideoClientPage({ slug }: { slug: string }) {
   const currentUrl =
     typeof window !== "undefined"
       ? window.location.href
-      : `https://showreels.id/v/${video.publicSlug}`;
+      : `https://showreels-id.vercel.app/v/${video.publicSlug}`;
   const shareLinks = getSocialShareLinks(currentUrl, video.title);
 
   return (

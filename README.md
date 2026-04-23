@@ -52,11 +52,11 @@ Open `http://localhost:3002`
 
 Configure these URLs in the Supabase Auth dashboard:
 
-- Site URL: `https://showreels.id`
+- Site URL: `https://showreels-id.vercel.app`
 - Redirect URL local reset: `http://localhost:3002/auth/reset-password`
-- Redirect URL production reset: `https://showreels.id/auth/reset-password`
+- Redirect URL production reset: `https://showreels-id.vercel.app/auth/reset-password`
 - Redirect URL local callback: `http://localhost:3002/auth/callback`
-- Redirect URL production callback: `https://showreels.id/auth/callback`
+- Redirect URL production callback: `https://showreels-id.vercel.app/auth/callback`
 
 Enable email/password auth, disable email confirmation for immediate login, and enable Google provider with the project's Google OAuth client.
 
