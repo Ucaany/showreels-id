@@ -1,35 +1,34 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "@/db/schema";
+import { getDatabaseUrl, isDatabaseUrlConfigured } from "@/lib/database/config";
 
-const connectionString = process.env.DATABASE_URL?.trim() || "";
-
-if (!connectionString) {
-  throw new Error(
-    "DATABASE_URL is required. Set it to your Supabase PostgreSQL connection string."
-  );
-}
+const connectionString = getDatabaseUrl();
+export const isDatabaseConfigured = isDatabaseUrlConfigured();
 
 const globalForDb = globalThis as unknown as {
   showreelsPool?: Pool;
 };
 
 const requiresSsl =
-  process.env.NODE_ENV === "production" ||
-  connectionString.includes("sslmode=require") ||
-  connectionString.includes("supabase.co");
+  isDatabaseConfigured &&
+  (process.env.NODE_ENV === "production" ||
+    connectionString.includes("sslmode=require") ||
+    connectionString.includes("supabase.co"));
 
-const pool =
-  globalForDb.showreelsPool ||
-  new Pool({
-    connectionString,
-    ssl: requiresSsl ? { rejectUnauthorized: false } : false,
-  });
+const activePool = isDatabaseConfigured
+  ? globalForDb.showreelsPool ||
+    new Pool({
+      connectionString,
+      ssl: requiresSsl ? { rejectUnauthorized: false } : false,
+    })
+  : null;
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.showreelsPool = pool;
+if (process.env.NODE_ENV !== "production" && activePool) {
+  globalForDb.showreelsPool = activePool;
 }
 
-export const db = drizzle(pool, { schema });
-export { pool };
-export const isDatabaseConfigured = Boolean(connectionString);
+export const db = activePool
+  ? drizzle(activePool, { schema })
+  : (null as unknown as ReturnType<typeof drizzle<typeof schema>>);
+export const pool = activePool as Pool;

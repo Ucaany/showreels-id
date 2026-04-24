@@ -35,6 +35,9 @@ export function SessionActivityManager() {
     }
 
     const supabase = createClient();
+    if (!supabase) {
+      return;
+    }
 
     const forceSignOut = async () => {
       if (signingOutRef.current) {

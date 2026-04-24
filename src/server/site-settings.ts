@@ -1,10 +1,21 @@
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
+import { db, isDatabaseConfigured } from "@/db";
 import { siteSettings, type DbSiteSettings } from "@/db/schema";
 
 export const SITE_SETTINGS_ID = "global";
 
 export async function getSiteSettings(): Promise<DbSiteSettings> {
+  if (!isDatabaseConfigured) {
+    return {
+      id: SITE_SETTINGS_ID,
+      maintenanceEnabled: false,
+      pauseEnabled: false,
+      maintenanceMessage:
+        "Website sedang dalam maintenance sementara. Silakan kembali beberapa saat lagi.",
+      updatedAt: new Date(),
+    };
+  }
+
   const existing = await db.query.siteSettings.findFirst({
     where: eq(siteSettings.id, SITE_SETTINGS_ID),
   });
@@ -39,6 +50,18 @@ export async function updateSiteSettings(input: {
   pauseEnabled?: boolean;
   maintenanceMessage?: string;
 }) {
+  if (!isDatabaseConfigured) {
+    return {
+      id: SITE_SETTINGS_ID,
+      maintenanceEnabled: input.maintenanceEnabled ?? false,
+      pauseEnabled: input.pauseEnabled ?? false,
+      maintenanceMessage:
+        input.maintenanceMessage ||
+        "Website sedang dalam maintenance sementara. Silakan kembali beberapa saat lagi.",
+      updatedAt: new Date(),
+    };
+  }
+
   await getSiteSettings();
 
   const [updated] = await db

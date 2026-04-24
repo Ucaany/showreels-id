@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { db, isDatabaseConfigured } from "@/db";
 import { users } from "@/db/schema";
 import { sanitizeUsername } from "@/lib/username";
 
@@ -41,6 +41,15 @@ export async function GET(request: Request) {
       available: false,
       reason: "invalid",
       suggestion: sanitized.length >= 3 ? sanitized : undefined,
+    });
+  }
+
+  if (!isDatabaseConfigured) {
+    return NextResponse.json({
+      input,
+      sanitized,
+      available: false,
+      reason: "idle",
     });
   }
 
