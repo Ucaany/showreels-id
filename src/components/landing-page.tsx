@@ -315,11 +315,11 @@ export function LandingPage({
   const marketingFeatures = useMemo(
     () => [
       {
-        title: locale === "en" ? "Drag & Drop Editor" : "Drag & drop editor",
+        title: locale === "en" ? "Link Stack Editor" : "Editor susunan link",
         description:
           locale === "en"
-            ? "Arrange blocks, switch colors, and update icons instantly."
-            : "Atur urutan, ubah warna, ganti ikon, semua live.",
+            ? "Arrange your custom links, socials, and highlight cards in minutes."
+            : "Atur urutan custom link, social, dan kartu highlight dalam hitungan menit.",
       },
       {
         title: locale === "en" ? "Instant Publish" : "Publish instan",
@@ -329,11 +329,11 @@ export function LandingPage({
             : "Perubahan langsung tayang tanpa deploy.",
       },
       {
-        title: locale === "en" ? "Scheduled Links" : "Schedule link",
+        title: locale === "en" ? "Priority Links" : "Link prioritas",
         description:
           locale === "en"
-            ? "Schedule campaign links and automate active windows."
-            : "Jadwalkan link promo, otomatis aktif dan nonaktif.",
+            ? "Pin key links like media kit, booking, and store at the top."
+            : "Pin link penting seperti media kit, booking, dan toko di bagian teratas.",
       },
       {
         title: locale === "en" ? "Deep Integrations" : "Integrasi lengkap",

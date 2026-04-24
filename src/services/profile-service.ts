@@ -17,6 +17,13 @@ export interface ProfileUpdateInput {
   youtubeUrl: string;
   facebookUrl: string;
   threadsUrl: string;
+  customLinks?: Array<{
+    id: string;
+    title: string;
+    url: string;
+    enabled: boolean;
+    order: number;
+  }>;
   skills: string[];
 }
 
@@ -57,6 +64,7 @@ export const profileService = {
         youtubeUrl: payload.youtubeUrl.trim(),
         facebookUrl: payload.facebookUrl.trim(),
         threadsUrl: payload.threadsUrl.trim(),
+        customLinks: payload.customLinks || [],
         skills: payload.skills,
       };
     });

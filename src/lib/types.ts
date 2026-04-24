@@ -9,6 +9,14 @@ export interface StoredImageCrop {
   zoom: number;
 }
 
+export interface CustomLinkEntry {
+  id: string;
+  title: string;
+  url: string;
+  enabled: boolean;
+  order: number;
+}
+
 export interface AuthSession {
   token: string;
   userId: string;
@@ -36,6 +44,7 @@ export interface UserProfile {
   youtubeUrl: string;
   facebookUrl: string;
   threadsUrl: string;
+  customLinks?: CustomLinkEntry[];
   skills: string[];
   profileVisibility: ProfileVisibility;
   createdAt: string;

@@ -7,6 +7,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
+import { CustomLinksList } from "@/components/custom-links-list";
 import { MediaPreviewCarousel } from "@/components/media-preview-carousel";
 import { PublicVideoMeta } from "@/components/public-video-meta";
 import { PublicShareCard } from "@/components/public-share-card";
@@ -14,8 +15,10 @@ import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getDictionary } from "@/lib/i18n";
 import { getCurrentUser } from "@/server/current-user";
 import { getPublicVideo } from "@/server/public-data";
+import { getRequestLocale } from "@/server/request-locale";
 import { getAutoThumbnailFromVideoUrl, getSourceLabel } from "@/lib/video-utils";
 import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
 
@@ -32,6 +35,8 @@ export default async function PublicVideoPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const locale = await getRequestLocale();
+  const dictionary = getDictionary(locale);
   const { slug } = await params;
   const currentUser = await getCurrentUser();
   const video = await getPublicVideo(slug, currentUser?.id);
@@ -153,7 +158,19 @@ export default async function PublicVideoPage({
                   <p className="text-sm leading-7 text-[#5f524b]">{creatorBio}</p>
                 </div>
               </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7d6f67]">
+                  {dictionary.publicVideoLinksTitle}
+                </p>
+                <CustomLinksList
+                  links={video.author.customLinks}
+                  compact
+                  maxItems={3}
+                  emptyLabel={dictionary.profileCustomLinksEmpty}
+                />
+              </div>
               <SocialLinks
+                websiteUrl={video.author.websiteUrl}
                 balanced
                 className="w-full"
                 instagramUrl={video.author.instagramUrl}
@@ -166,7 +183,7 @@ export default async function PublicVideoPage({
                   <Link href={`/creator/${video.author.username}`}>
                     <Button className="w-full">
                       <UserRound className="h-4 w-4" />
-                      Lihat semua video creator
+                      {dictionary.publicVideoLinksCta}
                     </Button>
                   </Link>
                   {isVideoOwner ? (

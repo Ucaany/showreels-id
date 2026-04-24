@@ -2,6 +2,7 @@ import { and, count, desc, eq, ne, notInArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
 import { users, videos } from "@/db/schema";
+import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
 import { getThumbnailCandidates } from "@/lib/video-utils";
 
@@ -279,6 +280,7 @@ export async function getPublicProfile(
         youtubeUrl: true,
         facebookUrl: true,
         threadsUrl: true,
+        customLinks: true,
         profileVisibility: true,
         skills: true,
         createdAt: true,
@@ -315,7 +317,13 @@ export async function getPublicProfile(
       },
     });
 
-    return { user, videos: profileVideos };
+    return {
+      user: {
+        ...user,
+        customLinks: normalizeCustomLinks(user.customLinks),
+      },
+      videos: profileVideos,
+    };
   } catch (error) {
     console.error("Failed to load public profile", error);
     return null;
@@ -364,10 +372,12 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
             city: true,
             contactEmail: true,
             phoneNumber: true,
+            websiteUrl: true,
             instagramUrl: true,
             youtubeUrl: true,
             facebookUrl: true,
             threadsUrl: true,
+            customLinks: true,
             profileVisibility: true,
           },
         },
@@ -391,7 +401,13 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
       return isOwner ? video : null;
     }
 
-    return video;
+    return {
+      ...video,
+      author: {
+        ...video.author,
+        customLinks: normalizeCustomLinks(video.author.customLinks),
+      },
+    };
   } catch (error) {
     console.error("Failed to load public video", error);
     return null;

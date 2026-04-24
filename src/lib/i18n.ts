@@ -28,7 +28,7 @@ export const dictionaries = {
     landingHeroTitleLead: "Satu tautan.",
     landingHeroTitleAccent: "Semua karya videomu.",
     landingHeroDescription:
-      "Bikin halaman creator yang merepresentasikan dirimu dalam hitungan menit. Kelola semua link dan karya dalam satu tempat yang gampang diingat.",
+      "Bikin halaman creator yang merepresentasikan dirimu dalam hitungan menit. Susun custom link dan karya video dalam satu halaman yang gampang diingat.",
     landingHeroInputHint: "Cek username kamu sekarang",
     landingHeroInputPlaceholder: "nama_kamu",
     landingHeroInputAction: "Ambil",
@@ -47,7 +47,7 @@ export const dictionaries = {
     landingFeaturesTitleLead: "Bio page yang",
     landingFeaturesTitleAccent: "benar-benar memudahkan.",
     landingFeaturesDescription:
-      "Setup 2 menit, update kapan pun dari HP. Tanpa coding, tanpa ribet.",
+      "Setup 2 menit, update kapan pun dari HP. Custom link, social, dan karya video tetap rapi tanpa coding.",
     landingPricingBadge: "Harga",
     landingPricingTitleLead: "Paket fleksibel untuk",
     landingPricingTitleAccent: "creator yang berkembang.",
@@ -89,6 +89,23 @@ export const dictionaries = {
     creatorProfile: "Profil kreator",
     availableVideos: "Video yang sudah dipublikasikan",
     noVideosYet: "Belum ada video yang dipublikasikan.",
+    profileCustomLinksTitle: "Custom Links",
+    profileCustomLinksDescription:
+      "Tambahkan link utama yang ingin kamu sorot di halaman publik creator.",
+    profileCustomLinksAdd: "Tambah link",
+    profileCustomLinksLimit: "Maksimal {max} custom link per creator.",
+    profileCustomLinksEmpty:
+      "Belum ada custom link. Tambahkan link utama seperti media kit, toko, atau booking.",
+    profileCustomLinksLabel: "Link",
+    profileCustomLinksNamePlaceholder: "Nama link (contoh: Media Kit)",
+    profileCustomLinksUrlPlaceholder: "https://link-kamu.com",
+    profileCustomLinksMoveUp: "Naikkan urutan",
+    profileCustomLinksMoveDown: "Turunkan urutan",
+    profileCustomLinksRemove: "Hapus link",
+    profileCustomLinksToggle: "Tampilkan link ini di halaman publik",
+    publicPrimaryLinksTitle: "Link Utama",
+    publicVideoLinksTitle: "Link creator (ringkas)",
+    publicVideoLinksCta: "Lihat semua link creator",
   },
   en: {
     language: "Language",
@@ -116,7 +133,7 @@ export const dictionaries = {
     landingHeroTitleLead: "One link.",
     landingHeroTitleAccent: "All your video work.",
     landingHeroDescription:
-      "Build a creator page that reflects your style in minutes. Keep your links and top work in one memorable place.",
+      "Build a creator page that reflects your style in minutes. Arrange custom links and top videos in one memorable page.",
     landingHeroInputHint: "Check your username now",
     landingHeroInputPlaceholder: "your_name",
     landingHeroInputAction: "Claim",
@@ -135,7 +152,7 @@ export const dictionaries = {
     landingFeaturesTitleLead: "A bio page that",
     landingFeaturesTitleAccent: "actually helps.",
     landingFeaturesDescription:
-      "Set up in minutes, update from your phone anytime. No coding required.",
+      "Set up in minutes, update from your phone anytime. Keep custom links, socials, and videos tidy without code.",
     landingPricingBadge: "Pricing",
     landingPricingTitleLead: "Flexible plans for",
     landingPricingTitleAccent: "growing creators.",
@@ -178,6 +195,23 @@ export const dictionaries = {
     creatorProfile: "Creator profile",
     availableVideos: "Published videos",
     noVideosYet: "No videos have been published yet.",
+    profileCustomLinksTitle: "Custom Links",
+    profileCustomLinksDescription:
+      "Add your priority links so visitors can take action faster.",
+    profileCustomLinksAdd: "Add link",
+    profileCustomLinksLimit: "Maximum {max} custom links per creator.",
+    profileCustomLinksEmpty:
+      "No custom links yet. Add key links like media kit, store, or booking.",
+    profileCustomLinksLabel: "Link",
+    profileCustomLinksNamePlaceholder: "Link title (e.g. Media Kit)",
+    profileCustomLinksUrlPlaceholder: "https://your-link.com",
+    profileCustomLinksMoveUp: "Move up",
+    profileCustomLinksMoveDown: "Move down",
+    profileCustomLinksRemove: "Remove link",
+    profileCustomLinksToggle: "Show this link on public pages",
+    publicPrimaryLinksTitle: "Primary Links",
+    publicVideoLinksTitle: "Creator links (quick access)",
+    publicVideoLinksCta: "See all creator links",
   },
 } as const;
 

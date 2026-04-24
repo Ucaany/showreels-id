@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AvatarBadge } from "@/components/avatar-badge";
+import { CustomLinksList } from "@/components/custom-links-list";
 import { ProfileRichText } from "@/components/profile-rich-text";
 import { PublicMobileHeader } from "@/components/public-mobile-header";
 import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getDictionary } from "@/lib/i18n";
 import { getBackgroundImageCropStyle } from "@/lib/image-crop";
 import { formatJoinedMonthYear } from "@/lib/profile-utils";
 import { getAutoThumbnailFromVideoUrl } from "@/lib/video-utils";
@@ -20,6 +22,7 @@ export default async function CreatorAboutPage({
   params: Promise<{ username: string }>;
 }) {
   const locale = await getRequestLocale();
+  const dictionary = getDictionary(locale);
   const { username } = await params;
   const currentUser = await getCurrentUser();
   const profile = await getPublicProfile(username, currentUser?.id);
@@ -248,7 +251,12 @@ export default async function CreatorAboutPage({
                   Hubungi Creator
                 </h2>
               </div>
+              <CustomLinksList
+                links={profile.user.customLinks}
+                emptyLabel={dictionary.profileCustomLinksEmpty}
+              />
               <SocialLinks
+                websiteUrl={profile.user.websiteUrl}
                 instagramUrl={profile.user.instagramUrl}
                 youtubeUrl={profile.user.youtubeUrl}
                 facebookUrl={profile.user.facebookUrl}

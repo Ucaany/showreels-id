@@ -121,6 +121,7 @@ export async function PATCH(request: Request) {
       youtubeUrl: parsed.data.youtubeUrl,
       facebookUrl: parsed.data.facebookUrl,
       threadsUrl: parsed.data.threadsUrl,
+      customLinks: parsed.data.customLinks,
       skills: parsed.data.skills,
       usernameChangeCount,
       usernameChangeWindowStart,

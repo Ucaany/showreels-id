@@ -1,5 +1,15 @@
 import type { Locale } from "@/lib/i18n";
 
+export const MAX_CUSTOM_LINKS = 8;
+
+export interface CustomLinkItem {
+  id: string;
+  title: string;
+  url: string;
+  enabled: boolean;
+  order: number;
+}
+
 export function normalizeSocialUrl(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -66,4 +76,61 @@ export function formatJoinedMonthYear(value: Date, locale: Locale): string {
     month: "long",
     year: "numeric",
   }).format(value);
+}
+
+export function normalizeCustomLinks(
+  value: unknown,
+  maxLinks: number = MAX_CUSTOM_LINKS
+): CustomLinkItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const seenIds = new Set<string>();
+
+  const normalized = value
+    .map((entry, fallbackIndex) => {
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
+
+      const source = entry as Record<string, unknown>;
+      const title = String(source.title || "").trim().slice(0, 32);
+      const url = normalizeSocialUrl(String(source.url || ""));
+      if (!title || !url) {
+        return null;
+      }
+
+      const providedId = String(source.id || "").trim();
+      const safeId =
+        providedId.length > 0
+          ? providedId.slice(0, 80)
+          : `custom-link-${fallbackIndex + 1}`;
+      const id = seenIds.has(safeId)
+        ? `${safeId}-${fallbackIndex + 1}`
+        : safeId;
+      seenIds.add(id);
+
+      const rawOrder = Number(source.order);
+      const order = Number.isFinite(rawOrder)
+        ? Math.max(0, Math.trunc(rawOrder))
+        : fallbackIndex;
+
+      return {
+        id,
+        title,
+        url,
+        enabled: source.enabled !== false,
+        order,
+      };
+    })
+    .filter((item): item is CustomLinkItem => Boolean(item));
+
+  return normalized
+    .sort((a, b) => a.order - b.order)
+    .slice(0, Math.max(0, maxLinks))
+    .map((item, index) => ({
+      ...item,
+      order: index,
+    }));
 }

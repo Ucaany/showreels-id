@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { normalizeAvatarUrl } from "@/lib/avatar-utils";
-import { normalizeSocialUrl } from "@/lib/profile-utils";
+import { MAX_CUSTOM_LINKS, normalizeSocialUrl } from "@/lib/profile-utils";
 import { normalizeAssetUrl, normalizeHttpUrl } from "@/lib/video-utils";
 
 export const profileVisibilitySchema = z.enum(["private", "semi_private", "public"]);
@@ -36,6 +36,37 @@ const socialUrlSchema = z
   .refine((value) => value === "" || value.startsWith("http"), {
     message: "Masukkan URL social media yang valid.",
   });
+
+const customLinkSchema = z.object({
+  id: z.string().trim().min(1, "ID custom link tidak valid.").max(80),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Judul custom link wajib diisi.")
+    .max(32, "Judul custom link maksimal 32 karakter."),
+  url: z
+    .string()
+    .trim()
+    .max(300, "URL custom link terlalu panjang.")
+    .transform((value) => normalizeSocialUrl(value))
+    .refine((value) => value.startsWith("http"), {
+      message: "Masukkan URL custom link yang valid.",
+    }),
+  enabled: z.boolean().default(true),
+  order: z.coerce.number().int().min(0).max(99).default(0),
+});
+
+const customLinksSchema = z
+  .array(customLinkSchema)
+  .max(MAX_CUSTOM_LINKS, `Maksimal ${MAX_CUSTOM_LINKS} custom link.`)
+  .default([])
+  .transform((items) =>
+    items.map((item, index) => ({
+      ...item,
+      order: index,
+      enabled: item.enabled !== false,
+    }))
+  );
 
 const mediaUrlSchema = z
   .string()
@@ -108,6 +139,7 @@ export const profileSchema = z.object({
   youtubeUrl: socialUrlSchema.default(""),
   facebookUrl: socialUrlSchema.default(""),
   threadsUrl: socialUrlSchema.default(""),
+  customLinks: customLinksSchema,
   skills: z.array(z.string()).default([]),
   avatarCropX: cropPercentSchema,
   avatarCropY: cropPercentSchema,

@@ -12,6 +12,14 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+export interface DbCustomLink {
+  id: string;
+  title: string;
+  url: string;
+  enabled: boolean;
+  order: number;
+}
+
 export const users = pgTable(
   "users",
   {
@@ -42,6 +50,10 @@ export const users = pgTable(
     youtubeUrl: text("youtube_url").notNull().default(""),
     facebookUrl: text("facebook_url").notNull().default(""),
     threadsUrl: text("threads_url").notNull().default(""),
+    customLinks: jsonb("custom_links")
+      .$type<DbCustomLink[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     profileVisibility: text("profile_visibility")
       .$type<"private" | "semi_private" | "public">()
       .notNull()

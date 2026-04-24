@@ -11,6 +11,7 @@ import {
   Video,
 } from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
+import { CustomLinksList } from "@/components/custom-links-list";
 import { CreatorBackButton } from "@/components/creator-back-button";
 import { SocialLinks } from "@/components/social-links";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import { Card } from "@/components/ui/card";
 import { formatDateLabel } from "@/lib/helpers";
 import { getBackgroundImageCropStyle } from "@/lib/image-crop";
 import { formatJoinedMonthYear } from "@/lib/profile-utils";
+import { getDictionary } from "@/lib/i18n";
 import { getPublicProfile } from "@/server/public-data";
 import { getCurrentUser } from "@/server/current-user";
 import { getRequestLocale } from "@/server/request-locale";
@@ -45,6 +47,7 @@ export default async function CreatorProfilePage({
   searchParams: Promise<{ page?: string; view?: string }>;
 }) {
   const locale = await getRequestLocale();
+  const dictionary = getDictionary(locale);
   const { username } = await params;
   const resolvedSearchParams = await searchParams;
   const currentUser = await getCurrentUser();
@@ -209,7 +212,17 @@ export default async function CreatorProfilePage({
                   <span>{profile.user.phoneNumber || "Belum diisi"}</span>
                 </p>
               </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7d6f67]">
+                  {dictionary.publicPrimaryLinksTitle}
+                </p>
+                <CustomLinksList
+                  links={profile.user.customLinks}
+                  emptyLabel={dictionary.profileCustomLinksEmpty}
+                />
+              </div>
               <SocialLinks
+                websiteUrl={profile.user.websiteUrl}
                 instagramUrl={profile.user.instagramUrl}
                 youtubeUrl={profile.user.youtubeUrl}
                 facebookUrl={profile.user.facebookUrl}

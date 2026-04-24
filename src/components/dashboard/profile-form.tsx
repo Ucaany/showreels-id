@@ -5,9 +5,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
-import { List, MapPinHouse, Pilcrow, Sparkles, UserRoundPen } from "lucide-react";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import {
+  ArrowDown,
+  ArrowUp,
+  Link2,
+  List,
+  MapPinHouse,
+  Pilcrow,
+  Plus,
+  Sparkles,
+  Trash2,
+  UserRoundPen,
+} from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
+import { CustomLinksList } from "@/components/custom-links-list";
 import { ImageCropDialog } from "@/components/dashboard/image-crop-dialog";
 import { ProfileRichText } from "@/components/profile-rich-text";
 import { SocialLinks } from "@/components/social-links";
@@ -19,7 +31,12 @@ import { usePreferences } from "@/hooks/use-preferences";
 import type { DbUser } from "@/db/schema";
 import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { getBackgroundImageCropStyle, normalizeImageCrop } from "@/lib/image-crop";
-import { getAgeFromBirthDate, normalizeSocialUrl } from "@/lib/profile-utils";
+import {
+  MAX_CUSTOM_LINKS,
+  normalizeCustomLinks,
+  getAgeFromBirthDate,
+  normalizeSocialUrl,
+} from "@/lib/profile-utils";
 
 const schema = z.object({
   fullName: z.string().min(2, "Nama minimal 2 karakter."),
@@ -58,6 +75,27 @@ const schema = z.object({
   youtubeUrl: z.string().max(300, "URL terlalu panjang."),
   facebookUrl: z.string().max(300, "URL terlalu panjang."),
   threadsUrl: z.string().max(300, "URL terlalu panjang."),
+  customLinks: z
+    .array(
+      z.object({
+        id: z.string().trim().min(1, "ID custom link tidak valid.").max(80),
+        title: z
+          .string()
+          .trim()
+          .min(1, "Judul link wajib diisi.")
+          .max(32, "Judul maksimal 32 karakter."),
+        url: z
+          .string()
+          .trim()
+          .max(300, "URL link terlalu panjang.")
+          .refine((value) => normalizeSocialUrl(value).startsWith("http"), {
+            message: "Gunakan URL http/https yang valid.",
+          }),
+        enabled: z.boolean(),
+        order: z.number().int().min(0).max(99),
+      })
+    )
+    .max(MAX_CUSTOM_LINKS, `Maksimal ${MAX_CUSTOM_LINKS} custom link.`),
   skills: z.string().max(300, "Skills terlalu panjang."),
   avatarCropX: z.number().min(-100).max(100),
   avatarCropY: z.number().min(-100).max(100),
@@ -71,6 +109,13 @@ type FormValues = z.infer<typeof schema>;
 
 const USERNAME_WINDOW_DAYS = 30;
 const USERNAME_MAX_CHANGES = 3;
+
+function createCustomLinkId(seed: number) {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `custom-link-${Date.now()}-${seed}`;
+}
 
 function getUsernameQuota(user: DbUser, nextUsername: string) {
   const originalUsername = user.username || "";
@@ -171,8 +216,26 @@ export function ProfileForm({ user }: { user: DbUser }) {
       youtubeUrl: user.youtubeUrl || "",
       facebookUrl: user.facebookUrl || "",
       threadsUrl: user.threadsUrl || "",
+      customLinks: normalizeCustomLinks(user.customLinks).map((link) => ({
+        id: link.id,
+        title: link.title,
+        url: link.url,
+        enabled: link.enabled !== false,
+        order: link.order,
+      })),
       skills: user.skills.join(", "),
     },
+  });
+
+  const {
+    fields: customLinkFields,
+    append: appendCustomLink,
+    remove: removeCustomLink,
+    move: moveCustomLink,
+  } = useFieldArray({
+    control: form.control,
+    name: "customLinks",
+    keyName: "fieldKey",
   });
 
   const watchedName = useWatch({ control: form.control, name: "fullName" });
@@ -222,6 +285,10 @@ export function ProfileForm({ user }: { user: DbUser }) {
     control: form.control,
     name: "threadsUrl",
   });
+  const watchedCustomLinks = useWatch({
+    control: form.control,
+    name: "customLinks",
+  });
   const watchedAvatarCropX = useWatch({
     control: form.control,
     name: "avatarCropX",
@@ -267,6 +334,14 @@ export function ProfileForm({ user }: { user: DbUser }) {
     () => getUsernameQuota(user, watchedUsername || ""),
     [user, watchedUsername]
   );
+  const previewCustomLinks = useMemo(
+    () => normalizeCustomLinks(watchedCustomLinks || []),
+    [watchedCustomLinks]
+  );
+  const customLinksErrorMessage =
+    typeof form.formState.errors.customLinks?.message === "string"
+      ? form.formState.errors.customLinks.message
+      : "";
 
   const appendTextBlock = (
     field: "bio" | "experience",
@@ -284,6 +359,28 @@ export function ProfileForm({ user }: { user: DbUser }) {
       shouldDirty: true,
       shouldValidate: true,
     });
+  };
+
+  const addCustomLink = () => {
+    if (customLinkFields.length >= MAX_CUSTOM_LINKS) {
+      return;
+    }
+
+    appendCustomLink({
+      id: createCustomLinkId(customLinkFields.length + 1),
+      title: "",
+      url: "",
+      enabled: true,
+      order: customLinkFields.length,
+    });
+  };
+
+  const moveCustomLinkBy = (index: number, offset: -1 | 1) => {
+    const targetIndex = index + offset;
+    if (targetIndex < 0 || targetIndex >= customLinkFields.length) {
+      return;
+    }
+    moveCustomLink(index, targetIndex);
   };
 
   const buildProfilePayload = (values: FormValues) => {
@@ -323,9 +420,13 @@ export function ProfileForm({ user }: { user: DbUser }) {
       coverCropY: coverCropValues.y,
       coverCropZoom: coverCropValues.zoom,
       skills: values.skills
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
+      customLinks: normalizeCustomLinks(values.customLinks || []).map((link, index) => ({
+        ...link,
+        order: index,
+      })),
     };
   };
 
@@ -425,6 +526,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
     watchedCity,
     watchedContactEmail,
     watchedCover,
+    watchedCustomLinks,
     watchedExperience,
     watchedFacebook,
     watchedInstagram,
@@ -893,6 +995,147 @@ export function ProfileForm({ user }: { user: DbUser }) {
                 </div>
               </div>
 
+              <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Link2 className="h-4 w-4 text-brand-600" />
+                    <h2 className="text-base font-semibold text-slate-950">
+                      {dictionary.profileCustomLinksTitle}
+                    </h2>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={addCustomLink}
+                    disabled={customLinkFields.length >= MAX_CUSTOM_LINKS}
+                  >
+                    <Plus className="h-4 w-4" />
+                    {dictionary.profileCustomLinksAdd}
+                  </Button>
+                </div>
+                <FieldHint>{dictionary.profileCustomLinksDescription}</FieldHint>
+                <FieldHint>
+                  {dictionary.profileCustomLinksLimit.replace(
+                    "{max}",
+                    String(MAX_CUSTOM_LINKS)
+                  )}
+                </FieldHint>
+
+                <div className="mt-4 space-y-3">
+                  {customLinkFields.length === 0 ? (
+                    <p className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                      {dictionary.profileCustomLinksEmpty}
+                    </p>
+                  ) : null}
+
+                  {customLinkFields.map((field, index) => (
+                    <div
+                      key={field.fieldKey}
+                      className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:p-4"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {dictionary.profileCustomLinksLabel} {index + 1}
+                        </p>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => moveCustomLinkBy(index, -1)}
+                            disabled={index === 0}
+                            title={dictionary.profileCustomLinksMoveUp}
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => moveCustomLinkBy(index, 1)}
+                            disabled={index === customLinkFields.length - 1}
+                            title={dictionary.profileCustomLinksMoveDown}
+                          >
+                            <ArrowDown className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeCustomLink(index)}
+                            title={dictionary.profileCustomLinksRemove}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
+                        <div>
+                          <Input
+                            placeholder={dictionary.profileCustomLinksNamePlaceholder}
+                            {...form.register(`customLinks.${index}.title`)}
+                          />
+                          <p className="mt-1 text-xs text-rose-600">
+                            {
+                              form.formState.errors.customLinks?.[index]?.title
+                                ?.message
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <Input
+                            placeholder={dictionary.profileCustomLinksUrlPlaceholder}
+                            {...form.register(`customLinks.${index}.url`, {
+                              onBlur: (event) => {
+                                form.setValue(
+                                  `customLinks.${index}.url`,
+                                  normalizeSocialUrl(event.target.value),
+                                  {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                  }
+                                );
+                              },
+                            })}
+                          />
+                          <p className="mt-1 text-xs text-rose-600">
+                            {
+                              form.formState.errors.customLinks?.[index]?.url
+                                ?.message
+                            }
+                          </p>
+                        </div>
+                      </div>
+
+                      <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-slate-300 text-brand-600"
+                          {...form.register(`customLinks.${index}.enabled`)}
+                        />
+                        {dictionary.profileCustomLinksToggle}
+                      </label>
+
+                      <input
+                        type="hidden"
+                        {...form.register(`customLinks.${index}.id`)}
+                      />
+                      <input
+                        type="hidden"
+                        {...form.register(`customLinks.${index}.order`, {
+                          valueAsNumber: true,
+                        })}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-rose-600">
+                  {customLinksErrorMessage}
+                </p>
+              </div>
+
               {message ? (
                 <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
                   {message}
@@ -990,6 +1233,15 @@ export function ProfileForm({ user }: { user: DbUser }) {
                   "Belum diisi"}
               </p>
             </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {dictionary.publicPrimaryLinksTitle}
+              </p>
+              <CustomLinksList
+                links={previewCustomLinks}
+                emptyLabel={dictionary.profileCustomLinksEmpty}
+              />
+            </div>
             <ProfileRichText
               content={watchedBio}
               emptyLabel="Bio akan tampil di sini saat diisi."
@@ -1004,6 +1256,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
               </div>
             </div>
             <SocialLinks
+              websiteUrl={normalizeSocialUrl(watchedWebsiteUrl || user.websiteUrl || "")}
               instagramUrl={normalizeSocialUrl(
                 watchedInstagram || user.instagramUrl || ""
               )}
