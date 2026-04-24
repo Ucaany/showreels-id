@@ -67,13 +67,13 @@ export function DashboardGreetingCard({
   }, [hour, locale]);
 
   return (
-    <Card className="dashboard-clean-card overflow-hidden border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.13),_transparent_32%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(241,245,249,0.96))] p-4 sm:p-5">
+    <Card className="dashboard-clean-card overflow-hidden border-[#ddd3cd] bg-[radial-gradient(circle_at_top_left,_rgba(239,79,63,0.18),_transparent_38%),radial-gradient(circle_at_84%_8%,rgba(37,99,235,0.13),_transparent_30%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(247,243,239,0.96))] p-4 sm:p-5">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-slate-600">{welcomeLabel}</p>
-        <h1 className="mt-2 font-display text-2xl font-semibold leading-tight text-slate-950 sm:text-3xl lg:text-4xl">
+        <p className="text-sm font-medium text-[#655952]">{welcomeLabel}</p>
+        <h1 className="mt-2 font-display text-2xl font-semibold leading-tight text-[#1d1815] sm:text-3xl lg:text-4xl">
           {greeting.text}, {userName} <span aria-hidden="true">{greeting.emoji}</span>
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-700 sm:text-base">
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#564b45] sm:text-base">
           {locale === "en"
             ? "Manage your work, track video status, and keep your portfolio tidy from one focused workspace."
             : "Kelola karya, pantau status video, dan rapikan portofolio dari satu ruang kerja yang lebih fokus."}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Link2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export function AppLogo({
@@ -12,21 +12,21 @@ export function AppLogo({
   const darkTone = tone === "dark";
 
   return (
-    <Link href="/" className={cn("inline-flex items-center gap-2", className)}>
+    <Link href="/" className={cn("inline-flex items-center gap-2.5", className)}>
       <span
         className={cn(
-          "inline-flex h-9 w-9 items-center justify-center rounded-lg text-white",
+          "inline-flex h-8 w-8 items-center justify-center rounded-full border",
           darkTone
-            ? "bg-brand-600 shadow-soft"
-            : "bg-brand-500 shadow-[0_12px_30px_rgba(79,158,255,0.35)]"
+            ? "border-brand-200 bg-white text-brand-600"
+            : "border-white/25 bg-white/15 text-white"
         )}
       >
-        <Sparkles className="h-4 w-4" />
+        <Link2 className="h-4 w-4" />
       </span>
       <span
         className={cn(
-          "font-display text-lg font-semibold",
-          darkTone ? "text-slate-900" : "text-slate-100"
+          "text-[1.02rem] font-semibold tracking-[-0.01em]",
+          darkTone ? "text-[#1f1a17]" : "text-[#f6f3f0]"
         )}
       >
         showreels.id

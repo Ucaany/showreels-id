@@ -87,8 +87,8 @@ export default async function CreatorProfilePage({
   return (
     <div className="min-h-screen bg-canvas">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
-        <Card className="overflow-hidden border-border bg-surface p-0">
-          <div className="relative overflow-hidden border-b border-slate-200">
+        <Card className="overflow-hidden border-[#ddd3cd] bg-white/92 p-0">
+          <div className="relative overflow-hidden border-b border-[#e4d9d3]">
             {coverImage ? (
                 <div
                   className="absolute inset-0"
@@ -103,7 +103,7 @@ export default async function CreatorProfilePage({
                   )}
                 />
             ) : null}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.58),_transparent_36%),linear-gradient(180deg,_rgba(255,255,255,0.80),_rgba(255,255,255,0.94))]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.58),_transparent_36%),linear-gradient(180deg,_rgba(255,250,247,0.86),_rgba(255,255,255,0.95))]" />
             <div className="relative flex min-h-[240px] flex-col justify-between gap-4 p-4 sm:min-h-[290px] sm:gap-6 sm:p-6 lg:min-h-[320px]">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <Badge className="w-fit">
@@ -115,7 +115,7 @@ export default async function CreatorProfilePage({
 
               <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                  <div className="inline-flex shrink-0 self-start rounded-full border-4 border-white/90 bg-white shadow-[0_18px_40px_rgba(37,99,235,0.18)]">
+                    <div className="inline-flex shrink-0 self-start rounded-full border-4 border-white/90 bg-white shadow-[0_18px_40px_rgba(29,23,20,0.14)]">
                     <AvatarBadge
                       name={profile.user.name || "Creator"}
                       avatarUrl={profile.user.image || ""}
@@ -129,24 +129,24 @@ export default async function CreatorProfilePage({
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <h1 className="font-display text-3xl font-semibold text-slate-950 sm:text-4xl">
+                      <h1 className="font-display text-3xl font-semibold text-[#201b18] sm:text-4xl">
                         {profile.user.name}
                       </h1>
                       {profile.user.role ? (
-                        <p className="mt-1 text-base font-medium text-brand-700">
+                        <p className="mt-1 text-base font-medium text-[#e24f3b]">
                           {profile.user.role}
                         </p>
                       ) : null}
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-sm font-medium text-slate-600">
+                      <span className="inline-flex items-center rounded-full border border-[#e0d4ce] bg-white/80 px-3 py-1 text-sm font-medium text-[#675a53]">
                         @{profile.user.username}
                       </span>
-                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-sm font-medium text-slate-600">
+                      <span className="inline-flex items-center rounded-full border border-[#e0d4ce] bg-white/80 px-3 py-1 text-sm font-medium text-[#675a53]">
                         <MapPin className="mr-1 h-3.5 w-3.5" />
                         {profile.user.city || "Kota belum diisi"}
                       </span>
-                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-sm font-medium text-slate-600">
+                      <span className="inline-flex items-center rounded-full border border-[#e0d4ce] bg-white/80 px-3 py-1 text-sm font-medium text-[#675a53]">
                         Bergabung {joinedMonthYear}
                       </span>
                     </div>
@@ -170,42 +170,42 @@ export default async function CreatorProfilePage({
 
         <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
           <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-            <Card className="space-y-4 border-border bg-surface">
+            <Card className="space-y-4 border-[#ddd3cd] bg-white/92">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7d6f67]">
                   Tentang creator
                 </p>
-                <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900">
+                <h2 className="mt-2 font-display text-2xl font-semibold text-[#201b18]">
                   Profil Singkat
                 </h2>
               </div>
-              <p className="text-sm leading-7 text-slate-600">
+              <p className="text-sm leading-7 text-[#5f524b]">
                 {bioExcerpt || "Bio belum ditambahkan."}
               </p>
               <Link
                 href={aboutHref}
-                className="inline-flex text-sm font-semibold text-brand-700 transition hover:text-brand-800"
+                className="inline-flex text-sm font-semibold text-[#e24f3b] transition hover:text-[#cb402d]"
               >
                 Lihat profil lengkap
               </Link>
             </Card>
 
-            <Card className="space-y-4 border-border bg-surface">
+            <Card className="space-y-4 border-[#ddd3cd] bg-white/92">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7d6f67]">
                   Contact
                 </p>
-                <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900">
+                <h2 className="mt-2 font-display text-2xl font-semibold text-[#201b18]">
                   Hubungi Creator
                 </h2>
               </div>
-              <div className="space-y-3 text-sm text-slate-600">
+              <div className="space-y-3 text-sm text-[#5f524b]">
                 <p className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-brand-600" />
+                  <Mail className="h-4 w-4 text-[#e24f3b]" />
                   <span>{profile.user.contactEmail || "Belum diisi"}</span>
                 </p>
                 <p className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-brand-600" />
+                  <Phone className="h-4 w-4 text-[#e24f3b]" />
                   <span>{profile.user.phoneNumber || "Belum diisi"}</span>
                 </p>
               </div>

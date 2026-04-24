@@ -93,13 +93,13 @@ export function DashboardShell({
   }, [authStatus, pathname, router, searchParamsValue]);
 
   return (
-    <div className="min-h-screen bg-canvas text-slate-950">
-      <header className="sticky top-0 z-30 border-b border-border bg-surface backdrop-blur">
+    <div className="min-h-screen bg-canvas text-[#201b18]">
+      <header className="sticky top-0 z-30 border-b border-[#e2d9d3] bg-[#f7f4f1]/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <AppLogo />
           <div className="hidden items-center gap-3 md:flex">
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
-              <p className="max-w-[180px] truncate whitespace-nowrap text-sm font-semibold text-slate-900">
+            <div className="flex items-center gap-2 rounded-full border border-[#ded3cd] bg-white px-3 py-2 shadow-sm">
+              <p className="max-w-[180px] truncate whitespace-nowrap text-sm font-semibold text-[#201b18]">
                 {displayUsername}
               </p>
               <AvatarBadge
@@ -127,7 +127,7 @@ export function DashboardShell({
           </div>
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-900 md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18] md:hidden"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-label="Open dashboard menu"
           >
@@ -137,26 +137,26 @@ export function DashboardShell({
       </header>
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-40 bg-slate-950/30 md:hidden">
+        <div className="fixed inset-0 z-40 bg-[#201b18]/35 md:hidden">
           <button
             type="button"
             className="absolute inset-0 h-full w-full cursor-default"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu backdrop"
           />
-          <div className="absolute left-0 top-0 h-full w-[88%] max-w-[340px] border-r border-slate-200 bg-white p-4 shadow-2xl">
+          <div className="absolute left-0 top-0 h-full w-[88%] max-w-[340px] border-r border-[#ded3cd] bg-[#f8f5f2] p-4 shadow-2xl">
             <div className="mb-5 flex items-center justify-between">
               <AppLogo />
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-900"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18]"
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Close menu"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+            <div className="mb-4 rounded-2xl border border-[#ded3cd] bg-white p-3">
               <div className="flex items-center gap-2">
                 <AvatarBadge
                   name={user.name || "Creator"}
@@ -168,7 +168,7 @@ export function DashboardShell({
                   }}
                   size="sm"
                 />
-                <p className="min-w-0 truncate whitespace-nowrap text-sm font-semibold text-slate-900">
+                <p className="min-w-0 truncate whitespace-nowrap text-sm font-semibold text-[#201b18]">
                   {displayUsername}
                 </p>
               </div>
@@ -186,8 +186,8 @@ export function DashboardShell({
                     className={cn(
                       "flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition",
                       active
-                        ? "bg-brand-600 text-white"
-                        : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+                        ? "bg-[#1a1412] text-white"
+                        : "text-[#4f433d] hover:bg-white hover:text-[#201b18]"
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -214,7 +214,7 @@ export function DashboardShell({
 
       <div className="mx-auto grid w-full max-w-7xl gap-4 px-3 py-5 sm:px-6 sm:py-6 md:grid-cols-[72px_1fr]">
         <aside
-          className="hidden rounded-2xl border border-border bg-surface p-2 shadow-card md:block md:h-fit"
+          className="hidden rounded-2xl border border-[#ddd3cd] bg-white/90 p-2 shadow-card md:block md:h-fit"
         >
           <nav className="space-y-1">
             {navItems.map((item) => {
@@ -230,8 +230,8 @@ export function DashboardShell({
                   className={cn(
                     "flex h-12 w-full items-center justify-center rounded-xl transition",
                     active
-                      ? "bg-brand-600 text-white"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+                      ? "bg-[#1a1412] text-white"
+                      : "text-[#4f433d] hover:bg-[#f1ebe6] hover:text-[#201b18]"
                   )}
                 >
                   <Icon className="h-5 w-5" />

@@ -47,7 +47,7 @@ export default async function CreatorAboutPage({
       <PublicMobileHeader ctaHref="/auth/signup" ctaLabel="Buat Profilmu" />
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
-        <Card className="overflow-hidden border-border bg-surface p-0">
+        <Card className="overflow-hidden border-[#ddd3cd] bg-white/92 p-0">
           <div className="relative min-h-[260px] border-b border-border sm:min-h-[320px]">
             {coverImage ? (
                 <div
@@ -63,7 +63,7 @@ export default async function CreatorAboutPage({
                   )}
                 />
             ) : null}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.44),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.72),_rgba(255,255,255,0.92))]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.44),_transparent_34%),linear-gradient(180deg,_rgba(255,250,247,0.78),_rgba(255,255,255,0.94))]" />
             <div className="relative flex h-full flex-col justify-between gap-8 p-5 sm:p-8">
               <div className="flex justify-between gap-3">
                 <Badge className="w-fit">Profil Lengkap Creator</Badge>
@@ -76,7 +76,7 @@ export default async function CreatorAboutPage({
 
               <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                  <div className="inline-flex shrink-0 self-start rounded-full border-4 border-white/90 bg-white shadow-[0_18px_40px_rgba(37,99,235,0.18)]">
+                    <div className="inline-flex shrink-0 self-start rounded-full border-4 border-white/90 bg-white shadow-[0_18px_40px_rgba(29,23,20,0.14)]">
                     <AvatarBadge
                       name={profile.user.name || "Creator"}
                       avatarUrl={profile.user.image || ""}
@@ -89,15 +89,15 @@ export default async function CreatorAboutPage({
                     />
                   </div>
                   <div>
-                    <h1 className="font-display text-3xl font-semibold text-slate-950 sm:text-4xl">
+                    <h1 className="font-display text-3xl font-semibold text-[#201b18] sm:text-4xl">
                       {profile.user.name}
                     </h1>
                     {profile.user.role ? (
-                      <p className="text-base font-medium text-brand-700">
+                      <p className="text-base font-medium text-[#e24f3b]">
                         {profile.user.role}
                       </p>
                     ) : null}
-                    <p className="text-base text-slate-600">@{profile.user.username}</p>
+                    <p className="text-base text-[#635750]">@{profile.user.username}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Badge>{profile.user.city || "Kota belum diisi"}</Badge>
                       <Badge>Bergabung {joinedMonthYear}</Badge>
@@ -122,10 +122,10 @@ export default async function CreatorAboutPage({
         </Card>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_340px]">
-          <Card className="space-y-6 border-border bg-surface">
+          <Card className="space-y-6 border-[#ddd3cd] bg-white/92">
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-2xl font-semibold text-slate-900">
+                <h2 className="font-display text-2xl font-semibold text-[#201b18]">
                   Bio Lengkap
                 </h2>
                 <Badge>Bio</Badge>
@@ -138,7 +138,7 @@ export default async function CreatorAboutPage({
 
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-2xl font-semibold text-slate-900">
+                <h2 className="font-display text-2xl font-semibold text-[#201b18]">
                   Experience
                 </h2>
                 <Badge>Pengalaman</Badge>
@@ -151,12 +151,12 @@ export default async function CreatorAboutPage({
           </Card>
 
           <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-            <Card className="space-y-4 border-border bg-surface">
+            <Card className="space-y-4 border-[#ddd3cd] bg-white/92">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7d6f67]">
                   Detail Creator
                 </p>
-                <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900">
+                <h2 className="mt-2 font-display text-2xl font-semibold text-[#201b18]">
                   Informasi Lengkap
                 </h2>
               </div>

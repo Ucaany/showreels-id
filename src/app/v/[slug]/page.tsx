@@ -53,7 +53,7 @@ export default async function PublicVideoPage({
     <div className="min-h-screen bg-canvas">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <Card className="overflow-hidden border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.11),_transparent_32%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))]">
+          <Card className="overflow-hidden border-[#ddd3cd] bg-[radial-gradient(circle_at_top_left,_rgba(239,79,63,0.16),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(250,246,242,0.98))]">
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-end gap-3">
                 <Link href={video.sourceUrl} target="_blank">
@@ -65,28 +65,28 @@ export default async function PublicVideoPage({
               </div>
 
               <div className="space-y-3">
-                <h1 className="font-display text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">
+                <h1 className="font-display text-3xl font-semibold leading-tight text-[#201b18] sm:text-4xl">
                   {video.title}
                 </h1>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="bg-brand-700 text-white shadow-none">
+                  <Badge className="bg-[#e24f3b] text-white shadow-none">
                     <LayoutTemplate className="mr-1 h-3.5 w-3.5" />
                     {video.aspectRatio === "portrait" ? "Portrait 9:16" : "Landscape 16:9"}
                   </Badge>
-                  <Badge className="bg-slate-900 text-white shadow-none">
+                  <Badge className="bg-[#1f1a17] text-white shadow-none">
                     Output: {video.outputType || "General"}
                   </Badge>
-                  <Badge className="bg-slate-800 text-white shadow-none">
+                  <Badge className="bg-[#2d2521] text-white shadow-none">
                     Durasi: {video.durationLabel || "-"}
                   </Badge>
                 </div>
-                <div className="space-y-3 rounded-2xl border border-slate-200 bg-white/70 p-4">
+                <div className="space-y-3 rounded-2xl border border-[#ddd3cd] bg-white/84 p-4">
                   <PublicVideoMeta
                     sourceBadgeClassName={sourceMeta.className}
                     sourceLabel={getSourceLabel(video.source as never)}
                     createdAt={video.createdAt.toISOString()}
                   />
-                  <p className="whitespace-pre-line text-sm leading-7 text-slate-700 sm:text-base">
+                  <p className="whitespace-pre-line text-sm leading-7 text-[#5f524b] sm:text-base">
                     {video.description}
                   </p>
                 </div>
@@ -110,12 +110,12 @@ export default async function PublicVideoPage({
           </Card>
 
           <div className="space-y-5">
-            <Card className="space-y-4 border-border bg-surface">
+            <Card className="space-y-4 border-[#ddd3cd] bg-white/92">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7d6f67]">
                   Creator
                 </p>
-                <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900">
+                <h2 className="mt-2 font-display text-2xl font-semibold text-[#201b18]">
                   Tentang Author
                 </h2>
               </div>
@@ -133,24 +133,24 @@ export default async function PublicVideoPage({
                 <div className="min-w-0 space-y-2">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-slate-900">
+                      <p className="font-semibold text-[#201b18]">
                         {video.author.name}
                       </p>
-                      <span className="text-sm text-slate-500">
+                      <span className="text-sm text-[#7d6f67]">
                         @{video.author.username || "creator"}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-sm text-slate-500">
+                      <span className="inline-flex items-center gap-1 text-sm text-[#7d6f67]">
                         <MapPin className="h-3.5 w-3.5" />
                         {video.author.city || "Wilayah belum diisi"}
                       </span>
                     </div>
                     {video.author.role ? (
-                      <p className="mt-1 text-sm font-medium text-brand-700">
+                      <p className="mt-1 text-sm font-medium text-[#e24f3b]">
                         {video.author.role}
                       </p>
                     ) : null}
                   </div>
-                  <p className="text-sm leading-7 text-slate-600">{creatorBio}</p>
+                  <p className="text-sm leading-7 text-[#5f524b]">{creatorBio}</p>
                 </div>
               </div>
               <SocialLinks
@@ -164,7 +164,7 @@ export default async function PublicVideoPage({
               {video.author.username ? (
                 <div className="space-y-2">
                   <Link href={`/creator/${video.author.username}`}>
-                    <Button className="w-full border border-brand-700 bg-brand-600 text-white shadow-soft hover:bg-brand-700">
+                    <Button className="w-full">
                       <UserRound className="h-4 w-4" />
                       Lihat semua video creator
                     </Button>
@@ -182,12 +182,12 @@ export default async function PublicVideoPage({
               ) : null}
             </Card>
 
-            <Card className="space-y-4 border-border bg-surface text-center">
+            <Card className="space-y-4 border-[#ddd3cd] bg-white/92 text-center">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7d6f67]">
                   Share
                 </p>
-                <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900">
+                <h2 className="mt-2 font-display text-2xl font-semibold text-[#201b18]">
                   Bagikan Link
                 </h2>
               </div>

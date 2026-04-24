@@ -10,13 +10,13 @@ export default function AboutPage() {
       <PublicMobileHeader ctaHref="/auth/signup" ctaLabel="Buat Profilmu" />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6">
         <Card className="border-border bg-surface">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#e24f3b]">
             About showreels.id
           </p>
-          <h1 className="mt-2 font-display text-3xl font-semibold text-slate-950 sm:text-4xl">
+          <h1 className="mt-2 font-display text-3xl font-semibold text-[#201b18] sm:text-4xl">
             Platform portofolio kreator untuk tampil lebih meyakinkan di depan klien.
           </h1>
-          <p className="mt-4 max-w-4xl text-sm leading-relaxed text-slate-700 sm:text-base">
+          <p className="mt-4 max-w-4xl text-sm leading-relaxed text-[#5f524b] sm:text-base">
             showreels.id dibuat untuk membantu content creator, editor, dan
             videographer mengelola karya dalam format yang lebih profesional.
             Fokus kami adalah membuat creator lebih mudah menyiapkan profil, submit
@@ -26,37 +26,37 @@ export default function AboutPage() {
 
         <section className="grid gap-4 md:grid-cols-3">
           <Card className="border-border bg-surface">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#fde8e2] text-[#e24f3b]">
               <Rocket className="h-5 w-5" />
             </div>
-            <h2 className="mt-3 font-display text-xl font-semibold text-slate-900">
+            <h2 className="mt-3 font-display text-xl font-semibold text-[#201b18]">
               Misi
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-[#5f524b]">
               Membantu creator menampilkan kualitas kerja secara profesional
               tanpa perlu setup website yang rumit.
             </p>
           </Card>
           <Card className="border-border bg-surface">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#fde8e2] text-[#e24f3b]">
               <Users className="h-5 w-5" />
             </div>
-            <h2 className="mt-3 font-display text-xl font-semibold text-slate-900">
+            <h2 className="mt-3 font-display text-xl font-semibold text-[#201b18]">
               Untuk Siapa
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-[#5f524b]">
               Content creator, social media specialist, videographer, editor,
               dan tim kreatif agency.
             </p>
           </Card>
           <Card className="border-border bg-surface">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#fde8e2] text-[#e24f3b]">
               <Lightbulb className="h-5 w-5" />
             </div>
-            <h2 className="mt-3 font-display text-xl font-semibold text-slate-900">
+            <h2 className="mt-3 font-display text-xl font-semibold text-[#201b18]">
               Nilai Utama
             </h2>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-[#5f524b]">
               Simpel, cepat, dan fokus pada hasil presentasi karya yang membuat
               klien lebih mudah mengambil keputusan.
             </p>
@@ -64,10 +64,10 @@ export default function AboutPage() {
         </section>
 
         <Card className="border-border bg-surface">
-          <h2 className="font-display text-2xl font-semibold text-slate-900">
+          <h2 className="font-display text-2xl font-semibold text-[#201b18]">
             Siap tampilkan portfolio terbaikmu?
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-[#5f524b]">
             Mulai dari profil creator, lanjut submit video, dan bagikan link ke klien.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">

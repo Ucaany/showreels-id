@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,7 +58,13 @@ async function finalizeSignedInSession() {
   };
 }
 
-export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
+export function SignupForm({
+  googleEnabled,
+  initialUsername = "",
+}: {
+  googleEnabled: boolean;
+  initialUsername?: string;
+}) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -66,18 +72,31 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
   const authLock = useAuthAttemptLock();
   const supabase = createClient();
   const altActionClassName =
-    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#d7cec7] bg-white px-4 text-sm font-semibold text-[#201b18] shadow-sm transition hover:bg-[#fbf7f4] focus:outline-none focus:ring-2 focus:ring-[#e6c2b9] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       fullName: "",
-      username: "",
+      username: initialUsername,
       email: "",
       password: "",
       confirmPassword: "",
     },
   });
+
+  useEffect(() => {
+    if (!initialUsername) {
+      return;
+    }
+
+    if (!form.getValues("username")) {
+      form.setValue("username", initialUsername, {
+        shouldDirty: false,
+        shouldValidate: true,
+      });
+    }
+  }, [form, initialUsername]);
 
   const onInvalidSubmit = () => {
     const attempt = authLock.registerFailure();
@@ -189,9 +208,9 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-            <UserRound className="h-4 w-4 text-brand-600" />
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#e3d8d2] sm:bg-[#fbf7f4] sm:p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
+            <UserRound className="h-4 w-4 text-[#e24f3b]" />
             Nama Lengkap
           </label>
           <Input {...form.register("fullName")} />
@@ -200,9 +219,9 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-            <UserRound className="h-4 w-4 text-brand-600" />
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#e3d8d2] sm:bg-[#fbf7f4] sm:p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
+            <UserRound className="h-4 w-4 text-[#e24f3b]" />
             Username
           </label>
           <Input {...form.register("username")} />
@@ -211,9 +230,9 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-            <Mail className="h-4 w-4 text-brand-600" />
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#e3d8d2] sm:bg-[#fbf7f4] sm:p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
+            <Mail className="h-4 w-4 text-[#e24f3b]" />
             Email
           </label>
           <Input {...form.register("email")} />
@@ -222,9 +241,9 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-            <LockKeyhole className="h-4 w-4 text-brand-600" />
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#e3d8d2] sm:bg-[#fbf7f4] sm:p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
+            <LockKeyhole className="h-4 w-4 text-[#e24f3b]" />
             Password
           </label>
           <div className="relative">
@@ -236,7 +255,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-slate-500 transition hover:text-slate-700"
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#7a6c64] transition hover:text-[#514640]"
               aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -247,9 +266,9 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-slate-50/70 sm:p-4">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-            <LockKeyhole className="h-4 w-4 text-brand-600" />
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#e3d8d2] sm:bg-[#fbf7f4] sm:p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
+            <LockKeyhole className="h-4 w-4 text-[#e24f3b]" />
             Konfirmasi Password
           </label>
           <div className="relative">
@@ -261,7 +280,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
             <button
               type="button"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-slate-500 transition hover:text-slate-700"
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#7a6c64] transition hover:text-[#514640]"
               aria-label={showConfirmPassword ? "Sembunyikan password" : "Lihat password"}
             >
               {showConfirmPassword ? (
@@ -277,7 +296,7 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
         </div>
 
         {authLock.lockMessage || submitError ? (
-          <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          <p className="rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
             {authLock.lockMessage || submitError}
           </p>
         ) : null}
@@ -294,10 +313,10 @@ export function SignupForm({ googleEnabled }: { googleEnabled: boolean }) {
               : dictionary.signup}
         </Button>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-slate-500">
-          <span className="h-px bg-slate-200" />
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-[#7f726a]">
+          <span className="h-px bg-[#e0d6d0]" />
           <span>atau</span>
-          <span className="h-px bg-slate-200" />
+          <span className="h-px bg-[#e0d6d0]" />
         </div>
         <div className="space-y-2">
           {googleEnabled ? (

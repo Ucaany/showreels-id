@@ -85,8 +85,8 @@ export default async function DashboardPage() {
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
           <div>
-            <p className="text-sm font-medium text-slate-600">Status video</p>
-            <h2 className="mt-1 font-display text-xl font-semibold text-slate-950 sm:text-2xl">
+            <p className="text-sm font-medium text-[#655952]">Status video</p>
+            <h2 className="mt-1 font-display text-xl font-semibold text-[#201b18] sm:text-2xl">
               Pantau visibilitas karya
             </h2>
           </div>
@@ -96,7 +96,7 @@ export default async function DashboardPage() {
               return (
                 <div
                   key={item.label}
-                  className="rounded-xl bg-slate-50 px-2 py-3 text-center sm:rounded-2xl sm:px-3"
+                  className="rounded-xl bg-[#f6f1ed] px-2 py-3 text-center sm:rounded-2xl sm:px-3"
                 >
                   <div className="flex items-center justify-center gap-1.5">
                     <span
@@ -104,11 +104,11 @@ export default async function DashboardPage() {
                     >
                       <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </span>
-                    <span className="truncate text-xs font-semibold text-slate-700 sm:text-sm">
+                    <span className="truncate text-xs font-semibold text-[#4b3f39] sm:text-sm">
                       {item.label}
                     </span>
                   </div>
-                  <p className="mt-1 font-display text-xl font-semibold text-slate-950 sm:text-2xl">
+                  <p className="mt-1 font-display text-xl font-semibold text-[#201b18] sm:text-2xl">
                     {item.value}
                   </p>
                 </div>
@@ -119,11 +119,11 @@ export default async function DashboardPage() {
 
         <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-600">Aksi profile</p>
-            <h2 className="font-display text-xl font-semibold text-slate-950 sm:text-2xl">
+            <p className="text-sm font-medium text-[#655952]">Aksi profile</p>
+            <h2 className="font-display text-xl font-semibold text-[#201b18] sm:text-2xl">
               Link profile creator
             </h2>
-            <p className="text-sm leading-6 text-slate-600">
+            <p className="text-sm leading-6 text-[#5f524b]">
               Cek halaman profil publikmu dengan cepat dan salin link untuk dibagikan
               ke calon client atau kolaborator.
             </p>
@@ -140,18 +140,18 @@ export default async function DashboardPage() {
       <section>
         <Card className="dashboard-clean-card border-border bg-surface">
           <div className="mb-4">
-            <h2 className="font-display text-xl font-semibold text-slate-900">
+            <h2 className="font-display text-xl font-semibold text-[#201b18]">
               {dictionary.myVideos}
             </h2>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-[#5f524b]">
               Kelola video public, semi-private, private, dan draft dari satu tempat.
             </p>
           </div>
 
           {myVideos.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-100 p-8 text-center">
-              <FolderOpen className="mx-auto h-8 w-8 text-slate-600" />
-              <p className="mt-3 font-medium text-slate-700">
+            <div className="rounded-xl border border-dashed border-[#d9cec7] bg-[#f6f1ed] p-8 text-center">
+              <FolderOpen className="mx-auto h-8 w-8 text-[#6a5d56]" />
+              <p className="mt-3 font-medium text-[#564a44]">
                 {dictionary.noVideosYet}
               </p>
               <Link href="/dashboard/videos/new" className="mt-4 inline-block">

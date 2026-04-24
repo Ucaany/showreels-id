@@ -94,7 +94,7 @@ export function LoginForm({
   const supabase = createClient();
   const oauthErrorMessage = getOauthErrorMessage(oauthError);
   const altActionClassName =
-    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#d7cec7] bg-white px-4 text-sm font-semibold text-[#201b18] shadow-sm transition hover:bg-[#fbf7f4] focus:outline-none focus:ring-2 focus:ring-[#e6c2b9] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -207,14 +207,14 @@ export function LoginForm({
         className="space-y-4"
       >
         {oauthErrorMessage ? (
-          <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          <p className="rounded-2xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
             {oauthErrorMessage}
           </p>
         ) : null}
 
         <div className="space-y-2">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-            <Mail className="h-4 w-4 text-brand-600" />
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
+            <Mail className="h-4 w-4 text-[#e24f3b]" />
             Email
           </label>
           <Input placeholder="nama@email.com" {...form.register("email")} />
@@ -225,13 +225,13 @@ export function LoginForm({
 
         <div className="space-y-2">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-              <LockKeyhole className="h-4 w-4 text-brand-600" />
+            <label className="flex items-center gap-2 text-sm font-medium text-[#4c413b]">
+              <LockKeyhole className="h-4 w-4 text-[#e24f3b]" />
               Password
             </label>
             <Link
               href="/auth/forgot-password"
-              className="text-xs font-semibold text-brand-600 hover:text-brand-700"
+              className="text-xs font-semibold text-[#e24f3b] hover:text-[#cf402d]"
             >
               Lupa password?
             </Link>
@@ -246,7 +246,7 @@ export function LoginForm({
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-slate-500 transition hover:text-slate-700"
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#7a6c64] transition hover:text-[#514640]"
               aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -258,7 +258,7 @@ export function LoginForm({
         </div>
 
         {authLock.lockMessage || submitError ? (
-          <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          <p className="rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
             {authLock.lockMessage || submitError}
           </p>
         ) : null}
@@ -275,12 +275,12 @@ export function LoginForm({
               : dictionary.login}
         </Button>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-slate-500">
-          <span className="h-px bg-slate-200" />
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-[#7f726a]">
+          <span className="h-px bg-[#e0d6d0]" />
           <span>atau</span>
-          <span className="h-px bg-slate-200" />
+          <span className="h-px bg-[#e0d6d0]" />
         </div>
-        <p className="pt-1 text-center text-sm text-slate-600">{dictionary.noAccount}</p>
+        <p className="pt-1 text-center text-sm text-[#625650]">{dictionary.noAccount}</p>
         <div className="space-y-2">
           {googleEnabled ? (
             <button
