@@ -71,6 +71,9 @@ export function SignupForm({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const authLock = useAuthAttemptLock();
   const supabase = createClient();
+  const authUnavailable = !supabase;
+  const authUnavailableMessage = "Layanan autentikasi belum siap. Coba refresh halaman.";
+  const visibleSubmitError = authUnavailable ? authUnavailableMessage : submitError;
   const altActionClassName =
     "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#d7cec7] bg-white px-4 text-sm font-semibold text-[#201b18] shadow-sm transition hover:bg-[#fbf7f4] focus:outline-none focus:ring-2 focus:ring-[#e6c2b9] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
@@ -113,6 +116,16 @@ export function SignupForm({
   };
 
   const onSubmit = async (values: SignupValues) => {
+    if (!supabase) {
+      setSubmitError(authUnavailableMessage);
+      void showFeedbackAlert({
+        title: "Layanan belum siap",
+        text: authUnavailableMessage,
+        icon: "warning",
+      });
+      return;
+    }
+
     if (authLock.isLocked) {
       setSubmitError(authLock.lockMessage);
       void showFeedbackAlert({
@@ -295,16 +308,16 @@ export function SignupForm({
           </p>
         </div>
 
-        {authLock.lockMessage || submitError ? (
+        {authLock.lockMessage || visibleSubmitError ? (
           <p className="rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {authLock.lockMessage || submitError}
+            {authLock.lockMessage || visibleSubmitError}
           </p>
         ) : null}
 
         <Button
           className="w-full"
           type="submit"
-          disabled={form.formState.isSubmitting || authLock.isLocked}
+          disabled={form.formState.isSubmitting || authLock.isLocked || authUnavailable}
         >
           {authLock.isLocked
             ? "Daftar terkunci"
@@ -323,8 +336,18 @@ export function SignupForm({
             <button
               type="button"
               className={altActionClassName}
-              disabled={authLock.isLocked}
+              disabled={authLock.isLocked || authUnavailable}
               onClick={async () => {
+                if (!supabase) {
+                  setSubmitError(authUnavailableMessage);
+                  void showFeedbackAlert({
+                    title: "Layanan belum siap",
+                    text: authUnavailableMessage,
+                    icon: "warning",
+                  });
+                  return;
+                }
+
                 if (authLock.isLocked) {
                   setSubmitError(authLock.lockMessage);
                   void showFeedbackAlert({

@@ -117,7 +117,7 @@ export function DashboardShell({
               variant="secondary"
               size="sm"
               onClick={async () => {
-                await supabase.auth.signOut();
+                await supabase?.auth.signOut();
                 window.location.replace("/");
               }}
             >
@@ -201,7 +201,7 @@ export function DashboardShell({
               size="sm"
               className="mt-4 w-full"
               onClick={async () => {
-                await supabase.auth.signOut();
+                await supabase?.auth.signOut();
                 window.location.replace("/");
               }}
             >

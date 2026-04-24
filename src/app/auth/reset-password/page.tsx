@@ -29,8 +29,11 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [ready, setReady] = useState(false);
   const supabase = createClient();
+  const authUnavailable = !supabase;
+  const authUnavailableMessage = "Layanan autentikasi belum siap. Coba refresh halaman.";
+  const [ready, setReady] = useState(authUnavailable);
+  const visibleError = error || (authUnavailable ? authUnavailableMessage : "");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -41,6 +44,10 @@ export default function ResetPasswordPage() {
   });
 
   useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
     let active = true;
 
     void supabase.auth.getUser().then(({ data }) => {
@@ -63,6 +70,11 @@ export default function ResetPasswordPage() {
   const onSubmit = form.handleSubmit(async ({ password }) => {
     setError("");
     setMessage("");
+
+    if (!supabase) {
+      setError(authUnavailableMessage);
+      return;
+    }
 
     const { error: updateError } = await supabase.auth.updateUser({
       password,
@@ -97,9 +109,9 @@ export default function ResetPasswordPage() {
           </p>
         ) : null}
 
-        {ready && error && !message ? (
+        {ready && visibleError && !message ? (
           <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
-            {error}
+            {visibleError}
           </p>
         ) : null}
 
@@ -134,16 +146,18 @@ export default function ResetPasswordPage() {
             {message}
           </p>
         ) : null}
-        {error && !message ? (
+        {visibleError && !message ? (
           <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {error}
+            {visibleError}
           </p>
         ) : null}
 
         <Button
           className="w-full"
           type="submit"
-          disabled={form.formState.isSubmitting || !ready || Boolean(error && !message)}
+          disabled={
+            form.formState.isSubmitting || !ready || Boolean(visibleError && !message)
+          }
         >
           {form.formState.isSubmitting ? "Menyimpan..." : "Simpan Password Baru"}
         </Button>

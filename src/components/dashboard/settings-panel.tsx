@@ -106,7 +106,7 @@ export function SettingsPanel({ username, profileVisibility }: SettingsPanelProp
       icon: "success",
       timer: 1000,
     });
-    await supabase.auth.signOut();
+    await supabase?.auth.signOut();
     window.location.replace("/");
   };
 
