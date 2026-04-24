@@ -194,8 +194,8 @@ select:-webkit-autofill:focus {
     mask-image: linear-gradient(
       to right,
       transparent 0%,
-      black 3%,
-      black 97%,
+      black 1.25rem,
+      black calc(100% - 1.25rem),
       transparent 100%
     );
   }
@@ -236,10 +236,17 @@ select:-webkit-autofill:focus {
   }
 }
 
+@media (max-width: 640px) {
+  :root {
+    --type-hero-title: clamp(2.36rem, 10.5vw, 3rem);
+    --type-hero-accent: clamp(2.6rem, 11.2vw, 3.25rem);
+  }
+}
+
 @media (max-width: 375px) {
   :root {
-    --type-hero-title: clamp(2.16rem, 12.8vw, 2.68rem);
-    --type-hero-accent: clamp(2.26rem, 13.2vw, 2.82rem);
+    --type-hero-title: clamp(2.38rem, 13.6vw, 2.9rem);
+    --type-hero-accent: clamp(2.62rem, 14.7vw, 3.2rem);
     --type-body-lg: 1.02rem;
     --type-body-base: 0.95rem;
     --type-helper: 0.82rem;
@@ -249,8 +256,8 @@ select:-webkit-autofill:focus {
 
 @media (max-width: 320px) {
   :root {
-    --type-hero-title: clamp(2.02rem, 12.4vw, 2.42rem);
-    --type-hero-accent: clamp(2.1rem, 12.7vw, 2.52rem);
+    --type-hero-title: clamp(2.2rem, 13.1vw, 2.62rem);
+    --type-hero-accent: clamp(2.42rem, 13.9vw, 2.9rem);
     --type-body-lg: 1rem;
     --type-body-base: 0.93rem;
     --type-helper: 0.8rem;
@@ -292,6 +299,27 @@ select:-webkit-autofill:focus {
     box-shadow: none;
     background: transparent;
     padding: 0;
+  }
+
+  .theme-marquee {
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 0.75rem,
+      black calc(100% - 0.75rem),
+      transparent 100%
+    );
+  }
+
+  .theme-marquee-track {
+    padding-inline: 0.75rem;
+  }
+
+  .theme-marquee-group {
+    gap: 0.75rem;
+    padding-right: 0.75rem;
   }
 }
 

@@ -16,6 +16,7 @@ import {
   Menu,
   PlayCircle,
   Plus,
+  UserRound,
   X,
 } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
@@ -37,31 +38,31 @@ const THEME_PREVIEWS = [
   {
     name: "Creator Clean",
     handle: "@creator.clean",
-    bg: "from-[#b2d8ff] to-[#538fff]",
+    bg: "from-[#b2d8ff]/72 to-[#538fff]/82",
     textTone: "dark" as const,
   },
   {
     name: "Portfolio Warm",
     handle: "@creator.warm",
-    bg: "from-[#d1ddff] to-[#758fff]",
+    bg: "from-[#d1ddff]/72 to-[#758fff]/82",
     textTone: "dark" as const,
   },
   {
     name: "Studio Focus",
     handle: "@creator.studio",
-    bg: "from-[#a9d9f5] to-[#3d7dc5]",
+    bg: "from-[#a9d9f5]/72 to-[#3d7dc5]/82",
     textTone: "dark" as const,
   },
   {
     name: "Editorial Soft",
     handle: "@creator.editorial",
-    bg: "from-[#e0eaff] to-[#9cb7ff]",
+    bg: "from-[#e0eaff]/74 to-[#9cb7ff]/82",
     textTone: "dark" as const,
   },
   {
     name: "Minimal Contrast",
     handle: "@creator.minimal",
-    bg: "from-[#44506f] to-[#1b2130]",
+    bg: "from-[#44506f]/82 to-[#1b2130]/88",
     textTone: "light" as const,
   },
 ];
@@ -145,6 +146,11 @@ function sanitizeUsernameInput(value: string) {
     .slice(0, 24);
 }
 
+function getThemeAvatarLetter(value: string) {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  return letters[createSeededHash(value) % letters.length] || "S";
+}
+
 function LandingFaqItem({
   question,
   answer,
@@ -199,47 +205,101 @@ function PhonePreviewMockup({
   name,
   handle,
   avatarUrl,
+  avatarText,
   rows,
   footer,
+  backgroundVideoSrc,
   avatarSize = "md",
   textTone = "dark",
   compact = false,
+  compactHeight = false,
 }: {
   className?: string;
   gradientClassName: string;
   name: string;
   handle: string;
   avatarUrl: string;
+  avatarText?: string;
   rows: PreviewPhoneCardRow[];
   footer?: string;
+  backgroundVideoSrc?: string;
   avatarSize?: "sm" | "md" | "lg";
   textTone?: "dark" | "light";
   compact?: boolean;
+  compactHeight?: boolean;
 }) {
   const isLightTone = textTone === "light";
+  const hasAvatarImage = avatarUrl.trim().length > 0;
 
   return (
     <div
       className={cn(
-        "rounded-[2.2rem] border-[6px] border-[#0f1520] bg-[#d9e7ff] p-2 shadow-sm ring-1 ring-[#d7e4ff]",
+        compact
+          ? "aspect-[9/16.35] rounded-[2.05rem]"
+          : compactHeight
+            ? "aspect-[9/15.75] rounded-[2.28rem]"
+            : "aspect-[9/17.15] rounded-[2.28rem]",
+        "border-[2.5px] border-[#101826]/45 bg-transparent p-[2px] shadow-none ring-1 ring-[#c9d9f7]/65",
         className
       )}
     >
       <div
         className={cn(
-          "relative overflow-hidden rounded-[1.7rem] bg-gradient-to-b px-3.5 pb-4 pt-4 sm:px-4",
-          compact ? "space-y-0.5" : "space-y-1",
+          "relative flex h-full flex-col overflow-hidden bg-gradient-to-b px-3 pb-3.5 pt-3 backdrop-blur-[1px] sm:px-3.5",
+          compact ? "rounded-[1.82rem]" : "rounded-[2.02rem]",
+          compact ? "space-y-0" : "space-y-1",
           gradientClassName
         )}
       >
-        <div className="mx-auto h-3.5 w-16 rounded-full bg-[#070d19]" />
-        <div className="mx-auto mt-3 w-fit rounded-full border-[3px] border-white/45 bg-white/90 p-1.5">
-          <AvatarBadge name={name} avatarUrl={avatarUrl} size={avatarSize} />
+        {backgroundVideoSrc ? (
+          <>
+            <video
+              className="absolute inset-0 h-full w-full object-cover opacity-70"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-hidden="true"
+            >
+              <source src={backgroundVideoSrc} type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(235,245,255,0.55),rgba(47,115,255,0.5))]" />
+          </>
+        ) : null}
+        <div className="relative z-10 mx-auto h-2.5 w-16 rounded-full bg-[#07111f]" />
+        <div
+          className={cn(
+            "relative z-10 mx-auto w-fit rounded-full border-2 border-white/55 bg-white/92",
+            compact ? "mt-2 p-1" : "mt-3 p-1.5"
+          )}
+        >
+          {avatarText ? (
+            <span
+              className={cn(
+                "inline-flex items-center justify-center rounded-full bg-[#eef5ff] font-extrabold text-[#2f66e4]",
+                compact ? "h-10 w-10 text-[0.9rem]" : "h-14 w-14 text-[1.15rem]"
+              )}
+            >
+              {avatarText}
+            </span>
+          ) : !hasAvatarImage ? (
+            <span
+              className={cn(
+                "inline-flex items-center justify-center rounded-full bg-[#eef5ff] text-[#2f66e4]",
+                compact ? "h-10 w-10" : "h-14 w-14"
+              )}
+            >
+              <UserRound className={cn(compact ? "h-5 w-5" : "h-7 w-7")} />
+            </span>
+          ) : (
+            <AvatarBadge name={name} avatarUrl={avatarUrl} size={avatarSize} />
+          )}
         </div>
         <p
           className={cn(
-            "mt-2.5 text-center font-bold tracking-[-0.02em]",
-            compact ? "text-[1.02rem] sm:text-[1.06rem]" : "text-[1.28rem] sm:text-[1.38rem]",
+            "relative z-10 mt-2.5 text-center font-bold tracking-[-0.02em]",
+            compact ? "text-[0.98rem] sm:text-[1.04rem]" : "text-[1.2rem] sm:text-[1.34rem]",
             isLightTone ? "text-white" : "text-[#141d2f]"
           )}
         >
@@ -247,15 +307,20 @@ function PhonePreviewMockup({
         </p>
         <p
           className={cn(
-            "text-center tracking-[-0.008em]",
-            compact ? "text-[0.76rem]" : "text-[0.88rem]",
+            "relative z-10 text-center tracking-[-0.008em]",
+            compact ? "text-[0.72rem]" : "text-[0.86rem]",
             isLightTone ? "text-white/80" : "text-[#3f5480]"
           )}
         >
           @{handle}
         </p>
 
-        <div className={cn(compact ? "mt-2 space-y-1.5" : "mt-3 space-y-2")}>
+        <div
+          className={cn(
+            "relative z-10 shrink-0",
+            compact ? "mt-2 space-y-1.5" : "mt-3 space-y-2"
+          )}
+        >
           {rows.map((row) => {
             const RowIcon = row.icon;
 
@@ -263,14 +328,14 @@ function PhonePreviewMockup({
               <div
                 key={`${row.label}-${row.status || "row"}`}
                 className={cn(
-                  "flex items-center justify-between rounded-2xl bg-white/95 text-[#1e2a40]",
-                  compact ? "min-h-9 px-2.5 py-1.5" : "min-h-[2.7rem] px-3 py-2"
+                  "flex items-center justify-between rounded-2xl border border-white/70 bg-white/96 text-[#1e2a40]",
+                  compact ? "min-h-8 px-2 py-1.5" : "min-h-[2.6rem] px-3 py-2"
                 )}
               >
                 <span
                   className={cn(
                     "inline-flex min-w-0 items-center gap-2 font-semibold tracking-[-0.01em]",
-                    compact ? "text-[0.76rem]" : "text-[0.84rem]"
+                    compact ? "text-[0.72rem]" : "text-[0.82rem]"
                   )}
                 >
                   <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e7efff] text-[#2f66e4]">
@@ -291,7 +356,7 @@ function PhonePreviewMockup({
         {footer ? (
           <p
             className={cn(
-              "mt-3 text-center text-[0.69rem] font-medium tracking-[0.08em]",
+              "relative z-10 mt-auto pt-3 text-center text-[0.69rem] font-medium tracking-[0.08em]",
               isLightTone ? "text-white/60" : "text-[#3d568d]/80"
             )}
           >
@@ -508,8 +573,8 @@ export function LandingPage({
         title: locale === "en" ? "Public creator profile" : "Profil creator publik",
         description:
           locale === "en"
-            ? "Show avatar, cover, bio, city, experience, contact, and skill tags on one share-ready page."
-            : "Tampilkan avatar, cover, bio, city, experience, kontak, dan skill tags dalam satu halaman publik.",
+            ? "Avatar, cover, bio, contact, and skills in one share-ready profile."
+            : "Avatar, cover, bio, kontak, dan skills dalam satu profil siap dibagikan.",
       },
       {
         title:
@@ -518,43 +583,25 @@ export function LandingPage({
             : "Halaman video publik per slug",
         description:
           locale === "en"
-            ? "Each published video gets its own page so clients can review title, details, and creator profile context."
-            : "Setiap video yang dipublikasi punya halaman sendiri agar klien mudah menilai judul, detail, dan profil creator.",
+            ? "Every published video has a clean public page for client review."
+            : "Setiap video punya halaman publik rapi untuk dibuka dan dinilai klien.",
       },
       {
         title:
           locale === "en"
             ? "Multi-source video support"
-            : "Dukungan sumber video lengkap",
+            : "Sumber video multi-platform",
         description:
           locale === "en"
-            ? "Use YouTube, Google Drive, Instagram, Facebook, or Vimeo as your video source."
-            : "Gunakan YouTube, Google Drive, Instagram, Facebook, atau Vimeo sebagai sumber video.",
+            ? "Use YouTube, Drive, Instagram, Facebook, or Vimeo as video sources."
+            : "Pakai YouTube, Drive, Instagram, Facebook, atau Vimeo sebagai sumber video.",
       },
       {
         title: locale === "en" ? "Visibility control" : "Kontrol visibilitas",
         description:
           locale === "en"
-            ? "Set status to draft, private, semi_private, or public based on who should see each profile or video."
-            : "Atur status draft, private, semi_private, atau public sesuai siapa yang boleh melihat profil atau video.",
-      },
-      {
-        title:
-          locale === "en"
-            ? "Custom links + social/contact"
-            : "Custom links + social/contact",
-        description:
-          locale === "en"
-            ? "Add priority links and social/contact links so collaboration requests can happen faster."
-            : "Tambahkan link prioritas dan social/contact links agar kerja sama lebih cepat masuk.",
-      },
-      {
-        title:
-          locale === "en" ? "Creator video management" : "Manajemen video creator",
-        description:
-          locale === "en"
-            ? "Manage title, description, thumbnail/media gallery, and output type directly from the dashboard."
-            : "Kelola judul, deskripsi, thumbnail/media gallery, dan output type langsung dari dashboard.",
+            ? "Choose draft, private, semi_private, or public for each content."
+            : "Atur draft, private, semi_private, atau public untuk tiap konten.",
       },
     ],
     [locale]
@@ -894,40 +941,40 @@ export function LandingPage({
                 </button>
               </div>
 
-              <div className="space-y-2 pb-4">
+              <div className="space-y-4 pb-7 pt-2">
                 <a
                   href="#features"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
+                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
                 >
                   {dictionary.landingNavFeatures}
                 </a>
                 <a
                   href="#themes"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
+                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
                 >
                   {dictionary.landingNavThemes}
                 </a>
                 <a
                   href="#pricing"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
+                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
                 >
                   {dictionary.landingNavPricing}
                 </a>
                 <a
                   href="#faq"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
+                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
                 >
                   {dictionary.landingNavFaq}
                 </a>
               </div>
 
-              <div className="border-t border-[#e2d9d3] pt-4">
+              <div className="border-t border-[#e2d9d3] pt-5">
                 <SitePreferences />
-                <div className="mt-4 space-y-2">
+                <div className="mt-6 space-y-4">
                   {currentUser ? (
                     <>
                       <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
@@ -969,20 +1016,20 @@ export function LandingPage({
         ) : null}
 
         <main className="pb-14 pt-[4.35rem] sm:pt-[4.6rem]">
-          <section className="mx-auto w-full max-w-[1160px] px-4 pb-12 pt-16 sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
+          <section className="mx-auto w-full max-w-[1160px] overflow-hidden px-4 pb-12 pt-16 sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
             <div className="grid items-center gap-9 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] lg:gap-11">
-              <div className="mx-auto max-w-[36rem] text-center lg:mx-0 lg:text-left">
-                <Badge className="rounded-full border border-[#c9dcff] bg-[#edf4ff]/68 px-3.5 py-1 text-eyebrow font-bold uppercase text-[#2a63de] shadow-sm backdrop-blur">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#2f73ff]">
-                      <span className="absolute inset-0 animate-ping rounded-full bg-[#2f73ff]/70" />
+              <div className="mx-auto min-w-0 max-w-[36rem] text-center lg:mx-0 lg:text-left">
+                <Badge className="max-w-[calc(100vw-2rem)] overflow-hidden rounded-full border border-black/20 bg-transparent px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] !text-[#111111] shadow-none backdrop-blur-[1px] sm:text-eyebrow">
+                  <span className="inline-flex max-w-full min-w-0 items-center gap-2">
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-black/70">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-black/20" />
                     </span>
-                    {dictionary.landingHeroBadge}
+                    <span className="min-w-0 truncate">{dictionary.landingHeroBadge}</span>
                   </span>
                 </Badge>
-                <h1 className="mt-4 font-display text-hero-display font-extrabold text-[#140f0d]">
+                <h1 className="mt-4 max-w-full overflow-visible pb-1 font-display text-hero-display font-semibold text-[#140f0d]">
                   {dictionary.landingHeroTitleLead}
-                  <span className={cn("mt-0.5 block text-hero-accent", accentTextClass)}>
+                  <span className={cn("mt-1 block pb-1 font-normal leading-[1.02] text-hero-accent", accentTextClass)}>
                     {dictionary.landingHeroTitleAccent}
                   </span>
                 </h1>
@@ -991,7 +1038,7 @@ export function LandingPage({
                 </p>
 
                 <form
-                  className="mx-auto mt-5 w-[min(100%,31rem)] rounded-[1.14rem] border border-[#d5dff2] bg-white p-[0.2rem] shadow-sm sm:mt-6 sm:rounded-[1.2rem] sm:p-1 lg:mx-0"
+                  className="mx-auto mt-5 w-[calc(100%-1rem)] max-w-[31rem] rounded-[1.14rem] border border-[#cbd9f2]/75 bg-white/45 p-[0.22rem] shadow-none backdrop-blur-md sm:mt-6 sm:rounded-[1.2rem] sm:p-1 lg:mx-0"
                   onSubmit={(event) => {
                     event.preventDefault();
                     if (usernameStatus !== "available") {
@@ -1003,10 +1050,10 @@ export function LandingPage({
                   }}
                 >
                   <div className="flex items-stretch gap-[3px]">
-                    <div className="flex min-w-0 flex-1 items-center gap-1 rounded-[0.9rem] bg-[#f4f8ff] px-2 sm:gap-1.5 sm:rounded-[0.95rem] sm:px-2.5">
+                    <div className="flex min-w-0 flex-1 items-center gap-1 rounded-[0.9rem] bg-white/55 px-2.5 sm:gap-1.5 sm:rounded-[0.95rem] sm:px-3">
                       <label
                         htmlFor="hero-username"
-                        className="shrink-0 text-[0.8rem] font-semibold tracking-[-0.006em] text-[#6f778f] sm:text-[0.89rem]"
+                        className="shrink-0 text-[0.8rem] font-semibold tracking-[-0.006em] text-[#1f2b44] sm:text-[0.89rem]"
                       >
                         showreels.id/
                       </label>
@@ -1023,7 +1070,7 @@ export function LandingPage({
                           setUsernameAsyncStatus(valid ? "checking" : "idle");
                         }}
                         placeholder={dictionary.landingHeroInputPlaceholder}
-                        className="h-[2.62rem] min-w-0 !w-auto flex-1 border-none bg-transparent px-0 text-[0.9rem] shadow-none focus:ring-0 sm:h-[2.85rem] sm:text-[0.96rem]"
+                        className="h-[2.62rem] min-w-0 !w-auto flex-1 border-none bg-transparent px-0 text-[0.9rem] font-medium text-[#111827] shadow-none placeholder:text-[#7d8ca6] focus:ring-0 sm:h-[2.85rem] sm:text-[0.96rem]"
                       />
                     </div>
                     <Button
@@ -1038,18 +1085,20 @@ export function LandingPage({
                 </form>
                 <div
                   className={cn(
-                    "mx-auto mt-2 inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[0.84rem] font-medium leading-tight sm:text-helper lg:mx-0",
+                    "mx-auto mt-2 inline-flex max-w-full items-center gap-2 overflow-hidden rounded-full border px-2.5 py-1 text-[0.84rem] font-medium leading-tight sm:text-helper lg:mx-0",
                     statusToneClass
                   )}
                 >
                   <span className={cn("h-2 w-2 rounded-full", statusDotClass)} />
-                  {statusLabel}
-                  {usernameStatus === "taken" && usernameSuggestion
-                    ? ` (${locale === "en" ? "Try" : "Coba"} @${usernameSuggestion})`
-                    : ""}
+                  <span className="min-w-0 truncate">
+                    {statusLabel}
+                    {usernameStatus === "taken" && usernameSuggestion
+                      ? ` (${locale === "en" ? "Try" : "Coba"} @${usernameSuggestion})`
+                      : ""}
+                  </span>
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5 text-helper font-medium text-[#453b35] lg:justify-start">
+                <div className="mx-auto mt-5 flex max-w-full flex-wrap items-center justify-center gap-x-2.5 gap-y-2 text-helper font-medium text-[#453b35] lg:mx-0 lg:justify-start">
                   <div className="flex -space-x-2.5">
                     {featuredCreators.slice(0, 4).map((creator) => (
                       <AvatarBadge
@@ -1060,12 +1109,12 @@ export function LandingPage({
                       />
                     ))}
                   </div>
-                  <p className="leading-none">
+                  <p className="min-w-0 leading-tight">
                     {creatorCount.toLocaleString(locale === "en" ? "en-US" : "id-ID")}{" "}
                     {locale === "en" ? "creators are active today" : "creator aktif hari ini"}
                   </p>
                   <span className="hidden h-1 w-1 rounded-full bg-[#c8bbb4] sm:inline-flex" />
-                  <p className="leading-none">
+                  <p className="min-w-0 leading-tight">
                     {videoCount.toLocaleString(locale === "en" ? "en-US" : "id-ID")}{" "}
                     {locale === "en" ? "videos published" : "video dipublish"}
                   </p>
@@ -1077,43 +1126,18 @@ export function LandingPage({
                 animate={prefersReducedMotion ? undefined : { y: [0, -10, 0] }}
                 transition={{ duration: 7.2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <div className="relative rounded-[2.35rem] border-[7px] border-[#12100e] bg-gradient-to-b from-[#a6d5ff] to-[#2f73ff] px-4 pb-5 pt-8 shadow-sm ring-1 ring-[#c7dbff] sm:px-5 sm:pb-6 sm:pt-9">
-                  <div className="absolute left-1/2 top-2.5 h-4 w-20 -translate-x-1/2 rounded-full bg-black" />
-                  <div className="mx-auto w-fit rounded-full border-[3px] border-white/40 bg-white/90 p-1.5">
-                    <AvatarBadge
-                      name={featuredCreators[0]?.name || "Creator Demo"}
-                      avatarUrl={featuredCreators[0]?.image || ""}
-                      size="lg"
-                    />
-                  </div>
-                  <p className="mt-3 text-center text-[1.38rem] font-semibold tracking-[-0.025em] text-[#1f1a17] sm:text-[1.5rem]">
-                    {featuredCreators[0]?.name || "Creator Demo"}
-                  </p>
-                  <p className="text-center text-[0.9rem] tracking-[-0.008em] text-[#5f4f48] sm:text-[0.95rem]">
-                    @{featuredCreators[0]?.username || "creator.demo"}
-                  </p>
-                  <div className="mt-4 space-y-2.5">
-                    {previewPlatformRows.map((item) => {
-                      const ItemIcon = item.icon;
-                      return (
-                      <div
-                        key={item.label}
-                        className="flex min-h-[2.8rem] items-center justify-between rounded-2xl bg-white/92 px-3.5 py-2.5 text-[#2a2320]"
-                      >
-                        <span className="inline-flex min-w-0 items-center gap-2 text-[0.84rem] font-semibold tracking-[-0.01em] sm:text-[0.9rem]">
-                          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#e8f0ff] text-[#2b63d4]">
-                            <ItemIcon className="h-3.5 w-3.5" />
-                          </span>
-                          <span className="truncate">{item.label}</span>
-                        </span>
-                        <span className="rounded-full bg-[#f2ebe7] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#7d6f67]">
-                          {item.status}
-                        </span>
-                      </div>
-                    );
-                    })}
-                  </div>
-                </div>
+                <PhonePreviewMockup
+                  className="mx-auto w-full max-w-[318px] sm:max-w-[336px]"
+                  gradientClassName="from-[#a6d5ff]/70 to-[#2f73ff]/84"
+                  name={featuredCreators[0]?.name || "Creator Demo"}
+                  handle={featuredCreators[0]?.username || "creator.demo"}
+                  avatarUrl={featuredCreators[0]?.image || ""}
+                  rows={previewPlatformRows}
+                  footer="showreels.id/creator.demo"
+                  backgroundVideoSrc={prefersReducedMotion ? undefined : "/hero-loop.mp4"}
+                  avatarSize="lg"
+                  compactHeight
+                />
 
                 <m.div
                   className="absolute -left-7 top-9 hidden rounded-xl border border-[#d5dff2] bg-white px-3.5 py-2.5 text-[0.84rem] shadow-sm lg:block"
@@ -1154,10 +1178,10 @@ export function LandingPage({
           </section>
 
           <section
-            className="mx-auto w-full max-w-[1160px] scroll-mt-28 px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20"
+            className="mx-auto w-full max-w-[1160px] scroll-mt-28 px-6 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20"
             id="features"
           >
-            <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.82fr)] lg:gap-11">
+            <div className="max-w-[760px]">
               <div>
                 <Badge className={sectionBadgeClass}>
                   {dictionary.landingFeaturesBadge}
@@ -1188,17 +1212,6 @@ export function LandingPage({
                   ))}
                 </div>
               </div>
-
-              <PhonePreviewMockup
-                className="mx-auto w-full max-w-[320px] sm:max-w-[340px]"
-                gradientClassName="from-[#c9ddff] to-[#658fff]"
-                name={featuredCreators[0]?.name || "Creator Demo"}
-                handle={featuredCreators[0]?.username || "creator.demo"}
-                avatarUrl={featuredCreators[0]?.image || ""}
-                rows={previewPlatformRows}
-                footer="showreels.id/creator.demo"
-                avatarSize="lg"
-              />
             </div>
           </section>
 
@@ -1217,7 +1230,7 @@ export function LandingPage({
                 </p>
               </div>
 
-                <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-5">
                   {PLATFORM_SOURCES.map((platform, index) => {
                     const PlatformIcon = platform.icon;
 
@@ -1229,32 +1242,26 @@ export function LandingPage({
                       viewport={{ once: true, amount: 0.4 }}
                       transition={{ duration: 0.25, delay: index * 0.05 }}
                       className={cn(
-                        "rounded-[1.2rem] border border-[#cfdcf2] bg-gradient-to-b p-4 text-center shadow-sm sm:p-[1.125rem]",
+                        "rounded-[1.2rem] border border-[#cfdcf2] bg-gradient-to-b p-3.5 text-center shadow-sm sm:p-[1.125rem]",
+                        index === PLATFORM_SOURCES.length - 1 && "col-span-2 mx-auto w-full max-w-[calc(50%-0.375rem)] lg:col-span-1 lg:max-w-none",
                         platform.bgClass
                       )}
                     >
-                      <div className="mx-auto inline-flex min-h-11 items-center justify-center gap-2.5">
+                      <div className="mx-auto inline-flex min-h-11 items-center justify-center">
                         <span
                           className={cn(
-                            "inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-white shadow-sm",
+                            "inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/80 bg-white shadow-sm",
                             platform.textClass
                           )}
+                          aria-label={platform.name}
                         >
-                          <PlatformIcon className="h-[18px] w-[18px] sm:h-[19px] sm:w-[19px]" />
-                        </span>
-                        <span
-                          className={cn(
-                            "inline-flex min-h-8 items-center rounded-full border border-white/80 bg-white/90 px-2.5 text-[0.69rem] font-bold uppercase tracking-[0.14em]",
-                            platform.textClass
-                          )}
-                        >
-                          {platform.helper}
+                          <PlatformIcon className="h-5 w-5" />
                         </span>
                       </div>
-                      <p className="mt-2.5 text-[1rem] font-bold tracking-[-0.012em] text-[#1c273f]">
+                      <p className="mt-2.5 text-[0.92rem] font-bold tracking-[-0.012em] text-[#1c273f] sm:text-[1rem]">
                         {platform.name}
                       </p>
-                      <p className="mt-1 text-helper text-[#4f5d76]">
+                      <p className="mt-1 text-[0.74rem] leading-snug text-[#4f5d76] sm:text-helper">
                         {locale === "en"
                           ? "Supported as video source"
                           : "Didukung sebagai sumber video"}
@@ -1291,11 +1298,12 @@ export function LandingPage({
                       {THEME_PREVIEWS.map((theme) => (
                         <PhonePreviewMockup
                           key={`${theme.name}-${loopIndex}`}
-                          className="w-[220px] flex-none sm:w-[240px]"
+                          className="w-[206px] flex-none sm:w-[224px]"
                           gradientClassName={theme.bg}
                           name={theme.name}
                           handle={theme.handle.replace("@", "")}
                           avatarUrl={featuredCreators[0]?.image || ""}
+                          avatarText={getThemeAvatarLetter(theme.name)}
                           rows={themeFeatureRows}
                           textTone={theme.textTone}
                           compact
@@ -1716,8 +1724,13 @@ export function LandingPage({
                         )}
                       </div>
 
-                      <div className="mt-3 flex min-w-0 flex-1 flex-col gap-2 sm:mt-0">
-                        <div className="flex items-start justify-between gap-2">
+                      <div
+                        className={cn(
+                          "flex min-w-0 flex-1 flex-col gap-2.5",
+                          latestVideosView === "list" ? "mt-3.5 sm:mt-0" : "mt-4"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2.5">
                           <p className="line-clamp-2 text-[0.92rem] font-semibold tracking-[-0.012em] text-[#1f1a17] sm:text-[0.97rem]">
                             {video.title}
                           </p>
@@ -1751,8 +1764,8 @@ export function LandingPage({
                           {video.description}
                         </p>
 
-                        <div className="mt-auto flex items-center justify-between border-t border-[#e7ddd7] pt-2 text-helper text-[#6f625a]">
-                          <div className="flex items-center gap-1.5">
+                        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-[#e7ddd7] pt-2.5 text-helper text-[#6f625a]">
+                          <div className="flex flex-wrap items-center gap-1.5">
                             <span className="rounded-full bg-[#f5eeea] px-2 py-0.5">
                               {video.durationLabel || "-"}
                             </span>
@@ -1803,7 +1816,7 @@ export function LandingPage({
               >
                 <PhonePreviewMockup
                   className="w-[220px]"
-                  gradientClassName="from-[#d2e4ff] to-[#6b95ff]"
+                  gradientClassName="from-[#d2e4ff]/72 to-[#6b95ff]/84"
                   name={locale === "en" ? "Public Profile" : "Profil Publik"}
                   handle={featuredCreators[0]?.username || "creator.demo"}
                   avatarUrl={featuredCreators[0]?.image || ""}
@@ -1824,7 +1837,7 @@ export function LandingPage({
               >
                 <PhonePreviewMockup
                   className="w-[220px]"
-                  gradientClassName="from-[#c9dbff] to-[#527fff]"
+                  gradientClassName="from-[#c9dbff]/72 to-[#527fff]/84"
                   name={locale === "en" ? "Video Sources" : "Sumber Video"}
                   handle={featuredCreators[0]?.username || "creator.demo"}
                   avatarUrl={featuredCreators[0]?.image || ""}
