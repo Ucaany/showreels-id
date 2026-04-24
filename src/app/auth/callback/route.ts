@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isCustomLinksSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { createClient } from "@/lib/supabase/server";
 import { syncUserProfile } from "@/server/auth-profile";
 
@@ -43,7 +44,12 @@ export async function GET(request: NextRequest) {
           getAuthSuccessUrl(destination, request.url)
         );
       } catch (syncError) {
-        console.error("Failed to sync profile during auth callback", syncError);
+        const mismatch = isCustomLinksSchemaError(syncError);
+        console.error("account_sync_failed", {
+          context: mismatch ? "db_schema_mismatch" : "callback_unexpected_error",
+          ...summarizeError(syncError),
+          userId: user.id,
+        });
         await supabase.auth.signOut();
 
         return NextResponse.redirect(

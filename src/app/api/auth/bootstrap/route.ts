@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCustomLinksSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { createClient } from "@/lib/supabase/server";
 import { syncUserProfile } from "@/server/auth-profile";
 
@@ -32,7 +33,12 @@ export async function POST() {
       redirectTo: profile.role === "owner" ? "/admin" : "/dashboard",
     });
   } catch (syncError) {
-    console.error("Failed to sync signed-in user profile", syncError);
+    const mismatch = isCustomLinksSchemaError(syncError);
+    console.error("account_sync_failed", {
+      context: mismatch ? "db_schema_mismatch" : "unexpected_error",
+      ...summarizeError(syncError),
+      userId: user.id,
+    });
     await supabase.auth.signOut();
 
     return NextResponse.json(

@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { profileSchema } from "@/lib/auth-schemas";
+import { isCustomLinksSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { normalizeImageCrop } from "@/lib/image-crop";
 import { sanitizeUsername } from "@/lib/username";
 import { isAdminEmail } from "@/server/admin-access";
@@ -95,42 +96,75 @@ export async function PATCH(request: Request) {
     zoom: parsed.data.coverCropZoom,
   });
 
-  const [updated] = await db
-    .update(users)
-    .set({
-      name: parsed.data.fullName.trim(),
-      username,
-      role: parsed.data.role.trim(),
-      image: normalizeAvatarUrl(parsed.data.avatarUrl?.trim() || "") || null,
-      coverImageUrl: normalizeAvatarUrl(parsed.data.coverImageUrl?.trim() || ""),
-      avatarCropX: avatarCrop.x,
-      avatarCropY: avatarCrop.y,
-      avatarCropZoom: avatarCrop.zoom,
-      coverCropX: coverCrop.x,
-      coverCropY: coverCrop.y,
-      coverCropZoom: coverCrop.zoom,
-      bio: parsed.data.bio.trim(),
-      experience: parsed.data.experience.trim(),
-      birthDate: parsed.data.birthDate.trim(),
-      city: parsed.data.city.trim(),
-      address: parsed.data.address.trim(),
-      contactEmail: parsed.data.contactEmail.trim().toLowerCase(),
-      phoneNumber: parsed.data.phoneNumber.trim(),
-      websiteUrl: parsed.data.websiteUrl,
-      instagramUrl: parsed.data.instagramUrl,
-      youtubeUrl: parsed.data.youtubeUrl,
-      facebookUrl: parsed.data.facebookUrl,
-      threadsUrl: parsed.data.threadsUrl,
-      customLinks: parsed.data.customLinks,
-      skills: parsed.data.skills,
-      usernameChangeCount,
-      usernameChangeWindowStart,
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, currentUser.id))
-    .returning();
+  const updatePayload = {
+    name: parsed.data.fullName.trim(),
+    username,
+    role: parsed.data.role.trim(),
+    image: normalizeAvatarUrl(parsed.data.avatarUrl?.trim() || "") || null,
+    coverImageUrl: normalizeAvatarUrl(parsed.data.coverImageUrl?.trim() || ""),
+    avatarCropX: avatarCrop.x,
+    avatarCropY: avatarCrop.y,
+    avatarCropZoom: avatarCrop.zoom,
+    coverCropX: coverCrop.x,
+    coverCropY: coverCrop.y,
+    coverCropZoom: coverCrop.zoom,
+    bio: parsed.data.bio.trim(),
+    experience: parsed.data.experience.trim(),
+    birthDate: parsed.data.birthDate.trim(),
+    city: parsed.data.city.trim(),
+    address: parsed.data.address.trim(),
+    contactEmail: parsed.data.contactEmail.trim().toLowerCase(),
+    phoneNumber: parsed.data.phoneNumber.trim(),
+    websiteUrl: parsed.data.websiteUrl,
+    instagramUrl: parsed.data.instagramUrl,
+    youtubeUrl: parsed.data.youtubeUrl,
+    facebookUrl: parsed.data.facebookUrl,
+    threadsUrl: parsed.data.threadsUrl,
+    skills: parsed.data.skills,
+    usernameChangeCount,
+    usernameChangeWindowStart,
+    updatedAt: new Date(),
+  };
 
-  return NextResponse.json({ user: updated });
+  try {
+    const [updated] = await db
+      .update(users)
+      .set({
+        ...updatePayload,
+        customLinks: parsed.data.customLinks,
+      })
+      .where(eq(users.id, currentUser.id))
+      .returning();
+
+    return NextResponse.json({ user: updated });
+  } catch (updateError) {
+    if (!isCustomLinksSchemaError(updateError)) {
+      console.error("profile_update_failed", {
+        context: "unexpected_error",
+        userId: currentUser.id,
+        ...summarizeError(updateError),
+      });
+      return NextResponse.json(
+        { error: "Gagal memperbarui profil. Coba lagi beberapa saat." },
+        { status: 500 }
+      );
+    }
+
+    console.warn("db_schema_mismatch profile update fallback without custom_links", {
+      userId: currentUser.id,
+      ...summarizeError(updateError),
+    });
+
+    await db
+      .update(users)
+      .set(updatePayload)
+      .where(eq(users.id, currentUser.id));
+
+    return NextResponse.json({
+      ok: true,
+      warning: "db_schema_mismatch_custom_links",
+    });
+  }
 }
 
 export async function DELETE() {
