@@ -31,13 +31,33 @@ import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
 const CREATOR_ROTATION_INTERVAL_MS = 5 * 60 * 1000;
 const CREATOR_DEVICE_SEED_KEY = "showreels-featured-creator-seed-v2";
 
-const THEME_PREVIEWS = [
-  { name: "Coral", handle: "@creator.coral", bg: "from-[#f39d7a] to-[#f35540]" },
-  { name: "Lavender", handle: "@creator.lavender", bg: "from-[#c5bde9] to-[#8b7bd6]" },
-  { name: "Ocean", handle: "@creator.ocean", bg: "from-[#95c7e8] to-[#3283ba]" },
-  { name: "Mono", handle: "@creator.mono", bg: "from-[#3f3f42] to-[#101011]" },
-  { name: "Rose", handle: "@creator.rose", bg: "from-[#efbfd0] to-[#dc6693]" },
-];
+const THEME_SURFACE_STYLES = [
+  {
+    bg: "from-[#f6af8d] via-[#f57f66] to-[#ef5f49]",
+    shell: "bg-[#fffaf7] border-[#f2d4c9] text-[#2f2420]",
+    chip: "bg-white/95 text-[#3b2f2a]",
+  },
+  {
+    bg: "from-[#d9d5f0] via-[#c1b7e8] to-[#8f82d8]",
+    shell: "bg-[#fcfbff] border-[#d8d0f1] text-[#2b2537]",
+    chip: "bg-white/92 text-[#322a4a]",
+  },
+  {
+    bg: "from-[#bae0f3] via-[#94cce8] to-[#4f9fce]",
+    shell: "bg-[#f7fcff] border-[#c4deec] text-[#1f3440]",
+    chip: "bg-white/94 text-[#234354]",
+  },
+  {
+    bg: "from-[#f4dbe0] via-[#eeb6c8] to-[#db6d95]",
+    shell: "bg-[#fff8fb] border-[#efd2de] text-[#3b2430]",
+    chip: "bg-white/95 text-[#4c2f3f]",
+  },
+  {
+    bg: "from-[#5b5d63] via-[#36383d] to-[#15161a]",
+    shell: "bg-[#1a1b1f] border-[#2c2e35] text-white",
+    chip: "bg-white/10 text-white",
+  },
+] as const;
 
 type UsernameStatus = "idle" | "checking" | "invalid" | "available" | "taken";
 
@@ -346,6 +366,75 @@ export function LandingPage({
     [locale]
   );
 
+  const themePresets = useMemo(() => {
+    const featureList = {
+      customLinks: dictionary.landingThemesFeatureCustomLinks,
+      socialLinks: dictionary.landingThemesFeatureSocialLinks,
+      videoHighlight: dictionary.landingThemesFeatureVideoHighlight,
+      contact: dictionary.landingThemesFeatureContact,
+      visibility: dictionary.landingThemesFeatureVisibility,
+      portfolio: dictionary.landingThemesFeaturePortfolio,
+    };
+
+    return [
+      {
+        name: dictionary.landingThemesPresetStarter,
+        handle: "@creator.starter",
+        featureHighlights: [
+          featureList.customLinks,
+          featureList.videoHighlight,
+          featureList.contact,
+          featureList.socialLinks,
+        ],
+        style: THEME_SURFACE_STYLES[0],
+      },
+      {
+        name: dictionary.landingThemesPresetCampaign,
+        handle: "@creator.campaign",
+        featureHighlights: [
+          featureList.videoHighlight,
+          featureList.customLinks,
+          featureList.socialLinks,
+          featureList.portfolio,
+        ],
+        style: THEME_SURFACE_STYLES[1],
+      },
+      {
+        name: dictionary.landingThemesPresetStudio,
+        handle: "@studio.reels",
+        featureHighlights: [
+          featureList.portfolio,
+          featureList.videoHighlight,
+          featureList.contact,
+          featureList.visibility,
+        ],
+        style: THEME_SURFACE_STYLES[2],
+      },
+      {
+        name: dictionary.landingThemesPresetPersonal,
+        handle: "@personal.brand",
+        featureHighlights: [
+          featureList.customLinks,
+          featureList.socialLinks,
+          featureList.visibility,
+          featureList.contact,
+        ],
+        style: THEME_SURFACE_STYLES[3],
+      },
+      {
+        name: dictionary.landingThemesPresetAgency,
+        handle: "@agency.showcase",
+        featureHighlights: [
+          featureList.portfolio,
+          featureList.customLinks,
+          featureList.contact,
+          featureList.visibility,
+        ],
+        style: THEME_SURFACE_STYLES[4],
+      },
+    ];
+  }, [dictionary]);
+
   const marketingTestimonials = useMemo(
     () => [
       {
@@ -603,25 +692,25 @@ export function LandingPage({
           </div>
         ) : null}
 
-        <main className="pb-16">
-          <section className="mx-auto w-full max-w-7xl px-4 pb-16 pt-16 sm:px-6 lg:pb-24 lg:pt-20">
-            <div className="grid items-center gap-14 lg:grid-cols-[1.1fr_0.9fr]">
+        <main className="pb-20">
+          <section className="mx-auto w-full max-w-7xl px-4 pb-14 pt-14 sm:px-6 sm:pb-16 sm:pt-16 lg:pb-20 lg:pt-20">
+            <div className="grid items-center gap-10 lg:grid-cols-[1.12fr_0.88fr] lg:gap-12">
               <div className="max-w-2xl">
                 <Badge className="rounded-full border border-[#ecd8d2] bg-[#f9e4df] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#eb5a44] shadow-none">
                   {dictionary.landingHeroBadge}
                 </Badge>
-                <h1 className="mt-5 text-5xl font-bold leading-[1.04] tracking-[-0.03em] text-[#140f0d] sm:text-6xl">
+                <h1 className="mt-5 text-[2.65rem] font-bold leading-[1.05] tracking-[-0.03em] text-[#140f0d] sm:text-[3.65rem] lg:text-[4.2rem]">
                   {dictionary.landingHeroTitleLead}
-                  <span className="mt-1 block font-accent text-[1.15em] text-[#eb5944]">
+                  <span className="mt-2 block font-accent text-[1.08em] leading-[0.95] text-[#eb5944]">
                     {dictionary.landingHeroTitleAccent}
                   </span>
                 </h1>
-                <p className="mt-6 text-xl leading-10 text-[#3f3733]">
+                <p className="mt-5 max-w-xl text-lg leading-8 text-[#3f3733] sm:text-[1.34rem] sm:leading-9">
                   {dictionary.landingHeroDescription}
                 </p>
 
                 <form
-                  className="mt-8 max-w-xl rounded-[1.25rem] border border-[#e1d5cf] bg-white p-2 shadow-[0_18px_34px_rgba(29,23,20,0.08)]"
+                  className="mt-8 max-w-xl rounded-[1.2rem] border border-[#e1d5cf] bg-white p-2.5 shadow-[0_18px_34px_rgba(29,23,20,0.08)]"
                   onSubmit={(event) => {
                     event.preventDefault();
                     if (usernameStatus !== "available") {
@@ -632,8 +721,8 @@ export function LandingPage({
                     );
                   }}
                 >
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <label className="inline-flex items-center px-3 text-lg text-[#84756d]">
+                  <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+                    <label className="inline-flex h-11 items-center rounded-xl bg-[#f8f4f1] px-3 text-sm font-medium text-[#84756d] sm:h-12 sm:text-base">
                       showreels.id/
                     </label>
                     <Input
@@ -648,11 +737,11 @@ export function LandingPage({
                         setUsernameAsyncStatus(valid ? "checking" : "idle");
                       }}
                       placeholder={dictionary.landingHeroInputPlaceholder}
-                      className="h-12 border-none bg-[#f8f4f1] text-[1.04rem] focus:ring-[#f0c3b8]"
+                      className="h-11 border-none bg-[#f8f4f1] text-[1rem] focus:ring-[#f0c3b8] sm:h-12 sm:text-[1.03rem]"
                     />
                     <Button
                       type="submit"
-                      className="h-12 min-w-[120px] bg-[#ef5f49] hover:bg-[#e34f39]"
+                      className="h-11 min-w-[120px] bg-[#ef5f49] px-5 hover:bg-[#e34f39] sm:h-12"
                       disabled={usernameStatus !== "available"}
                     >
                       {dictionary.landingHeroInputAction}
@@ -662,7 +751,7 @@ export function LandingPage({
                 </form>
                 <p
                   className={cn(
-                    "mt-3 text-sm",
+                    "mt-3 text-sm leading-relaxed",
                     usernameStatus === "available"
                       ? "text-emerald-700"
                       : usernameStatus === "taken" || usernameStatus === "invalid"
@@ -676,7 +765,7 @@ export function LandingPage({
                     : ""}
                 </p>
 
-                <div className="mt-7 flex flex-wrap items-center gap-3 text-sm text-[#453b35]">
+                <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-[#453b35]">
                   <div className="flex -space-x-2">
                     {featuredCreators.slice(0, 4).map((creator) => (
                       <AvatarBadge
@@ -699,7 +788,7 @@ export function LandingPage({
                 </div>
               </div>
 
-              <div className="relative mx-auto w-full max-w-[420px]">
+              <div className="relative mx-auto w-full max-w-[400px] lg:max-w-[420px]">
                 <div className="relative rounded-[2.7rem] border-[8px] border-[#12100e] bg-gradient-to-b from-[#f6ac86] to-[#f35642] px-5 pb-7 pt-10 shadow-[0_28px_56px_rgba(17,13,11,0.28)]">
                   <div className="absolute left-1/2 top-3 h-5 w-24 -translate-x-1/2 rounded-full bg-black" />
                   <div className="mx-auto h-20 w-20 rounded-full border-4 border-white/40 bg-white/85" />
@@ -730,11 +819,11 @@ export function LandingPage({
                   </div>
                 </div>
 
-                <div className="absolute -left-18 top-16 rounded-2xl border border-[#e7dbd4] bg-white px-4 py-3 text-sm shadow-lg">
+                <div className="absolute -left-[4.5rem] top-16 hidden rounded-2xl border border-[#e7dbd4] bg-white px-4 py-3 text-sm shadow-lg md:block">
                   <p className="text-[#80726a]">{locale === "en" ? "CTR this week" : "CTR minggu ini"}</p>
                   <p className="text-xl font-semibold text-[#1f1a17]">12.4%</p>
                 </div>
-                <div className="absolute -right-16 bottom-16 rounded-2xl border border-[#e7dbd4] bg-white px-4 py-3 text-sm shadow-lg">
+                <div className="absolute -right-16 bottom-16 hidden rounded-2xl border border-[#e7dbd4] bg-white px-4 py-3 text-sm shadow-lg md:block">
                   <p className="text-[#80726a]">Live</p>
                   <p className="text-xl font-semibold text-[#1f1a17]">+142 click</p>
                 </div>
@@ -742,25 +831,25 @@ export function LandingPage({
             </div>
           </section>
 
-          <section id="themes" className="border-y border-[#e3dbd6] bg-[#f7f4f1] py-16 sm:py-20">
+          <section id="themes" className="border-y border-[#e3dbd6] bg-[#f7f4f1] py-14 sm:py-16">
             <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
               <div className="text-center">
                 <Badge className="rounded-full border border-[#f1d4cd] bg-[#fde8e2] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#eb5a44] shadow-none">
                   {dictionary.landingThemesBadge}
                 </Badge>
-                <h2 className="mt-4 text-4xl font-bold tracking-[-0.03em] text-[#140f0d] sm:text-6xl">
+                <h2 className="mt-4 text-[2.1rem] font-bold leading-[1.08] tracking-[-0.03em] text-[#140f0d] sm:text-[3rem] lg:text-[3.55rem]">
                   {dictionary.landingThemesTitleLead}{" "}
                   <span className="font-accent text-[#eb5944]">
                     {dictionary.landingThemesTitleAccent}
                   </span>
                 </h2>
-                <p className="mx-auto mt-5 max-w-3xl text-xl leading-9 text-[#4c403a]">
+                <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-[#4c403a] sm:text-lg sm:leading-9">
                   {dictionary.landingThemesDescription}
                 </p>
               </div>
 
-              <div className="mt-10 flex snap-x gap-5 overflow-x-auto pb-3">
-                {THEME_PREVIEWS.map((theme, index) => (
+              <div className="mt-9 flex snap-x gap-4 overflow-x-auto pb-3 sm:gap-5">
+                {themePresets.map((theme, index) => (
                   <m.article
                     key={theme.name}
                     initial={{ opacity: 0, y: 10 }}
@@ -768,21 +857,26 @@ export function LandingPage({
                     viewport={{ once: true, amount: 0.45 }}
                     transition={{ delay: index * 0.05, duration: 0.22 }}
                     className={cn(
-                      "min-w-[235px] snap-start rounded-[2rem] border-[6px] border-[#12100e] bg-gradient-to-b p-4 pb-6 shadow-lg",
-                      theme.bg
+                      "min-w-[236px] snap-start rounded-[2rem] border-[6px] border-[#12100e] bg-gradient-to-b p-4 pb-6 shadow-lg sm:min-w-[255px]",
+                      theme.style.bg
                     )}
                   >
-                    <div className="mx-auto mb-5 h-3 w-20 rounded-full bg-black" />
-                    <div className="mx-auto h-14 w-14 rounded-full border-2 border-white/50 bg-white/90" />
-                    <p className="mt-2 text-center text-xl font-semibold text-[#1f1a17]">
-                      {theme.name}
-                    </p>
-                    <p className="mb-4 text-center text-xs text-[#6b5d56]">{theme.handle}</p>
-                    <div className="space-y-2">
-                      {["Instagram", "YouTube", "Podcast", "Contact"].map((item) => (
+                    <div className="mx-auto mb-4 h-3 w-20 rounded-full bg-black/90" />
+                    <div className={cn("rounded-[1.2rem] border px-3 py-3", theme.style.shell)}>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-70">
+                        {dictionary.landingThemesBadge}
+                      </p>
+                      <p className="mt-1 text-lg font-semibold leading-tight">{theme.name}</p>
+                      <p className="mt-1 text-xs opacity-75">{theme.handle}</p>
+                    </div>
+                    <div className="mt-4 space-y-2.5">
+                      {theme.featureHighlights.map((item) => (
                         <div
                           key={item}
-                          className="rounded-xl bg-white/92 px-3 py-2 text-sm font-medium text-[#1e1916]"
+                          className={cn(
+                            "rounded-xl border border-white/35 px-3 py-2 text-sm font-medium",
+                            theme.style.chip
+                          )}
                         >
                           {item}
                         </div>
@@ -792,7 +886,7 @@ export function LandingPage({
                 ))}
               </div>
 
-              <div className="mt-8 flex justify-center">
+              <div className="mt-7 flex justify-center">
                 <a href="#pricing">
                   <Button variant="secondary">
                     {dictionary.landingThemesCta}
@@ -803,19 +897,19 @@ export function LandingPage({
             </div>
           </section>
 
-          <section id="features" className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+          <section id="features" className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 sm:py-16">
             <div className="grid items-center gap-12 lg:grid-cols-[1fr_0.8fr]">
               <div>
                 <Badge className="rounded-full border border-[#f1d4cd] bg-[#fde8e2] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#eb5a44] shadow-none">
                   {dictionary.landingFeaturesBadge}
                 </Badge>
-                <h2 className="mt-4 text-4xl font-bold tracking-[-0.03em] text-[#140f0d] sm:text-6xl">
+                <h2 className="mt-4 text-[2.1rem] font-bold leading-[1.08] tracking-[-0.03em] text-[#140f0d] sm:text-[3rem] lg:text-[3.55rem]">
                   {dictionary.landingFeaturesTitleLead}{" "}
                   <span className="font-accent text-[#eb5944]">
                     {dictionary.landingFeaturesTitleAccent}
                   </span>
                 </h2>
-                <p className="mt-5 max-w-3xl text-xl leading-9 text-[#4c403a]">
+                <p className="mt-4 max-w-3xl text-base leading-8 text-[#4c403a] sm:text-lg sm:leading-9">
                   {dictionary.landingFeaturesDescription}
                 </p>
 
@@ -850,19 +944,19 @@ export function LandingPage({
             </div>
           </section>
 
-          <section id="pricing" className="border-y border-[#e3dbd6] bg-[#f7f4f1] py-16 sm:py-20">
+          <section id="pricing" className="border-y border-[#e3dbd6] bg-[#f7f4f1] py-14 sm:py-16">
             <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
               <div className="text-center">
                 <Badge className="rounded-full border border-[#f1d4cd] bg-[#fde8e2] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#eb5a44] shadow-none">
                   {dictionary.landingPricingBadge}
                 </Badge>
-                <h2 className="mt-4 text-4xl font-bold tracking-[-0.03em] text-[#140f0d] sm:text-6xl">
+                <h2 className="mt-4 text-[2.1rem] font-bold leading-[1.08] tracking-[-0.03em] text-[#140f0d] sm:text-[3rem] lg:text-[3.55rem]">
                   {dictionary.landingPricingTitleLead}{" "}
                   <span className="font-accent text-[#eb5944]">
                     {dictionary.landingPricingTitleAccent}
                   </span>
                 </h2>
-                <p className="mx-auto mt-5 max-w-3xl text-xl leading-9 text-[#4c403a]">
+                <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-[#4c403a] sm:text-lg sm:leading-9">
                   {dictionary.landingPricingDescription}
                 </p>
               </div>
@@ -966,18 +1060,18 @@ export function LandingPage({
             </div>
           </section>
 
-          <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+          <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 sm:py-16">
             <div className="text-center">
               <Badge className="rounded-full border border-[#f1d4cd] bg-[#fde8e2] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#eb5a44] shadow-none">
                 {dictionary.landingTestimonialsBadge}
               </Badge>
-              <h2 className="mt-4 text-4xl font-bold tracking-[-0.03em] text-[#140f0d] sm:text-6xl">
+              <h2 className="mt-4 text-[2.1rem] font-bold leading-[1.08] tracking-[-0.03em] text-[#140f0d] sm:text-[3rem] lg:text-[3.55rem]">
                 {dictionary.landingTestimonialsTitleLead}{" "}
                 <span className="font-accent text-[#eb5944]">
                   {dictionary.landingTestimonialsTitleAccent}
                 </span>
               </h2>
-              <p className="mx-auto mt-5 max-w-3xl text-xl leading-9 text-[#4c403a]">
+              <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-[#4c403a] sm:text-lg sm:leading-9">
                 {dictionary.landingTestimonialsDescription}
               </p>
             </div>
@@ -1019,19 +1113,19 @@ export function LandingPage({
             </div>
           </section>
 
-          <section id="faq" className="border-y border-[#e3dbd6] bg-[#f7f4f1] py-16 sm:py-20">
+          <section id="faq" className="border-y border-[#e3dbd6] bg-[#f7f4f1] py-14 sm:py-16">
             <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
               <div className="text-center">
                 <Badge className="rounded-full border border-[#f1d4cd] bg-[#fde8e2] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#eb5a44] shadow-none">
                   {dictionary.landingFaqBadge}
                 </Badge>
-                <h2 className="mt-4 text-4xl font-bold tracking-[-0.03em] text-[#140f0d] sm:text-6xl">
+                <h2 className="mt-4 text-[2.1rem] font-bold leading-[1.08] tracking-[-0.03em] text-[#140f0d] sm:text-[3rem] lg:text-[3.55rem]">
                   {dictionary.landingFaqTitleLead}{" "}
                   <span className="font-accent text-[#eb5944]">
                     {dictionary.landingFaqTitleAccent}
                   </span>
                 </h2>
-                <p className="mx-auto mt-5 max-w-3xl text-xl leading-9 text-[#4c403a]">
+                <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-[#4c403a] sm:text-lg sm:leading-9">
                   {dictionary.landingFaqDescription}
                 </p>
               </div>
@@ -1102,7 +1196,7 @@ export function LandingPage({
 
           <section className="mx-auto w-full max-w-7xl px-4 pb-14 sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-3xl font-bold tracking-[-0.02em] text-[#1b1512] sm:text-4xl">
+              <h2 className="text-[2rem] font-bold tracking-[-0.02em] text-[#1b1512] sm:text-[2.45rem]">
                 {locale === "en"
                   ? "Latest videos from creators"
                   : "Video terbaru dari creator"}
@@ -1168,7 +1262,7 @@ export function LandingPage({
                       key={video.id}
                       href={`/v/${video.publicSlug}`}
                       className={cn(
-                        "group surface-panel overflow-hidden rounded-[1.3rem] p-4 transition hover:-translate-y-0.5",
+                        "group surface-panel overflow-hidden rounded-[1.3rem] p-4 transition hover:-translate-y-0.5 sm:p-5",
                         latestVideosView === "list"
                           ? "grid gap-3 sm:grid-cols-[180px_minmax(0,1fr)]"
                           : "flex h-full flex-col"
@@ -1196,14 +1290,14 @@ export function LandingPage({
                         )}
                       </div>
 
-                      <div className="mt-3 flex min-w-0 flex-1 flex-col gap-2 sm:mt-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="line-clamp-2 text-sm font-semibold text-[#1f1a17] sm:text-base">
+                      <div className="mt-3 flex min-w-0 flex-1 flex-col gap-3 sm:mt-0">
+                        <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+                          <p className="line-clamp-2 min-w-0 flex-1 pr-1 text-[0.98rem] font-semibold leading-6 text-[#1f1a17] sm:text-base sm:leading-7">
                             {video.title}
                           </p>
                           <span
                             className={cn(
-                              "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:text-xs",
+                              "mt-0.5 inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:text-xs",
                               sourceMeta.className
                             )}
                           >
@@ -1211,7 +1305,7 @@ export function LandingPage({
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2.5">
+                        <div className="mt-0.5 flex items-center gap-2.5">
                           <AvatarBadge
                             name={video.author?.name || "Creator"}
                             avatarUrl={video.author?.image || ""}
@@ -1227,7 +1321,7 @@ export function LandingPage({
                           </div>
                         </div>
 
-                        <p className="line-clamp-2 text-sm leading-7 text-[#5f524b]">
+                        <p className="line-clamp-2 text-sm leading-6 text-[#5f524b]">
                           {video.description}
                         </p>
 

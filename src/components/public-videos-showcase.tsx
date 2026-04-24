@@ -208,8 +208,8 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
                         </div>
                       )}
                     </div>
-                    <div className="flex min-w-0 flex-col gap-2">
-                      <div className="flex min-w-0 items-start justify-between gap-2">
+                    <div className="flex min-w-0 flex-col gap-3">
+                      <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
                         <span
                           className={cn("inline-flex shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold", sourceMeta.className)}
                         >
@@ -217,10 +217,10 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
                         </span>
                         <span className="text-[11px] text-[#7a6d65]">{postedAtLabel}</span>
                       </div>
-                      <p className="line-clamp-2 min-w-0 text-sm font-semibold leading-snug text-[#201b18] sm:text-[15px]">
+                      <p className="line-clamp-2 min-w-0 text-sm font-semibold leading-6 text-[#201b18] sm:text-[15px]">
                         {video.title}
                       </p>
-                      <div className="flex min-w-0 items-center gap-2">
+                      <div className="mt-0.5 flex min-w-0 items-center gap-2.5">
                         <AvatarBadge
                           name={video.author?.name || "Creator"}
                           avatarUrl={video.author?.image || ""}
@@ -235,7 +235,7 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
                           </p>
                         </div>
                       </div>
-                      <p className="line-clamp-2 text-xs leading-relaxed text-[#5f524b] sm:text-sm">
+                      <p className="line-clamp-2 text-xs leading-6 text-[#5f524b] sm:text-sm">
                         {video.description}
                       </p>
                     </div>
@@ -249,42 +249,12 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
                   href={`/v/${video.publicSlug}`}
                   aria-label={`${locale === "en" ? "View video" : "Lihat video"} ${video.title}`}
                   className={cn(
-                    "group flex min-w-0 flex-col gap-4 rounded-[1.2rem] border border-[#ddd3cd] bg-white p-4 shadow-sm transition hover:border-[#e7c6bc] hover:shadow-[0_16px_30px_rgba(29,23,20,0.1)] sm:p-5",
+                    "group flex min-w-0 flex-col gap-3.5 rounded-[1.2rem] border border-[#ddd3cd] bg-white p-4 shadow-sm transition hover:border-[#e7c6bc] hover:shadow-[0_16px_30px_rgba(29,23,20,0.1)] sm:p-5",
                     viewMode === "grid"
-                      ? "h-full min-h-[392px]"
+                      ? "h-full min-h-[398px]"
                       : ""
                   )}
                 >
-                  <div className="flex min-w-0 items-start justify-between gap-3">
-                    <p className="line-clamp-2 min-w-0 text-base font-semibold text-[#201b18]">
-                      {video.title}
-                    </p>
-                    <span
-                      className={cn(
-                        "inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
-                        sourceMeta.className
-                      )}
-                    >
-                      {sourceMeta.label}
-                    </span>
-                  </div>
-
-                  <div className="flex min-w-0 items-center gap-2">
-                    <AvatarBadge
-                      name={video.author?.name || "Creator"}
-                      avatarUrl={video.author?.image || ""}
-                      size="sm"
-                    />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-[#4a3d37]">
-                        {video.author?.name || "Creator"}
-                      </p>
-                      <p className="truncate text-xs text-[#7a6d65]">
-                        @{video.author?.username || "creator"}
-                      </p>
-                    </div>
-                  </div>
-
                   <div className="overflow-hidden rounded-xl border border-[#eee5df] bg-[#f4eeea]">
                     {thumbnail ? (
                       <Image
@@ -308,9 +278,41 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
                     )}
                   </div>
 
-                  <p className="line-clamp-2 text-sm leading-relaxed text-[#5f524b]">
-                    {video.description}
-                  </p>
+                  <div className="flex min-w-0 flex-1 flex-col gap-3">
+                    <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+                      <p className="line-clamp-2 min-w-0 flex-1 pr-1 text-[1.02rem] font-semibold leading-6 text-[#201b18] sm:text-lg sm:leading-7">
+                        {video.title}
+                      </p>
+                      <span
+                        className={cn(
+                          "mt-0.5 inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
+                          sourceMeta.className
+                        )}
+                      >
+                        {sourceMeta.label}
+                      </span>
+                    </div>
+
+                    <div className="mt-0.5 flex min-w-0 items-center gap-2.5">
+                      <AvatarBadge
+                        name={video.author?.name || "Creator"}
+                        avatarUrl={video.author?.image || ""}
+                        size="sm"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-[#4a3d37]">
+                          {video.author?.name || "Creator"}
+                        </p>
+                        <p className="truncate text-xs text-[#7a6d65]">
+                          @{video.author?.username || "creator"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="line-clamp-2 text-sm leading-6 text-[#5f524b]">
+                      {video.description}
+                    </p>
+                  </div>
 
                   <div className="mt-auto flex items-center justify-between border-t border-[#e9dfda] pt-3 text-sm">
                     <span
