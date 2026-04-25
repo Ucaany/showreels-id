@@ -1,19 +1,13 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { sanitizeUsername } from "@/lib/username-rules";
 
-export function sanitizeUsername(input: string): string {
-  return input
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9_]/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 24);
-}
+export { USERNAME_REGEX, isReservedUsername, isUsernameFormatValid, sanitizeUsername } from "@/lib/username-rules";
 
 export async function ensureUniqueUsername(baseInput: string): Promise<string> {
   const base = sanitizeUsername(baseInput) || "creator";
+  const baseRoot = base.slice(0, 24) || "creator";
   let candidate = base;
   let counter = 1;
 
@@ -28,6 +22,6 @@ export async function ensureUniqueUsername(baseInput: string): Promise<string> {
     }
 
     counter += 1;
-    candidate = `${base}_${counter}`;
+    candidate = `${baseRoot}-${counter}`.slice(0, 30);
   }
 }

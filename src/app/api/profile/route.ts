@@ -6,7 +6,7 @@ import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { profileSchema } from "@/lib/auth-schemas";
 import { isCustomLinksSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { normalizeImageCrop } from "@/lib/image-crop";
-import { sanitizeUsername } from "@/lib/username";
+import { isReservedUsername, sanitizeUsername } from "@/lib/username-rules";
 import { isAdminEmail } from "@/server/admin-access";
 import { deleteUserAccount } from "@/server/auth-profile";
 import { getCurrentUser } from "@/server/current-user";
@@ -36,6 +36,13 @@ export async function PATCH(request: Request) {
   }
 
   const username = sanitizeUsername(parsed.data.username);
+  if (isReservedUsername(username)) {
+    return NextResponse.json(
+      { error: "Username tidak dapat digunakan." },
+      { status: 400 }
+    );
+  }
+
   const existingUser = await db.query.users.findFirst({
     where: and(eq(users.username, username), ne(users.id, currentUser.id)),
     columns: { id: true },

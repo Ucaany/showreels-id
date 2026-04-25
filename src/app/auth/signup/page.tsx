@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { SignupForm } from "@/components/auth/signup-form";
 import { isGoogleAuthEnabled } from "@/lib/auth-config";
 import { getCurrentUser } from "@/server/current-user";
-import { sanitizeUsername } from "@/lib/username";
+import { sanitizeUsername } from "@/lib/username-rules";
 
 export default async function SignupPage({
   searchParams,

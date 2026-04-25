@@ -113,6 +113,40 @@ export function SettingsPanel({ username, profileVisibility }: SettingsPanelProp
   return (
     <div className="space-y-5">
       <Card className="dashboard-clean-card border-[#ddd3cd] bg-white/90">
+        <h2 className="text-base font-semibold text-[#201b18]">Kategori Settings</h2>
+        <p className="mt-2 text-sm text-[#61554f]">
+          Buka kategori spesifik untuk pengaturan lanjutan akun creator.
+        </p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <Link href="/dashboard/settings/privacy">
+            <Button variant="secondary" size="sm" className="w-full">
+              Privasi Creator
+            </Button>
+          </Link>
+          <Link href="/dashboard/settings/link-profile">
+            <Button variant="secondary" size="sm" className="w-full">
+              Link Profile
+            </Button>
+          </Link>
+          <Link href="/dashboard/settings/payment">
+            <Button variant="secondary" size="sm" className="w-full">
+              Payment
+            </Button>
+          </Link>
+          <Link href="/dashboard/settings/whitelabel">
+            <Button variant="secondary" size="sm" className="w-full">
+              Whitelabel
+            </Button>
+          </Link>
+          <Link href="/dashboard/settings/security">
+            <Button variant="secondary" size="sm" className="w-full">
+              Security
+            </Button>
+          </Link>
+        </div>
+      </Card>
+
+      <Card className="dashboard-clean-card border-[#ddd3cd] bg-white/90">
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#e24f3b]">
             Settings

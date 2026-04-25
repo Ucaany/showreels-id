@@ -1,6 +1,15 @@
 import { z } from "zod";
 import { normalizeAvatarUrl } from "@/lib/avatar-utils";
-import { MAX_CUSTOM_LINKS, normalizeSocialUrl } from "@/lib/profile-utils";
+import {
+  MAX_CUSTOM_LINKS,
+  MAX_LINK_DESCRIPTION_LENGTH,
+  MAX_LINK_TITLE_LENGTH,
+  normalizeSocialUrl,
+} from "@/lib/profile-utils";
+import {
+  isReservedUsername,
+  USERNAME_REGEX,
+} from "@/lib/username-rules";
 import { normalizeAssetUrl, normalizeHttpUrl } from "@/lib/video-utils";
 
 export const profileVisibilitySchema = z.enum(["private", "semi_private", "public"]);
@@ -18,7 +27,11 @@ export const signUpSchema = z
     username: z
       .string()
       .min(3, "Username minimal 3 karakter.")
-      .regex(/^[a-zA-Z0-9_]+$/, "Gunakan huruf, angka, atau underscore."),
+      .max(30, "Username maksimal 30 karakter.")
+      .regex(USERNAME_REGEX, "Gunakan huruf kecil, angka, underscore, atau dash.")
+      .refine((value) => !isReservedUsername(value), {
+        message: "Username tidak dapat digunakan.",
+      }),
     email: z.email("Format email belum valid."),
     password: z.string().min(8, "Password minimal 8 karakter."),
     confirmPassword: z.string(),
@@ -43,7 +56,7 @@ const customLinkSchema = z.object({
     .string()
     .trim()
     .min(1, "Judul custom link wajib diisi.")
-    .max(32, "Judul custom link maksimal 32 karakter."),
+    .max(MAX_LINK_TITLE_LENGTH, `Judul custom link maksimal ${MAX_LINK_TITLE_LENGTH} karakter.`),
   url: z
     .string()
     .trim()
@@ -52,6 +65,24 @@ const customLinkSchema = z.object({
     .refine((value) => value.startsWith("http"), {
       message: "Masukkan URL custom link yang valid.",
     }),
+  description: z
+    .string()
+    .trim()
+    .max(
+      MAX_LINK_DESCRIPTION_LENGTH,
+      `Deskripsi custom link maksimal ${MAX_LINK_DESCRIPTION_LENGTH} karakter.`
+    )
+    .optional()
+    .default(""),
+  platform: z.string().trim().max(30, "Platform terlalu panjang.").optional().default(""),
+  badge: z.string().trim().max(30, "Badge terlalu panjang.").optional().default(""),
+  thumbnailUrl: z
+    .string()
+    .trim()
+    .max(300, "URL thumbnail terlalu panjang.")
+    .transform((value) => normalizeSocialUrl(value))
+    .optional()
+    .default(""),
   enabled: z.boolean().default(true),
   order: z.coerce.number().int().min(0).max(99).default(0),
 });
@@ -116,11 +147,15 @@ export const profileSchema = z.object({
   username: z
     .string()
     .min(3, "Username minimal 3 karakter.")
-    .regex(/^[a-zA-Z0-9_]+$/, "Gunakan huruf, angka, atau underscore."),
+    .max(30, "Username maksimal 30 karakter.")
+    .regex(USERNAME_REGEX, "Gunakan huruf kecil, angka, underscore, atau dash.")
+    .refine((value) => !isReservedUsername(value), {
+      message: "Username tidak dapat digunakan.",
+    }),
   role: z.string().trim().max(120, "Role terlalu panjang.").default(""),
   avatarUrl: avatarUrlSchema.default(""),
   coverImageUrl: avatarUrlSchema.default(""),
-  bio: z.string().max(500, "Bio maksimal 500 karakter."),
+  bio: z.string().max(240, "Bio maksimal 240 karakter."),
   experience: z.string().max(700, "Pengalaman maksimal 700 karakter."),
   birthDate: birthDateSchema.default(""),
   city: z.string().trim().max(120, "Kota terlalu panjang.").default(""),
@@ -159,7 +194,11 @@ export const passwordRecoveryVerifySchema = z.object({
     .string()
     .trim()
     .min(3, "Username minimal 3 karakter.")
-    .regex(/^[a-zA-Z0-9_]+$/, "Gunakan huruf, angka, atau underscore."),
+    .max(30, "Username maksimal 30 karakter.")
+    .regex(USERNAME_REGEX, "Gunakan huruf kecil, angka, underscore, atau dash.")
+    .refine((value) => !isReservedUsername(value), {
+      message: "Username tidak dapat digunakan.",
+    }),
   birthDate: z
     .string()
     .trim()

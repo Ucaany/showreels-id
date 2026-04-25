@@ -4,24 +4,24 @@ import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import type { Locale } from "@/lib/i18n";
 
-function getGreetingByHour(hour: number, locale: Locale) {
+function getGreetingByMinute(minuteOfDay: number, locale: Locale) {
   const isEnglish = locale === "en";
 
-  if (hour < 11) {
+  if (minuteOfDay >= 240 && minuteOfDay <= 659) {
     return {
       text: isEnglish ? "Good morning" : "Selamat pagi",
       emoji: "\u2600\uFE0F",
     };
   }
 
-  if (hour < 16) {
+  if (minuteOfDay >= 660 && minuteOfDay <= 899) {
     return {
       text: isEnglish ? "Good afternoon" : "Selamat siang",
       emoji: "\uD83C\uDF24\uFE0F",
     };
   }
 
-  if (hour < 19) {
+  if (minuteOfDay >= 900 && minuteOfDay <= 1079) {
     return {
       text: isEnglish ? "Good evening" : "Selamat sore",
       emoji: "\uD83C\uDF07",
@@ -43,28 +43,29 @@ export function DashboardGreetingCard({
   welcomeLabel: string;
   userName: string;
 }) {
-  const [hour, setHour] = useState<number | null>(null);
+  const [minuteOfDay, setMinuteOfDay] = useState<number | null>(null);
 
   useEffect(() => {
-    const syncHour = () => {
-      setHour(new Date().getHours());
+    const syncMinuteOfDay = () => {
+      const now = new Date();
+      setMinuteOfDay(now.getHours() * 60 + now.getMinutes());
     };
 
-    syncHour();
-    const timer = window.setInterval(syncHour, 60_000);
+    syncMinuteOfDay();
+    const timer = window.setInterval(syncMinuteOfDay, 60_000);
     return () => window.clearInterval(timer);
   }, []);
 
   const greeting = useMemo(() => {
-    if (hour === null) {
+    if (minuteOfDay === null) {
       return {
         text: locale === "en" ? "Welcome" : "Selamat datang",
         emoji: "\u2728",
       };
     }
 
-    return getGreetingByHour(hour, locale);
-  }, [hour, locale]);
+    return getGreetingByMinute(minuteOfDay, locale);
+  }, [minuteOfDay, locale]);
 
   return (
     <Card className="dashboard-clean-card overflow-hidden border-[#ddd3cd] bg-[radial-gradient(circle_at_top_left,_rgba(239,79,63,0.18),_transparent_38%),radial-gradient(circle_at_84%_8%,rgba(37,99,235,0.13),_transparent_30%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(247,243,239,0.96))] p-4 sm:p-5">
@@ -75,8 +76,8 @@ export function DashboardGreetingCard({
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#564b45] sm:text-base">
           {locale === "en"
-            ? "Manage your work, track video status, and keep your portfolio tidy from one focused workspace."
-            : "Kelola karya, pantau status video, dan rapikan portofolio dari satu ruang kerja yang lebih fokus."}
+            ? "Track your Showreels performance and manage your profile, links, and portfolio from one clean workspace."
+            : "Pantau performa halaman showreels kamu dan kelola semua konten dari satu tempat."}
         </p>
       </div>
     </Card>

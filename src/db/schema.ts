@@ -16,6 +16,10 @@ export interface DbCustomLink {
   id: string;
   title: string;
   url: string;
+  description?: string;
+  platform?: string;
+  badge?: string;
+  thumbnailUrl?: string;
   enabled: boolean;
   order: number;
 }
