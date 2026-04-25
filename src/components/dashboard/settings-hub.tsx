@@ -1,8 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { type ComponentType, useState } from "react";
 import Link from "next/link";
-import { ShieldAlert } from "lucide-react";
+import {
+  ChevronRight,
+  CreditCard,
+  KeyRound,
+  Link2,
+  Palette,
+  Shield,
+  ShieldAlert,
+  Sparkles,
+  Users,
+  Wrench,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
@@ -17,6 +28,58 @@ type SettingsHubEntitlements = {
   supportEnabled: boolean;
   themeSwitchComingSoon: boolean;
 };
+
+function SettingsNavCard({
+  href,
+  title,
+  description,
+  meta,
+  icon,
+  external = false,
+  emoji,
+  disabled = false,
+}: {
+  href?: string;
+  title: string;
+  description: string;
+  meta?: string;
+  icon: ComponentType<{ className?: string }>;
+  external?: boolean;
+  emoji?: string;
+  disabled?: boolean;
+}) {
+  const Icon = icon;
+  const body = (
+    <Card
+      className={`dashboard-clean-card h-full border-[#d6e2f7] bg-white p-4 transition ${
+        disabled ? "opacity-80" : "hover:-translate-y-0.5 hover:border-[#bfd6ff] hover:shadow-md"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#d5e1f4] bg-[#edf4ff] text-[#2f73ff]">
+          <Icon className="h-5 w-5" />
+        </span>
+        <ChevronRight className="h-4 w-4 text-[#7d95bd]" />
+      </div>
+      <h2 className="mt-3 text-base font-semibold text-[#1b2e4f]">
+        {emoji ? `${emoji} ` : ""}
+        {title}
+      </h2>
+      <p className="mt-1 text-sm leading-6 text-[#4f658f]">{description}</p>
+      {meta ? <p className="mt-2 text-xs font-medium text-[#5f78a3]">{meta}</p> : null}
+    </Card>
+  );
+
+  if (!href) {
+    return body;
+  }
+
+  return (
+    <Link href={href} target={external ? "_blank" : undefined} className="group block h-full">
+      {body}
+    </Link>
+  );
+}
 
 export function SettingsHub({
   username,
@@ -35,6 +98,8 @@ export function SettingsHub({
   const [deleteText, setDeleteText] = useState("");
   const [deleting, setDeleting] = useState(false);
   const planLabel = planName === "business" ? "Business" : planName === "pro" ? "Pro" : "Free";
+  const planBadge =
+    planName === "business" ? "💼 Business" : planName === "pro" ? "⚡ Pro" : "🆓 Free";
 
   const handleDeleteAccount = async () => {
     if (deleteText.trim().toUpperCase() !== "HAPUS AKUN") {
@@ -87,111 +152,120 @@ export function SettingsHub({
   };
 
   return (
-    <div className="space-y-5">
-      <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#e24f3b]">
+    <div className="space-y-6">
+      <Card className="dashboard-clean-card border-[#d6e2f7] bg-gradient-to-b from-[#ffffff] to-[#f6faff] p-4 sm:p-5">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#d5e1f4] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#2f73ff]">
+          <Sparkles className="h-3.5 w-3.5" />
           Settings
-        </p>
-        <h1 className="mt-1 font-display text-2xl font-semibold text-[#201b18] sm:text-3xl">
+        </div>
+        <h1 className="mt-2 font-display text-2xl font-semibold text-[#1b2e4f] sm:text-3xl">
           Pengaturan Akun Creator
         </h1>
-        <p className="mt-2 text-sm text-[#60534c]">
-          Atur privasi, slug profil, payment, whitelabel, keamanan, dan penghapusan akun.
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4f658f]">
+          Atur privasi, slug profil, payment, whitelabel, keamanan, dan penghapusan akun dalam
+          satu halaman yang rapi.
         </p>
-        <div className="mt-4 rounded-2xl border border-[#e3d8d2] bg-white p-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7d6f67]">
-            Plan Aktif
-          </p>
-          <p className="mt-1 text-lg font-semibold text-[#201b18]">{planLabel}</p>
-          <p className="mt-1 text-sm text-[#5e514a]">
-            Batas ubah username: {entitlements.usernameChangesPer30Days}x/30 hari | Analytics{" "}
-            {entitlements.analyticsMaxDays} hari
-          </p>
+        <div className="mt-4 grid gap-3 rounded-2xl border border-[#d6e2f7] bg-white p-3 sm:grid-cols-[auto_1fr] sm:items-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#cde0ff] bg-[#edf4ff] px-3 py-1 text-sm font-semibold text-[#1f58e3]">
+            <Wrench className="h-4 w-4" />
+            {planBadge}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-[#d6e2f7] bg-[#f8fbff] px-2.5 py-1 text-xs font-medium text-[#5b7198]">
+              Username: {entitlements.usernameChangesPer30Days}x / 30 hari
+            </span>
+            <span className="rounded-full border border-[#d6e2f7] bg-[#f8fbff] px-2.5 py-1 text-xs font-medium text-[#5b7198]">
+              Analytics: {entitlements.analyticsMaxDays} hari
+            </span>
+            <span className="rounded-full border border-[#d6e2f7] bg-[#f8fbff] px-2.5 py-1 text-xs font-medium text-[#5b7198]">
+              Plan aktif: {planLabel}
+            </span>
+          </div>
         </div>
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <Link href="/dashboard/settings/privacy">
-          <Card className="dashboard-clean-card border-border bg-surface p-4">
-            <h2 className="text-base font-semibold text-[#201b18]">Privasi Creator</h2>
-            <p className="mt-1 text-sm text-[#5e514a]">
-              Public profile, indexing, email publik, sosial, statistik publik.
-            </p>
-          </Card>
-        </Link>
-        <Link href="/dashboard/settings/link-profile">
-          <Card className="dashboard-clean-card border-border bg-surface p-4">
-            <h2 className="text-base font-semibold text-[#201b18]">Link Profile</h2>
-            <p className="mt-1 text-sm text-[#5e514a]">
-              Ganti slug, cek ketersediaan username, dan URL publik profile.
-            </p>
-            <p className="mt-2 text-xs text-[#6f625a]">{`/creator/${username}`}</p>
-          </Card>
-        </Link>
-        <Link href="/dashboard/settings/payment">
-          <Card className="dashboard-clean-card border-border bg-surface p-4">
-            <h2 className="text-base font-semibold text-[#201b18]">Payment</h2>
-            <p className="mt-1 text-sm text-[#5e514a]">
-              Billing email, payment method default, tax info, dan invoice note.
-            </p>
-          </Card>
-        </Link>
-        <Link href="/dashboard/settings/whitelabel">
-          <Card className="dashboard-clean-card border-border bg-surface p-4">
-            <h2 className="text-base font-semibold text-[#201b18]">Whitelabel</h2>
-            <p className="mt-1 text-sm text-[#5e514a]">
-              Aktifkan/nonaktifkan branding Showreels.id sesuai plan.
-            </p>
-            <p className="mt-2 text-xs text-[#6f625a]">
-              {entitlements.whitelabelEnabled ? "Business unlocked" : "Business only"}
-            </p>
-          </Card>
-        </Link>
-        <Card className="dashboard-clean-card border-border bg-surface p-4">
-          <h2 className="text-base font-semibold text-[#201b18]">Ganti Tema</h2>
-          <p className="mt-1 text-sm text-[#5e514a]">
-            {entitlements.themeSwitchComingSoon
+        <SettingsNavCard
+          href="/dashboard/settings/privacy"
+          icon={Shield}
+          emoji="🔒"
+          title="Privasi Creator"
+          description="Public profile, indexing, email publik, sosial, dan statistik publik."
+        />
+        <SettingsNavCard
+          href="/dashboard/settings/link-profile"
+          icon={Link2}
+          emoji="🔗"
+          title="Link Profile"
+          description="Ganti slug, cek ketersediaan username, dan URL publik profile."
+          meta={`/creator/${username}`}
+        />
+        <SettingsNavCard
+          href="/dashboard/settings/payment"
+          icon={CreditCard}
+          emoji="💳"
+          title="Payment"
+          description="Billing email, payment method default, tax info, dan invoice note."
+        />
+        <SettingsNavCard
+          href="/dashboard/settings/whitelabel"
+          icon={Palette}
+          emoji="🎨"
+          title="Whitelabel"
+          description="Aktifkan/nonaktifkan branding Showreels.id sesuai plan."
+          meta={entitlements.whitelabelEnabled ? "Business unlocked" : "Business only"}
+        />
+        <SettingsNavCard
+          icon={Sparkles}
+          emoji="✨"
+          title="Ganti Tema"
+          description={
+            entitlements.themeSwitchComingSoon
               ? "Fitur coming soon tersedia untuk plan Business."
-              : "Fitur coming soon khusus plan Business."}
-          </p>
-        </Card>
-        <Link href="/dashboard/settings/security">
-          <Card className="dashboard-clean-card border-border bg-surface p-4">
-            <h2 className="text-base font-semibold text-[#201b18]">Security</h2>
-            <p className="mt-1 text-sm text-[#5e514a]">
-              Ganti password akun dan logout dari semua perangkat.
-            </p>
-          </Card>
-        </Link>
+              : "Fitur coming soon khusus plan Business."
+          }
+          meta="Coming Soon"
+          disabled
+        />
+        <SettingsNavCard
+          href="/dashboard/settings/security"
+          icon={KeyRound}
+          emoji="🛡️"
+          title="Security"
+          description="Ganti password akun dan logout dari semua perangkat."
+        />
         {entitlements.creatorGroupEnabled && creatorGroupLink ? (
-          <Link href={creatorGroupLink} target="_blank">
-            <Card className="dashboard-clean-card border-border bg-surface p-4">
-              <h2 className="text-base font-semibold text-[#201b18]">Grup Khusus Creator</h2>
-              <p className="mt-1 text-sm text-[#5e514a]">
-                Akses komunitas creator untuk update produk dan networking.
-              </p>
-            </Card>
-          </Link>
+          <SettingsNavCard
+            href={creatorGroupLink}
+            external
+            icon={Users}
+            emoji="👥"
+            title="Grup Khusus Creator"
+            description="Akses komunitas creator untuk update produk dan networking."
+          />
         ) : null}
         {entitlements.supportEnabled && supportLink ? (
-          <Link href={supportLink} target="_blank">
-            <Card className="dashboard-clean-card border-border bg-surface p-4">
-              <h2 className="text-base font-semibold text-[#201b18]">Contact Support</h2>
-              <p className="mt-1 text-sm text-[#5e514a]">
-                Hubungi support tim Showreels untuk bantuan akun creator.
-              </p>
-            </Card>
-          </Link>
+          <SettingsNavCard
+            href={supportLink}
+            external
+            icon={Shield}
+            emoji="🤝"
+            title="Contact Support"
+            description="Hubungi support tim Showreels untuk bantuan akun creator."
+          />
         ) : null}
       </div>
 
-      <Card className="dashboard-clean-card border-rose-200 bg-rose-50 p-4 sm:p-5">
-        <div className="flex items-start gap-2">
-          <ShieldAlert className="mt-0.5 h-4 w-4 text-rose-600" />
+      <Card className="dashboard-clean-card border-rose-200 bg-gradient-to-b from-rose-50 to-white p-4 sm:p-5">
+        <div className="flex items-start gap-2.5">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-white text-rose-600">
+            <ShieldAlert className="h-4 w-4" />
+          </span>
           <div>
-            <h2 className="text-base font-semibold text-rose-700">Hapus Account</h2>
-            <p className="mt-1 text-sm text-rose-700">
-              Ketik <span className="font-semibold">HAPUS AKUN</span> untuk melanjutkan penghapusan permanen.
+            <h2 className="text-base font-semibold text-rose-700">🚨 Hapus Akun</h2>
+            <p className="mt-1 text-sm leading-6 text-rose-700">
+              Ketik <span className="font-semibold">HAPUS AKUN</span> untuk melanjutkan
+              penghapusan permanen.
             </p>
           </div>
         </div>
@@ -202,8 +276,13 @@ export function SettingsHub({
             placeholder="Ketik HAPUS AKUN"
             className="h-11 w-full rounded-xl border border-rose-200 bg-white px-3 text-sm text-[#201b18] outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-200"
           />
-          <Button variant="danger" onClick={handleDeleteAccount} disabled={deleting} className="w-full sm:w-auto">
-            {deleting ? "Menghapus..." : "Hapus Account"}
+          <Button
+            variant="danger"
+            onClick={handleDeleteAccount}
+            disabled={deleting}
+            className="w-full sm:w-auto"
+          >
+            {deleting ? "Menghapus..." : "Hapus Akun"}
           </Button>
         </div>
       </Card>
