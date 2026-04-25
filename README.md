@@ -130,12 +130,12 @@ Vercel environment variable docs: [vercel.com/docs/environment-variables](https:
 - The app builds with `next build --webpack` because this machine falls back to the WASM SWC path on Windows.
 - If `npm run dev` is already using a port, start another one with `npm run dev -- --port 3003`.
 
-## Billing (Midtrans Core API QRIS)
+## Billing (Midtrans Snap Checkout)
 
-- Billing upgrade now uses Midtrans Core API (`/v2/charge`) with `payment_type: qris`.
+- Billing upgrade now uses Midtrans Snap API (`/snap/v1/transactions`) untuk checkout kartu + QRIS.
 - Payment page route: `/dashboard/payment?plan=pro|business`.
 - Webhook endpoint: `/api/billing/midtrans/webhook`.
 - Required env:
   - `MIDTRANS_SERVER_KEY`
-  - `MIDTRANS_CLIENT_KEY` (reserved for frontend/public usage when needed)
+  - `MIDTRANS_CLIENT_KEY` (untuk popup Snap.js; tanpa ini fallback redirect tetap bisa)
   - `MIDTRANS_IS_PRODUCTION=false` for sandbox, `true` for production

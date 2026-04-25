@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 import { PaymentPagePanel } from "@/components/dashboard/payment-page-panel";
-import { getPlanPrice, isMidtransConfigured } from "@/server/billing";
+import {
+  getMidtransClientKey,
+  getMidtransRuntimeConfig,
+  getPlanPrice,
+} from "@/server/billing";
 
 type SearchParams = {
   plan?: string;
@@ -21,13 +25,20 @@ export default async function DashboardPaymentPage({
 
   const planLabel = selectedPlan === "business" ? "Business" : "Pro";
   const amount = getPlanPrice(selectedPlan, "monthly");
+  const midtransRuntime = getMidtransRuntimeConfig();
 
   return (
     <PaymentPagePanel
       selectedPlan={selectedPlan}
       planLabel={planLabel}
       amount={amount}
-      midtransReady={isMidtransConfigured()}
+      midtransConfig={{
+        mode: midtransRuntime.mode,
+        serverKeySet: midtransRuntime.serverKeySet,
+        clientKeySet: midtransRuntime.clientKeySet,
+        snapScriptUrl: midtransRuntime.snapScriptUrl,
+        clientKey: getMidtransClientKey(),
+      }}
     />
   );
 }

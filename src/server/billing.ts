@@ -1,7 +1,12 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions, billingTransactions } from "@/db/schema";
-import { getPlanFeatureBullets } from "@/lib/plan-feature-matrix";
+import { hasPlaceholderEnvValue, normalizeEnvValue } from "@/lib/env-utils";
+import {
+  getPlanFeatureBullets,
+  getPlanFeatureChecklist,
+  type PlanFeatureChecklistItem,
+} from "@/lib/plan-feature-matrix";
 import { ensureBillingSchema } from "@/server/billing-schema-bootstrap";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
 
@@ -14,6 +19,7 @@ type PlanConfig = {
   monthly: number;
   yearlyLegacy: number;
   benefits: string[];
+  benefitItems: PlanFeatureChecklistItem[];
 };
 
 type MidtransAction = {
@@ -41,6 +47,25 @@ type MidtransChargePayload = {
   fraud_status?: string;
 };
 
+type MidtransSnapPayload = {
+  token?: string;
+  redirect_url?: string;
+  currency?: string;
+  status_code?: string;
+  status_message?: string;
+  error_messages?: string[];
+};
+
+export type MidtransRuntimeConfig = {
+  mode: "sandbox" | "production";
+  isProduction: boolean;
+  serverKeySet: boolean;
+  clientKeySet: boolean;
+  coreApiBaseUrl: string;
+  snapApiBaseUrl: string;
+  snapScriptUrl: string;
+};
+
 type BillingTransactionRow = typeof billingTransactions.$inferSelect;
 
 export type BillingPaymentSummary = {
@@ -49,6 +74,9 @@ export type BillingPaymentSummary = {
   currency: string;
   status: BillingTransactionRow["status"];
   transactionStatus: string;
+  paymentMethod: string;
+  snapToken: string | null;
+  redirectUrl: string | null;
   expiresAt: string | null;
   qrUrl: string | null;
   qrActions: MidtransAction[];
@@ -61,6 +89,7 @@ const PLAN_CATALOG: Record<BillingPlanName, PlanConfig> = {
     monthly: 0,
     yearlyLegacy: 0,
     benefits: getPlanFeatureBullets("free", "id"),
+    benefitItems: getPlanFeatureChecklist("free", "id"),
   },
   pro: {
     name: "pro",
@@ -68,6 +97,7 @@ const PLAN_CATALOG: Record<BillingPlanName, PlanConfig> = {
     monthly: 49000,
     yearlyLegacy: 490000,
     benefits: getPlanFeatureBullets("pro", "id"),
+    benefitItems: getPlanFeatureChecklist("pro", "id"),
   },
   business: {
     name: "business",
@@ -75,17 +105,44 @@ const PLAN_CATALOG: Record<BillingPlanName, PlanConfig> = {
     monthly: 149000,
     yearlyLegacy: 1490000,
     benefits: getPlanFeatureBullets("business", "id"),
+    benefitItems: getPlanFeatureChecklist("business", "id"),
   },
 };
 
-function isMidtransProduction() {
-  return (process.env.MIDTRANS_IS_PRODUCTION || "").toLowerCase() === "true";
+function getMidtransServerKey() {
+  return normalizeEnvValue(process.env.MIDTRANS_SERVER_KEY);
+}
+
+export function getMidtransClientKey() {
+  return normalizeEnvValue(process.env.MIDTRANS_CLIENT_KEY);
+}
+
+export function getMidtransRuntimeConfig(): MidtransRuntimeConfig {
+  const isProduction =
+    normalizeEnvValue(process.env.MIDTRANS_IS_PRODUCTION).toLowerCase() === "true";
+  const mode = isProduction ? "production" : "sandbox";
+  const serverKey = getMidtransServerKey();
+  const clientKey = getMidtransClientKey();
+
+  return {
+    mode,
+    isProduction,
+    serverKeySet: !hasPlaceholderEnvValue(serverKey),
+    clientKeySet: !hasPlaceholderEnvValue(clientKey),
+    coreApiBaseUrl: isProduction
+      ? "https://api.midtrans.com"
+      : "https://api.sandbox.midtrans.com",
+    snapApiBaseUrl: isProduction
+      ? "https://app.midtrans.com"
+      : "https://app.sandbox.midtrans.com",
+    snapScriptUrl: isProduction
+      ? "https://app.midtrans.com/snap/snap.js"
+      : "https://app.sandbox.midtrans.com/snap/snap.js",
+  };
 }
 
 export function getMidtransCoreApiBaseUrl() {
-  return isMidtransProduction()
-    ? "https://api.midtrans.com"
-    : "https://api.sandbox.midtrans.com";
+  return getMidtransRuntimeConfig().coreApiBaseUrl;
 }
 
 function getMidtransAuthorizationHeader(serverKey: string) {
@@ -143,7 +200,7 @@ function getQrisActionUrl(
 }
 
 export function isMidtransConfigured() {
-  return Boolean((process.env.MIDTRANS_SERVER_KEY || "").trim());
+  return getMidtransRuntimeConfig().serverKeySet;
 }
 
 export function getPlanCatalog() {
@@ -159,13 +216,32 @@ export function toBillingPaymentSummary(
   transaction: BillingTransactionRow
 ): BillingPaymentSummary {
   const payload = (transaction.rawPayload || {}) as Record<string, unknown>;
+  const webhook =
+    payload.webhook && typeof payload.webhook === "object"
+      ? (payload.webhook as Record<string, unknown>)
+      : null;
   const actions = toMidtransActions(payload);
+  const transactionStatusFromWebhook =
+    webhook && typeof webhook.transaction_status === "string"
+      ? webhook.transaction_status
+      : null;
+  const paymentMethodFromWebhook =
+    webhook && typeof webhook.payment_type === "string" ? webhook.payment_type : null;
+  const tokenFromPayload = typeof payload.token === "string" ? payload.token : null;
+  const redirectFromPayload =
+    typeof payload.redirect_url === "string" ? payload.redirect_url : null;
+  const redirectUrl = transaction.redirectUrl || redirectFromPayload || null;
+  const paymentMethod =
+    transaction.paymentMethod || paymentMethodFromWebhook || transaction.provider;
   const transactionStatus =
     typeof payload.transaction_status === "string"
       ? payload.transaction_status
-      : transaction.status;
+      : transactionStatusFromWebhook || transaction.status;
   const expiresAt =
     typeof payload.expiry_time === "string" ? payload.expiry_time : null;
+  const isQrisLikePayment =
+    paymentMethod === "qris" ||
+    actions.some((action) => action.name === "generate-qr-code");
 
   return {
     invoiceId: transaction.invoiceId,
@@ -173,9 +249,12 @@ export function toBillingPaymentSummary(
     currency: transaction.currency,
     status: transaction.status,
     transactionStatus,
+    paymentMethod,
+    snapToken: transaction.snapToken || tokenFromPayload,
+    redirectUrl,
     expiresAt,
     qrActions: actions,
-    qrUrl: getQrisActionUrl(actions, transaction.redirectUrl),
+    qrUrl: isQrisLikePayment ? getQrisActionUrl(actions, redirectUrl) : null,
   };
 }
 
@@ -357,12 +436,13 @@ export async function createUpgradeTransaction(input: {
         ok: false as const,
         code: "midtrans_not_configured",
         message:
-          "Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di environment.",
+          "Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY di environment.",
       };
     }
 
-    const serverKey = (process.env.MIDTRANS_SERVER_KEY || "").trim();
-    const response = await fetch(`${getMidtransCoreApiBaseUrl()}/v2/charge`, {
+    const runtime = getMidtransRuntimeConfig();
+    const serverKey = getMidtransServerKey();
+    const response = await fetch(`${runtime.snapApiBaseUrl}/snap/v1/transactions`, {
       method: "POST",
       headers: {
         Authorization: getMidtransAuthorizationHeader(serverKey),
@@ -370,7 +450,6 @@ export async function createUpgradeTransaction(input: {
         Accept: "application/json",
       },
       body: JSON.stringify({
-        payment_type: "qris",
         transaction_details: {
           order_id: invoiceId,
           gross_amount: amount,
@@ -387,9 +466,10 @@ export async function createUpgradeTransaction(input: {
           first_name: input.fullName || "Creator",
           email: input.email,
         },
-        qris: {
-          acquirer: "gopay",
+        credit_card: {
+          secure: true,
         },
+        enabled_payments: ["credit_card", "qris"],
         custom_field1: input.targetPlan,
         custom_field2: input.billingCycle,
         custom_field3: input.userId,
@@ -397,10 +477,10 @@ export async function createUpgradeTransaction(input: {
     });
 
     const payload = (await response.json().catch(() => null)) as
-      | MidtransChargePayload
+      | MidtransSnapPayload
       | null;
 
-    if (!response.ok || !payload?.order_id) {
+    if (!response.ok || !payload?.token || !payload?.redirect_url) {
       return {
         ok: false as const,
         code: "midtrans_error",
@@ -412,7 +492,6 @@ export async function createUpgradeTransaction(input: {
     }
 
     const payloadRecord = payload as unknown as Record<string, unknown>;
-    const qrisUrl = getQrisActionUrl(toMidtransActions(payloadRecord), "");
 
     const [transaction] = await db
       .insert(billingTransactions)
@@ -426,10 +505,10 @@ export async function createUpgradeTransaction(input: {
         currency: payload.currency || "IDR",
         status: "pending",
         provider: "midtrans",
-        providerReference: payload.transaction_id || invoiceId,
-        snapToken: "",
-        redirectUrl: qrisUrl || "",
-        paymentMethod: payload.payment_type || "qris",
+        providerReference: invoiceId,
+        snapToken: payload.token,
+        redirectUrl: payload.redirect_url,
+        paymentMethod: "snap",
         description: `Upgrade ke ${PLAN_CATALOG[input.targetPlan].label}`,
         rawPayload: payloadRecord,
       })

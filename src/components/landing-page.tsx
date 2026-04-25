@@ -27,7 +27,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/cn";
-import { getPlanFeatureBullets } from "@/lib/plan-feature-matrix";
+import {
+  getPlanFeatureChecklist,
+  getPlanFeatureComingSoonLabel,
+} from "@/lib/plan-feature-matrix";
 import { createClient } from "@/lib/supabase/client";
 import { getThumbnailCandidates } from "@/lib/video-utils";
 import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
@@ -752,6 +755,7 @@ export function LandingPage({
   );
 
   const featureLocale = locale === "en" ? "en" : "id";
+  const comingSoonLabel = getPlanFeatureComingSoonLabel(featureLocale);
 
   const pricingPlans = useMemo(
     () => [
@@ -760,7 +764,7 @@ export function LandingPage({
         name: "Free",
         monthlyPrice: "Rp0",
         subtitle: dictionary.landingPricingFree,
-        points: getPlanFeatureBullets("free", featureLocale),
+        points: getPlanFeatureChecklist("free", featureLocale),
         featured: false,
       },
       {
@@ -768,7 +772,7 @@ export function LandingPage({
         name: "Pro",
         monthlyPrice: "Rp49.000",
         subtitle: dictionary.landingPricingPro,
-        points: getPlanFeatureBullets("pro", featureLocale),
+        points: getPlanFeatureChecklist("pro", featureLocale),
         featured: true,
       },
       {
@@ -776,7 +780,7 @@ export function LandingPage({
         name: "Business",
         monthlyPrice: "Rp149.000",
         subtitle: dictionary.landingPricingTeam,
-        points: getPlanFeatureBullets("business", featureLocale),
+        points: getPlanFeatureChecklist("business", featureLocale),
         featured: false,
       },
     ],
@@ -1373,22 +1377,63 @@ export function LandingPage({
                     </p>
 
                     <ul className="mt-4 flex-1 space-y-3">
-                      {plan.points.map((point) => (
-                        <li
-                          key={point}
-                          className="flex items-center gap-2 text-[0.88rem] tracking-[-0.008em]"
-                        >
-                          <span
-                            className={cn(
-                              "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
-                              plan.featured ? "bg-white/20" : "bg-[#e8f1ff] text-[#2f66e4]"
-                            )}
+                      {plan.points.map((point) => {
+                        const isUnavailable = point.status === "unavailable";
+                        const isComingSoon = point.status === "coming_soon";
+
+                        return (
+                          <li
+                            key={`${plan.id}-${point.id}`}
+                            className="flex items-start gap-2 text-[0.88rem] tracking-[-0.008em]"
                           >
-                            <Check className="h-3.5 w-3.5" />
-                          </span>
-                          {point}
-                        </li>
-                      ))}
+                            <span
+                              className={cn(
+                                "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ring-1",
+                                isUnavailable
+                                  ? plan.featured
+                                    ? "bg-white/10 text-white/55 ring-white/20"
+                                    : "bg-[#f0eae6] text-[#8c7f78] ring-[#e5d7cf]"
+                                  : plan.featured
+                                    ? "bg-emerald-400/20 text-emerald-200 ring-emerald-300/40"
+                                    : "bg-emerald-50 text-emerald-600 ring-emerald-200"
+                              )}
+                              aria-hidden="true"
+                            >
+                              {isUnavailable ? (
+                                <X className="h-3.5 w-3.5" />
+                              ) : (
+                                <Check className="h-3.5 w-3.5" />
+                              )}
+                            </span>
+                            <span
+                              className={cn(
+                                "min-w-0 leading-snug",
+                                isUnavailable
+                                  ? plan.featured
+                                    ? "text-white/55 line-through"
+                                    : "text-[#8e7f77] line-through"
+                                  : plan.featured
+                                    ? "text-white"
+                                    : "text-[#201b18]"
+                              )}
+                            >
+                              {point.label}
+                              {isComingSoon ? (
+                                <span
+                                  className={cn(
+                                    "ml-2 inline-flex rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]",
+                                    plan.featured
+                                      ? "border-emerald-200/45 bg-emerald-400/15 text-emerald-200"
+                                      : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                  )}
+                                >
+                                  {comingSoonLabel}
+                                </span>
+                              ) : null}
+                            </span>
+                          </li>
+                        );
+                      })}
                     </ul>
 
                     <div className="mt-5">

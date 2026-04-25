@@ -1,9 +1,9 @@
 import { BillingPanel } from "@/components/dashboard/billing-panel";
 import {
+  getMidtransRuntimeConfig,
   getBillingTransactions,
   getOrCreateSubscription,
   getPlanCatalog,
-  isMidtransConfigured,
 } from "@/server/billing";
 import { requireCurrentUser } from "@/server/current-user";
 import { getOrCreateCreatorSettings } from "@/server/creator-settings";
@@ -15,6 +15,7 @@ import {
 
 export default async function DashboardBillingPage() {
   const user = await requireCurrentUser();
+  const midtransRuntime = getMidtransRuntimeConfig();
 
   const [subscription, transactions, settings, entitlementState] = await Promise.all([
     getOrCreateSubscription(user.id),
@@ -47,7 +48,11 @@ export default async function DashboardBillingPage() {
       }))}
       billingEmail={settings.billingEmail || user.contactEmail || user.email}
       paymentMethod={settings.paymentMethod}
-      midtransReady={isMidtransConfigured()}
+      midtransConfig={{
+        mode: midtransRuntime.mode,
+        serverKeySet: midtransRuntime.serverKeySet,
+        clientKeySet: midtransRuntime.clientKeySet,
+      }}
       creatorGroupLink={getCreatorGroupLink()}
       supportLink={getSupportLink()}
     />

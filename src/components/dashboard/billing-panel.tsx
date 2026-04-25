@@ -2,10 +2,15 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, CreditCard, Download, RefreshCw } from "lucide-react";
+import { ArrowUpRight, Check, CreditCard, Download, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
+import {
+  getPlanFeatureChecklistFromBullets,
+  getPlanFeatureComingSoonLabel,
+  type PlanFeatureChecklistItem,
+} from "@/lib/plan-feature-matrix";
 
 type PlanName = "free" | "pro" | "business";
 type BillingCycle = "monthly" | "yearly";
@@ -16,6 +21,7 @@ type PlanConfig = {
   monthly: number;
   yearlyLegacy: number;
   benefits: string[];
+  benefitItems?: PlanFeatureChecklistItem[];
 };
 
 type BillingEntitlements = {
@@ -78,7 +84,7 @@ export function BillingPanel({
   initialTransactions,
   billingEmail,
   paymentMethod,
-  midtransReady,
+  midtransConfig,
   creatorGroupLink,
   supportLink,
 }: {
@@ -89,7 +95,11 @@ export function BillingPanel({
   initialTransactions: TransactionPayload[];
   billingEmail: string;
   paymentMethod: string;
-  midtransReady: boolean;
+  midtransConfig: {
+    mode: "sandbox" | "production";
+    serverKeySet: boolean;
+    clientKeySet: boolean;
+  };
   creatorGroupLink: string;
   supportLink: string;
 }) {
@@ -99,11 +109,13 @@ export function BillingPanel({
   const [transactions, setTransactions] = useState(initialTransactions);
   const [submittingPlan, setSubmittingPlan] = useState<PlanName | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const midtransReady = midtransConfig.serverKeySet;
 
   const activePlanLabel = useMemo(
     () => catalog[effectivePlanName]?.label || effectivePlanName,
     [effectivePlanName, catalog]
   );
+  const comingSoonLabel = getPlanFeatureComingSoonLabel("id");
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -230,6 +242,36 @@ export function BillingPanel({
         </div>
       </Card>
 
+      <Card className="dashboard-clean-card border-border bg-surface p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-[#201b18]">Status Integrasi Midtrans</p>
+            <p className="mt-1 text-xs text-[#6f625a]">
+              Mode:{" "}
+              <span className="font-semibold capitalize text-[#201b18]">
+                {midtransConfig.mode}
+              </span>
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span
+              className={`rounded-full border px-2.5 py-1 font-semibold ${midtransConfig.serverKeySet ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}
+            >
+              Server Key: {midtransConfig.serverKeySet ? "Terdeteksi" : "Belum diisi"}
+            </span>
+            <span
+              className={`rounded-full border px-2.5 py-1 font-semibold ${midtransConfig.clientKeySet ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+            >
+              Client Key: {midtransConfig.clientKeySet ? "Terdeteksi" : "Belum diisi"}
+            </span>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-[#6f625a]">
+          Server Key wajib untuk membuat transaksi. Client Key dipakai agar popup Snap aktif;
+          tanpa Client Key checkout tetap bisa lewat redirect URL Midtrans.
+        </p>
+      </Card>
+
       {!midtransReady ? (
         <Card className="dashboard-clean-card border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-700">Midtrans belum dikonfigurasi</p>
@@ -316,10 +358,35 @@ export function BillingPanel({
               <p className="text-sm font-semibold text-[#201b18]">{plan.label}</p>
               <p className="mt-1 text-2xl font-semibold text-[#201b18]">{toIdr(plan.monthly)}</p>
               <p className="text-xs text-[#635750]">per bulan</p>
-              <ul className="mt-3 flex-1 space-y-1 text-sm text-[#5f524b]">
-                {plan.benefits.map((benefit) => (
-                  <li key={benefit}>- {benefit}</li>
-                ))}
+              <ul className="mt-3 flex-1 space-y-2 text-sm">
+                {(plan.benefitItems?.length
+                  ? plan.benefitItems
+                  : getPlanFeatureChecklistFromBullets(plan.benefits, "id")
+                ).map((benefit) => {
+                  const isUnavailable = benefit.status === "unavailable";
+                  const isComingSoon = benefit.status === "coming_soon";
+
+                  return (
+                    <li key={`${plan.name}-${benefit.id}`} className="flex items-start gap-2">
+                      <span
+                        className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ring-1 ${isUnavailable ? "bg-[#f0eae6] text-[#8d7f77] ring-[#e5d7cf]" : "bg-emerald-50 text-emerald-600 ring-emerald-200"}`}
+                        aria-hidden="true"
+                      >
+                        {isUnavailable ? <X className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                      </span>
+                      <span
+                        className={`min-w-0 leading-snug ${isUnavailable ? "text-[#8f8179] line-through" : "text-[#3f3530]"}`}
+                      >
+                        {benefit.label}
+                        {isComingSoon ? (
+                          <span className="ml-2 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
+                            {comingSoonLabel}
+                          </span>
+                        ) : null}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="mt-4">
                 <Button
