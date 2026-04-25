@@ -1,22 +1,21 @@
 import Link from "next/link";
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import {
-  BarChart3,
   Coins,
-  Eye,
   FolderOpen,
   Link2,
   Plus,
   UserRoundPen,
+  Video,
 } from "lucide-react";
 import { CopyProfileLinkButton } from "@/components/dashboard/copy-profile-link-button";
+import { CreatorTrafficPanel } from "@/components/dashboard/creator-traffic-panel";
 import { DashboardGreetingCard } from "@/components/dashboard/dashboard-greeting-card";
 import { DashboardLivePreviewCard } from "@/components/dashboard/dashboard-live-preview-card";
-import { DashboardVideoList } from "@/components/dashboard/dashboard-video-list";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { db, isDatabaseConfigured } from "@/db";
-import { visitorEvents, videos } from "@/db/schema";
+import { videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { requireCurrentUser } from "@/server/current-user";
 import { getRequestLocale } from "@/server/request-locale";
@@ -39,50 +38,25 @@ export default async function DashboardPage() {
         orderBy: desc(videos.createdAt),
         columns: {
           id: true,
+          visibility: true,
           title: true,
           source: true,
           sourceUrl: true,
           thumbnailUrl: true,
-          visibility: true,
           publicSlug: true,
           createdAt: true,
         },
       })
     : [];
 
-  const publicVideosCount = myVideos.filter((video) => video.visibility === "public").length;
   const normalizedLinks = normalizeCustomLinks(user.customLinks);
   const activeLinks = normalizedLinks.filter((link) => link.enabled !== false);
-
-  let totalViews = 0;
-  let totalClicks = 0;
-
-  if (isDatabaseConfigured) {
-    const creatorPath = `/creator/${user.username || "creator"}`;
-    const [viewsResult] = await db
-      .select({ value: count() })
-      .from(visitorEvents)
-      .where(sql`${visitorEvents.path} LIKE ${`${creatorPath}%`}`);
-
-    const [clicksResult] = await db
-      .select({ value: count() })
-      .from(visitorEvents)
-      .where(and(eq(visitorEvents.path, creatorPath)));
-
-    totalViews = viewsResult?.value ?? 0;
-    totalClicks = clicksResult?.value ?? 0;
-  }
-
-  const ctr = totalViews > 0 ? Number(((totalClicks / totalViews) * 100).toFixed(2)) : 0;
+  const publicVideosCount = myVideos.filter((video) => video.visibility === "public").length;
+  const draftCount = myVideos.filter((video) => video.visibility === "draft").length;
+  const privateCount = myVideos.filter((video) => video.visibility === "private").length;
+  const semiPrivateCount = myVideos.filter((video) => video.visibility === "semi_private").length;
 
   const metricCards = [
-    {
-      label: "Total Views",
-      value: String(totalViews),
-      icon: Eye,
-      helper: "Pengunjung halaman publik",
-      className: "bg-[#ecf4ff] text-[#245fbe]",
-    },
     {
       label: "Total Links",
       value: String(activeLinks.length),
@@ -91,25 +65,25 @@ export default async function DashboardPage() {
       className: "bg-[#edf8ef] text-[#2d8555]",
     },
     {
-      label: "Produk",
+      label: "Video Publik",
       value: String(publicVideosCount),
       icon: FolderOpen,
-      helper: "Video publik aktif",
+      helper: "Karya yang bisa diakses client",
       className: "bg-[#fff3ea] text-[#c0672f]",
+    },
+    {
+      label: "Total Video",
+      value: String(myVideos.length),
+      icon: Video,
+      helper: `Draft ${draftCount} - Private ${privateCount}`,
+      className: "bg-[#eef2ff] text-[#4659ce]",
     },
     {
       label: "Revenue",
       value: toIdr(0),
       icon: Coins,
-      helper: "Segera hadir",
+      helper: "Terhubung dari billing plan",
       className: "bg-[#f6f0ff] text-[#6d4aad]",
-    },
-    {
-      label: "Total Clicks",
-      value: String(totalClicks),
-      icon: BarChart3,
-      helper: `CTR ${ctr}%`,
-      className: "bg-[#f3f2f7] text-[#4d5065]",
     },
   ];
 
@@ -121,26 +95,32 @@ export default async function DashboardPage() {
       cta: "Kelola Link",
     },
     {
+      href: "/dashboard/videos",
+      title: "Kelola Video",
+      description: "Atur semua video portfolio dari satu halaman.",
+      cta: "Buka Kelola Video",
+    },
+    {
+      href: "/dashboard/analytics",
+      title: "Buka Analytics",
+      description: "Lihat performa traffic profile dan video.",
+      cta: "Lihat Analytics",
+    },
+    {
       href: "/dashboard/profile",
       title: "Edit Profile",
       description: "Perbarui identitas visual creator.",
       cta: "Edit Profil",
     },
     {
-      href: "/dashboard/videos/new",
-      title: "Tambah Video",
-      description: "Masukkan video karya terbaru.",
-      cta: "Tambah Video",
-    },
-    {
       href: "/dashboard/billing",
       title: "Kelola Billing",
-      description: "Lihat plan aktif dan invoice.",
+      description: "Lihat plan aktif, transaksi, dan invoice.",
       cta: "Buka Billing",
     },
   ];
 
-  const hasNoData = totalViews === 0 && activeLinks.length === 0 && publicVideosCount === 0;
+  const hasNoData = activeLinks.length === 0 && publicVideosCount === 0;
 
   return (
     <div className="space-y-6">
@@ -152,9 +132,9 @@ export default async function DashboardPage() {
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
-          <p className="text-sm font-medium text-[#655952]">Public Profile Link</p>
+          <p className="text-sm font-medium text-[#655952]">Link publik siap dibagikan</p>
           <h2 className="mt-1 font-display text-xl font-semibold text-[#201b18] sm:text-2xl">
-            Bagikan halaman creator kamu
+            Share halaman creator kamu sekarang
           </h2>
           <p className="mt-2 text-sm leading-6 text-[#5f524b]">
             Satu link untuk menampilkan bio, sosial media, dan portofolio kamu ke klien.
@@ -208,10 +188,12 @@ export default async function DashboardPage() {
 
       <section>
         <div className="mb-3">
-          <p className="text-sm font-medium text-[#655952]">Analytics Summary</p>
-          <h2 className="font-display text-2xl font-semibold text-[#201b18]">Ringkasan performa</h2>
+          <p className="text-sm font-medium text-[#655952]">Creator Summary</p>
+          <h2 className="font-display text-2xl font-semibold text-[#201b18]">
+            Ringkasan performa dan konten
+          </h2>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {metricCards.map((item) => {
             const Icon = item.icon;
             return (
@@ -233,12 +215,14 @@ export default async function DashboardPage() {
         </div>
       </section>
 
+      <CreatorTrafficPanel compact />
+
       <section>
         <div className="mb-3">
           <p className="text-sm font-medium text-[#655952]">Quick Actions</p>
           <h2 className="font-display text-2xl font-semibold text-[#201b18]">Aksi cepat creator</h2>
         </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {quickActions.map((item) => (
             <Card key={item.href} className="dashboard-clean-card border-border bg-surface p-4">
               <h3 className="text-base font-semibold text-[#201b18]">{item.title}</h3>
@@ -264,37 +248,61 @@ export default async function DashboardPage() {
       </section>
 
       <section>
-        <Card className="dashboard-clean-card border-border bg-surface">
-          <div className="mb-4">
-            <h2 className="font-display text-xl font-semibold text-[#201b18]">Video Portofolio Saya</h2>
-            <p className="text-sm text-[#5f524b]">
-              Kelola video public, semi-private, private, dan draft dari satu tempat.
-            </p>
-          </div>
-
-          {myVideos.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#d9cec7] bg-[#f6f1ed] p-8 text-center">
-              <FolderOpen className="mx-auto h-8 w-8 text-[#6a5d56]" />
-              <p className="mt-3 font-medium text-[#564a44]">Belum ada video yang dipublikasikan.</p>
-              <Link href="/dashboard/videos/new" className="mt-4 inline-block">
-                <Button>Submit Video</Button>
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-display text-xl font-semibold text-[#201b18]">
+                  Video Portfolio Summary
+                </h2>
+                <p className="text-sm text-[#5f524b]">
+                  Ringkasan status video portofolio kamu dalam satu panel.
+                </p>
+              </div>
+              <Link href="/dashboard/videos">
+                <Button variant="secondary">Buka Kelola Video</Button>
               </Link>
             </div>
-          ) : (
-            <DashboardVideoList
-              videos={myVideos.map((video) => ({
-                id: video.id,
-                title: video.title,
-                source: video.source,
-                sourceUrl: video.sourceUrl,
-                thumbnailUrl: video.thumbnailUrl,
-                visibility: video.visibility,
-                publicSlug: video.publicSlug,
-                createdAt: video.createdAt.toISOString(),
-              }))}
-            />
-          )}
-        </Card>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-xl border border-[#e4dad4] bg-white px-4 py-3">
+                <p className="text-xs text-[#71625a]">Total Video</p>
+                <p className="font-display text-2xl font-semibold text-[#201b18]">{myVideos.length}</p>
+              </div>
+              <div className="rounded-xl border border-[#e4dad4] bg-white px-4 py-3">
+                <p className="text-xs text-[#71625a]">Public</p>
+                <p className="font-display text-2xl font-semibold text-[#201b18]">{publicVideosCount}</p>
+              </div>
+              <div className="rounded-xl border border-[#e4dad4] bg-white px-4 py-3">
+                <p className="text-xs text-[#71625a]">Semi Private</p>
+                <p className="font-display text-2xl font-semibold text-[#201b18]">{semiPrivateCount}</p>
+              </div>
+              <div className="rounded-xl border border-[#e4dad4] bg-white px-4 py-3">
+                <p className="text-xs text-[#71625a]">Draft + Private</p>
+                <p className="font-display text-2xl font-semibold text-[#201b18]">
+                  {draftCount + privateCount}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
+            <p className="text-sm font-medium text-[#655952]">Section Baru</p>
+            <h3 className="mt-1 font-display text-xl font-semibold text-[#201b18]">Kelola Video</h3>
+            <p className="mt-2 text-sm leading-6 text-[#5f524b]">
+              Masuk ke halaman kelola video untuk tambah, edit, filter, dan publish karya terbaru.
+            </p>
+            <div className="mt-4 space-y-2">
+              <Link href="/dashboard/videos" className="block">
+                <Button className="w-full">Buka Kelola Video</Button>
+              </Link>
+              <Link href="/dashboard/videos/new" className="block">
+                <Button variant="secondary" className="w-full">
+                  Tambah Video Baru
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </div>
       </section>
     </div>
   );
