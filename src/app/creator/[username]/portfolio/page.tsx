@@ -1,0 +1,458 @@
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import {
+  LayoutGrid,
+  List,
+  Mail,
+  MapPin,
+  Phone,
+  Sparkles,
+  Video,
+} from "lucide-react";
+import { AvatarBadge } from "@/components/avatar-badge";
+import { CustomLinksList } from "@/components/custom-links-list";
+import { CreatorBackButton } from "@/components/creator-back-button";
+import { SocialLinks } from "@/components/social-links";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { formatDateLabel } from "@/lib/helpers";
+import { getBackgroundImageCropStyle } from "@/lib/image-crop";
+import { formatJoinedMonthYear } from "@/lib/profile-utils";
+import { getDictionary } from "@/lib/i18n";
+import { getPublicProfile } from "@/server/public-data";
+import { getCurrentUser } from "@/server/current-user";
+import { getRequestLocale } from "@/server/request-locale";
+import { getAutoThumbnailFromVideoUrl, getSourceLabel } from "@/lib/video-utils";
+
+function createExcerpt(value: string, limit: number) {
+  const plain = value.replace(/\s+/g, " ").trim();
+  if (!plain) {
+    return "";
+  }
+
+  if (plain.length <= limit) {
+    return plain;
+  }
+
+  return `${plain.slice(0, limit).trim()}...`;
+}
+
+export default async function CreatorProfilePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ username: string }>;
+  searchParams: Promise<{ page?: string; view?: string }>;
+}) {
+  const locale = await getRequestLocale();
+  const dictionary = getDictionary(locale);
+  const { username } = await params;
+  const resolvedSearchParams = await searchParams;
+  const currentUser = await getCurrentUser();
+  const profile = await getPublicProfile(username, currentUser?.id);
+
+  if (!profile) {
+    notFound();
+  }
+
+  const itemsPerPage = 4;
+  const totalPages = Math.max(1, Math.ceil(profile.videos.length / itemsPerPage));
+  const rawPage = Number.parseInt(resolvedSearchParams.page || "1", 10);
+  const currentView = resolvedSearchParams.view === "list" ? "list" : "grid";
+  const currentPage = Number.isNaN(rawPage)
+    ? 1
+    : Math.min(Math.max(rawPage, 1), totalPages);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const visibleVideos = profile.videos.slice(startIndex, startIndex + itemsPerPage);
+  const joinedMonthYear = formatJoinedMonthYear(profile.user.createdAt, locale);
+  const cleanedPhone = (profile.user.phoneNumber || "").replace(/[^\d+]/g, "");
+  const bioExcerpt = createExcerpt(profile.user.bio || "", 210);
+  const autoCoverImage =
+    profile.videos[0]?.thumbnailUrl ||
+    (profile.videos[0]?.sourceUrl
+      ? getAutoThumbnailFromVideoUrl(profile.videos[0].sourceUrl)
+      : "");
+  const coverImage = profile.user.coverImageUrl || autoCoverImage;
+  const hireMeLink = profile.user.contactEmail
+    ? `mailto:${profile.user.contactEmail}`
+    : cleanedPhone
+      ? `https://wa.me/${cleanedPhone.replace(/^\+/, "")}`
+      : profile.user.websiteUrl || "/auth/signup";
+  const aboutHref = `/creator/${username}/about`;
+  const publicProfileHref = `/creator/${username}`;
+
+  const buildPageHref = (page: number) =>
+    `/creator/${username}/portfolio?page=${page}&view=${currentView}`;
+  const buildViewHref = (view: "grid" | "list") =>
+    `/creator/${username}/portfolio?page=1&view=${view}`;
+
+  return (
+    <div className="min-h-screen bg-canvas">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
+        <Card className="overflow-hidden border-[#ddd3cd] bg-white/92 p-0">
+          <div className="relative overflow-hidden border-b border-[#e4d9d3]">
+            {coverImage ? (
+                <div
+                  className="absolute inset-0"
+                  style={getBackgroundImageCropStyle(
+                    coverImage,
+                    {
+                      x: profile.user.coverCropX,
+                      y: profile.user.coverCropY,
+                      zoom: profile.user.coverCropZoom,
+                    },
+                    "linear-gradient(145deg, rgba(15,23,42,0.10), rgba(15,23,42,0.18))"
+                  )}
+                />
+            ) : null}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.58),_transparent_36%),linear-gradient(180deg,_rgba(255,250,247,0.86),_rgba(255,255,255,0.95))]" />
+            <div className="relative flex min-h-[240px] flex-col justify-between gap-4 p-4 sm:min-h-[290px] sm:gap-6 sm:p-6 lg:min-h-[320px]">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <Badge className="w-fit">
+                  <Sparkles className="mr-1 h-3.5 w-3.5" />
+                  Creator Profile
+                </Badge>
+                <CreatorBackButton />
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                    <div className="inline-flex shrink-0 self-start rounded-full border-4 border-white/90 bg-white shadow-[0_18px_40px_rgba(29,23,20,0.14)]">
+                    <AvatarBadge
+                      name={profile.user.name || "Creator"}
+                      avatarUrl={profile.user.image || ""}
+                      crop={{
+                        x: profile.user.avatarCropX,
+                        y: profile.user.avatarCropY,
+                        zoom: profile.user.avatarCropZoom,
+                      }}
+                      size="lg"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <h1 className="font-display text-3xl font-semibold text-[#201b18] sm:text-4xl">
+                        {profile.user.name}
+                      </h1>
+                      {profile.user.role ? (
+                        <p className="mt-1 text-base font-medium text-[#e24f3b]">
+                          {profile.user.role}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center rounded-full border border-[#e0d4ce] bg-white/80 px-3 py-1 text-sm font-medium text-[#675a53]">
+                        @{profile.user.username}
+                      </span>
+                      <span className="inline-flex items-center rounded-full border border-[#e0d4ce] bg-white/80 px-3 py-1 text-sm font-medium text-[#675a53]">
+                        <MapPin className="mr-1 h-3.5 w-3.5" />
+                        {profile.user.city || "Kota belum diisi"}
+                      </span>
+                      <span className="inline-flex items-center rounded-full border border-[#e0d4ce] bg-white/80 px-3 py-1 text-sm font-medium text-[#675a53]">
+                        Bergabung {joinedMonthYear}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[320px]">
+                  <Link href={hireMeLink} target="_blank">
+                    <Button className="w-full">Hire Me</Button>
+                  </Link>
+                  <Link href={publicProfileHref}>
+                    <Button variant="secondary" className="w-full">
+                      Kembali ke Link Utama
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+          <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+            <Card className="space-y-4 border-[#ddd3cd] bg-white/92">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7d6f67]">
+                  Tentang creator
+                </p>
+                <h2 className="mt-2 font-display text-2xl font-semibold text-[#201b18]">
+                  Profil Singkat
+                </h2>
+              </div>
+              <p className="text-sm leading-7 text-[#5f524b]">
+                {bioExcerpt || "Bio belum ditambahkan."}
+              </p>
+              <Link
+                href={aboutHref}
+                className="inline-flex text-sm font-semibold text-[#e24f3b] transition hover:text-[#cb402d]"
+              >
+                Lihat profil lengkap
+              </Link>
+            </Card>
+
+            <Card className="space-y-4 border-[#ddd3cd] bg-white/92">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7d6f67]">
+                  Contact
+                </p>
+                <h2 className="mt-2 font-display text-2xl font-semibold text-[#201b18]">
+                  Hubungi Creator
+                </h2>
+              </div>
+              <div className="space-y-3 text-sm text-[#5f524b]">
+                <p className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-[#e24f3b]" />
+                  <span>{profile.user.contactEmail || "Belum diisi"}</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-[#e24f3b]" />
+                  <span>{profile.user.phoneNumber || "Belum diisi"}</span>
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7d6f67]">
+                  {dictionary.publicPrimaryLinksTitle}
+                </p>
+                <CustomLinksList
+                  links={profile.user.customLinks}
+                  emptyLabel={dictionary.profileCustomLinksEmpty}
+                />
+              </div>
+              <SocialLinks
+                websiteUrl={profile.user.websiteUrl}
+                instagramUrl={profile.user.instagramUrl}
+                youtubeUrl={profile.user.youtubeUrl}
+                facebookUrl={profile.user.facebookUrl}
+                threadsUrl={profile.user.threadsUrl}
+              />
+              <div className="flex flex-wrap gap-2">
+                {profile.user.skills.map((skill) => (
+                  <Badge key={skill}>{skill}</Badge>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <section className="px-0 py-1">
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Video Portfolio
+                </p>
+                <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+                  Portfolio video creator
+                </h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  Daftar karya video publik yang ditampilkan dari fitur Kelola Video.
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 p-1">
+                <Link href={buildViewHref("grid")}>
+                  <span
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition ${
+                      currentView === "grid"
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-600"
+                    }`}
+                  >
+                    <LayoutGrid className="h-4 w-4 text-brand-600" />
+                    Grid
+                  </span>
+                </Link>
+                <Link href={buildViewHref("list")}>
+                  <span
+                    className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition ${
+                      currentView === "list"
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-600"
+                    }`}
+                  >
+                    <List className="h-4 w-4 text-brand-600" />
+                    List
+                  </span>
+                </Link>
+              </div>
+            </div>
+
+            {profile.videos.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                <Video className="mx-auto h-8 w-8 text-slate-500" />
+                <p className="mt-3 text-sm text-slate-600">
+                  Creator ini belum mempublikasikan video.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div
+                  className={
+                    currentView === "grid"
+                      ? "grid gap-4 md:grid-cols-2"
+                      : "grid gap-3"
+                  }
+                >
+                  {visibleVideos.map((video) => {
+                    const sourceLabel = getSourceLabel(video.source as never);
+                    const aspectLabel =
+                      video.aspectRatio === "portrait"
+                        ? "Portrait 9:16"
+                        : "Landscape 16:9";
+                    const outputLabel = video.outputType.trim() || "General";
+                    const durationLabel = video.durationLabel.trim() || "-";
+                    const postedLabel = formatDateLabel(video.createdAt.toISOString());
+
+                    return (
+                      <Link key={video.id} href={`/v/${video.publicSlug}`}>
+                        <article
+                          className={`group h-full border-b border-slate-200 bg-transparent py-4 transition hover:border-brand-300 ${
+                            currentView === "list"
+                              ? "sm:py-5"
+                              : ""
+                          }`}
+                        >
+                          <div
+                            className={
+                              currentView === "list"
+                                ? "flex h-full flex-col gap-4 sm:flex-row sm:items-start"
+                                : "flex h-full flex-col gap-4"
+                            }
+                          >
+                            <div
+                              className={`overflow-hidden rounded-2xl bg-slate-100 ${
+                                currentView === "list" ? "sm:w-[180px] sm:flex-none" : ""
+                              }`}
+                            >
+                              {video.thumbnailUrl ||
+                              getAutoThumbnailFromVideoUrl(video.sourceUrl) ? (
+                                <Image
+                                  src={
+                                    video.thumbnailUrl ||
+                                    getAutoThumbnailFromVideoUrl(video.sourceUrl)
+                                  }
+                                  alt={`Thumbnail ${video.title}`}
+                                  width={640}
+                                  height={360}
+                                  sizes="(max-width: 768px) 100vw, 38vw"
+                                  unoptimized
+                                  className={`aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.02] ${
+                                    currentView === "list" ? "sm:h-full sm:min-h-[112px]" : ""
+                                  }`}
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="flex aspect-video items-center justify-center text-sm font-medium text-slate-500">
+                                  Thumbnail belum diisi
+                                </div>
+                              )}
+                            </div>
+                            <div className="space-y-3">
+                              {currentView === "grid" ? (
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                  <Badge>{sourceLabel}</Badge>
+                                  <span className="text-xs text-slate-500">
+                                    {postedLabel}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                  <Badge>{sourceLabel}</Badge>
+                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                    Output: {outputLabel}
+                                  </span>
+                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-500">
+                                    {postedLabel}
+                                  </span>
+                                </div>
+                              )}
+                              <h3 className="text-base font-semibold leading-snug text-slate-900 sm:text-lg">
+                                {video.title}
+                              </h3>
+                              {currentView === "grid" ? (
+                                <div className="flex flex-wrap items-center gap-2.5">
+                                  <span className="inline-flex items-center rounded-full bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white">
+                                    {aspectLabel}
+                                  </span>
+                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                    Output: {outputLabel}
+                                  </span>
+                                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600">
+                                    Durasi: {durationLabel}
+                                  </span>
+                                </div>
+                              ) : null}
+                              <p className="line-clamp-2 text-sm leading-6 text-slate-600">
+                                {video.description}
+                              </p>
+                            </div>
+                          </div>
+                        </article>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {totalPages > 1 ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+                    <p className="text-sm text-slate-600">
+                      Halaman {currentPage} dari {totalPages}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href={buildPageHref(Math.max(1, currentPage - 1))}
+                        className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                          currentPage === 1
+                            ? "pointer-events-none border-slate-200 text-slate-400"
+                            : "border-slate-300 text-slate-700 hover:border-brand-300 hover:text-brand-700"
+                        }`}
+                      >
+                        Sebelumnya
+                      </Link>
+                      {Array.from({ length: totalPages }, (_, index) => {
+                        const page = index + 1;
+                        const active = page === currentPage;
+                        return (
+                          <Link
+                            key={page}
+                            href={buildPageHref(page)}
+                            className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
+                              active
+                                ? "border-brand-500 bg-brand-600 text-white"
+                                : "border-slate-300 text-slate-700 hover:border-brand-300 hover:text-brand-700"
+                            }`}
+                          >
+                            {page}
+                          </Link>
+                        );
+                      })}
+                      <Link
+                        href={buildPageHref(Math.min(totalPages, currentPage + 1))}
+                        className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                          currentPage === totalPages
+                            ? "pointer-events-none border-slate-200 text-slate-400"
+                            : "border-slate-300 text-slate-700 hover:border-brand-300 hover:text-brand-700"
+                        }`}
+                      >
+                        Berikutnya
+                      </Link>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+
+      <footer className="border-t border-slate-200 bg-white/85">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-4 py-8 text-center sm:px-6">
+          {!profile.whitelabelEnabled ? (
+            <p className="text-sm text-slate-600">Portfolio ini dibuat menggunakan showreels.id</p>
+          ) : null}
+        </div>
+      </footer>
+    </div>
+  );
+}

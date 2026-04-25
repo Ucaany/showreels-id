@@ -40,6 +40,7 @@ import {
   Smartphone,
   Trash2,
   Type,
+  Video,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -689,8 +690,10 @@ export function LinkBuilderEditor({
     );
   }, [links, linkSearch]);
   const publicPath = `/creator/${sanitizeUsername(profileFields.username || "creator")}`;
+  const portfolioPath = `${publicPath}/portfolio`;
   const quickBlockOptions = [
     { key: "link", label: "Link", helper: "Tambahkan URL", icon: Link2 },
+    { key: "portfolio", label: "Portfolio", helper: "Link ke portfolio video", icon: Video },
     { key: "text", label: "Text", helper: "Blok teks bebas", icon: Type },
     { key: "image", label: "Image", helper: "Embed gambar", icon: ImageIcon },
     { key: "youtube", label: "YouTube", helper: "Embed video", icon: PlayCircle },
@@ -707,8 +710,10 @@ export function LinkBuilderEditor({
     if (platform) {
       setNewLink((prev) => ({
         ...prev,
-        platform,
-        title: prev.title || platform,
+        platform: platform === "Portfolio" ? "Portfolio Video" : platform,
+        title:
+          prev.title || (platform === "Portfolio" ? "Lihat Portfolio Video" : platform),
+        url: prev.url || (platform === "Portfolio" ? portfolioPath : prev.url),
       }));
     }
     setIsAddBlockOpen(true);
