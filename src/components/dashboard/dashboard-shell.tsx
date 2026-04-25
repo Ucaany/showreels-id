@@ -31,7 +31,6 @@ type NavItem = {
   label: string;
   icon: typeof Home;
   matchPrefix?: string;
-  soon?: boolean;
 };
 
 const SIDEBAR_STORAGE_KEY = "showreels.sidebar.collapsed";
@@ -66,21 +65,31 @@ export function DashboardShell({
     }
   });
 
-  const navItems: NavItem[] =
+  const primaryNavItems: NavItem[] =
     mode === "admin"
       ? [{ href: "/admin", label: "Owner Panel", icon: Home }]
       : [
           { href: "/dashboard", label: dictionary.dashboard, icon: Home },
           { href: "/dashboard/link-builder", label: "Link Builder", icon: Link2 },
-          { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, soon: true },
-          { href: "/dashboard/billing", label: "Billing", icon: CreditCard, soon: true },
+          { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+          { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
           { href: "/dashboard/profile", label: dictionary.profile, icon: UserRound },
-          { href: "/dashboard/settings", label: "Settings", icon: Settings2 },
           {
-            href: "/dashboard/videos/new",
-            label: "Video Karya",
+            href: "/dashboard/videos",
+            label: "Kelola Video",
             icon: Film,
             matchPrefix: "/dashboard/videos",
+          },
+        ];
+
+  const secondaryNavItems: NavItem[] =
+    mode === "admin"
+      ? []
+      : [
+          {
+            href: "/dashboard/settings",
+            label: "Settings",
+            icon: Settings2,
           },
         ];
 
@@ -140,7 +149,7 @@ export function DashboardShell({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="hidden h-10 w-10 items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18] lg:inline-flex"
+              className="dashboard-tap-target hidden items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18] lg:inline-flex"
               onClick={() => setCollapsed((prev) => !prev)}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -172,15 +181,11 @@ export function DashboardShell({
                 {user.email}
               </p>
             </div>
-            <Button variant="secondary" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-              {dictionary.logout}
-            </Button>
           </div>
 
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18] md:hidden"
+            className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18] md:hidden"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-label="Open dashboard menu"
           >
@@ -202,7 +207,7 @@ export function DashboardShell({
               <AppLogo />
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18]"
+                className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18]"
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Close menu"
               >
@@ -228,7 +233,7 @@ export function DashboardShell({
               <p className="mt-1 truncate text-xs text-[#6e6058]">{user.email}</p>
             </div>
             <nav className="space-y-1">
-              {navItems.map((item) => {
+              {[...primaryNavItems, ...secondaryNavItems].map((item) => {
                 const Icon = item.icon;
                 const active = isNavItemActive(item);
 
@@ -240,7 +245,7 @@ export function DashboardShell({
                     className={cn(
                       "flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-medium transition",
                       active
-                        ? "bg-[#1a1412] text-white"
+                        ? "bg-[#ffe8e2] text-[#cb4a36] ring-1 ring-[#f1c3b7]"
                         : "text-[#4f433d] hover:bg-white hover:text-[#201b18]"
                     )}
                   >
@@ -248,11 +253,6 @@ export function DashboardShell({
                       <Icon className="h-4 w-4" />
                       {item.label}
                     </span>
-                    {item.soon ? (
-                      <span className="rounded-full bg-[#fff2ee] px-2 py-0.5 text-[10px] font-semibold text-[#c24e3f]">
-                        Soon
-                      </span>
-                    ) : null}
                   </Link>
                 );
               })}
@@ -265,10 +265,10 @@ export function DashboardShell({
         </div>
       ) : null}
 
-      <div className="mx-auto flex w-full max-w-[1400px] gap-4 px-3 py-5 sm:px-6 sm:py-6">
+      <div className="dashboard-shell-container flex gap-4">
         <aside
           className={cn(
-            "hidden shrink-0 rounded-2xl border border-[#ddd3cd] bg-white/90 p-3 shadow-card transition-all duration-200 lg:block",
+            "hidden shrink-0 rounded-2xl border border-[#ddd3cd] bg-gradient-to-b from-[#fffefe] to-[#f7f2ee] p-3 shadow-card transition-all duration-200 lg:block",
             sidebarWidthClass
           )}
         >
@@ -278,8 +278,9 @@ export function DashboardShell({
             </p>
             <p className="mt-1 text-sm font-semibold text-[#231d19]">{collapsed ? "Free" : "Free Creator"}</p>
           </div>
-          <nav className="space-y-1">
-            {navItems.map((item) => {
+          <nav className="flex h-full flex-col">
+            <div className="space-y-1">
+            {primaryNavItems.map((item) => {
               const Icon = item.icon;
               const active = isNavItemActive(item);
 
@@ -290,12 +291,12 @@ export function DashboardShell({
                   title={collapsed ? item.label : undefined}
                   aria-label={item.label}
                   className={cn(
-                    "group flex items-center rounded-xl transition",
+                    "group relative flex items-center rounded-xl transition",
                     collapsed
                       ? "h-11 justify-center"
                       : "h-11 justify-between px-3",
                     active
-                      ? "bg-[#1a1412] text-white"
+                      ? "bg-[#ffe8e2] text-[#cb4a36] ring-1 ring-[#f1c3b7]"
                       : "text-[#4f433d] hover:bg-[#f1ebe6] hover:text-[#201b18]"
                   )}
                 >
@@ -303,14 +304,68 @@ export function DashboardShell({
                     <Icon className="h-4 w-4" />
                     {!collapsed ? <span className="text-sm font-medium">{item.label}</span> : null}
                   </span>
-                  {!collapsed && item.soon ? (
-                    <span className="rounded-full bg-[#fff2ee] px-2 py-0.5 text-[10px] font-semibold text-[#c24e3f]">
-                      Soon
+                  {collapsed ? (
+                    <span className="pointer-events-none absolute left-[calc(100%+10px)] top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-lg border border-[#dfd3cc] bg-white px-2.5 py-1 text-xs font-medium text-[#2a221f] shadow-md group-hover:block">
+                      {item.label}
                     </span>
                   ) : null}
                 </Link>
               );
             })}
+            </div>
+            <div className="mt-auto space-y-3 pt-4">
+              <div className="space-y-1">
+                {secondaryNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isNavItemActive(item);
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={collapsed ? item.label : undefined}
+                      aria-label={item.label}
+                      className={cn(
+                        "group relative flex items-center rounded-xl transition",
+                        collapsed
+                          ? "h-11 justify-center"
+                          : "h-11 justify-between px-3",
+                        active
+                          ? "bg-[#ffe8e2] text-[#cb4a36] ring-1 ring-[#f1c3b7]"
+                          : "text-[#4f433d] hover:bg-[#f1ebe6] hover:text-[#201b18]"
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {!collapsed ? <span className="text-sm font-medium">{item.label}</span> : null}
+                      </span>
+                      {collapsed ? (
+                        <span className="pointer-events-none absolute left-[calc(100%+10px)] top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-lg border border-[#dfd3cc] bg-white px-2.5 py-1 text-xs font-medium text-[#2a221f] shadow-md group-hover:block">
+                          {item.label}
+                        </span>
+                      ) : null}
+                    </Link>
+                  );
+                })}
+              </div>
+              {!collapsed ? (
+                <div className="rounded-2xl border border-[#e4d8d1] bg-[#f8f3ef] p-3">
+                  <p className="text-xs font-semibold text-[#7a6a61]">Akun</p>
+                  <p className="mt-1 truncate text-sm font-semibold text-[#201b18]">{user.email}</p>
+                </div>
+              ) : null}
+              <Button
+                variant="secondary"
+                size="sm"
+                className={cn("dashboard-tap-target w-full", collapsed ? "px-0" : "")}
+                onClick={handleSignOut}
+                aria-label={dictionary.logout}
+                title={collapsed ? dictionary.logout : undefined}
+              >
+                <LogOut className="h-4 w-4" />
+                {!collapsed ? dictionary.logout : null}
+              </Button>
+            </div>
           </nav>
         </aside>
 

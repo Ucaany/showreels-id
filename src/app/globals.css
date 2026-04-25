@@ -16,6 +16,10 @@
   --type-body-base: clamp(0.9rem, 0.94vw, 0.98rem);
   --type-helper: clamp(0.76rem, 0.8vw, 0.84rem);
   --type-eyebrow: 0.74rem;
+  --dashboard-shell-max-width: 1400px;
+  --dashboard-shell-pad-x: 1rem;
+  --dashboard-shell-pad-y: 1.1rem;
+  --dashboard-gap: 1rem;
 }
 
 @theme inline {
@@ -180,6 +184,31 @@ select:-webkit-autofill:focus {
     box-shadow: var(--shadow-card);
   }
 
+  .dashboard-shell-container {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--dashboard-shell-max-width);
+    padding-inline: var(--dashboard-shell-pad-x);
+    padding-block: var(--dashboard-shell-pad-y);
+  }
+
+  .dashboard-clean-card {
+    border: 1px solid #e2d9d3;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 28px rgba(32, 27, 24, 0.06);
+  }
+
+  .dashboard-stack {
+    display: grid;
+    gap: var(--dashboard-gap);
+  }
+
+  .dashboard-tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
   .content-auto {
     content-visibility: auto;
     contain-intrinsic-size: 1px 720px;
@@ -223,6 +252,22 @@ select:-webkit-autofill:focus {
     .theme-marquee:hover .theme-marquee-track {
       animation-play-state: paused;
     }
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --dashboard-shell-pad-x: 1.4rem;
+    --dashboard-shell-pad-y: 1.3rem;
+    --dashboard-gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --dashboard-shell-pad-x: 1.75rem;
+    --dashboard-shell-pad-y: 1.45rem;
+    --dashboard-gap: 1.15rem;
   }
 }
 
@@ -291,14 +336,6 @@ select:-webkit-autofill:focus {
   .dashboard-profile-mobile input,
   .dashboard-profile-mobile textarea {
     font-size: 16px;
-  }
-
-  .dashboard-clean-card {
-    border-color: transparent;
-    border-radius: 0;
-    box-shadow: none;
-    background: transparent;
-    padding: 0;
   }
 
   .theme-marquee {

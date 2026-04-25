@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext,
@@ -19,12 +20,18 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  Eye,
+  ExternalLink,
   GripVertical,
   Link2,
   Monitor,
   PencilLine,
   Plus,
   Save,
+  Share2,
   Smartphone,
   Trash2,
 } from "lucide-react";
@@ -142,7 +149,7 @@ function SortableLinkItem({
             aria-label="Move up"
             disabled={index === 0}
           >
-            ↑
+            <ArrowUp className="h-3.5 w-3.5" />
           </Button>
           <Button
             size="sm"
@@ -151,7 +158,7 @@ function SortableLinkItem({
             aria-label="Move down"
             disabled={index >= total - 1}
           >
-            ↓
+            <ArrowDown className="h-3.5 w-3.5" />
           </Button>
           <Button size="sm" variant="secondary" onClick={() => onSave(link.id)}>
             <Save className="h-3.5 w-3.5" />
@@ -252,6 +259,7 @@ export function LinkBuilderEditor({ user }: { user: LinkBuilderUser }) {
     platform: "",
     badge: "",
   });
+  const [linkSearch, setLinkSearch] = useState("");
   const [profileFields, setProfileFields] = useState({
     fullName: user.name || "",
     username: user.username || "",
@@ -561,27 +569,106 @@ export function LinkBuilderEditor({ user }: { user: LinkBuilderUser }) {
     () => links.filter((item) => item.enabled !== false).slice(0, 8),
     [links]
   );
+  const filteredLinks = useMemo(() => {
+    const keyword = linkSearch.trim().toLowerCase();
+    if (!keyword) return links;
+
+    return links.filter((item) =>
+      [item.title, item.url, item.platform || "", item.description || ""]
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword)
+    );
+  }, [links, linkSearch]);
+  const publicPath = `/creator/${sanitizeUsername(profileFields.username || "creator")}`;
+
+  const handleCopyPublicLink = async () => {
+    await navigator.clipboard.writeText(`${window.location.origin}${publicPath}`);
+    await showFeedbackAlert({
+      title: "Link profile berhasil disalin",
+      icon: "success",
+      timer: 1100,
+    });
+  };
 
   return (
     <div className="space-y-4">
       <Card className="dashboard-clean-card border-[#ddd3cd] bg-white/90 p-4 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#e24f3b]">
-              Link Builder
+              Satulink Builder
             </p>
-            <h1 className="mt-1 font-display text-2xl font-semibold text-[#201b18]">
-              Atur bio, social, dan custom link
-            </h1>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <h1 className="font-display text-2xl font-semibold text-[#201b18]">
+                {profileFields.fullName || "Creator"}
+              </h1>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                LIVE
+              </span>
+            </div>
+            <div className="mt-2 inline-flex max-w-full items-center gap-1 rounded-2xl border border-[#eadfd9] bg-[#fbf7f4] px-3 py-2 text-sm text-[#5f524b]">
+              <span className="truncate">{publicPath}</span>
+              <button
+                type="button"
+                onClick={handleCopyPublicLink}
+                className="dashboard-tap-target inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#dccfc8] bg-white text-[#5f524b]"
+                aria-label="Copy public link"
+              >
+                <Copy className="h-4 w-4" />
+              </button>
+              <Link
+                href={publicPath}
+                target="_blank"
+                className="dashboard-tap-target inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#dccfc8] bg-white text-[#5f524b]"
+                aria-label="Buka public page"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
-          <div className="rounded-full border border-[#d8ccc4] bg-white px-3 py-2 text-xs font-semibold text-[#5d5049]">
-            {saveStatus === "saving"
-              ? "Menyimpan..."
-              : saveStatus === "saved"
-                ? "Tersimpan"
-                : saveStatus === "error"
-                  ? "Gagal menyimpan"
-                  : "Saved"}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-full border border-[#d8ccc4] bg-white p-1">
+              <button
+                type="button"
+                className="dashboard-tap-target rounded-full bg-[#1a1412] px-4 text-xs font-semibold text-white"
+              >
+                Editor
+              </button>
+              <button
+                type="button"
+                className="dashboard-tap-target rounded-full px-4 text-xs font-semibold text-[#5d5049]"
+                disabled
+              >
+                Content
+              </button>
+              <button
+                type="button"
+                className="dashboard-tap-target rounded-full px-4 text-xs font-semibold text-[#5d5049]"
+                disabled
+              >
+                Design
+              </button>
+            </div>
+            <Link href={publicPath} target="_blank">
+              <Button size="sm" variant="secondary">
+                <Eye className="h-4 w-4" />
+                Preview
+              </Button>
+            </Link>
+            <Button size="sm" variant="secondary" onClick={handleCopyPublicLink}>
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
+            <div className="rounded-full border border-[#d8ccc4] bg-white px-3 py-2 text-xs font-semibold text-[#5d5049]">
+              {saveStatus === "saving"
+                ? "Menyimpan..."
+                : saveStatus === "saved"
+                  ? "Tersimpan"
+                  : saveStatus === "error"
+                    ? "Gagal menyimpan"
+                    : "Saved"}
+            </div>
           </div>
         </div>
       </Card>
@@ -735,13 +822,29 @@ export function LinkBuilderEditor({ user }: { user: LinkBuilderUser }) {
                   Custom Link
                 </p>
                 <h2 className="text-lg font-semibold text-[#201b18]">
-                  + Tambah Link (maks {MAX_CUSTOM_LINKS_FREE_PLAN})
+                  Tambah Block (maks {MAX_CUSTOM_LINKS_FREE_PLAN})
                 </h2>
               </div>
-              <Button size="sm" onClick={handleAddLink} disabled={links.length >= MAX_CUSTOM_LINKS_FREE_PLAN}>
+              <Button
+                size="sm"
+                className="bg-[#ef4f3f] hover:bg-[#dd4839]"
+                onClick={handleAddLink}
+                disabled={links.length >= MAX_CUSTOM_LINKS_FREE_PLAN}
+              >
                 <Plus className="h-4 w-4" />
-                Tambah Link
+                Tambah Block
               </Button>
+            </div>
+
+            <div className="mb-4 flex flex-wrap gap-2">
+              {["Link", "Header", "Sosial", "Divider"].map((item) => (
+                <span
+                  key={item}
+                  className="inline-flex h-9 items-center rounded-xl border border-[#e2d8d2] bg-white px-3 text-xs font-semibold text-[#5f524b]"
+                >
+                  {item}
+                </span>
+              ))}
             </div>
 
             <div className="grid gap-3 rounded-2xl border border-dashed border-[#d9cec7] bg-[#faf6f3] p-3">
@@ -771,9 +874,31 @@ export function LinkBuilderEditor({ user }: { user: LinkBuilderUser }) {
             </div>
 
             <div className="mt-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6b5e56]">
+                  {links.length} Blocks
+                </p>
+                <span className="rounded-full border border-[#e0d4ce] bg-white px-2.5 py-1 text-xs font-semibold text-[#6b5e56]">
+                  {previewLinks.length} active
+                </span>
+              </div>
+              <div className="mb-3">
+                <Input
+                  value={linkSearch}
+                  onChange={(event) => setLinkSearch(event.target.value)}
+                  placeholder="Cari block..."
+                />
+              </div>
+
               {links.length === 0 ? (
                 <p className="rounded-2xl border border-dashed border-[#d9cec7] bg-[#f7f3f0] px-4 py-3 text-sm text-[#6b5e56]">
                   Belum ada link. Tambahkan link pertama untuk mulai membangun halaman Showreels kamu.
+                </p>
+              ) : null}
+
+              {links.length > 0 && filteredLinks.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-[#d9cec7] bg-[#f7f3f0] px-4 py-3 text-sm text-[#6b5e56]">
+                  Tidak ada block yang cocok dengan kata kunci pencarian.
                 </p>
               ) : null}
 
@@ -783,29 +908,34 @@ export function LinkBuilderEditor({ user }: { user: LinkBuilderUser }) {
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
-                  items={links.map((item) => item.id)}
+                  items={filteredLinks.map((item) => item.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="space-y-3">
-                    {links.map((link, index) => (
-                      <SortableLinkItem
-                        key={link.id}
-                        link={link}
-                        index={index}
-                        total={links.length}
-                        onMove={handleLocalMove}
-                        onDelete={handleDeleteLink}
-                        onToggle={handleToggleLink}
-                        onSave={handleSaveLink}
-                        onChange={(id, patch) =>
-                          setLinks((prev) =>
-                            prev.map((item) =>
-                              item.id === id ? { ...item, ...patch } : item
+                    {filteredLinks.map((link) => {
+                      const originalIndex = links.findIndex((item) => item.id === link.id);
+                      if (originalIndex < 0) return null;
+
+                      return (
+                        <SortableLinkItem
+                          key={link.id}
+                          link={link}
+                          index={originalIndex}
+                          total={links.length}
+                          onMove={handleLocalMove}
+                          onDelete={handleDeleteLink}
+                          onToggle={handleToggleLink}
+                          onSave={handleSaveLink}
+                          onChange={(id, patch) =>
+                            setLinks((prev) =>
+                              prev.map((item) =>
+                                item.id === id ? { ...item, ...patch } : item
+                              )
                             )
-                          )
-                        }
-                      />
-                    ))}
+                          }
+                        />
+                      );
+                    })}
                   </div>
                 </SortableContext>
               </DndContext>
@@ -817,79 +947,129 @@ export function LinkBuilderEditor({ user }: { user: LinkBuilderUser }) {
           <Card className="dashboard-clean-card border-[#ddd3cd] bg-white/90 p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-[#201b18]">Live Preview</h2>
-              <div className="inline-flex rounded-full border border-[#d7cec7] bg-white p-1">
-                <button
-                  type="button"
-                  onClick={() => setDeviceMode("desktop")}
-                  className={`inline-flex h-9 items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
-                    deviceMode === "desktop"
-                      ? "bg-[#1a1412] text-white"
-                      : "text-[#5e514b] hover:bg-[#f2ebe7]"
-                  }`}
-                >
-                  <Monitor className="h-3.5 w-3.5" />
-                  Desktop
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDeviceMode("android")}
-                  className={`inline-flex h-9 items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
-                    deviceMode === "android"
-                      ? "bg-[#1a1412] text-white"
-                      : "text-[#5e514b] hover:bg-[#f2ebe7]"
-                  }`}
-                >
-                  <Smartphone className="h-3.5 w-3.5" />
-                  Android
-                </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex rounded-full border border-[#d7cec7] bg-white p-1">
+                  <button
+                    type="button"
+                    onClick={() => setDeviceMode("desktop")}
+                    className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
+                      deviceMode === "desktop"
+                        ? "bg-[#1a1412] text-white"
+                        : "text-[#5e514b] hover:bg-[#f2ebe7]"
+                    }`}
+                  >
+                    <Monitor className="h-3.5 w-3.5" />
+                    Desktop
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeviceMode("android")}
+                    className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
+                      deviceMode === "android"
+                        ? "bg-[#1a1412] text-white"
+                        : "text-[#5e514b] hover:bg-[#f2ebe7]"
+                    }`}
+                  >
+                    <Smartphone className="h-3.5 w-3.5" />
+                    Mobile
+                  </button>
+                </div>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                  Live
+                </span>
               </div>
             </div>
 
-            <div className="mt-4">
-              <div
-                className={`mx-auto rounded-[30px] border border-[#d8cec8] bg-gradient-to-br from-[#ffffff] via-[#f6f2ef] to-[#f2eae5] p-4 shadow-sm ${
-                  deviceMode === "android" ? "max-w-[390px]" : "max-w-full"
-                }`}
-              >
-                <div className="rounded-2xl border border-[#e4dad4] bg-white p-4">
-                  <p className="text-base font-semibold text-[#201b18]">
-                    {profileFields.fullName || "Display Name"}
-                  </p>
-                  <p className="mt-1 text-sm text-[#6a5d56]">
-                    {profileFields.role || "Role / Profession"}
-                  </p>
-                  <p className="mt-3 max-h-[4.5rem] overflow-hidden text-sm leading-6 text-[#4f433d]">
-                    {profileFields.bio || "Bio akan muncul di sini saat kamu mengetik."}
-                  </p>
+            <div className="mt-4 rounded-[26px] border border-[#e2d7d1] bg-[radial-gradient(circle_at_1px_1px,#eadfd8_1px,transparent_0)] [background-size:16px_16px] p-4">
+              {deviceMode === "desktop" ? (
+                <div className="mx-auto max-w-[420px] rounded-3xl border border-[#d9cec8] bg-[#faf8f7] p-4 shadow">
+                  <div className="rounded-2xl border border-[#e4dad4] bg-white p-4">
+                    <div className="h-20 rounded-xl bg-gradient-to-r from-[#6c65ff] via-[#8f5bf3] to-[#eb6a4d]" />
+                    <div className="-mt-7 ml-4 flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-[#6d64ff] text-lg font-semibold text-white shadow">
+                      {(profileFields.fullName || "C").slice(0, 1).toUpperCase()}
+                    </div>
+                    <p className="mt-2 text-lg font-semibold text-[#201b18]">
+                      {profileFields.fullName || "Display Name"}
+                    </p>
+                    <p className="text-sm text-[#6a5d56]">{profileFields.role || "Role / Profession"}</p>
+                    <p className="mt-2 max-h-[4.5rem] overflow-hidden text-sm leading-6 text-[#4f433d]">
+                      {profileFields.bio || "Bio akan muncul di sini saat kamu mengetik."}
+                    </p>
 
-                  <div className="mt-4 space-y-2">
-                    {previewLinks.length === 0 ? (
-                      <p className="rounded-xl border border-dashed border-[#d9cec7] bg-[#f8f4f1] px-3 py-2 text-xs text-[#6c6059]">
-                        Belum ada link aktif.
-                      </p>
-                    ) : (
-                      previewLinks.map((link) => (
-                        <div
-                          key={link.id}
-                          className="rounded-xl border border-[#e2d8d1] bg-[#fffaf8] px-3 py-2"
-                        >
-                          <p className="text-sm font-semibold text-[#2b241f]">{link.title}</p>
-                          {link.description ? (
-                            <p className="mt-0.5 text-xs text-[#6b5e56]">{link.description}</p>
-                          ) : null}
-                        </div>
-                      ))
-                    )}
+                    <div className="mt-4 grid gap-2">
+                      {previewLinks.length === 0 ? (
+                        <p className="rounded-xl border border-dashed border-[#d9cec7] bg-[#f8f4f1] px-3 py-2 text-xs text-[#6c6059]">
+                          Belum ada link aktif.
+                        </p>
+                      ) : (
+                        previewLinks.slice(0, 4).map((link) => (
+                          <div
+                            key={link.id}
+                            className="rounded-xl border border-[#e2d8d1] bg-[#fffaf8] px-3 py-2 text-sm font-semibold text-[#2b241f]"
+                          >
+                            {link.title}
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="mx-auto max-w-[360px] rounded-[38px] border-[9px] border-[#111111] bg-[#f3f0ee] p-4 shadow-xl">
+                  <div className="mx-auto h-5 w-24 rounded-full bg-[#101010]" />
+                  <div className="mt-4 rounded-[24px] border border-[#ddd2cc] bg-[#faf8f7] px-4 py-6 text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#6d64ff] to-[#8f45e9] text-2xl font-semibold text-white shadow">
+                      {(profileFields.fullName || "C").slice(0, 1).toUpperCase()}
+                    </div>
+                    <p className="mt-4 text-2xl font-semibold tracking-tight text-[#201b18]">
+                      {profileFields.fullName || "Display Name"}
+                    </p>
+                    <p className="mt-1 text-sm text-[#6a5d56]">
+                      {profileFields.role || "Role / Profession"}
+                    </p>
+                    <p className="mt-3 max-h-[4.5rem] overflow-hidden text-sm leading-6 text-[#4f433d]">
+                      {profileFields.bio || "Bio akan muncul di sini saat kamu mengetik."}
+                    </p>
+
+                    <div className="mt-4 space-y-2 text-left">
+                      {previewLinks.length === 0 ? (
+                        <p className="rounded-xl border border-dashed border-[#d9cec7] bg-[#f8f4f1] px-3 py-2 text-xs text-[#6c6059]">
+                          Belum ada link aktif.
+                        </p>
+                      ) : (
+                        previewLinks.slice(0, 5).map((link) => (
+                          <div
+                            key={link.id}
+                            className="rounded-xl border border-[#e2d8d1] bg-[#fffaf8] px-3 py-2"
+                          >
+                            <p className="text-sm font-semibold text-[#2b241f]">{link.title}</p>
+                            {link.description ? (
+                              <p className="mt-0.5 text-xs text-[#6b5e56]">{link.description}</p>
+                            ) : null}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="mt-4">
-              <Link2 className="inline h-4 w-4 text-[#5e514b]" />{" "}
-              <span className="text-xs text-[#5e514b]">{`/creator/${sanitizeUsername(
-                profileFields.username || "creator"
-              )}`}</span>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full border border-[#e0d5ce] bg-white px-3 py-1.5 text-xs font-semibold text-[#5e514b]">
+                <Link2 className="mr-1.5 h-3.5 w-3.5" />
+                {publicPath}
+              </span>
+              <Button size="sm" variant="secondary" onClick={handleCopyPublicLink}>
+                <Copy className="h-4 w-4" />
+                Copy
+              </Button>
+              <Link href={publicPath} target="_blank">
+                <Button size="sm" variant="secondary">
+                  <ExternalLink className="h-4 w-4" />
+                  Open
+                </Button>
+              </Link>
             </div>
           </Card>
         </div>
