@@ -1,6 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions, billingTransactions } from "@/db/schema";
+import { ensureBillingSchema } from "@/server/billing-schema-bootstrap";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
 
 export type BillingPlanName = "free" | "pro" | "business";
@@ -524,6 +525,12 @@ export async function handleMidtransWebhook(payload: {
 
   if (!isDatabaseConfigured) {
     return { ok: true as const, message: "Webhook diterima (db tidak aktif)." };
+  }
+
+  try {
+    await ensureBillingSchema();
+  } catch (error) {
+    console.error("Failed to bootstrap billing schema", error);
   }
 
   try {
