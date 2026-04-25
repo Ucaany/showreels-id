@@ -26,14 +26,21 @@ import {
   Eye,
   ExternalLink,
   GripVertical,
+  ImageIcon,
   Link2,
+  Minus,
   Monitor,
+  Music2,
+  PlayCircle,
   PencilLine,
   Plus,
   Save,
+  Search,
   Share2,
   Smartphone,
   Trash2,
+  Type,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -61,7 +68,7 @@ import {
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type MobileTab = "edit" | "preview";
-type DeviceMode = "desktop" | "android";
+type DeviceMode = "mobile" | "desktop";
 
 type LinkBuilderUser = {
   name: string | null;
@@ -261,7 +268,9 @@ export function LinkBuilderEditor({
   planName: "free" | "pro" | "business";
 }) {
   const [mobileTab, setMobileTab] = useState<MobileTab>("edit");
-  const [deviceMode, setDeviceMode] = useState<DeviceMode>("desktop");
+  const [deviceMode, setDeviceMode] = useState<DeviceMode>("mobile");
+  const [isAddBlockOpen, setIsAddBlockOpen] = useState(false);
+  const [blockSearch, setBlockSearch] = useState("");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [isSavingNow, setIsSavingNow] = useState(false);
   const [links, setLinks] = useState<EditableLink[]>(() =>
@@ -497,6 +506,8 @@ export function LinkBuilderEditor({
     const payload = (await response.json()) as { links: EditableLink[] };
     setLinks(payload.links.map((link) => ({ ...link, isDirty: false })));
     setNewLink({ title: "", url: "", description: "", platform: "", badge: "" });
+    setBlockSearch("");
+    setIsAddBlockOpen(false);
     await showFeedbackAlert({
       title: "Berhasil disimpan!",
       text: "Perubahan kamu sudah tampil di halaman Showreels.",
@@ -678,6 +689,30 @@ export function LinkBuilderEditor({
     );
   }, [links, linkSearch]);
   const publicPath = `/creator/${sanitizeUsername(profileFields.username || "creator")}`;
+  const quickBlockOptions = [
+    { key: "link", label: "Link", helper: "Tambahkan URL", icon: Link2 },
+    { key: "text", label: "Text", helper: "Blok teks bebas", icon: Type },
+    { key: "image", label: "Image", helper: "Embed gambar", icon: ImageIcon },
+    { key: "youtube", label: "YouTube", helper: "Embed video", icon: PlayCircle },
+    { key: "spotify", label: "Spotify", helper: "Embed musik", icon: Music2 },
+    { key: "divider", label: "Divider", helper: "Garis pemisah", icon: Minus },
+  ] as const;
+  const filteredQuickBlockOptions = quickBlockOptions.filter((item) => {
+    const keyword = blockSearch.trim().toLowerCase();
+    if (!keyword) return true;
+    return `${item.label} ${item.helper}`.toLowerCase().includes(keyword);
+  });
+
+  const openAddBlockModal = (platform?: string) => {
+    if (platform) {
+      setNewLink((prev) => ({
+        ...prev,
+        platform,
+        title: prev.title || platform,
+      }));
+    }
+    setIsAddBlockOpen(true);
+  };
 
   const handleCopyPublicLink = async () => {
     await navigator.clipboard.writeText(`${window.location.origin}${publicPath}`);
@@ -694,7 +729,7 @@ export function LinkBuilderEditor({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2f73ff]">
-              Satulink Builder
+              showreels.id
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <h1 className="font-display text-2xl font-semibold text-[#201b18]">
@@ -703,57 +738,42 @@ export function LinkBuilderEditor({
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                 LIVE
               </span>
+              <span className="inline-flex max-w-full items-center rounded-full border border-[#d4e3fb] bg-[#edf4ff] px-3 py-1 text-xs font-semibold text-[#2f73ff]">
+                {publicPath}
+              </span>
             </div>
-            <div className="mt-2 inline-flex max-w-full items-center gap-1 rounded-2xl border border-[#eadfd9] bg-[#fbf7f4] px-3 py-2 text-sm text-[#5f524b]">
-              <span className="truncate">{publicPath}</span>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleCopyPublicLink}
-                className="dashboard-tap-target inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#dccfc8] bg-white text-[#5f524b]"
-                aria-label="Copy public link"
+                className="dashboard-tap-target inline-flex h-8 items-center justify-center rounded-lg border border-[#d6e2f7] bg-white px-2.5 text-xs font-semibold text-[#32558a] hover:bg-[#f6faff]"
               >
-                <Copy className="h-4 w-4" />
+                <Copy className="mr-1 h-3.5 w-3.5" />
+                Copy
               </button>
               <Link
                 href={publicPath}
                 target="_blank"
-                className="dashboard-tap-target inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#dccfc8] bg-white text-[#5f524b]"
-                aria-label="Buka public page"
+                className="dashboard-tap-target inline-flex h-8 items-center justify-center rounded-lg border border-[#d6e2f7] bg-white px-2.5 text-xs font-semibold text-[#32558a] hover:bg-[#f6faff]"
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                Open
               </Link>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex rounded-full border border-[#d8ccc4] bg-white p-1">
-              <button
-                type="button"
-                className="dashboard-tap-target rounded-full bg-[#2f73ff] px-4 text-xs font-semibold text-white"
-              >
-                Editor
-              </button>
-              <button
-                type="button"
-                className="dashboard-tap-target rounded-full px-4 text-xs font-semibold text-[#5d5049]"
-                disabled
-              >
-                Content
-              </button>
-              <button
-                type="button"
-                className="dashboard-tap-target rounded-full px-4 text-xs font-semibold text-[#5d5049]"
-                disabled
-              >
-                Design
-              </button>
-            </div>
             <Link href={publicPath} target="_blank">
-              <Button size="sm" variant="secondary">
+              <Button size="sm" variant="secondary" className="h-9 px-3 text-xs font-semibold">
                 <Eye className="h-4 w-4" />
                 Preview
               </Button>
             </Link>
-            <Button size="sm" variant="secondary" onClick={handleCopyPublicLink}>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-9 px-3 text-xs font-semibold"
+              onClick={handleCopyPublicLink}
+            >
               <Share2 className="h-4 w-4" />
               Share
             </Button>
@@ -1057,7 +1077,7 @@ export function LinkBuilderEditor({
               <Button
                 size="sm"
                 className="bg-[#2f73ff] hover:bg-[#225fe0]"
-                onClick={handleAddLink}
+                onClick={() => openAddBlockModal()}
                 disabled={isLinkLimitReached}
               >
                 <Plus className="h-4 w-4" />
@@ -1065,42 +1085,9 @@ export function LinkBuilderEditor({
               </Button>
             </div>
 
-            <div className="mb-4 flex flex-wrap gap-2">
-              {["Link", "Header", "Sosial", "Divider"].map((item) => (
-                <span
-                  key={item}
-                  className="inline-flex h-9 items-center rounded-xl border border-[#e2d8d2] bg-white px-3 text-xs font-semibold text-[#5f524b]"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-
-            <div className="grid gap-3 rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] p-3">
-              <Input
-                value={newLink.title}
-                maxLength={MAX_LINK_TITLE_LENGTH}
-                onChange={(event) => setNewLink((prev) => ({ ...prev, title: event.target.value }))}
-                placeholder="Judul tombol"
-              />
-              <Input
-                value={newLink.url}
-                onChange={(event) => setNewLink((prev) => ({ ...prev, url: event.target.value }))}
-                placeholder="https://..."
-              />
-              <Input
-                value={newLink.platform}
-                onChange={(event) => setNewLink((prev) => ({ ...prev, platform: event.target.value }))}
-                placeholder="Platform"
-              />
-              <Textarea
-                value={newLink.description}
-                maxLength={MAX_LINK_DESCRIPTION_LENGTH}
-                onChange={(event) => setNewLink((prev) => ({ ...prev, description: event.target.value }))}
-                className="min-h-20"
-                placeholder="Deskripsi singkat (opsional)"
-              />
-            </div>
+            <p className="mb-4 rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-3 py-2 text-xs text-[#5b7198]">
+              Tambahkan block dari popup agar tampilan editor lebih ringkas dan fokus.
+            </p>
 
             <div className="mt-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -1108,7 +1095,7 @@ export function LinkBuilderEditor({
                   {links.length} Blocks
                 </p>
                 <span className="rounded-full border border-[#e0d4ce] bg-white px-2.5 py-1 text-xs font-semibold text-[#5b7198]">
-                  {previewLinks.length} active · Plan {planName.toUpperCase()}
+                  {previewLinks.length} active - Plan {planName.toUpperCase()}
                 </span>
               </div>
               <div className="mb-3">
@@ -1180,6 +1167,18 @@ export function LinkBuilderEditor({
                 <div className="inline-flex rounded-full border border-[#d7cec7] bg-white p-1">
                   <button
                     type="button"
+                    onClick={() => setDeviceMode("mobile")}
+                    className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
+                      deviceMode === "mobile"
+                        ? "bg-[#2f73ff] text-white"
+                        : "text-[#5e514b] hover:bg-[#edf4ff]"
+                    }`}
+                  >
+                    <Smartphone className="h-3.5 w-3.5" />
+                    Mobile
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setDeviceMode("desktop")}
                     className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
                       deviceMode === "desktop"
@@ -1190,18 +1189,6 @@ export function LinkBuilderEditor({
                     <Monitor className="h-3.5 w-3.5" />
                     Desktop
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeviceMode("android")}
-                    className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
-                      deviceMode === "android"
-                        ? "bg-[#2f73ff] text-white"
-                        : "text-[#5e514b] hover:bg-[#edf4ff]"
-                    }`}
-                  >
-                    <Smartphone className="h-3.5 w-3.5" />
-                    Mobile
-                  </button>
                 </div>
                 <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                   Live
@@ -1210,104 +1197,51 @@ export function LinkBuilderEditor({
             </div>
 
             <div className="mt-4 rounded-[26px] border border-[#e2d7d1] bg-[radial-gradient(circle_at_1px_1px,#eadfd8_1px,transparent_0)] [background-size:16px_16px] p-4">
-              {deviceMode === "desktop" ? (
-                <div className="mx-auto max-w-[420px] rounded-3xl border border-[#d9cec8] bg-[#faf8f7] p-4 shadow">
-                  <div className="rounded-2xl border border-[#e4dad4] bg-white p-4">
-                    <div className="h-20 rounded-xl bg-gradient-to-r from-[#6c65ff] via-[#8f5bf3] to-[#eb6a4d]" />
-                    <div className="-mt-7 ml-4 flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-[#6d64ff] text-lg font-semibold text-white shadow">
+              <div
+                className={`mx-auto transition-all ${
+                  deviceMode === "desktop" ? "max-w-[380px]" : "max-w-[340px]"
+                }`}
+              >
+                <div className="relative rounded-[42px] border-[10px] border-[#0c121d] bg-[#111827] p-3 shadow-[0_24px_48px_rgba(16,29,55,0.3)]">
+                  <div className="absolute left-1/2 top-2 h-6 w-32 -translate-x-1/2 rounded-full bg-[#05080d]" />
+                  <div className="rounded-[30px] bg-[#f8fbff] px-5 pb-6 pt-12 text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-[#2f73ff] to-[#5b8dff] text-2xl font-semibold text-white shadow">
                       {(profileFields.fullName || "C").slice(0, 1).toUpperCase()}
                     </div>
-                    <p className="mt-2 text-lg font-semibold text-[#201b18]">
+                    <p className="mt-4 text-[32px] font-semibold leading-none text-[#1f2a44]">
                       {profileFields.fullName || "Display Name"}
                     </p>
-                    <p className="text-sm text-[#6a5d56]">{profileFields.role || "Role / Profession"}</p>
-                    <p className="mt-2 max-h-[4.5rem] overflow-hidden text-sm leading-6 text-[#4f433d]">
-                      {profileFields.bio || "Bio akan muncul di sini saat kamu mengetik."}
+                    <p className="mt-2 text-sm text-[#6a7da3]">
+                      {profileFields.role || "Deskripsi singkat tentang Anda"}
                     </p>
-                    <div className="mt-3 space-y-1">
-                      {previewExperiences.length === 0 ? (
-                        <p className="text-xs text-[#5b7198]">Experience belum ditambahkan.</p>
-                      ) : (
-                        previewExperiences.map((item) => (
-                          <p key={item.id} className="text-xs text-[#5f524b]">
-                            {item.title || "Experience"}
-                            {item.organization ? ` - ${item.organization}` : ""}
-                            {item.period ? ` (${item.period})` : ""}
-                          </p>
-                        ))
-                      )}
-                    </div>
-
-                    <div className="mt-4 grid gap-2">
+                    <div className="mt-5 space-y-2 text-left">
                       {previewLinks.length === 0 ? (
-                        <p className="rounded-xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-3 py-2 text-xs text-[#5b7198]">
+                        <p className="rounded-xl border border-dashed border-[#cfe0fa] bg-white px-3 py-2 text-xs text-[#5b7198]">
                           Belum ada link aktif.
                         </p>
                       ) : (
                         previewLinks.slice(0, 4).map((link) => (
                           <div
                             key={link.id}
-                            className="rounded-xl border border-[#e2d8d1] bg-[#fffaf8] px-3 py-2 text-sm font-semibold text-[#2b241f]"
+                            className="flex items-center gap-2 rounded-xl border border-[#dce7f8] bg-white px-3 py-2"
                           >
-                            {link.title}
+                            <span className="h-4 w-4 rounded-[5px] bg-[#5f6cff]" />
+                            <p className="truncate text-sm font-medium text-[#1f2a44]">{link.title}</p>
                           </div>
                         ))
                       )}
                     </div>
+                    {previewExperiences.length > 0 ? (
+                      <p className="mt-4 text-left text-xs text-[#6b7ca1]">
+                        {previewExperiences[0]?.title}
+                        {previewExperiences[0]?.organization
+                          ? ` - ${previewExperiences[0].organization}`
+                          : ""}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
-              ) : (
-                <div className="mx-auto max-w-[360px] rounded-[38px] border-[9px] border-[#111111] bg-[#f3f0ee] p-4 shadow-xl">
-                  <div className="mx-auto h-5 w-24 rounded-full bg-[#101010]" />
-                  <div className="mt-4 rounded-[24px] border border-[#ddd2cc] bg-[#faf8f7] px-4 py-6 text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#6d64ff] to-[#8f45e9] text-2xl font-semibold text-white shadow">
-                      {(profileFields.fullName || "C").slice(0, 1).toUpperCase()}
-                    </div>
-                    <p className="mt-4 text-2xl font-semibold tracking-tight text-[#201b18]">
-                      {profileFields.fullName || "Display Name"}
-                    </p>
-                    <p className="mt-1 text-sm text-[#6a5d56]">
-                      {profileFields.role || "Role / Profession"}
-                    </p>
-                    <p className="mt-3 max-h-[4.5rem] overflow-hidden text-sm leading-6 text-[#4f433d]">
-                      {profileFields.bio || "Bio akan muncul di sini saat kamu mengetik."}
-                    </p>
-                    <div className="mt-2 space-y-1 text-left">
-                      {previewExperiences.length === 0 ? (
-                        <p className="text-xs text-[#5b7198]">Experience belum ditambahkan.</p>
-                      ) : (
-                        previewExperiences.map((item) => (
-                          <p key={item.id} className="text-xs text-[#5f524b]">
-                            {item.title || "Experience"}
-                            {item.organization ? ` - ${item.organization}` : ""}
-                            {item.period ? ` (${item.period})` : ""}
-                          </p>
-                        ))
-                      )}
-                    </div>
-
-                    <div className="mt-4 space-y-2 text-left">
-                      {previewLinks.length === 0 ? (
-                        <p className="rounded-xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-3 py-2 text-xs text-[#5b7198]">
-                          Belum ada link aktif.
-                        </p>
-                      ) : (
-                        previewLinks.slice(0, 5).map((link) => (
-                          <div
-                            key={link.id}
-                            className="rounded-xl border border-[#e2d8d1] bg-[#fffaf8] px-3 py-2"
-                          >
-                            <p className="text-sm font-semibold text-[#2b241f]">{link.title}</p>
-                            {link.description ? (
-                              <p className="mt-0.5 text-xs text-[#5b7198]">{link.description}</p>
-                            ) : null}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -1329,6 +1263,127 @@ export function LinkBuilderEditor({
           </Card>
         </div>
       </div>
+
+      {isAddBlockOpen ? (
+        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#0f2347]/55 p-4">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label="Close add block modal backdrop"
+            onClick={() => setIsAddBlockOpen(false)}
+          />
+          <div className="relative z-[96] w-full max-w-[860px] rounded-[1.4rem] border border-[#c8d9f4] bg-white p-4 shadow-xl sm:p-5">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-2xl font-semibold text-[#1a2b48]">Add a block</h3>
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#cfdcf2] text-[#44608d] hover:bg-[#eff5ff]"
+                aria-label="Close add block modal"
+                onClick={() => setIsAddBlockOpen(false)}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="relative mt-4">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa2c8]" />
+              <Input
+                value={blockSearch}
+                onChange={(event) => setBlockSearch(event.target.value)}
+                placeholder="Search blocks..."
+                className="h-12 pl-10 text-base"
+              />
+            </div>
+
+            <div className="mt-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5b7198]">
+                Quick Add
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-4">
+                {filteredQuickBlockOptions.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => openAddBlockModal(item.label)}
+                      className="rounded-xl border border-[#d8e5fa] bg-[#f7fbff] px-3 py-3 text-left transition hover:border-[#aac7f5] hover:bg-[#edf4ff]"
+                    >
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#2f73ff]">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <p className="mt-2 text-sm font-semibold text-[#1f2a44]">{item.label}</p>
+                      <p className="text-xs text-[#6b7ca1]">{item.helper}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-4">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2f73ff]">
+                Custom Link
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Input
+                  value={newLink.title}
+                  maxLength={MAX_LINK_TITLE_LENGTH}
+                  onChange={(event) => setNewLink((prev) => ({ ...prev, title: event.target.value }))}
+                  placeholder="Judul tombol"
+                />
+                <Input
+                  value={newLink.url}
+                  onChange={(event) => setNewLink((prev) => ({ ...prev, url: event.target.value }))}
+                  placeholder="https://..."
+                />
+                <Input
+                  value={newLink.platform}
+                  onChange={(event) =>
+                    setNewLink((prev) => ({ ...prev, platform: event.target.value }))
+                  }
+                  placeholder="Platform"
+                />
+                <Input
+                  value={newLink.badge}
+                  onChange={(event) => setNewLink((prev) => ({ ...prev, badge: event.target.value }))}
+                  placeholder="Badge (opsional)"
+                />
+                <div className="sm:col-span-2">
+                  <Textarea
+                    value={newLink.description}
+                    maxLength={MAX_LINK_DESCRIPTION_LENGTH}
+                    onChange={(event) =>
+                      setNewLink((prev) => ({ ...prev, description: event.target.value }))
+                    }
+                    className="min-h-20"
+                    placeholder="Deskripsi singkat (opsional)"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsAddBlockOpen(false)}
+                  className="h-9 px-3 text-xs font-semibold"
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="button"
+                  className="h-9 bg-[#2f73ff] px-3 text-xs font-semibold hover:bg-[#225fe0]"
+                  onClick={handleAddLink}
+                  disabled={isLinkLimitReached}
+                >
+                  <Plus className="h-4 w-4" />
+                  Tambah Block
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="fixed inset-x-0 bottom-3 z-20 px-3 md:hidden">
         <Button className="w-full" onClick={saveProfileNow} disabled={isSavingNow}>

@@ -291,7 +291,7 @@ export function DashboardShell({
               {collapsed ? planLabel : `${planLabel} Creator`}
             </p>
           </div>
-          <nav className="flex h-full min-h-0 flex-col">
+          <nav className="flex min-h-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
             {primaryNavItems.map((item) => {
               const Icon = item.icon;

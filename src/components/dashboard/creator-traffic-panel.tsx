@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Activity, Clock3, Eye, Lock, MapPin, Sparkles } from "lucide-react";
+import { Activity, Eye, Lock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
@@ -28,28 +28,6 @@ type Point = {
   uniqueVisitors: number;
 };
 
-type TopPage = {
-  path: string;
-  label: string;
-  views: number;
-};
-
-type Recent = {
-  id: string;
-  label: string;
-  path: string;
-  createdAt: string;
-};
-
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
-
 export function CreatorTrafficPanel({
   compact = false,
   className = "",
@@ -74,8 +52,6 @@ export function CreatorTrafficPanel({
     planName: "free",
   });
   const [points, setPoints] = useState<Point[]>([]);
-  const [topPages, setTopPages] = useState<TopPage[]>([]);
-  const [recent, setRecent] = useState<Recent[]>([]);
   const [analyticsMaxDays, setAnalyticsMaxDays] = useState(30);
   const [appliedPeriod, setAppliedPeriod] = useState<PeriodValue>("7d");
 
@@ -112,13 +88,12 @@ export function CreatorTrafficPanel({
       setLoading(true);
       setError("");
 
-      const [summaryRes, trafficRes, topRes] = await Promise.all([
+      const [summaryRes, trafficRes] = await Promise.all([
         fetch(`/api/analytics/summary?${query}`),
         fetch(`/api/analytics/traffic?${query}`),
-        fetch(`/api/analytics/top-pages?${query}`),
       ]);
 
-      if (!summaryRes.ok || !trafficRes.ok || !topRes.ok) {
+      if (!summaryRes.ok || !trafficRes.ok) {
         if (!isCancelled) {
           setError("Gagal memuat data analytics.");
           setLoading(false);
@@ -126,10 +101,9 @@ export function CreatorTrafficPanel({
         return;
       }
 
-      const [summaryPayload, trafficPayload, topPayload] = await Promise.all([
+      const [summaryPayload, trafficPayload] = await Promise.all([
         summaryRes.json() as Promise<SummaryPayload>,
         trafficRes.json() as Promise<{ points: Point[] }>,
-        topRes.json() as Promise<{ topPages: TopPage[]; recent: Recent[] }>,
       ]);
 
       if (isCancelled) {
@@ -148,8 +122,6 @@ export function CreatorTrafficPanel({
       setAppliedPeriod(summaryPayload.appliedPeriod || "7d");
       setAnalyticsMaxDays(summaryPayload.analyticsMaxDays || 30);
       setPoints(trafficPayload.points || []);
-      setTopPages(topPayload.topPages || []);
-      setRecent(topPayload.recent || []);
       setLoading(false);
     };
 
@@ -160,7 +132,9 @@ export function CreatorTrafficPanel({
   }, [query]);
 
   return (
-    <Card className={`dashboard-clean-card border-[#d6e2f7] bg-white p-4 sm:p-5 ${className}`}>
+    <Card
+      className={`dashboard-clean-card border-[#d6e2f7] bg-white ${compact ? "p-4" : "p-4 sm:p-5"} ${className}`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-[#5873a0]">Traffic Overview</p>
@@ -257,7 +231,7 @@ export function CreatorTrafficPanel({
         </div>
       ) : null}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-[#dce7f8] bg-white p-4">
           <div className="flex items-center gap-2 text-[#4f658f]">
             <Eye className="h-4 w-4 text-[#2f73ff]" />
@@ -278,27 +252,6 @@ export function CreatorTrafficPanel({
             {summary.uniqueVisitors}
           </p>
         </div>
-        <div className="rounded-2xl border border-[#dce7f8] bg-white p-4">
-          <div className="flex items-center gap-2 text-[#4f658f]">
-            <MapPin className="h-4 w-4 text-[#2f73ff]" />
-            <p className="text-xs font-semibold uppercase tracking-[0.14em]">Top Page</p>
-          </div>
-          <p className="mt-2 truncate text-sm font-semibold text-[#1b2e4f]">
-            {summary.topPage || "Belum ada data"}
-          </p>
-          <p className="text-xs text-[#5b7198]">{summary.topPageViews} views</p>
-        </div>
-        <div className="rounded-2xl border border-[#dce7f8] bg-white p-4">
-          <div className="flex items-center gap-2 text-[#4f658f]">
-            <Clock3 className="h-4 w-4 text-[#2f73ff]" />
-            <p className="text-xs font-semibold uppercase tracking-[0.14em]">
-              Recent Activity
-            </p>
-          </div>
-          <p className="mt-2 text-sm text-[#1b2e4f]">
-            {recent.length === 0 ? "Belum ada traffic terbaru." : `${recent.length} event terakhir`}
-          </p>
-        </div>
       </div>
 
       {loading ? (
@@ -310,51 +263,8 @@ export function CreatorTrafficPanel({
           {error}
         </div>
       ) : (
-        <div
-          className={`mt-4 grid gap-4 ${
-            compact ? "xl:grid-cols-[minmax(0,1fr)_320px]" : "xl:grid-cols-[minmax(0,1fr)_360px]"
-          }`}
-        >
+        <div className="mt-4">
           <TrafficLineChart points={points} />
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-[#dce7f8] bg-white p-4">
-              <h3 className="text-sm font-semibold text-[#1b2e4f]">Top Pages</h3>
-              <div className="mt-3 space-y-2">
-                {topPages.length === 0 ? (
-                  <p className="text-sm text-[#5b7198]">Belum ada traffic.</p>
-                ) : (
-                  topPages.slice(0, compact ? 4 : 6).map((item, index) => (
-                    <div
-                      key={`${item.path}-${index}`}
-                      className="flex items-center justify-between gap-2 rounded-xl border border-[#dce7f8] bg-[#f9fbff] px-3 py-2"
-                    >
-                      <p className="truncate text-sm font-medium text-[#1b2e4f]">{item.label}</p>
-                      <span className="text-xs font-semibold text-[#5b7198]">{item.views}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[#dce7f8] bg-white p-4">
-              <h3 className="text-sm font-semibold text-[#1b2e4f]">Recent Traffic</h3>
-              <div className="mt-3 space-y-2">
-                {recent.length === 0 ? (
-                  <p className="text-sm text-[#5b7198]">Belum ada event terbaru.</p>
-                ) : (
-                  recent.slice(0, compact ? 4 : 7).map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-xl border border-[#dce7f8] bg-[#f9fbff] px-3 py-2"
-                    >
-                      <p className="text-sm font-medium text-[#1b2e4f]">{item.label}</p>
-                      <p className="text-xs text-[#5b7198]">{formatDateTime(item.createdAt)}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
         </div>
       )}
     </Card>

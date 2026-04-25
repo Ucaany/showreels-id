@@ -94,7 +94,6 @@ export default async function DashboardPage() {
 
       <section className="space-y-3">
         <div>
-          <p className="text-sm font-medium text-[#5873a0]">Card 1</p>
           <h2 className="font-display text-2xl font-semibold text-[#1b2e4f]">
             Greetings + Traffic Analisa Video
           </h2>
@@ -104,7 +103,6 @@ export default async function DashboardPage() {
 
       <section className="space-y-3">
         <div>
-          <p className="text-sm font-medium text-[#5873a0]">Card 2</p>
           <h2 className="font-display text-2xl font-semibold text-[#1b2e4f]">
             Share Link + Ringkasan Performa Konten
           </h2>
@@ -177,16 +175,18 @@ export default async function DashboardPage() {
 
       <section className="space-y-3">
         <div>
-          <p className="text-sm font-medium text-[#5873a0]">Card 3</p>
           <h2 className="font-display text-2xl font-semibold text-[#1b2e4f]">Quick Action</h2>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           {quickActions.map((item) => (
-            <Card key={item.href} className="dashboard-clean-card border-[#d6e2f7] bg-white p-4">
-              <h3 className="text-base font-semibold text-[#1b2e4f]">{item.title}</h3>
-              <p className="mt-1 text-sm leading-6 text-[#4f658f]">{item.description}</p>
-              <Link href={item.href} className="mt-4 inline-block">
-                <Button size="sm" variant="secondary">
+            <Card
+              key={item.href}
+              className="dashboard-clean-card border-[#d6e2f7] bg-white p-3 sm:p-3.5"
+            >
+              <h3 className="text-sm font-semibold text-[#1b2e4f]">{item.title}</h3>
+              <p className="mt-1 text-xs leading-5 text-[#4f658f]">{item.description}</p>
+              <Link href={item.href} className="mt-3 inline-block">
+                <Button size="sm" variant="secondary" className="h-8 px-3 text-xs font-semibold">
                   {item.cta}
                 </Button>
               </Link>
