@@ -1,34 +1,45 @@
-import Link from "next/link";
-import { CreditCard } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { BillingPanel } from "@/components/dashboard/billing-panel";
+import {
+  getBillingTransactions,
+  getOrCreateSubscription,
+  getPlanCatalog,
+  isMidtransConfigured,
+} from "@/server/billing";
+import { requireCurrentUser } from "@/server/current-user";
+import { getOrCreateCreatorSettings } from "@/server/creator-settings";
 
-export default function DashboardBillingPage() {
+export default async function DashboardBillingPage() {
+  const user = await requireCurrentUser();
+
+  const [subscription, transactions, settings] = await Promise.all([
+    getOrCreateSubscription(user.id),
+    getBillingTransactions(user.id),
+    getOrCreateCreatorSettings({
+      userId: user.id,
+      billingEmail: user.contactEmail || user.email,
+    }),
+  ]);
+
   return (
-    <Card className="dashboard-clean-card border-[#ddd3cd] bg-white/90 p-5 sm:p-6">
-      <div className="max-w-2xl space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#e24f3b]">
-          Billing
-        </p>
-        <h1 className="font-display text-2xl font-semibold text-[#201b18] sm:text-3xl">
-          Billing center sedang disiapkan
-        </h1>
-        <p className="text-sm leading-6 text-[#5d514b]">
-          Active plan, riwayat transaksi, invoice, dan upgrade flow akan tersedia
-          pada phase berikutnya.
-        </p>
-        <div className="flex flex-wrap gap-2 pt-2">
-          <Link href="/dashboard">
-            <Button>
-              <CreditCard className="h-4 w-4" />
-              Lihat Dashboard
-            </Button>
-          </Link>
-          <Link href="/dashboard/settings">
-            <Button variant="secondary">Buka Settings</Button>
-          </Link>
-        </div>
-      </div>
-    </Card>
+    <BillingPanel
+      initialPlan={{
+        ...subscription,
+        planName: subscription.planName as "free" | "pro" | "business",
+        billingCycle: subscription.billingCycle as "monthly" | "yearly",
+        status: subscription.status as "active" | "trial" | "expired" | "failed" | "pending",
+        renewalDate: subscription.renewalDate?.toISOString() || null,
+      }}
+      catalog={getPlanCatalog()}
+      initialTransactions={transactions.map((transaction) => ({
+        ...transaction,
+        planName: transaction.planName as "free" | "pro" | "business",
+        billingCycle: transaction.billingCycle as "monthly" | "yearly",
+        status: transaction.status as "pending" | "paid" | "failed" | "cancelled" | "expired",
+        createdAt: transaction.createdAt.toISOString(),
+      }))}
+      billingEmail={settings.billingEmail || user.contactEmail || user.email}
+      paymentMethod={settings.paymentMethod}
+      midtransReady={isMidtransConfigured()}
+    />
   );
 }

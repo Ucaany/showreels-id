@@ -173,14 +173,155 @@ export const visitorDailyStats = pgTable(
   })
 );
 
+export const creatorSettings = pgTable(
+  "creator_settings",
+  {
+    userId: uuid("user_id")
+      .primaryKey()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    publicProfile: boolean("public_profile").notNull().default(true),
+    searchIndexing: boolean("search_indexing").notNull().default(true),
+    showPublicEmail: boolean("show_public_email").notNull().default(false),
+    showSocialLinks: boolean("show_social_links").notNull().default(true),
+    showPublicStats: boolean("show_public_stats").notNull().default(false),
+    whitelabelEnabled: boolean("whitelabel_enabled").notNull().default(false),
+    billingEmail: text("billing_email").notNull().default(""),
+    paymentMethod: text("payment_method").notNull().default("midtrans"),
+    taxInfo: text("tax_info").notNull().default(""),
+    invoiceNotes: text("invoice_notes").notNull().default(""),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => ({
+    billingEmailIdx: index("creator_settings_billing_email_idx").on(table.billingEmail),
+  })
+);
+
+export const billingSubscriptions = pgTable(
+  "billing_subscriptions",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" })
+      .unique(),
+    planName: text("plan_name")
+      .$type<"free" | "pro" | "business">()
+      .notNull()
+      .default("free"),
+    billingCycle: text("billing_cycle")
+      .$type<"monthly" | "yearly">()
+      .notNull()
+      .default("monthly"),
+    status: text("status")
+      .$type<"active" | "trial" | "expired" | "failed" | "pending">()
+      .notNull()
+      .default("active"),
+    price: integer("price").notNull().default(0),
+    currency: text("currency").notNull().default("IDR"),
+    renewalDate: timestamp("renewal_date", { mode: "date" }),
+    nextPlanName: text("next_plan_name")
+      .$type<"free" | "pro" | "business">()
+      .notNull()
+      .default("free"),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdIdx: index("billing_subscriptions_user_id_idx").on(table.userId),
+    statusIdx: index("billing_subscriptions_status_idx").on(table.status),
+  })
+);
+
+export const billingTransactions = pgTable(
+  "billing_transactions",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    subscriptionId: text("subscription_id").references(() => billingSubscriptions.id, {
+      onDelete: "set null",
+    }),
+    invoiceId: text("invoice_id").notNull().unique(),
+    planName: text("plan_name")
+      .$type<"free" | "pro" | "business">()
+      .notNull()
+      .default("free"),
+    billingCycle: text("billing_cycle")
+      .$type<"monthly" | "yearly">()
+      .notNull()
+      .default("monthly"),
+    amount: integer("amount").notNull().default(0),
+    currency: text("currency").notNull().default("IDR"),
+    status: text("status")
+      .$type<"pending" | "paid" | "failed" | "cancelled" | "expired">()
+      .notNull()
+      .default("pending"),
+    provider: text("provider").notNull().default("midtrans"),
+    providerReference: text("provider_reference").notNull().default(""),
+    snapToken: text("snap_token").notNull().default(""),
+    redirectUrl: text("redirect_url").notNull().default(""),
+    paymentMethod: text("payment_method").notNull().default(""),
+    description: text("description").notNull().default(""),
+    rawPayload: jsonb("raw_payload")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    paidAt: timestamp("paid_at", { mode: "date" }),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdIdx: index("billing_transactions_user_id_idx").on(table.userId),
+    invoiceIdIdx: index("billing_transactions_invoice_id_idx").on(table.invoiceId),
+    statusIdx: index("billing_transactions_status_idx").on(table.status),
+  })
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   videos: many(videos),
+  billingTransactions: many(billingTransactions),
 }));
 
 export const videosRelations = relations(videos, ({ one }) => ({
   author: one(users, {
     fields: [videos.userId],
     references: [users.id],
+  }),
+}));
+
+export const creatorSettingsRelations = relations(creatorSettings, ({ one }) => ({
+  user: one(users, {
+    fields: [creatorSettings.userId],
+    references: [users.id],
+  }),
+}));
+
+export const billingSubscriptionsRelations = relations(
+  billingSubscriptions,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [billingSubscriptions.userId],
+      references: [users.id],
+    }),
+    transactions: many(billingTransactions),
+  })
+);
+
+export const billingTransactionsRelations = relations(billingTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [billingTransactions.userId],
+    references: [users.id],
+  }),
+  subscription: one(billingSubscriptions, {
+    fields: [billingTransactions.subscriptionId],
+    references: [billingSubscriptions.id],
   }),
 }));
 
@@ -194,3 +335,9 @@ export type DbVisitorEvent = typeof visitorEvents.$inferSelect;
 export type NewDbVisitorEvent = typeof visitorEvents.$inferInsert;
 export type DbVisitorDailyStats = typeof visitorDailyStats.$inferSelect;
 export type NewDbVisitorDailyStats = typeof visitorDailyStats.$inferInsert;
+export type DbCreatorSettings = typeof creatorSettings.$inferSelect;
+export type NewDbCreatorSettings = typeof creatorSettings.$inferInsert;
+export type DbBillingSubscription = typeof billingSubscriptions.$inferSelect;
+export type NewDbBillingSubscription = typeof billingSubscriptions.$inferInsert;
+export type DbBillingTransaction = typeof billingTransactions.$inferSelect;
+export type NewDbBillingTransaction = typeof billingTransactions.$inferInsert;
