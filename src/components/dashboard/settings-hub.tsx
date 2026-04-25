@@ -104,7 +104,7 @@ export function SettingsHub({
           </p>
           <p className="mt-1 text-lg font-semibold text-[#201b18]">{planLabel}</p>
           <p className="mt-1 text-sm text-[#5e514a]">
-            Batas ubah username: {entitlements.usernameChangesPer30Days}x/30 hari · Analytics{" "}
+            Batas ubah username: {entitlements.usernameChangesPer30Days}x/30 hari | Analytics{" "}
             {entitlements.analyticsMaxDays} hari
           </p>
         </div>
@@ -202,7 +202,7 @@ export function SettingsHub({
             placeholder="Ketik HAPUS AKUN"
             className="h-11 w-full rounded-xl border border-rose-200 bg-white px-3 text-sm text-[#201b18] outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-200"
           />
-          <Button variant="danger" onClick={handleDeleteAccount} disabled={deleting}>
+          <Button variant="danger" onClick={handleDeleteAccount} disabled={deleting} className="w-full sm:w-auto">
             {deleting ? "Menghapus..." : "Hapus Account"}
           </Button>
         </div>
@@ -210,3 +210,4 @@ export function SettingsHub({
     </div>
   );
 }
+

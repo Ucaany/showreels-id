@@ -119,8 +119,8 @@ export default function SettingsLinkProfilePage() {
   return (
     <div className="space-y-5">
       <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
-        <Link href="/dashboard/settings">
-          <Button size="sm" variant="secondary">
+        <Link href="/dashboard/settings" className="inline-flex w-full sm:w-auto">
+          <Button size="sm" variant="secondary" className="w-full sm:w-auto">
             <ArrowLeft className="h-4 w-4" />
             Kembali ke Settings
           </Button>
@@ -176,15 +176,21 @@ export default function SettingsLinkProfilePage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button onClick={handleSave} disabled={saving || normalizedSlug === initialSlug}>
+              <Button
+                onClick={handleSave}
+                disabled={saving || normalizedSlug === initialSlug}
+                className="w-full sm:w-auto"
+              >
                 {saving ? "Menyimpan..." : "Simpan Slug"}
               </Button>
-              <Button variant="secondary" onClick={handleCopy}>
+              <Button variant="secondary" onClick={handleCopy} className="w-full sm:w-auto">
                 <Copy className="h-4 w-4" />
                 Copy Link
               </Button>
-              <Link href={publicUrl} target="_blank">
-                <Button variant="secondary">Preview Profile</Button>
+              <Link href={publicUrl} target="_blank" className="w-full sm:w-auto">
+                <Button variant="secondary" className="w-full sm:w-auto">
+                  Preview Profile
+                </Button>
               </Link>
             </div>
           </div>

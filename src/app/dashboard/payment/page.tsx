@@ -19,7 +19,7 @@ export default async function DashboardPaymentPage({
     redirect("/dashboard/billing");
   }
 
-  const planLabel = selectedPlan === "business" ? "Team" : "Pro";
+  const planLabel = selectedPlan === "business" ? "Business" : "Pro";
   const amount = getPlanPrice(selectedPlan, "monthly");
 
   return (

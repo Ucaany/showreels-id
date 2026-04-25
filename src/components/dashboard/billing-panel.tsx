@@ -309,11 +309,14 @@ export function BillingPanel({
           const isCurrent = planName === effectivePlanName;
 
           return (
-            <Card key={plan.name} className="dashboard-clean-card border-border bg-surface p-4">
+            <Card
+              key={plan.name}
+              className="dashboard-clean-card border-border bg-surface flex h-full flex-col p-4"
+            >
               <p className="text-sm font-semibold text-[#201b18]">{plan.label}</p>
               <p className="mt-1 text-2xl font-semibold text-[#201b18]">{toIdr(plan.monthly)}</p>
               <p className="text-xs text-[#635750]">per bulan</p>
-              <ul className="mt-3 space-y-1 text-sm text-[#5f524b]">
+              <ul className="mt-3 flex-1 space-y-1 text-sm text-[#5f524b]">
                 {plan.benefits.map((benefit) => (
                   <li key={benefit}>- {benefit}</li>
                 ))}

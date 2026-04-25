@@ -69,8 +69,8 @@ export default function SettingsWhitelabelPage() {
   return (
     <div className="space-y-5">
       <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
-        <Link href="/dashboard/settings">
-          <Button size="sm" variant="secondary">
+        <Link href="/dashboard/settings" className="inline-flex w-full sm:w-auto">
+          <Button size="sm" variant="secondary" className="w-full sm:w-auto">
             <ArrowLeft className="h-4 w-4" />
             Kembali ke Settings
           </Button>
@@ -116,7 +116,7 @@ export default function SettingsWhitelabelPage() {
                 Fitur ganti tema khusus Business sedang disiapkan (coming soon).
               </p>
             </div>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
               {saving ? "Menyimpan..." : "Simpan Whitelabel"}
             </Button>
           </div>
@@ -131,8 +131,8 @@ export default function SettingsWhitelabelPage() {
                 </p>
               </div>
             </div>
-            <Link href="/dashboard/billing" className="mt-3 inline-block">
-              <Button>
+            <Link href="/dashboard/billing" className="mt-3 inline-block w-full sm:w-auto">
+              <Button className="w-full sm:w-auto">
                 <Sparkles className="h-4 w-4" />
                 Upgrade Plan
               </Button>

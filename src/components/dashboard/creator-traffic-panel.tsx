@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Activity, Clock3, Eye, MapPin } from "lucide-react";
+import { Activity, Clock3, Eye, Lock, MapPin, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { TrafficLineChart } from "@/components/dashboard/traffic-line-chart";
@@ -13,6 +15,9 @@ type SummaryPayload = {
   topPageViews: number;
   appliedPeriod?: PeriodValue;
   analyticsMaxDays?: number;
+  requestedRangeDays?: number;
+  appliedRangeDays?: number;
+  planName?: "free" | "pro" | "business";
 };
 
 type Point = {
@@ -62,6 +67,9 @@ export function CreatorTrafficPanel({
     uniqueVisitors: 0,
     topPage: null,
     topPageViews: 0,
+    requestedRangeDays: 0,
+    appliedRangeDays: 0,
+    planName: "free",
   });
   const [points, setPoints] = useState<Point[]>([]);
   const [topPages, setTopPages] = useState<TopPage[]>([]);
@@ -79,6 +87,13 @@ export function CreatorTrafficPanel({
     }
     return params.toString();
   }, [analyticsMaxDays, period, start, end]);
+
+  const isThirtyDayLocked = analyticsMaxDays < 30;
+  const lockedCountdownDays = Math.max(0, 30 - analyticsMaxDays);
+  const hasRangeClamp =
+    (summary.requestedRangeDays || 0) > 0 &&
+    (summary.appliedRangeDays || 0) > 0 &&
+    (summary.requestedRangeDays || 0) > (summary.appliedRangeDays || 0);
 
   useEffect(() => {
     let isCancelled = false;
@@ -112,6 +127,9 @@ export function CreatorTrafficPanel({
         uniqueVisitors: summaryPayload.uniqueVisitors || 0,
         topPage: summaryPayload.topPage || null,
         topPageViews: summaryPayload.topPageViews || 0,
+        requestedRangeDays: summaryPayload.requestedRangeDays || 0,
+        appliedRangeDays: summaryPayload.appliedRangeDays || 0,
+        planName: summaryPayload.planName || "free",
       });
       setAppliedPeriod(summaryPayload.appliedPeriod || "7d");
       setAnalyticsMaxDays(summaryPayload.analyticsMaxDays || 30);
@@ -140,6 +158,9 @@ export function CreatorTrafficPanel({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-[#e5d6cf] bg-white px-2.5 py-1 text-xs font-semibold text-[#6e5f57]">
+            Limit plan: {analyticsMaxDays} hari
+          </span>
           <Select
             aria-label="Filter periode analytics"
             value={period}
@@ -148,17 +169,51 @@ export function CreatorTrafficPanel({
           >
             <option value="today">Hari ini</option>
             <option value="7d">7 hari terakhir</option>
-            <option value="30d" disabled={analyticsMaxDays < 30}>
-              {analyticsMaxDays < 30 ? "30 hari (Pro/Business)" : "30 hari terakhir"}
+            <option value="30d">
+              {isThirtyDayLocked ? "🔒 30 hari (Upgrade Pro/Business)" : "30 hari terakhir"}
             </option>
             <option value="custom">Custom range</option>
           </Select>
         </div>
       </div>
-      {appliedPeriod !== period ? (
-        <p className="mt-2 text-xs text-[#6c5f58]">
-          Periode disesuaikan otomatis ke {appliedPeriod.toUpperCase()} sesuai limit plan.
-        </p>
+
+      {isThirtyDayLocked ? (
+        <div className="mt-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-white p-3 sm:p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">
+                <Lock className="h-3.5 w-3.5" />
+                Analytics Lock
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[#3d322d]">
+                Akses analytics 30 hari masih terkunci untuk plan{" "}
+                <span className="capitalize">{summary.planName || "free"}</span>.
+              </p>
+              <p className="mt-1 text-sm text-[#6a5b53]">
+                Sisa {lockedCountdownDays} hari lagi terkunci menuju akses 30 hari.
+              </p>
+            </div>
+            <Link href="/dashboard/billing" className="w-full sm:w-auto">
+              <Button size="sm" className="w-full sm:w-auto">
+                <Sparkles className="h-4 w-4" />
+                Upgrade Pro/Business
+              </Button>
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      {appliedPeriod !== period || hasRangeClamp ? (
+        <div className="mt-3 rounded-2xl border border-[#f2d2c8] bg-[#fff6f2] p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#d56752]">
+            Range disesuaikan
+          </p>
+          <p className="mt-1 text-sm text-[#6a5b53]">
+            {hasRangeClamp
+              ? `Permintaan ${summary.requestedRangeDays} hari disesuaikan ke ${summary.appliedRangeDays} hari sesuai limit plan.`
+              : `Periode disesuaikan otomatis ke ${appliedPeriod.toUpperCase()} sesuai limit plan.`}
+          </p>
+        </div>
       ) : null}
 
       {period === "custom" ? (
@@ -182,7 +237,8 @@ export function CreatorTrafficPanel({
             />
           </label>
           <p className="text-xs text-[#6c5f58] sm:col-span-2">
-            Range custom mengikuti limit plan maksimal {analyticsMaxDays} hari.
+            Range custom mengikuti limit plan maksimal {analyticsMaxDays} hari. Jika melebihi
+            limit, data otomatis disesuaikan.
           </p>
         </div>
       ) : null}

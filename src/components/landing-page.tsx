@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/cn";
+import { getPlanFeatureBullets } from "@/lib/plan-feature-matrix";
 import { createClient } from "@/lib/supabase/client";
 import { getThumbnailCandidates } from "@/lib/video-utils";
 import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
@@ -750,6 +751,8 @@ export function LandingPage({
     ]
   );
 
+  const featureLocale = locale === "en" ? "en" : "id";
+
   const pricingPlans = useMemo(
     () => [
       {
@@ -757,13 +760,7 @@ export function LandingPage({
         name: "Free",
         monthlyPrice: "Rp0",
         subtitle: dictionary.landingPricingFree,
-        points: [
-          locale === "en" ? "Public creator profile page" : "Halaman profil creator publik",
-          locale === "en" ? "Public video page by slug" : "Halaman video publik per slug",
-          locale === "en"
-            ? "Custom links + social/contact links"
-            : "Custom links + social/contact links",
-        ],
+        points: getPlanFeatureBullets("free", featureLocale),
         featured: false,
       },
       {
@@ -771,39 +768,23 @@ export function LandingPage({
         name: "Pro",
         monthlyPrice: "Rp49.000",
         subtitle: dictionary.landingPricingPro,
-        points: [
-          locale === "en" ? "Everything in Free" : "Semua fitur Free",
-          locale === "en"
-            ? "Visibility states: draft/private/semi_private/public"
-            : "Status visibilitas: draft/private/semi_private/public",
-          locale === "en"
-            ? "Sources: YouTube, Drive, Instagram, Facebook, Vimeo"
-            : "Sumber: YouTube, Drive, Instagram, Facebook, Vimeo",
-        ],
+        points: getPlanFeatureBullets("pro", featureLocale),
         featured: true,
       },
       {
         id: "business" as PricingPlanId,
-        name: "Team",
+        name: "Business",
         monthlyPrice: "Rp149.000",
         subtitle: dictionary.landingPricingTeam,
-        points: [
-          locale === "en" ? "Everything in Pro" : "Semua fitur Pro",
-          locale === "en"
-            ? "Whitelabel branding removal on public page"
-            : "Hapus branding showreels.id pada halaman publik",
-          locale === "en"
-            ? "Theme switch coming soon"
-            : "Ganti tema (coming soon)",
-        ],
+        points: getPlanFeatureBullets("business", featureLocale),
         featured: false,
       },
     ],
     [
+      featureLocale,
       dictionary.landingPricingFree,
       dictionary.landingPricingPro,
       dictionary.landingPricingTeam,
-      locale,
     ]
   );
 
@@ -1357,7 +1338,7 @@ export function LandingPage({
                   <article
                     key={plan.name}
                     className={cn(
-                      "rounded-[1.45rem] border p-5 shadow-sm sm:p-6",
+                      "flex h-full flex-col rounded-[1.45rem] border p-5 shadow-sm sm:p-6",
                       plan.featured
                         ? "border-[#1f1a17] bg-[#1a1412] text-white"
                         : "border-[#ddd3cd] bg-white text-[#201b18]"
@@ -1391,7 +1372,7 @@ export function LandingPage({
                       {plan.subtitle}
                     </p>
 
-                    <ul className="mt-4 space-y-3">
+                    <ul className="mt-4 flex-1 space-y-3">
                       {plan.points.map((point) => (
                         <li
                           key={point}

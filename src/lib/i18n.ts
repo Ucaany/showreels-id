@@ -68,7 +68,7 @@ export const dictionaries = {
     landingPricingTitleLead: "Paket fleksibel untuk",
     landingPricingTitleAccent: "creator yang berkembang.",
     landingPricingDescription:
-      "Struktur paket tetap Free, Pro, dan Team. Seluruh poin hanya menampilkan capability Showreels saat ini.",
+      "Struktur paket tetap Free, Pro, dan Business. Seluruh poin hanya menampilkan capability Showreels saat ini.",
     landingPricingMonthlyLabel: "Bulanan",
     landingPricingYearlyLabel: "Tahunan",
     landingPricingYearlySave: "Hemat 2 bulan",
@@ -203,7 +203,7 @@ export const dictionaries = {
     landingPricingTitleLead: "Flexible plans for",
     landingPricingTitleAccent: "growing creators.",
     landingPricingDescription:
-      "The Free, Pro, and Team structure stays in place. Every bullet below reflects current Showreels capabilities.",
+      "The Free, Pro, and Business structure stays in place. Every bullet below reflects current Showreels capabilities.",
     landingPricingMonthlyLabel: "Monthly",
     landingPricingYearlyLabel: "Yearly",
     landingPricingYearlySave: "Save 2 months",

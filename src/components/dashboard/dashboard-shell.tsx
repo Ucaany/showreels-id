@@ -206,7 +206,7 @@ export function DashboardShell({
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu backdrop"
           />
-          <div className="absolute left-0 top-0 h-full w-[88%] max-w-[340px] border-r border-[#ded3cd] bg-[#f8f5f2] p-4 shadow-2xl">
+          <div className="absolute left-0 top-0 flex h-full w-[88%] max-w-[340px] flex-col border-r border-[#ded3cd] bg-[#f8f5f2] p-4 shadow-2xl">
             <div className="mb-5 flex items-center justify-between">
               <AppLogo />
               <button
@@ -236,7 +236,7 @@ export function DashboardShell({
               </div>
               <p className="mt-1 truncate text-xs text-[#6e6058]">{user.email}</p>
             </div>
-            <nav className="space-y-1">
+            <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
               {[...primaryNavItems, ...secondaryNavItems].map((item) => {
                 const Icon = item.icon;
                 const active = isNavItemActive(item);
@@ -261,10 +261,17 @@ export function DashboardShell({
                 );
               })}
             </nav>
-            <Button variant="secondary" size="sm" className="mt-4 w-full" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-              {dictionary.logout}
-            </Button>
+            <div className="mt-4 border-t border-[#e2d8d2] pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-4">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="min-h-11 w-full"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4" />
+                {dictionary.logout}
+              </Button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -272,7 +279,7 @@ export function DashboardShell({
       <div className="dashboard-shell-container flex gap-4">
         <aside
           className={cn(
-            "hidden shrink-0 rounded-2xl border border-[#ddd3cd] bg-gradient-to-b from-[#fffefe] to-[#f7f2ee] p-3 shadow-card transition-all duration-200 lg:block",
+            "hidden shrink-0 rounded-2xl border border-[#ddd3cd] bg-gradient-to-b from-[#fffefe] to-[#f7f2ee] p-3 shadow-card transition-all duration-200 lg:sticky lg:top-[96px] lg:block lg:h-[calc(100vh-112px)]",
             sidebarWidthClass
           )}
         >
@@ -284,8 +291,8 @@ export function DashboardShell({
               {collapsed ? planLabel : `${planLabel} Creator`}
             </p>
           </div>
-          <nav className="flex h-full flex-col">
-            <div className="space-y-1">
+          <nav className="flex h-full min-h-0 flex-col">
+            <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
             {primaryNavItems.map((item) => {
               const Icon = item.icon;
               const active = isNavItemActive(item);
@@ -319,7 +326,7 @@ export function DashboardShell({
               );
             })}
             </div>
-            <div className="mt-auto space-y-3 pt-4">
+            <div className="space-y-3 border-t border-[#e2d8d2] pt-4">
               <div className="space-y-1">
                 {secondaryNavItems.map((item) => {
                   const Icon = item.icon;

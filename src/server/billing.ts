@@ -1,6 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions, billingTransactions } from "@/db/schema";
+import { getPlanFeatureBullets } from "@/lib/plan-feature-matrix";
 import { ensureBillingSchema } from "@/server/billing-schema-bootstrap";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
 
@@ -59,34 +60,21 @@ const PLAN_CATALOG: Record<BillingPlanName, PlanConfig> = {
     label: "Free",
     monthly: 0,
     yearlyLegacy: 0,
-    benefits: [
-      "Maksimal 10 link builder",
-      "Analitik traffic 7 hari",
-      "Quota video public 10/source platform",
-    ],
+    benefits: getPlanFeatureBullets("free", "id"),
   },
   pro: {
     name: "pro",
     label: "Pro",
     monthly: 49000,
     yearlyLegacy: 490000,
-    benefits: [
-      "Semua fitur Free",
-      "Link builder tanpa batas",
-      "Quota video public 50/source platform",
-      "Creator group + contact support",
-    ],
+    benefits: getPlanFeatureBullets("pro", "id"),
   },
   business: {
     name: "business",
     label: "Business",
     monthly: 149000,
     yearlyLegacy: 1490000,
-    benefits: [
-      "Semua fitur Pro",
-      "Whitelabel halaman publik",
-      "Theme switch (coming soon)",
-    ],
+    benefits: getPlanFeatureBullets("business", "id"),
   },
 };
 

@@ -73,8 +73,8 @@ export default function SettingsPaymentPage() {
   return (
     <div className="space-y-5">
       <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
-        <Link href="/dashboard/settings">
-          <Button size="sm" variant="secondary">
+        <Link href="/dashboard/settings" className="inline-flex w-full sm:w-auto">
+          <Button size="sm" variant="secondary" className="w-full sm:w-auto">
             <ArrowLeft className="h-4 w-4" />
             Kembali ke Settings
           </Button>
@@ -138,11 +138,13 @@ export default function SettingsPaymentPage() {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={handleSave} disabled={saving}>
+              <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
                 {saving ? "Menyimpan..." : "Simpan Payment Settings"}
               </Button>
-              <Link href="/dashboard/billing">
-                <Button variant="secondary">Buka Billing</Button>
+              <Link href="/dashboard/billing" className="w-full sm:w-auto">
+                <Button variant="secondary" className="w-full sm:w-auto">
+                  Buka Billing
+                </Button>
               </Link>
             </div>
           </div>
