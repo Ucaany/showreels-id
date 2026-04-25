@@ -114,6 +114,13 @@ const PREVIEW_PLATFORM_ROWS = [
 ] as const;
 
 type UsernameStatus = "idle" | "checking" | "invalid" | "available" | "taken";
+type PricingPlanId = "free" | "pro" | "business";
+
+const PRICING_PLAN_HREF_BY_ID: Record<PricingPlanId, string> = {
+  free: "/auth/signup",
+  pro: "/dashboard/payment?plan=pro",
+  business: "/dashboard/payment?plan=business",
+};
 
 function createSeededHash(value: string) {
   let hash = 2166136261;
@@ -418,7 +425,6 @@ export function LandingPage({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
   const [latestVideosView, setLatestVideosView] = useState<"grid" | "list">("grid");
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [isDesktop, setIsDesktop] = useState(false);
   const [creatorDeviceSeed, setCreatorDeviceSeed] = useState("creator-seed-default");
   const [creatorTimeBucket, setCreatorTimeBucket] = useState(0);
@@ -747,10 +753,9 @@ export function LandingPage({
   const pricingPlans = useMemo(
     () => [
       {
-        id: "free" as const,
+        id: "free" as PricingPlanId,
         name: "Free",
         monthlyPrice: "Rp0",
-        yearlyPrice: "Rp0",
         subtitle: dictionary.landingPricingFree,
         points: [
           locale === "en" ? "Public creator profile page" : "Halaman profil creator publik",
@@ -759,14 +764,12 @@ export function LandingPage({
             ? "Custom links + social/contact links"
             : "Custom links + social/contact links",
         ],
-        chooseHref: "/auth/signup",
         featured: false,
       },
       {
-        id: "pro" as const,
+        id: "pro" as PricingPlanId,
         name: "Pro",
         monthlyPrice: "Rp49.000",
-        yearlyPrice: "Rp490.000",
         subtitle: dictionary.landingPricingPro,
         points: [
           locale === "en" ? "Everything in Free" : "Semua fitur Free",
@@ -777,14 +780,12 @@ export function LandingPage({
             ? "Sources: YouTube, Drive, Instagram, Facebook, Vimeo"
             : "Sumber: YouTube, Drive, Instagram, Facebook, Vimeo",
         ],
-        chooseHref: "/dashboard/payment?plan=pro",
         featured: true,
       },
       {
-        id: "business" as const,
+        id: "business" as PricingPlanId,
         name: "Team",
         monthlyPrice: "Rp149.000",
-        yearlyPrice: "Rp1.490.000",
         subtitle: dictionary.landingPricingTeam,
         points: [
           locale === "en" ? "Everything in Pro" : "Semua fitur Pro",
@@ -795,7 +796,6 @@ export function LandingPage({
             ? "Theme switch coming soon"
             : "Ganti tema (coming soon)",
         ],
-        chooseHref: "/dashboard/payment?plan=business",
         featured: false,
       },
     ],
@@ -1352,23 +1352,6 @@ export function LandingPage({
                 </p>
               </div>
 
-              <div className="mt-6 flex justify-center">
-                <div className="inline-flex rounded-full border border-[#cfdaef] bg-white p-1 shadow-sm">
-                  <button
-                    type="button"
-                    onClick={() => setBillingCycle("monthly")}
-                    className={cn(
-                      "min-h-10 rounded-full px-4 text-[0.84rem] font-bold tracking-[-0.008em] transition",
-                      billingCycle === "monthly"
-                        ? "bg-[#2f73ff] text-white"
-                        : "text-[#4f5b71] hover:text-[#1c2435]"
-                    )}
-                  >
-                    {dictionary.landingPricingMonthlyLabel}
-                  </button>
-                </div>
-              </div>
-
               <div className="mt-8 grid gap-3.5 lg:grid-cols-3">
                 {pricingPlans.map((plan) => (
                   <article
@@ -1428,7 +1411,7 @@ export function LandingPage({
                     </ul>
 
                     <div className="mt-5">
-                      <Link href={plan.chooseHref}>
+                      <Link href={PRICING_PLAN_HREF_BY_ID[plan.id]}>
                         <Button
                           className={cn(
                             "relative z-10 w-full !font-extrabold !opacity-100 !shadow-none",
