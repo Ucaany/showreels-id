@@ -1,6 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions, billingTransactions } from "@/db/schema";
+import { isMissingBillingSchemaError } from "@/server/database-errors";
 
 export type BillingPlanName = "free" | "pro" | "business";
 export type BillingCycle = "monthly" | "yearly";
@@ -189,44 +190,55 @@ export function toBillingPaymentSummary(
   };
 }
 
+function buildFallbackSubscription(userId: string) {
+  return {
+    id: `subscription-${userId}`,
+    userId,
+    planName: "free" as BillingPlanName,
+    billingCycle: "monthly" as BillingCycle,
+    status: "active" as const,
+    price: 0,
+    currency: "IDR",
+    renewalDate: null,
+    nextPlanName: "free" as BillingPlanName,
+    updatedAt: new Date(),
+    createdAt: new Date(),
+  };
+}
+
 export async function getOrCreateSubscription(userId: string) {
   if (!isDatabaseConfigured) {
-    return {
-      id: `subscription-${userId}`,
-      userId,
-      planName: "free" as BillingPlanName,
-      billingCycle: "monthly" as BillingCycle,
-      status: "active" as const,
-      price: 0,
-      currency: "IDR",
-      renewalDate: null,
-      nextPlanName: "free" as BillingPlanName,
-      updatedAt: new Date(),
-      createdAt: new Date(),
-    };
+    return buildFallbackSubscription(userId);
   }
 
-  const existing = await db.query.billingSubscriptions.findFirst({
-    where: eq(billingSubscriptions.userId, userId),
-  });
-  if (existing) {
-    return existing;
+  try {
+    const existing = await db.query.billingSubscriptions.findFirst({
+      where: eq(billingSubscriptions.userId, userId),
+    });
+    if (existing) {
+      return existing;
+    }
+
+    const [created] = await db
+      .insert(billingSubscriptions)
+      .values({
+        userId,
+        planName: "free",
+        billingCycle: "monthly",
+        status: "active",
+        price: 0,
+        currency: "IDR",
+        nextPlanName: "free",
+      })
+      .returning();
+
+    return created;
+  } catch (error) {
+    if (isMissingBillingSchemaError(error)) {
+      return buildFallbackSubscription(userId);
+    }
+    throw error;
   }
-
-  const [created] = await db
-    .insert(billingSubscriptions)
-    .values({
-      userId,
-      planName: "free",
-      billingCycle: "monthly",
-      status: "active",
-      price: 0,
-      currency: "IDR",
-      nextPlanName: "free",
-    })
-    .returning();
-
-  return created;
 }
 
 export async function getBillingTransactions(userId: string) {
@@ -243,11 +255,18 @@ export async function getBillingTransactions(userId: string) {
     }>;
   }
 
-  return db.query.billingTransactions.findMany({
-    where: eq(billingTransactions.userId, userId),
-    orderBy: desc(billingTransactions.createdAt),
-    limit: 30,
-  });
+  try {
+    return await db.query.billingTransactions.findMany({
+      where: eq(billingTransactions.userId, userId),
+      orderBy: desc(billingTransactions.createdAt),
+      limit: 30,
+    });
+  } catch (error) {
+    if (isMissingBillingSchemaError(error)) {
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function getBillingTransactionByInvoiceForUser(
@@ -258,12 +277,19 @@ export async function getBillingTransactionByInvoiceForUser(
     return null;
   }
 
-  return db.query.billingTransactions.findFirst({
-    where: and(
-      eq(billingTransactions.userId, userId),
-      eq(billingTransactions.invoiceId, invoiceId)
-    ),
-  });
+  try {
+    return await db.query.billingTransactions.findFirst({
+      where: and(
+        eq(billingTransactions.userId, userId),
+        eq(billingTransactions.invoiceId, invoiceId)
+      ),
+    });
+  } catch (error) {
+    if (isMissingBillingSchemaError(error)) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function createUpgradeTransaction(input: {
@@ -281,7 +307,6 @@ export async function createUpgradeTransaction(input: {
     };
   }
 
-  const subscription = await getOrCreateSubscription(input.userId);
   const amount = getPlanPrice(input.targetPlan, input.billingCycle);
   const invoiceId = buildInvoiceId(input.userId);
 
@@ -293,148 +318,162 @@ export async function createUpgradeTransaction(input: {
     };
   }
 
-  if (amount <= 0) {
+  try {
+    const subscription = await getOrCreateSubscription(input.userId);
+
+    if (amount <= 0) {
+      const [transaction] = await db
+        .insert(billingTransactions)
+        .values({
+          userId: input.userId,
+          subscriptionId: subscription.id,
+          invoiceId,
+          planName: "free",
+          billingCycle: "monthly",
+          amount: 0,
+          currency: "IDR",
+          status: "paid",
+          provider: "manual",
+          providerReference: invoiceId,
+          paymentMethod: "manual",
+          description: "Downgrade ke Free plan",
+          paidAt: new Date(),
+        })
+        .returning();
+
+      const [updatedSubscription] = await db
+        .update(billingSubscriptions)
+        .set({
+          planName: "free",
+          billingCycle: "monthly",
+          status: "active",
+          price: 0,
+          renewalDate: null,
+          nextPlanName: "free",
+          updatedAt: new Date(),
+        })
+        .where(eq(billingSubscriptions.id, subscription.id))
+        .returning();
+
+      return {
+        ok: true as const,
+        mode: "free" as const,
+        transaction,
+        subscription: updatedSubscription,
+      };
+    }
+
+    if (!isMidtransConfigured()) {
+      return {
+        ok: false as const,
+        code: "midtrans_not_configured",
+        message:
+          "Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di environment.",
+      };
+    }
+
+    const serverKey = (process.env.MIDTRANS_SERVER_KEY || "").trim();
+    const response = await fetch(`${getMidtransCoreApiBaseUrl()}/v2/charge`, {
+      method: "POST",
+      headers: {
+        Authorization: getMidtransAuthorizationHeader(serverKey),
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        payment_type: "qris",
+        transaction_details: {
+          order_id: invoiceId,
+          gross_amount: amount,
+        },
+        item_details: [
+          {
+            id: `${input.targetPlan}-${input.billingCycle}`,
+            price: amount,
+            quantity: 1,
+            name: `Showreels ${PLAN_CATALOG[input.targetPlan].label} (${input.billingCycle})`,
+          },
+        ],
+        customer_details: {
+          first_name: input.fullName || "Creator",
+          email: input.email,
+        },
+        qris: {
+          acquirer: "gopay",
+        },
+        custom_field1: input.targetPlan,
+        custom_field2: input.billingCycle,
+        custom_field3: input.userId,
+      }),
+    });
+
+    const payload = (await response.json().catch(() => null)) as
+      | MidtransChargePayload
+      | null;
+
+    if (!response.ok || !payload?.order_id) {
+      return {
+        ok: false as const,
+        code: "midtrans_error",
+        message:
+          payload?.error_messages?.[0] ||
+          payload?.status_message ||
+          "Gagal membuat transaksi Midtrans. Coba ulang beberapa saat lagi.",
+      };
+    }
+
+    const payloadRecord = payload as unknown as Record<string, unknown>;
+    const qrisUrl = getQrisActionUrl(toMidtransActions(payloadRecord), "");
+
     const [transaction] = await db
       .insert(billingTransactions)
       .values({
         userId: input.userId,
         subscriptionId: subscription.id,
         invoiceId,
-        planName: "free",
-        billingCycle: "monthly",
-        amount: 0,
-        currency: "IDR",
-        status: "paid",
-        provider: "manual",
-        providerReference: invoiceId,
-        paymentMethod: "manual",
-        description: "Downgrade ke Free plan",
-        paidAt: new Date(),
+        planName: input.targetPlan,
+        billingCycle: input.billingCycle,
+        amount,
+        currency: payload.currency || "IDR",
+        status: "pending",
+        provider: "midtrans",
+        providerReference: payload.transaction_id || invoiceId,
+        snapToken: "",
+        redirectUrl: qrisUrl || "",
+        paymentMethod: payload.payment_type || "qris",
+        description: `Upgrade ke ${PLAN_CATALOG[input.targetPlan].label}`,
+        rawPayload: payloadRecord,
       })
       .returning();
 
-    const [updatedSubscription] = await db
+    await db
       .update(billingSubscriptions)
       .set({
-        planName: "free",
-        billingCycle: "monthly",
-        status: "active",
-        price: 0,
-        renewalDate: null,
-        nextPlanName: "free",
+        status: "pending",
+        nextPlanName: input.targetPlan,
+        billingCycle: input.billingCycle,
+        price: amount,
         updatedAt: new Date(),
       })
-      .where(eq(billingSubscriptions.id, subscription.id))
-      .returning();
+      .where(eq(billingSubscriptions.id, subscription.id));
 
     return {
       ok: true as const,
-      mode: "free" as const,
+      mode: "paid" as const,
       transaction,
-      subscription: updatedSubscription,
+      payment: toBillingPaymentSummary(transaction),
     };
+  } catch (error) {
+    if (isMissingBillingSchemaError(error)) {
+      return {
+        ok: false as const,
+        code: "billing_schema_missing",
+        message:
+          "Schema billing belum siap di database production. Jalankan migrasi database terbaru lalu coba lagi.",
+      };
+    }
+    throw error;
   }
-
-  if (!isMidtransConfigured()) {
-    return {
-      ok: false as const,
-      code: "midtrans_not_configured",
-      message:
-        "Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY dan MIDTRANS_CLIENT_KEY di environment.",
-    };
-  }
-
-  const serverKey = (process.env.MIDTRANS_SERVER_KEY || "").trim();
-  const response = await fetch(`${getMidtransCoreApiBaseUrl()}/v2/charge`, {
-    method: "POST",
-    headers: {
-      Authorization: getMidtransAuthorizationHeader(serverKey),
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      payment_type: "qris",
-      transaction_details: {
-        order_id: invoiceId,
-        gross_amount: amount,
-      },
-      item_details: [
-        {
-          id: `${input.targetPlan}-${input.billingCycle}`,
-          price: amount,
-          quantity: 1,
-          name: `Showreels ${PLAN_CATALOG[input.targetPlan].label} (${input.billingCycle})`,
-        },
-      ],
-      customer_details: {
-        first_name: input.fullName || "Creator",
-        email: input.email,
-      },
-      qris: {
-        acquirer: "gopay",
-      },
-      custom_field1: input.targetPlan,
-      custom_field2: input.billingCycle,
-      custom_field3: input.userId,
-    }),
-  });
-
-  const payload = (await response.json().catch(() => null)) as
-    | MidtransChargePayload
-    | null;
-
-  if (!response.ok || !payload?.order_id) {
-    return {
-      ok: false as const,
-      code: "midtrans_error",
-      message:
-        payload?.error_messages?.[0] ||
-        payload?.status_message ||
-        "Gagal membuat transaksi Midtrans. Coba ulang beberapa saat lagi.",
-    };
-  }
-
-  const payloadRecord = payload as unknown as Record<string, unknown>;
-  const qrisUrl = getQrisActionUrl(toMidtransActions(payloadRecord), "");
-
-  const [transaction] = await db
-    .insert(billingTransactions)
-    .values({
-      userId: input.userId,
-      subscriptionId: subscription.id,
-      invoiceId,
-      planName: input.targetPlan,
-      billingCycle: input.billingCycle,
-      amount,
-      currency: payload.currency || "IDR",
-      status: "pending",
-      provider: "midtrans",
-      providerReference: payload.transaction_id || invoiceId,
-      snapToken: "",
-      redirectUrl: qrisUrl || "",
-      paymentMethod: payload.payment_type || "qris",
-      description: `Upgrade ke ${PLAN_CATALOG[input.targetPlan].label}`,
-      rawPayload: payloadRecord,
-    })
-    .returning();
-
-  await db
-    .update(billingSubscriptions)
-    .set({
-      status: "pending",
-      nextPlanName: input.targetPlan,
-      billingCycle: input.billingCycle,
-      price: amount,
-      updatedAt: new Date(),
-    })
-    .where(eq(billingSubscriptions.id, subscription.id));
-
-  return {
-    ok: true as const,
-    mode: "paid" as const,
-    transaction,
-    payment: toBillingPaymentSummary(transaction),
-  };
 }
 
 function mapMidtransStatus(transactionStatus: string) {
@@ -487,73 +526,84 @@ export async function handleMidtransWebhook(payload: {
     return { ok: true as const, message: "Webhook diterima (db tidak aktif)." };
   }
 
-  const transaction = await db.query.billingTransactions.findFirst({
-    where: eq(billingTransactions.invoiceId, invoiceId),
-  });
-  if (!transaction) {
-    return { ok: false as const, message: "Transaksi invoice tidak ditemukan." };
-  }
+  try {
+    const transaction = await db.query.billingTransactions.findFirst({
+      where: eq(billingTransactions.invoiceId, invoiceId),
+    });
+    if (!transaction) {
+      return { ok: false as const, message: "Transaksi invoice tidak ditemukan." };
+    }
 
-  const transactionStatus = payload.transaction_status || "failed";
-  const mappedTransactionStatus = mapMidtransStatus(transactionStatus);
-  const mappedSubscriptionStatus = mapSubscriptionStatus(transactionStatus);
-  const isPaid = mappedTransactionStatus === "paid";
+    const transactionStatus = payload.transaction_status || "failed";
+    const mappedTransactionStatus = mapMidtransStatus(transactionStatus);
+    const mappedSubscriptionStatus = mapSubscriptionStatus(transactionStatus);
+    const isPaid = mappedTransactionStatus === "paid";
 
-  const [updatedTransaction] = await db
-    .update(billingTransactions)
-    .set({
-      status: mappedTransactionStatus,
-      paymentMethod: payload.payment_type || transaction.paymentMethod,
-      currency: payload.currency || transaction.currency,
-      amount:
-        Number(payload.gross_amount ?? transaction.amount) || transaction.amount,
-      paidAt: isPaid ? new Date() : transaction.paidAt,
-      rawPayload: {
-        ...(transaction.rawPayload || {}),
-        webhook: payload,
-      },
-      updatedAt: new Date(),
-    })
-    .where(eq(billingTransactions.id, transaction.id))
-    .returning();
-
-  const subscription = await db.query.billingSubscriptions.findFirst({
-    where: and(
-      eq(billingSubscriptions.userId, transaction.userId),
-      eq(billingSubscriptions.id, transaction.subscriptionId || "")
-    ),
-  });
-
-  if (subscription) {
-    const renewalDate = isPaid
-      ? new Date(
-          Date.now() +
-            (transaction.billingCycle === "yearly" ? 365 : 30) *
-              24 *
-              60 *
-              60 *
-              1000
-        )
-      : subscription.renewalDate;
-
-    await db
-      .update(billingSubscriptions)
+    const [updatedTransaction] = await db
+      .update(billingTransactions)
       .set({
-        planName: isPaid ? transaction.planName : subscription.planName,
-        nextPlanName: isPaid ? transaction.planName : subscription.nextPlanName,
-        status: mappedSubscriptionStatus,
-        price: transaction.amount,
-        billingCycle: transaction.billingCycle,
-        renewalDate,
+        status: mappedTransactionStatus,
+        paymentMethod: payload.payment_type || transaction.paymentMethod,
+        currency: payload.currency || transaction.currency,
+        amount:
+          Number(payload.gross_amount ?? transaction.amount) || transaction.amount,
+        paidAt: isPaid ? new Date() : transaction.paidAt,
+        rawPayload: {
+          ...(transaction.rawPayload || {}),
+          webhook: payload,
+        },
         updatedAt: new Date(),
       })
-      .where(eq(billingSubscriptions.id, subscription.id));
-  }
+      .where(eq(billingTransactions.id, transaction.id))
+      .returning();
 
-  return {
-    ok: true as const,
-    transaction: updatedTransaction,
-  };
+    const subscription = await db.query.billingSubscriptions.findFirst({
+      where: and(
+        eq(billingSubscriptions.userId, transaction.userId),
+        eq(billingSubscriptions.id, transaction.subscriptionId || "")
+      ),
+    });
+
+    if (subscription) {
+      const renewalDate = isPaid
+        ? new Date(
+            Date.now() +
+              (transaction.billingCycle === "yearly" ? 365 : 30) *
+                24 *
+                60 *
+                60 *
+                1000
+          )
+        : subscription.renewalDate;
+
+      await db
+        .update(billingSubscriptions)
+        .set({
+          planName: isPaid ? transaction.planName : subscription.planName,
+          nextPlanName: isPaid ? transaction.planName : subscription.nextPlanName,
+          status: mappedSubscriptionStatus,
+          price: transaction.amount,
+          billingCycle: transaction.billingCycle,
+          renewalDate,
+          updatedAt: new Date(),
+        })
+        .where(eq(billingSubscriptions.id, subscription.id));
+    }
+
+    return {
+      ok: true as const,
+      transaction: updatedTransaction,
+    };
+  } catch (error) {
+    if (isMissingBillingSchemaError(error)) {
+      return {
+        ok: false as const,
+        message:
+          "Schema billing belum siap di database production. Jalankan migrasi database terbaru.",
+      };
+    }
+    throw error;
+  }
 }
 
 export async function refreshBillingTransactionStatusFromMidtrans(input: {

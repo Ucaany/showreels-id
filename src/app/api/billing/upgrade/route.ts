@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         ? 412
         : result.code === "invalid_billing_cycle"
           ? 400
-        : result.code === "db_not_ready"
+        : result.code === "db_not_ready" || result.code === "billing_schema_missing"
           ? 503
           : 502;
 

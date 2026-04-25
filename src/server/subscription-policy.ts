@@ -3,6 +3,7 @@ import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions } from "@/db/schema";
 import type { VideoSource } from "@/lib/types";
 import type { BillingCycle, BillingPlanName } from "@/server/billing";
+import { isRelationMissingError } from "@/server/database-errors";
 
 export type CreatorPlanName = BillingPlanName;
 
@@ -131,14 +132,35 @@ export async function getEffectiveCreatorPlan(userId: string): Promise<Effective
     };
   }
 
-  const subscription = await db.query.billingSubscriptions.findFirst({
-    where: eq(billingSubscriptions.userId, userId),
-    columns: {
-      planName: true,
-      billingCycle: true,
-      status: true,
-    },
-  });
+  let subscription:
+    | {
+        planName: string;
+        billingCycle: string;
+        status: string;
+      }
+    | null
+    | undefined = null;
+
+  try {
+    subscription = await db.query.billingSubscriptions.findFirst({
+      where: eq(billingSubscriptions.userId, userId),
+      columns: {
+        planName: true,
+        billingCycle: true,
+        status: true,
+      },
+    });
+  } catch (error) {
+    if (isRelationMissingError(error, "billing_subscriptions")) {
+      return {
+        planName: "free",
+        billingCycle: "monthly",
+        status: "missing",
+        source: "fallback_free",
+      };
+    }
+    throw error;
+  }
 
   if (!subscription) {
     return {

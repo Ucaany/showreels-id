@@ -4,6 +4,7 @@ import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions, creatorSettings, users, videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
+import { isMissingBillingSchemaError } from "@/server/database-errors";
 import { getThumbnailCandidates } from "@/lib/video-utils";
 
 export interface PublicShowcaseVideo {
@@ -28,27 +29,34 @@ function isEntitledSubscriptionStatus(status: string | null | undefined) {
 }
 
 async function isWhitelabelActiveForUser(userId: string) {
-  const [settings, subscription] = await Promise.all([
-    db.query.creatorSettings.findFirst({
-      where: eq(creatorSettings.userId, userId),
-      columns: {
-        whitelabelEnabled: true,
-      },
-    }),
-    db.query.billingSubscriptions.findFirst({
-      where: eq(billingSubscriptions.userId, userId),
-      columns: {
-        planName: true,
-        status: true,
-      },
-    }),
-  ]);
+  try {
+    const [settings, subscription] = await Promise.all([
+      db.query.creatorSettings.findFirst({
+        where: eq(creatorSettings.userId, userId),
+        columns: {
+          whitelabelEnabled: true,
+        },
+      }),
+      db.query.billingSubscriptions.findFirst({
+        where: eq(billingSubscriptions.userId, userId),
+        columns: {
+          planName: true,
+          status: true,
+        },
+      }),
+    ]);
 
-  return Boolean(
-    settings?.whitelabelEnabled &&
-      subscription?.planName === "business" &&
-      isEntitledSubscriptionStatus(subscription?.status)
-  );
+    return Boolean(
+      settings?.whitelabelEnabled &&
+        subscription?.planName === "business" &&
+        isEntitledSubscriptionStatus(subscription?.status)
+    );
+  } catch (error) {
+    if (isMissingBillingSchemaError(error)) {
+      return false;
+    }
+    throw error;
+  }
 }
 
 function sanitizeMediaUrl(url: string | null) {

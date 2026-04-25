@@ -25,7 +25,7 @@ export async function POST() {
 
   if (!result.ok) {
     const status =
-      result.code === "db_not_ready"
+      result.code === "db_not_ready" || result.code === "billing_schema_missing"
         ? 503
         : result.code === "midtrans_not_configured"
           ? 412
