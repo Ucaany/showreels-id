@@ -1,11 +1,18 @@
 import type { Locale } from "@/lib/i18n";
 
-export const MAX_CUSTOM_LINKS = 8;
+export const MAX_CUSTOM_LINKS_FREE_PLAN = 10;
+export const MAX_CUSTOM_LINKS = 250;
+export const MAX_LINK_TITLE_LENGTH = 60;
+export const MAX_LINK_DESCRIPTION_LENGTH = 140;
 
 export interface CustomLinkItem {
   id: string;
   title: string;
   url: string;
+  description?: string;
+  platform?: string;
+  badge?: string;
+  thumbnailUrl?: string;
   enabled: boolean;
   order: number;
 }
@@ -95,11 +102,17 @@ export function normalizeCustomLinks(
       }
 
       const source = entry as Record<string, unknown>;
-      const title = String(source.title || "").trim().slice(0, 32);
+      const title = String(source.title || "").trim().slice(0, MAX_LINK_TITLE_LENGTH);
       const url = normalizeSocialUrl(String(source.url || ""));
       if (!title || !url) {
         return null;
       }
+      const description = String(source.description || "")
+        .trim()
+        .slice(0, MAX_LINK_DESCRIPTION_LENGTH);
+      const platform = String(source.platform || "").trim().slice(0, 30);
+      const badge = String(source.badge || "").trim().slice(0, 30);
+      const thumbnailUrl = normalizeSocialUrl(String(source.thumbnailUrl || ""));
 
       const providedId = String(source.id || "").trim();
       const safeId =
@@ -116,13 +129,28 @@ export function normalizeCustomLinks(
         ? Math.max(0, Math.trunc(rawOrder))
         : fallbackIndex;
 
-      return {
+      const nextItem: CustomLinkItem = {
         id,
         title,
         url,
         enabled: source.enabled !== false,
         order,
       };
+
+      if (description) {
+        nextItem.description = description;
+      }
+      if (platform) {
+        nextItem.platform = platform;
+      }
+      if (badge) {
+        nextItem.badge = badge;
+      }
+      if (thumbnailUrl) {
+        nextItem.thumbnailUrl = thumbnailUrl;
+      }
+
+      return nextItem;
     })
     .filter((item): item is CustomLinkItem => Boolean(item));
 

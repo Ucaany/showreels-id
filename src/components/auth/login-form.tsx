@@ -16,6 +16,7 @@ import { useAuthAttemptLock } from "@/hooks/use-auth-attempt-lock";
 import { usePreferences } from "@/hooks/use-preferences";
 import { getAuthRedirectUrl } from "@/lib/auth-redirect-url";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
+import { getSafeNextPath } from "@/lib/safe-next-path";
 
 const loginSchema = z.object({
   email: z.email("Format email belum valid."),
@@ -57,10 +58,13 @@ function getCredentialsErrorMessage(
   return "Email atau password tidak cocok.";
 }
 
-async function finalizeSignedInSession() {
-  const response = await fetch("/api/auth/bootstrap", {
+async function finalizeSignedInSession(nextPath: string) {
+  const response = await fetch(
+    `/api/auth/bootstrap?next=${encodeURIComponent(nextPath)}`,
+    {
     method: "POST",
-  });
+    }
+  );
   const payload = (await response.json().catch(() => null)) as
     | { error?: string; redirectTo?: string; code?: string }
     | null;
@@ -83,9 +87,11 @@ async function finalizeSignedInSession() {
 export function LoginForm({
   googleEnabled,
   oauthError = "",
+  nextPath = "/dashboard",
 }: {
   googleEnabled: boolean;
   oauthError?: string;
+  nextPath?: string;
 }) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
@@ -96,6 +102,11 @@ export function LoginForm({
   const authUnavailableMessage = "Layanan autentikasi belum siap. Coba refresh halaman.";
   const visibleSubmitError = authUnavailable ? authUnavailableMessage : submitError;
   const oauthErrorMessage = getOauthErrorMessage(oauthError);
+  const safeNextPath = getSafeNextPath(nextPath);
+  const signupHref =
+    safeNextPath === "/dashboard"
+      ? "/auth/signup"
+      : `/auth/signup?next=${encodeURIComponent(safeNextPath)}`;
   const altActionClassName =
     "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#d7cec7] bg-white px-4 text-sm font-semibold text-[#201b18] shadow-sm transition hover:bg-[#fbf7f4] focus:outline-none focus:ring-2 focus:ring-[#e6c2b9] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
@@ -162,7 +173,7 @@ export function LoginForm({
         return;
       }
 
-      const bootstrapResult = await finalizeSignedInSession();
+      const bootstrapResult = await finalizeSignedInSession(safeNextPath);
 
       if (!bootstrapResult.ok) {
         await supabase.auth.signOut();
@@ -324,7 +335,7 @@ export function LoginForm({
                 const { data, error } = await supabase.auth.signInWithOAuth({
                   provider: "google",
                   options: {
-                    redirectTo: getAuthRedirectUrl("/dashboard"),
+                    redirectTo: getAuthRedirectUrl(safeNextPath),
                     queryParams: {
                       prompt: "select_account",
                     },
@@ -355,7 +366,7 @@ export function LoginForm({
               {dictionary.continueGoogle}
             </button>
           ) : null}
-          <Link href="/auth/signup" className={altActionClassName}>
+          <Link href={signupHref} className={altActionClassName}>
             {dictionary.signup}
           </Link>
         </div>

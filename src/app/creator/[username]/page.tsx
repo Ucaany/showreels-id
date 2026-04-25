@@ -447,7 +447,9 @@ export default async function CreatorProfilePage({
 
       <footer className="border-t border-slate-200 bg-white/85">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-4 py-8 text-center sm:px-6">
-          <p className="text-sm text-slate-600">Halaman ini dibuat oleh showreels.id</p>
+          {!profile.whitelabelEnabled ? (
+            <p className="text-sm text-slate-600">Halaman ini dibuat oleh showreels.id</p>
+          ) : null}
         </div>
       </footer>
     </div>

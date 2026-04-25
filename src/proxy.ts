@@ -11,6 +11,10 @@ const LEGACY_HOSTS = new Set([
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl.clone();
   const hasOauthCode = url.searchParams.has("code");
+  const forwardedHeaders = new Headers(request.headers);
+
+  forwardedHeaders.set("x-pathname", request.nextUrl.pathname);
+  forwardedHeaders.set("x-search", request.nextUrl.search);
 
   if (LEGACY_HOSTS.has(url.hostname)) {
     url.hostname = PRODUCTION_HOST;
@@ -27,7 +31,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return updateSession(request);
+  return updateSession(request, forwardedHeaders);
 }
 
 export const config = {

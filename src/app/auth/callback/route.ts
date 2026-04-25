@@ -1,19 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isCustomLinksSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
+import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
 import { syncUserProfile } from "@/server/auth-profile";
-
-function getSafeNextPath(value: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return "/dashboard";
-  }
-
-  return value;
-}
 
 function getAuthSuccessUrl(destination: string, requestUrl: string) {
   const url = new URL(destination, requestUrl);
   url.searchParams.set("auth", "login");
+  return url;
+}
+
+function makeLoginErrorUrl(
+  requestUrl: string,
+  errorCode: "callback" | "account_sync",
+  next: string
+) {
+  const url = new URL("/auth/login", requestUrl);
+  url.searchParams.set("error", errorCode);
+
+  if (next !== "/dashboard") {
+    url.searchParams.set("next", next);
+  }
+
   return url;
 }
 
@@ -32,7 +40,7 @@ export async function GET(request: NextRequest) {
 
       if (!user) {
         return NextResponse.redirect(
-          new URL("/auth/login?error=callback", request.url)
+          makeLoginErrorUrl(request.url, "callback", next)
         );
       }
 
@@ -53,13 +61,13 @@ export async function GET(request: NextRequest) {
         await supabase.auth.signOut();
 
         return NextResponse.redirect(
-          new URL("/auth/login?error=account_sync", request.url)
+          makeLoginErrorUrl(request.url, "account_sync", next)
         );
       }
     }
   }
 
   return NextResponse.redirect(
-    new URL("/auth/login?error=callback", request.url)
+    makeLoginErrorUrl(request.url, "callback", next)
   );
 }

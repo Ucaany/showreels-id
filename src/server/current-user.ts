@@ -1,4 +1,6 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { syncUserProfile } from "@/server/auth-profile";
@@ -37,10 +39,21 @@ export async function getCurrentUser() {
   }
 }
 
-export async function requireCurrentUser() {
+async function getNextPathFromRequest() {
+  const requestHeaders = await headers();
+  const pathname = requestHeaders.get("x-pathname") || "";
+  const search = requestHeaders.get("x-search") || "";
+
+  return getSafeNextPath(`${pathname}${search}`, "/dashboard");
+}
+
+export async function requireCurrentUser(options?: { nextPath?: string }) {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/auth/login");
+    const nextPath = options?.nextPath
+      ? getSafeNextPath(options.nextPath, "/dashboard")
+      : await getNextPathFromRequest();
+    redirect(`/auth/login?next=${encodeURIComponent(nextPath)}`);
   }
   return user;
 }

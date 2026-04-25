@@ -4,7 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { normalizeSocialUrl } from "@/lib/profile-utils";
-import { sanitizeUsername } from "@/lib/username";
+import { sanitizeUsername } from "@/lib/username-rules";
 import { deleteUserAccount } from "@/server/auth-profile";
 import { isProtectedOwnerTarget } from "@/server/admin-access";
 import { requireAdminSession } from "@/server/admin-guard";

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { showFeedbackAlert } from "@/lib/feedback-alert";
 
 export function CopyProfileLinkButton({ username }: { username: string }) {
   const [copied, setCopied] = useState(false);
@@ -10,9 +11,23 @@ export function CopyProfileLinkButton({ username }: { username: string }) {
   const handleCopy = async () => {
     const origin = window.location.origin;
     const link = `${origin}/creator/${username}`;
-    await navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1400);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
+      await showFeedbackAlert({
+        title: "Link berhasil disalin!",
+        text: "Sekarang kamu bisa bagikan Showreels kamu ke calon klien atau audiens.",
+        icon: "success",
+        timer: 1600,
+      });
+    } catch {
+      await showFeedbackAlert({
+        title: "Gagal menyalin link",
+        text: "Silakan coba lagi beberapa saat.",
+        icon: "error",
+      });
+    }
   };
 
   return (

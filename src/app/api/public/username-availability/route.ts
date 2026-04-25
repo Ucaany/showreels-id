@@ -2,15 +2,16 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db, isDatabaseConfigured } from "@/db";
 import { users } from "@/db/schema";
-import { sanitizeUsername } from "@/lib/username";
-
-function isUsernameFormatValid(value: string) {
-  return /^[a-zA-Z0-9_]{3,24}$/.test(value.trim());
-}
+import {
+  isReservedUsername,
+  isUsernameFormatValid,
+  sanitizeUsername,
+} from "@/lib/username-rules";
 
 async function findSuggestion(base: string) {
+  const suggestionBase = base.slice(0, 24) || "creator";
   let counter = 2;
-  let candidate = `${base}_${counter}`;
+  let candidate = `${suggestionBase}-${counter}`;
 
   while (counter <= 40) {
     const existing = await db.query.users.findFirst({
@@ -23,7 +24,7 @@ async function findSuggestion(base: string) {
     }
 
     counter += 1;
-    candidate = `${base}_${counter}`;
+    candidate = `${suggestionBase}-${counter}`.slice(0, 30);
   }
 
   return undefined;
@@ -31,16 +32,26 @@ async function findSuggestion(base: string) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const input = searchParams.get("username") ?? "";
+  const input = searchParams.get("username") ?? searchParams.get("slug") ?? "";
   const sanitized = sanitizeUsername(input);
 
-  if (!isUsernameFormatValid(input) || sanitized.length < 3) {
+  if (!isUsernameFormatValid(sanitized) || sanitized.length < 3) {
     return NextResponse.json({
       input,
       sanitized,
       available: false,
       reason: "invalid",
       suggestion: sanitized.length >= 3 ? sanitized : undefined,
+    });
+  }
+
+  if (isReservedUsername(sanitized)) {
+    return NextResponse.json({
+      input,
+      sanitized,
+      available: false,
+      reason: "reserved",
+      suggestion: await findSuggestion(`${sanitized}-creator`),
     });
   }
 

@@ -6,10 +6,11 @@ import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { profileSchema } from "@/lib/auth-schemas";
 import { isCustomLinksSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { normalizeImageCrop } from "@/lib/image-crop";
-import { sanitizeUsername } from "@/lib/username";
+import { isReservedUsername, sanitizeUsername } from "@/lib/username-rules";
 import { isAdminEmail } from "@/server/admin-access";
 import { deleteUserAccount } from "@/server/auth-profile";
 import { getCurrentUser } from "@/server/current-user";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 const USERNAME_CHANGE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -36,6 +37,30 @@ export async function PATCH(request: Request) {
   }
 
   const username = sanitizeUsername(parsed.data.username);
+  if (isReservedUsername(username)) {
+    return NextResponse.json(
+      { error: "Username tidak dapat digunakan." },
+      { status: 400 }
+    );
+  }
+
+  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
+  const usernameChangeLimit = entitlementState.entitlements.usernameChangesPer30Days;
+  const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
+
+  if (
+    typeof linkBuilderMax === "number" &&
+    parsed.data.customLinks.length > linkBuilderMax
+  ) {
+    return NextResponse.json(
+      {
+        error: `Paket ${entitlementState.effectivePlan.planName.toUpperCase()} mendukung maksimal ${linkBuilderMax} link builder.`,
+        code: "link_limit_exceeded",
+      },
+      { status: 403 }
+    );
+  }
+
   const existingUser = await db.query.users.findFirst({
     where: and(eq(users.username, username), ne(users.id, currentUser.id)),
     columns: { id: true },
@@ -61,7 +86,7 @@ export async function PATCH(request: Request) {
     if (shouldResetWindow) {
       usernameChangeCount = 1;
       usernameChangeWindowStart = now;
-    } else if (currentUser.usernameChangeCount >= 3) {
+    } else if (currentUser.usernameChangeCount >= usernameChangeLimit) {
       const activeWindowStart = currentUser.usernameChangeWindowStart ?? now;
       const resetAt = new Date(
         activeWindowStart.getTime() + USERNAME_CHANGE_WINDOW_MS
@@ -69,7 +94,7 @@ export async function PATCH(request: Request) {
 
       return NextResponse.json(
         {
-          error: `Username hanya bisa diubah 3 kali per 30 hari. Coba lagi setelah ${resetAt.toLocaleDateString(
+          error: `Username hanya bisa diubah ${usernameChangeLimit} kali per 30 hari. Coba lagi setelah ${resetAt.toLocaleDateString(
             "id-ID",
             {
               day: "2-digit",
@@ -77,6 +102,7 @@ export async function PATCH(request: Request) {
               year: "numeric",
             }
           )}.`,
+          code: "username_change_limit_exceeded",
         },
         { status: 429 }
       );

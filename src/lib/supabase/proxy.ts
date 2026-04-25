@@ -6,10 +6,25 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/config";
 
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({
-    request,
+function makeProxyResponse(request: NextRequest, forwardedHeaders?: Headers) {
+  if (!forwardedHeaders) {
+    return NextResponse.next({
+      request,
+    });
+  }
+
+  return NextResponse.next({
+    request: {
+      headers: forwardedHeaders,
+    },
   });
+}
+
+export async function updateSession(
+  request: NextRequest,
+  forwardedHeaders?: Headers
+) {
+  let response = makeProxyResponse(request, forwardedHeaders);
 
   if (!isSupabaseConfigured()) {
     return response;
@@ -28,9 +43,7 @@ export async function updateSession(request: NextRequest) {
             request.cookies.set(name, value);
           });
 
-          response = NextResponse.next({
-            request,
-          });
+          response = makeProxyResponse(request, forwardedHeaders);
 
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);

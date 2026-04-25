@@ -33,17 +33,24 @@ import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { getBackgroundImageCropStyle, normalizeImageCrop } from "@/lib/image-crop";
 import {
   MAX_CUSTOM_LINKS,
+  MAX_LINK_DESCRIPTION_LENGTH,
+  MAX_LINK_TITLE_LENGTH,
   normalizeCustomLinks,
   getAgeFromBirthDate,
   normalizeSocialUrl,
 } from "@/lib/profile-utils";
+import { isReservedUsername, USERNAME_REGEX } from "@/lib/username-rules";
 
 const schema = z.object({
   fullName: z.string().min(2, "Nama minimal 2 karakter."),
   username: z
     .string()
     .min(3, "Username minimal 3 karakter.")
-    .regex(/^[a-zA-Z0-9_]+$/, "Gunakan huruf, angka, atau underscore."),
+    .max(30, "Username maksimal 30 karakter.")
+    .regex(USERNAME_REGEX, "Gunakan huruf kecil, angka, underscore, atau dash.")
+    .refine((value) => !isReservedUsername(value), {
+      message: "Username tidak dapat digunakan.",
+    }),
   role: z.string().max(120, "Role terlalu panjang."),
   avatarUrl: z
     .string()
@@ -63,7 +70,7 @@ const schema = z.object({
     .refine((value) => value === "" || normalizeAvatarUrl(value).startsWith("http"), {
       message: "Gunakan URL cover http/https yang valid.",
     }),
-  bio: z.string().max(500, "Bio maksimal 500 karakter."),
+  bio: z.string().max(240, "Bio maksimal 240 karakter."),
   experience: z.string().max(700, "Pengalaman maksimal 700 karakter."),
   birthDate: z.string().optional(),
   city: z.string().max(120, "Kota terlalu panjang."),
@@ -83,7 +90,7 @@ const schema = z.object({
           .string()
           .trim()
           .min(1, "Judul link wajib diisi.")
-          .max(32, "Judul maksimal 32 karakter."),
+          .max(MAX_LINK_TITLE_LENGTH, `Judul maksimal ${MAX_LINK_TITLE_LENGTH} karakter.`),
         url: z
           .string()
           .trim()
@@ -91,6 +98,16 @@ const schema = z.object({
           .refine((value) => normalizeSocialUrl(value).startsWith("http"), {
             message: "Gunakan URL http/https yang valid.",
           }),
+        description: z
+          .string()
+          .trim()
+          .max(
+            MAX_LINK_DESCRIPTION_LENGTH,
+            `Deskripsi maksimal ${MAX_LINK_DESCRIPTION_LENGTH} karakter.`
+          )
+          .optional(),
+        platform: z.string().trim().max(30, "Platform terlalu panjang.").optional(),
+        badge: z.string().trim().max(30, "Badge terlalu panjang.").optional(),
         enabled: z.boolean(),
         order: z.number().int().min(0).max(99),
       })
@@ -220,6 +237,9 @@ export function ProfileForm({ user }: { user: DbUser }) {
         id: link.id,
         title: link.title,
         url: link.url,
+        description: link.description || "",
+        platform: link.platform || "",
+        badge: link.badge || "",
         enabled: link.enabled !== false,
         order: link.order,
       })),

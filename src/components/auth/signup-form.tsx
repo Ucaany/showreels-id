@@ -16,6 +16,7 @@ import { useAuthAttemptLock } from "@/hooks/use-auth-attempt-lock";
 import { usePreferences } from "@/hooks/use-preferences";
 import { getAuthRedirectUrl } from "@/lib/auth-redirect-url";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
+import { getSafeNextPath } from "@/lib/safe-next-path";
 
 const signupSchema = z
   .object({
@@ -35,10 +36,13 @@ const signupSchema = z
 
 type SignupValues = z.infer<typeof signupSchema>;
 
-async function finalizeSignedInSession() {
-  const response = await fetch("/api/auth/bootstrap", {
+async function finalizeSignedInSession(nextPath: string) {
+  const response = await fetch(
+    `/api/auth/bootstrap?next=${encodeURIComponent(nextPath)}`,
+    {
     method: "POST",
-  });
+    }
+  );
   const payload = (await response.json().catch(() => null)) as
     | { error?: string; redirectTo?: string }
     | null;
@@ -61,9 +65,11 @@ async function finalizeSignedInSession() {
 export function SignupForm({
   googleEnabled,
   initialUsername = "",
+  nextPath = "/dashboard",
 }: {
   googleEnabled: boolean;
   initialUsername?: string;
+  nextPath?: string;
 }) {
   const { dictionary } = usePreferences();
   const [submitError, setSubmitError] = useState("");
@@ -74,6 +80,11 @@ export function SignupForm({
   const authUnavailable = !supabase;
   const authUnavailableMessage = "Layanan autentikasi belum siap. Coba refresh halaman.";
   const visibleSubmitError = authUnavailable ? authUnavailableMessage : submitError;
+  const safeNextPath = getSafeNextPath(nextPath);
+  const loginHref =
+    safeNextPath === "/dashboard"
+      ? "/auth/login"
+      : `/auth/login?next=${encodeURIComponent(safeNextPath)}`;
   const altActionClassName =
     "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#d7cec7] bg-white px-4 text-sm font-semibold text-[#201b18] shadow-sm transition hover:bg-[#fbf7f4] focus:outline-none focus:ring-2 focus:ring-[#e6c2b9] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
@@ -146,7 +157,7 @@ export function SignupForm({
             full_name: values.fullName,
             username: values.username,
           },
-          emailRedirectTo: getAuthRedirectUrl("/dashboard"),
+          emailRedirectTo: getAuthRedirectUrl(safeNextPath),
         },
       });
 
@@ -177,7 +188,7 @@ export function SignupForm({
         return;
       }
 
-      const bootstrapResult = await finalizeSignedInSession();
+      const bootstrapResult = await finalizeSignedInSession(safeNextPath);
 
       if (!bootstrapResult.ok) {
         await supabase.auth.signOut();
@@ -361,7 +372,7 @@ export function SignupForm({
                 const { data, error } = await supabase.auth.signInWithOAuth({
                   provider: "google",
                   options: {
-                    redirectTo: getAuthRedirectUrl("/dashboard"),
+                    redirectTo: getAuthRedirectUrl(safeNextPath),
                     queryParams: {
                       prompt: "select_account",
                     },
@@ -392,7 +403,7 @@ export function SignupForm({
               {dictionary.continueGoogle}
             </button>
           ) : null}
-          <Link href="/auth/login" className={altActionClassName}>
+          <Link href={loginHref} className={altActionClassName}>
             {dictionary.login}
           </Link>
         </div>

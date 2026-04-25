@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { isCustomLinksSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
+import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
 import { syncUserProfile } from "@/server/auth-profile";
 
-export async function POST() {
+export async function POST(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const next = getSafeNextPath(searchParams.get("next"));
   const supabase = await createClient();
   const {
     data: { user },
@@ -30,7 +33,7 @@ export async function POST() {
 
     return NextResponse.json({
       ok: true,
-      redirectTo: profile.role === "owner" ? "/admin" : "/dashboard",
+      redirectTo: profile.role === "owner" ? "/admin" : next,
     });
   } catch (syncError) {
     const mismatch = isCustomLinksSchemaError(syncError);

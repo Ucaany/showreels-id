@@ -32,6 +32,7 @@ export async function POST(request: Request) {
   const existingEvent = await db.query.visitorEvents.findFirst({
     where: and(
       eq(visitorEvents.visitorId, visitorId),
+      eq(visitorEvents.path, path),
       gte(visitorEvents.createdAt, getWibDayStartUtc())
     ),
     columns: { id: true },

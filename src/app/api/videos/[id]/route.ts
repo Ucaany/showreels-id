@@ -1,16 +1,40 @@
 import { NextResponse } from "next/server";
-import { and, eq, ne } from "drizzle-orm";
+import { and, count, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { videoSchema } from "@/lib/auth-schemas";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 import {
   buildAiDescription,
   createPublicSlug,
   normalizeAssetUrl,
   validateEmbedReadyVideoUrl,
 } from "@/lib/video-utils";
+import type { VideoSource } from "@/lib/types";
+
+async function countPublicVideosBySource(input: {
+  userId: string;
+  source: VideoSource;
+  excludeVideoId?: string;
+}) {
+  const filters = [
+    eq(videos.userId, input.userId),
+    eq(videos.source, input.source),
+    eq(videos.visibility, "public"),
+  ];
+  if (input.excludeVideoId) {
+    filters.push(ne(videos.id, input.excludeVideoId));
+  }
+
+  const rows = await db
+    .select({ value: count() })
+    .from(videos)
+    .where(and(...filters));
+
+  return rows[0]?.value ?? 0;
+}
 
 export async function PATCH(
   request: Request,
@@ -57,6 +81,38 @@ export async function PATCH(
     );
   }
   const source = sourceValidation.source;
+  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
+  const normalizedThumbnailUrl = normalizeAssetUrl(parsed.data.thumbnailUrl || "");
+
+  if (!entitlementState.entitlements.customThumbnailEnabled && normalizedThumbnailUrl) {
+    return NextResponse.json(
+      {
+        error: "Custom thumbnail hanya tersedia untuk plan Pro/Business.",
+        code: "feature_not_available_for_plan",
+      },
+      { status: 403 }
+    );
+  }
+
+  if (parsed.data.visibility === "public") {
+    const sourceQuota = entitlementState.entitlements.sourceQuotaPerPlatform[source];
+    if (typeof sourceQuota === "number") {
+      const publicSourceCount = await countPublicVideosBySource({
+        userId: currentUser.id,
+        source,
+        excludeVideoId: existingVideo.id,
+      });
+      if (publicSourceCount >= sourceQuota) {
+        return NextResponse.json(
+          {
+            error: `Kuota video public untuk ${source} pada plan ${entitlementState.effectivePlan.planName.toUpperCase()} sudah habis (${sourceQuota} video/source).`,
+            code: "source_quota_exceeded",
+          },
+          { status: 403 }
+        );
+      }
+    }
+  }
 
   const trimmedTitle = parsed.data.title.trim();
   const existingSlugs = await db.query.videos.findMany({
@@ -85,7 +141,7 @@ export async function PATCH(
         }),
       tags: parsed.data.tags,
       visibility: parsed.data.visibility,
-      thumbnailUrl: normalizeAssetUrl(parsed.data.thumbnailUrl || ""),
+      thumbnailUrl: normalizedThumbnailUrl,
       extraVideoUrls: parsed.data.extraVideoUrls,
       imageUrls: parsed.data.imageUrls,
       sourceUrl: sourceValidation.canonicalUrl,
