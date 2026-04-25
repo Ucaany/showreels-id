@@ -265,7 +265,7 @@ function PhonePreviewMockup({
         {backgroundVideoSrc ? (
           <>
             <video
-              className="absolute inset-0 h-full w-full object-cover opacity-70"
+              className="absolute inset-0 h-full w-full object-cover brightness-[0.76] opacity-55 saturate-[0.88]"
               autoPlay
               muted
               loop
@@ -275,7 +275,7 @@ function PhonePreviewMockup({
             >
               <source src={backgroundVideoSrc} type="video/mp4" />
             </video>
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(235,245,255,0.55),rgba(47,115,255,0.5))]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,22,48,0.44),rgba(18,55,126,0.52),rgba(6,17,38,0.66))]" />
           </>
         ) : null}
         <div className="relative z-10 mx-auto h-2.5 w-16 rounded-full bg-[#07111f]" />
@@ -829,27 +829,39 @@ export function LandingPage({
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <div className="min-h-screen bg-canvas text-[#201b18]">
-        <header className="fixed left-0 right-0 top-0 z-[70] border-b border-[#e6ddd7] bg-[#f7f3f0]/92 backdrop-blur">
-          <div className="mx-auto flex w-full max-w-[1160px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+      <div className="min-h-screen overflow-x-clip bg-canvas text-[#201b18]">
+        <header className="fixed left-0 right-0 top-0 z-[70] border-b border-[#d6e2f7] bg-[#f8fbff]/92 backdrop-blur">
+          <div className="mx-auto flex min-h-[4.55rem] w-full max-w-[1160px] items-center justify-between gap-4 px-4 py-2.5 sm:px-6 lg:px-8">
             <AppLogo />
 
-            <nav className="hidden items-center gap-7 text-[0.97rem] font-medium tracking-[-0.012em] text-[#4f433d] lg:flex">
-              <a href="#features" className="transition hover:text-[#1f1a17]">
+            <nav className="hidden items-center gap-1 text-[0.95rem] font-semibold tracking-[-0.012em] text-[#35537f] lg:flex">
+              <a
+                href="#features"
+                className="inline-flex min-h-11 items-center rounded-full px-3.5 transition hover:bg-[#edf4ff] hover:text-[#1f4fb8]"
+              >
                 {dictionary.landingNavFeatures}
               </a>
-              <a href="#themes" className="transition hover:text-[#1f1a17]">
+              <a
+                href="#themes"
+                className="inline-flex min-h-11 items-center rounded-full px-3.5 transition hover:bg-[#edf4ff] hover:text-[#1f4fb8]"
+              >
                 {dictionary.landingNavThemes}
               </a>
-              <a href="#pricing" className="transition hover:text-[#1f1a17]">
+              <a
+                href="#pricing"
+                className="inline-flex min-h-11 items-center rounded-full px-3.5 transition hover:bg-[#edf4ff] hover:text-[#1f4fb8]"
+              >
                 {dictionary.landingNavPricing}
               </a>
-              <a href="#faq" className="transition hover:text-[#1f1a17]">
+              <a
+                href="#faq"
+                className="inline-flex min-h-11 items-center rounded-full px-3.5 transition hover:bg-[#edf4ff] hover:text-[#1f4fb8]"
+              >
                 {dictionary.landingNavFaq}
               </a>
             </nav>
 
-            <div className="hidden items-center gap-3 lg:flex">
+            <div className="hidden items-center gap-2.5 lg:flex">
               <SitePreferences compact />
               {currentUser ? (
                 <>
@@ -858,13 +870,13 @@ export function LandingPage({
                       Dashboard
                     </Button>
                   </Link>
-                  <div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#ddd3cd] bg-white px-2.5 py-1.5">
+                  <div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#ccdbf5] bg-white px-2.5 py-1.5">
                     <AvatarBadge
                       name={currentUser.name || "Creator"}
                       avatarUrl={currentUser.image || ""}
                       size="sm"
                     />
-                    <span className="pr-1 text-sm font-semibold text-[#3e3530]">
+                    <span className="pr-1 text-sm font-semibold text-[#2f4570]">
                       @{currentUser.username || "creator"}
                     </span>
                   </div>
@@ -884,7 +896,7 @@ export function LandingPage({
                 <>
                   <Link
                     href="/auth/login"
-                    className="text-[0.97rem] font-semibold tracking-[-0.012em] text-[#3f3530]"
+                    className="inline-flex min-h-11 items-center rounded-full px-3.5 text-[0.95rem] font-semibold tracking-[-0.012em] text-[#2f4f83] transition hover:bg-[#edf4ff] hover:text-[#1f4fb8]"
                   >
                     {loginLabel}
                   </Link>
@@ -902,7 +914,7 @@ export function LandingPage({
 
             <button
               type="button"
-              className="inline-flex h-12 w-12 items-center justify-center rounded-[1.15rem] border border-[#ddd3cd] bg-white text-[#2d2623] lg:hidden"
+              className="inline-flex h-12 w-12 items-center justify-center rounded-[1.15rem] border border-[#ccdbf5] bg-white text-[#24406c] lg:hidden"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               aria-label="Open menu"
               aria-expanded={mobileMenuOpen}
@@ -913,19 +925,19 @@ export function LandingPage({
         </header>
 
         {mobileMenuOpen ? (
-          <div className="fixed inset-0 z-[80] bg-[#120e0c]/40 lg:hidden">
+          <div className="fixed inset-0 z-[80] bg-[#0d2246]/38 lg:hidden">
             <button
               type="button"
               className="absolute inset-0 h-full w-full cursor-default"
               onClick={() => setMobileMenuOpen(false)}
               aria-label="Close menu backdrop"
             />
-            <aside className="absolute right-0 top-0 h-full w-[86%] max-w-[360px] border-l border-[#ddd3cd] bg-[#f8f5f2] p-5 shadow-sm">
+            <aside className="absolute right-0 top-0 h-full w-[min(88vw,360px)] border-l border-[#ccdbf5] bg-[#f7fbff] p-5 shadow-sm">
               <div className="mb-6 flex items-center justify-between">
                 <AppLogo />
                 <button
                   type="button"
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-[1.05rem] border border-[#ddd3cd] bg-white text-[#2d2623]"
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-[1.05rem] border border-[#ccdbf5] bg-white text-[#24406c]"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <X className="h-5 w-5" />
@@ -936,36 +948,36 @@ export function LandingPage({
                 <a
                   href="#features"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
+                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#2e4e82] transition hover:bg-white"
                 >
                   {dictionary.landingNavFeatures}
                 </a>
                 <a
                   href="#themes"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
+                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#2e4e82] transition hover:bg-white"
                 >
                   {dictionary.landingNavThemes}
                 </a>
                 <a
                   href="#pricing"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
+                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#2e4e82] transition hover:bg-white"
                 >
                   {dictionary.landingNavPricing}
                 </a>
                 <a
                   href="#faq"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#3c322d] hover:bg-white"
+                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#2e4e82] transition hover:bg-white"
                 >
                   {dictionary.landingNavFaq}
                 </a>
               </div>
 
-              <div className="border-t border-[#e2d9d3] pt-5">
+              <div className="border-t border-[#d5e1f4] pt-5">
                 <SitePreferences />
-                <div className="mt-6 space-y-4">
+                <div className="mt-6 space-y-3">
                   {currentUser ? (
                     <>
                       <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
@@ -988,16 +1000,26 @@ export function LandingPage({
                     </>
                   ) : (
                     <>
-                      <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="secondary" className="w-full">
-                          {loginLabel}
-                        </Button>
-                      </Link>
-                      <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>
-                        <Button className="w-full !shadow-none bg-[#2f73ff] font-extrabold text-white hover:bg-[#225fe0]">
-                          {dictionary.landingClaimCta}
-                        </Button>
-                      </Link>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Link
+                          href="/auth/login"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="min-w-0"
+                        >
+                          <Button variant="secondary" className="w-full">
+                            {loginLabel}
+                          </Button>
+                        </Link>
+                        <Link
+                          href="/auth/signup"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="min-w-0"
+                        >
+                          <Button className="w-full !shadow-none bg-[#2f73ff] font-extrabold text-white hover:bg-[#225fe0]">
+                            {dictionary.landingClaimCta}
+                          </Button>
+                        </Link>
+                      </div>
                     </>
                   )}
                 </div>
@@ -1006,7 +1028,7 @@ export function LandingPage({
           </div>
         ) : null}
 
-        <main className="pb-14 pt-[4.35rem] sm:pt-[4.6rem]">
+        <main className="overflow-x-clip pb-14 pt-[4.72rem] sm:pt-[4.95rem]">
           <section className="mx-auto w-full max-w-[1160px] overflow-hidden px-4 pb-12 pt-16 sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
             <div className="grid items-center gap-9 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] lg:gap-11">
               <div className="mx-auto min-w-0 max-w-[36rem] text-center lg:mx-0 lg:text-left">
@@ -1029,7 +1051,7 @@ export function LandingPage({
                 </p>
 
                 <form
-                  className="mx-auto mt-5 w-[calc(100%-1rem)] max-w-[31rem] rounded-[1.14rem] border border-[#cbd9f2]/75 bg-white/45 p-[0.22rem] shadow-none backdrop-blur-md sm:mt-6 sm:rounded-[1.2rem] sm:p-1 lg:mx-0"
+                  className="mx-auto mt-5 w-full max-w-[31rem] rounded-[1.14rem] border border-[#cbd9f2]/75 bg-white/45 p-[0.22rem] shadow-none backdrop-blur-md sm:mt-6 sm:rounded-[1.2rem] sm:p-1 lg:mx-0"
                   onSubmit={(event) => {
                     event.preventDefault();
                     if (usernameStatus !== "available") {
@@ -1555,18 +1577,23 @@ export function LandingPage({
             </div>
           </section>
 
-          <section className="mx-auto w-full max-w-[1160px] px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
+          <section className="mx-auto w-full max-w-[1160px] px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
             <div className="text-center">
-              <p className="text-eyebrow font-semibold uppercase text-[#7c6e66]">
-                Community
-              </p>
-              <h2 className="mt-2.5 font-display text-[clamp(1.55rem,2.5vw,2.2rem)] font-semibold tracking-[-0.03em] text-[#1b1512]">
-                {locale === "en" ? "Featured creators" : "Creator pilihan"}
+              <Badge className={sectionBadgeClass}>
+                {locale === "en" ? "Community" : "Komunitas"}
+              </Badge>
+              <h2 className={sectionTitleClass}>
+                {locale === "en" ? "Featured creators" : "Community Creator Pilihan"}
               </h2>
+              <p className={centeredSectionDescriptionClass}>
+                {locale === "en"
+                  ? "Discover creators with complete profiles, strong reels, and clear specialization."
+                  : "Temukan creator dengan profil lengkap, reel terbaik, dan spesialisasi yang jelas."}
+              </p>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-7 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
               {featuredCreatorCards.length === 0 ? (
-                <p className="text-body-base rounded-2xl border border-dashed border-[#d8cdc6] bg-white p-8 text-center text-[#6d6159] sm:col-span-2 lg:col-span-3">
+                <p className="text-body-base rounded-2xl border border-dashed border-[#d3def1] bg-white p-8 text-center text-[#5f6f8e] sm:col-span-2 lg:col-span-3">
                   {locale === "en" ? "No creators yet." : "Belum ada creator."}
                 </p>
               ) : (
@@ -1586,12 +1613,12 @@ export function LandingPage({
                         <p className="truncate text-card-title font-semibold text-[#201b18]">
                           {creator.name || "Creator"}
                         </p>
-                        <p className="truncate text-helper text-[#7a6c64]">
+                        <p className="truncate text-helper text-[#627294]">
                           @{creator.username || "creator"}
                         </p>
                       </div>
                     </div>
-                    <p className="text-body-base mt-2.5 line-clamp-2 text-[#5e524b]">
+                    <p className="text-body-base mt-2.5 line-clamp-2 text-[#4f5f7e]">
                       {creator.bio?.trim() ||
                         (locale === "en"
                           ? "Bio has not been added yet."
@@ -1603,22 +1630,33 @@ export function LandingPage({
             </div>
           </section>
 
-          <section className="mx-auto w-full max-w-[1160px] px-4 pb-12 sm:px-6 lg:px-8">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-display text-[clamp(1.55rem,2.5vw,2.2rem)] font-semibold tracking-[-0.03em] text-[#1b1512]">
+          <section className="mx-auto w-full max-w-[1160px] px-4 pb-12 sm:px-6 sm:pb-14 lg:px-8 lg:pb-16">
+            <div className="text-center">
+              <Badge className={sectionBadgeClass}>
+                {locale === "en" ? "Latest videos" : "Video terbaru"}
+              </Badge>
+              <h2 className={sectionTitleClass}>
                 {locale === "en"
                   ? "Latest videos from creators"
-                  : "Video terbaru dari creator"}
+                  : "Video Terbaru dari Creator"}
               </h2>
-              <div className="inline-flex items-center gap-1 rounded-full border border-[#d8cdc6] bg-white p-1">
+              <p className={centeredSectionDescriptionClass}>
+                {locale === "en"
+                  ? "Review fresh uploads quickly with consistent card previews and metadata."
+                  : "Lihat upload terbaru dengan kartu video yang konsisten dan metadata yang mudah dibaca."}
+              </p>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <div className="inline-flex items-center gap-1 rounded-full border border-[#cbdbf5] bg-white p-1">
                 <button
                   type="button"
                   onClick={() => setLatestVideosView("grid")}
                   className={cn(
                     "inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.86rem] font-semibold tracking-[-0.008em] transition",
                     latestVideosView === "grid"
-                      ? "bg-[#1a1412] text-white"
-                      : "text-[#5d5049] hover:bg-[#f3ece7]"
+                      ? "bg-[#2f73ff] text-white"
+                      : "text-[#3d5a8f] hover:bg-[#edf4ff]"
                   )}
                 >
                   <LayoutGrid className="h-4 w-4" />
@@ -1630,8 +1668,8 @@ export function LandingPage({
                   className={cn(
                     "inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.86rem] font-semibold tracking-[-0.008em] transition",
                     latestVideosView === "list"
-                      ? "bg-[#1a1412] text-white"
-                      : "text-[#5d5049] hover:bg-[#f3ece7]"
+                      ? "bg-[#2f73ff] text-white"
+                      : "text-[#3d5a8f] hover:bg-[#edf4ff]"
                   )}
                 >
                   <List className="h-4 w-4" />
@@ -1649,7 +1687,7 @@ export function LandingPage({
               )}
             >
               {visibleLatestVideos.length === 0 ? (
-                <p className="text-body-base rounded-2xl border border-dashed border-[#d8cdc6] bg-white p-8 text-center text-[#6d6159]">
+                <p className="text-body-base rounded-2xl border border-dashed border-[#d3def1] bg-white p-8 text-center text-[#5f6f8e]">
                   {locale === "en" ? "No video yet." : "Belum ada video."}
                 </p>
               ) : (
@@ -1729,22 +1767,22 @@ export function LandingPage({
                             <p className="truncate text-[0.89rem] font-semibold tracking-[-0.008em] text-[#4a3d37]">
                               {video.author?.name || "Creator"}
                             </p>
-                            <p className="truncate text-helper text-[#7d6e66]">
+                            <p className="truncate text-helper text-[#627294]">
                               @{video.author?.username || "creator"}
                             </p>
                           </div>
                         </div>
 
-                        <p className="text-body-base line-clamp-2 text-[#5f524b]">
+                        <p className="text-body-base line-clamp-2 text-[#4f5f7e]">
                           {video.description}
                         </p>
 
-                        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-[#e7ddd7] pt-2.5 text-helper text-[#6f625a]">
+                        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-[#dbe5f6] pt-2.5 text-helper text-[#5f6f8e]">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="rounded-full bg-[#f5eeea] px-2 py-0.5">
+                            <span className="rounded-full bg-[#edf4ff] px-2 py-0.5">
                               {video.durationLabel || "-"}
                             </span>
-                            <span className="rounded-full bg-[#f5eeea] px-2 py-0.5">
+                            <span className="rounded-full bg-[#edf4ff] px-2 py-0.5">
                               {video.outputType || "-"}
                             </span>
                           </div>
@@ -1757,7 +1795,7 @@ export function LandingPage({
               )}
             </div>
 
-            <div className="mt-5">
+            <div className="mt-5 flex justify-center">
               <Link href="/videos">
                 <Button variant="secondary">
                   {locale === "en" ? "View all videos" : "Lihat semua video"}

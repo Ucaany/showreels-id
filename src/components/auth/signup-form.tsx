@@ -17,6 +17,7 @@ import { usePreferences } from "@/hooks/use-preferences";
 import { getAuthRedirectUrl } from "@/lib/auth-redirect-url";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 import { getSafeNextPath } from "@/lib/safe-next-path";
+import { cn } from "@/lib/cn";
 
 const signupSchema = z
   .object({
@@ -86,7 +87,7 @@ export function SignupForm({
       ? "/auth/login"
       : `/auth/login?next=${encodeURIComponent(safeNextPath)}`;
   const altActionClassName =
-    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#d7cec7] bg-white px-4 text-sm font-semibold text-[#201b18] shadow-sm transition hover:bg-[#fbf7f4] focus:outline-none focus:ring-2 focus:ring-[#e6c2b9] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#cad9f4] bg-white px-4 text-sm font-semibold text-[#1b365f] shadow-sm transition hover:bg-[#edf4ff] focus:outline-none focus:ring-2 focus:ring-[#b7d2ff] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
@@ -98,6 +99,7 @@ export function SignupForm({
       confirmPassword: "",
     },
   });
+  const isFormDisabled = form.formState.isSubmitting || authLock.isLocked || authUnavailable;
 
   useEffect(() => {
     if (!initialUsername) {
@@ -224,6 +226,7 @@ export function SignupForm({
     <AuthShell
       title={dictionary.authSignupTitle}
       subtitle="Buat akun creator dengan tampilan yang lebih bersih dan alur registrasi yang sederhana."
+      showPreferences={false}
     >
       <motion.form
         onSubmit={form.handleSubmit(onSubmit, onInvalidSubmit)}
@@ -232,54 +235,80 @@ export function SignupForm({
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#e3d8d2] sm:bg-[#fbf7f4] sm:p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#d6e2f7] sm:bg-[#f5f9ff] sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <UserRound className="h-4 w-4 text-[#e24f3b]" />
+            <UserRound className="h-4 w-4 text-[#2f73ff]" />
             Nama Lengkap
           </label>
-          <Input {...form.register("fullName")} />
+          <Input
+            disabled={isFormDisabled}
+            className={cn(
+              form.formState.errors.fullName &&
+                "border-rose-300 focus:border-rose-500 focus:ring-rose-200"
+            )}
+            {...form.register("fullName")}
+          />
           <p className="mt-1 text-xs text-rose-600">
             {form.formState.errors.fullName?.message}
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#e3d8d2] sm:bg-[#fbf7f4] sm:p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#d6e2f7] sm:bg-[#f5f9ff] sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <UserRound className="h-4 w-4 text-[#e24f3b]" />
+            <UserRound className="h-4 w-4 text-[#2f73ff]" />
             Username
           </label>
-          <Input {...form.register("username")} />
+          <Input
+            disabled={isFormDisabled}
+            className={cn(
+              form.formState.errors.username &&
+                "border-rose-300 focus:border-rose-500 focus:ring-rose-200"
+            )}
+            {...form.register("username")}
+          />
           <p className="mt-1 text-xs text-rose-600">
             {form.formState.errors.username?.message}
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#e3d8d2] sm:bg-[#fbf7f4] sm:p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#d6e2f7] sm:bg-[#f5f9ff] sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <Mail className="h-4 w-4 text-[#e24f3b]" />
+            <Mail className="h-4 w-4 text-[#2f73ff]" />
             Email
           </label>
-          <Input {...form.register("email")} />
+          <Input
+            disabled={isFormDisabled}
+            className={cn(
+              form.formState.errors.email &&
+                "border-rose-300 focus:border-rose-500 focus:ring-rose-200"
+            )}
+            {...form.register("email")}
+          />
           <p className="mt-1 text-xs text-rose-600">
             {form.formState.errors.email?.message}
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#e3d8d2] sm:bg-[#fbf7f4] sm:p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#d6e2f7] sm:bg-[#f5f9ff] sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <LockKeyhole className="h-4 w-4 text-[#e24f3b]" />
+            <LockKeyhole className="h-4 w-4 text-[#2f73ff]" />
             Password
           </label>
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
-              className="pr-11"
+              disabled={isFormDisabled}
+              className={cn(
+                "pr-11",
+                form.formState.errors.password &&
+                  "border-rose-300 focus:border-rose-500 focus:ring-rose-200"
+              )}
               {...form.register("password")}
             />
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#7a6c64] transition hover:text-[#514640]"
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#5a78ad] transition hover:text-[#2f73ff]"
               aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -290,21 +319,26 @@ export function SignupForm({
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#e3d8d2] sm:bg-[#fbf7f4] sm:p-4">
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#d6e2f7] sm:bg-[#f5f9ff] sm:p-4">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <LockKeyhole className="h-4 w-4 text-[#e24f3b]" />
+            <LockKeyhole className="h-4 w-4 text-[#2f73ff]" />
             Konfirmasi Password
           </label>
           <div className="relative">
             <Input
               type={showConfirmPassword ? "text" : "password"}
-              className="pr-11"
+              disabled={isFormDisabled}
+              className={cn(
+                "pr-11",
+                form.formState.errors.confirmPassword &&
+                  "border-rose-300 focus:border-rose-500 focus:ring-rose-200"
+              )}
               {...form.register("confirmPassword")}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#7a6c64] transition hover:text-[#514640]"
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#5a78ad] transition hover:text-[#2f73ff]"
               aria-label={showConfirmPassword ? "Sembunyikan password" : "Lihat password"}
             >
               {showConfirmPassword ? (
@@ -326,9 +360,9 @@ export function SignupForm({
         ) : null}
 
         <Button
-          className="w-full"
+          className="w-full bg-[#2f73ff] text-white hover:bg-[#225fe0] focus-visible:ring-[#8eb3ff]"
           type="submit"
-          disabled={form.formState.isSubmitting || authLock.isLocked || authUnavailable}
+          disabled={isFormDisabled}
         >
           {authLock.isLocked
             ? "Daftar terkunci"
