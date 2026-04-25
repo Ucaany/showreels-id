@@ -41,7 +41,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
 import {
-  MAX_CUSTOM_LINKS_FREE_PLAN,
+  MAX_CUSTOM_LINKS,
   MAX_LINK_DESCRIPTION_LENGTH,
   MAX_LINK_TITLE_LENGTH,
   normalizeCustomLinks,
@@ -244,13 +244,23 @@ function SortableLinkItem({
   );
 }
 
-export function LinkBuilderEditor({ user }: { user: LinkBuilderUser }) {
+export function LinkBuilderEditor({
+  user,
+  linkBuilderMax,
+  planName,
+}: {
+  user: LinkBuilderUser;
+  linkBuilderMax: number | null;
+  planName: "free" | "pro" | "business";
+}) {
   const [mobileTab, setMobileTab] = useState<MobileTab>("edit");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("desktop");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [isSavingNow, setIsSavingNow] = useState(false);
   const [links, setLinks] = useState<EditableLink[]>(() =>
-    normalizeCustomLinks(user.customLinks).map((link) => ({ ...link }))
+    normalizeCustomLinks(user.customLinks, linkBuilderMax ?? MAX_CUSTOM_LINKS).map((link) => ({
+      ...link,
+    }))
   );
   const [newLink, setNewLink] = useState({
     title: "",
@@ -569,6 +579,10 @@ export function LinkBuilderEditor({ user }: { user: LinkBuilderUser }) {
     () => links.filter((item) => item.enabled !== false).slice(0, 8),
     [links]
   );
+  const isLinkLimitReached =
+    typeof linkBuilderMax === "number" && links.length >= linkBuilderMax;
+  const maxLinksLabel =
+    typeof linkBuilderMax === "number" ? String(linkBuilderMax) : "Unlimited";
   const filteredLinks = useMemo(() => {
     const keyword = linkSearch.trim().toLowerCase();
     if (!keyword) return links;
@@ -822,14 +836,14 @@ export function LinkBuilderEditor({ user }: { user: LinkBuilderUser }) {
                   Custom Link
                 </p>
                 <h2 className="text-lg font-semibold text-[#201b18]">
-                  Tambah Block (maks {MAX_CUSTOM_LINKS_FREE_PLAN})
+                  Tambah Block (maks {maxLinksLabel})
                 </h2>
               </div>
               <Button
                 size="sm"
                 className="bg-[#ef4f3f] hover:bg-[#dd4839]"
                 onClick={handleAddLink}
-                disabled={links.length >= MAX_CUSTOM_LINKS_FREE_PLAN}
+                disabled={isLinkLimitReached}
               >
                 <Plus className="h-4 w-4" />
                 Tambah Block
@@ -879,7 +893,7 @@ export function LinkBuilderEditor({ user }: { user: LinkBuilderUser }) {
                   {links.length} Blocks
                 </p>
                 <span className="rounded-full border border-[#e0d4ce] bg-white px-2.5 py-1 text-xs font-semibold text-[#6b5e56]">
-                  {previewLinks.length} active
+                  {previewLinks.length} active · Plan {planName.toUpperCase()}
                 </span>
               </div>
               <div className="mb-3">

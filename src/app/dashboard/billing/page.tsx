@@ -7,17 +7,23 @@ import {
 } from "@/server/billing";
 import { requireCurrentUser } from "@/server/current-user";
 import { getOrCreateCreatorSettings } from "@/server/creator-settings";
+import {
+  getCreatorEntitlementsForUser,
+  getCreatorGroupLink,
+  getSupportLink,
+} from "@/server/subscription-policy";
 
 export default async function DashboardBillingPage() {
   const user = await requireCurrentUser();
 
-  const [subscription, transactions, settings] = await Promise.all([
+  const [subscription, transactions, settings, entitlementState] = await Promise.all([
     getOrCreateSubscription(user.id),
     getBillingTransactions(user.id),
     getOrCreateCreatorSettings({
       userId: user.id,
       billingEmail: user.contactEmail || user.email,
     }),
+    getCreatorEntitlementsForUser(user.id),
   ]);
 
   return (
@@ -29,6 +35,8 @@ export default async function DashboardBillingPage() {
         status: subscription.status as "active" | "trial" | "expired" | "failed" | "pending",
         renewalDate: subscription.renewalDate?.toISOString() || null,
       }}
+      effectivePlan={entitlementState.effectivePlan.planName}
+      entitlements={entitlementState.entitlements}
       catalog={getPlanCatalog()}
       initialTransactions={transactions.map((transaction) => ({
         ...transaction,
@@ -40,6 +48,8 @@ export default async function DashboardBillingPage() {
       billingEmail={settings.billingEmail || user.contactEmail || user.email}
       paymentMethod={settings.paymentMethod}
       midtransReady={isMidtransConfigured()}
+      creatorGroupLink={getCreatorGroupLink()}
+      supportLink={getSupportLink()}
     />
   );
 }

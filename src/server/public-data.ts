@@ -1,7 +1,7 @@
 import { and, count, desc, eq, ne, notInArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
-import { users, videos } from "@/db/schema";
+import { billingSubscriptions, creatorSettings, users, videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
 import { getThumbnailCandidates } from "@/lib/video-utils";
@@ -21,6 +21,34 @@ export interface PublicShowcaseVideo {
     name: string | null;
     image: string | null;
   };
+}
+
+function isEntitledSubscriptionStatus(status: string | null | undefined) {
+  return status === "active" || status === "trial";
+}
+
+async function isWhitelabelActiveForUser(userId: string) {
+  const [settings, subscription] = await Promise.all([
+    db.query.creatorSettings.findFirst({
+      where: eq(creatorSettings.userId, userId),
+      columns: {
+        whitelabelEnabled: true,
+      },
+    }),
+    db.query.billingSubscriptions.findFirst({
+      where: eq(billingSubscriptions.userId, userId),
+      columns: {
+        planName: true,
+        status: true,
+      },
+    }),
+  ]);
+
+  return Boolean(
+    settings?.whitelabelEnabled &&
+      subscription?.planName === "business" &&
+      isEntitledSubscriptionStatus(subscription?.status)
+  );
 }
 
 function sanitizeMediaUrl(url: string | null) {
@@ -323,6 +351,7 @@ export async function getPublicProfile(
         customLinks: normalizeCustomLinks(user.customLinks),
       },
       videos: profileVideos,
+      whitelabelEnabled: await isWhitelabelActiveForUser(user.id),
     };
   } catch (error) {
     console.error("Failed to load public profile", error);
@@ -407,6 +436,7 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
         ...video.author,
         customLinks: normalizeCustomLinks(video.author.customLinks),
       },
+      whitelabelEnabled: await isWhitelabelActiveForUser(video.author.id),
     };
   } catch (error) {
     console.error("Failed to load public video", error);

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  MAX_CUSTOM_LINKS_FREE_PLAN,
+  MAX_CUSTOM_LINKS,
   MAX_LINK_DESCRIPTION_LENGTH,
   MAX_LINK_TITLE_LENGTH,
   normalizeCustomLinks,
@@ -10,7 +10,7 @@ import {
 
 export type LinkItem = CustomLinkItem;
 
-export const LINK_BUILDER_MAX_ITEMS = MAX_CUSTOM_LINKS_FREE_PLAN;
+export const LINK_BUILDER_MAX_ITEMS = MAX_CUSTOM_LINKS;
 
 export const linkCreateSchema = z.object({
   title: z
@@ -59,8 +59,11 @@ export const linkReorderSchema = z.object({
   ids: z.array(z.string().trim().min(1).max(80)).min(1),
 });
 
-export function normalizeStoredLinks(value: unknown): LinkItem[] {
-  return normalizeCustomLinks(value, LINK_BUILDER_MAX_ITEMS);
+export function normalizeStoredLinks(
+  value: unknown,
+  maxLinks: number = LINK_BUILDER_MAX_ITEMS
+): LinkItem[] {
+  return normalizeCustomLinks(value, maxLinks);
 }
 
 export function createLinkItem(

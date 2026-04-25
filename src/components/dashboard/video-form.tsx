@@ -119,6 +119,7 @@ type FormValues = z.infer<typeof schema>;
 
 interface VideoFormProps {
   mode?: "create" | "edit";
+  customThumbnailEnabled?: boolean;
   initialVideo?: {
     id: string;
     title: string;
@@ -138,6 +139,7 @@ interface VideoFormProps {
 
 export function VideoForm({
   mode = "create",
+  customThumbnailEnabled = true,
   initialVideo,
 }: VideoFormProps = {}) {
   const router = useRouter();
@@ -236,6 +238,15 @@ export function VideoForm({
       );
     } catch {}
   }, [form, mode, storageKey]);
+
+  useEffect(() => {
+    if (!customThumbnailEnabled && form.getValues("thumbnailUrl")) {
+      form.setValue("thumbnailUrl", "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [customThumbnailEnabled, form]);
 
   useEffect(() => {
     if (autosaveTimerRef.current) {
@@ -636,15 +647,22 @@ export function VideoForm({
               ) : null}
             </div>
             <Input
+              disabled={!customThumbnailEnabled}
               placeholder="https://images.unsplash.com/..."
               {...form.register("thumbnailUrl")}
             />
             <p className="mt-1 text-xs text-rose-600">
               {form.formState.errors.thumbnailUrl?.message}
             </p>
-            <p className="mt-1 text-xs text-slate-600">
-              Isi URL thumbnail publik (http/https). Jika diisi, slide media akan aktif.
-            </p>
+            {customThumbnailEnabled ? (
+              <p className="mt-1 text-xs text-slate-600">
+                Isi URL thumbnail publik (http/https). Jika diisi, slide media akan aktif.
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-amber-700">
+                Custom thumbnail terkunci di plan Free. Upgrade ke Pro/Business untuk mengaktifkan.
+              </p>
+            )}
             {!manualThumbnailUrl && source ? (
               <p className="mt-1 text-xs text-brand-700">
                 Thumbnail otomatis diambil dari video utama dan slider dinonaktifkan.

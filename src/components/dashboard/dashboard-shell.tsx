@@ -38,10 +38,12 @@ const SIDEBAR_STORAGE_KEY = "showreels.sidebar.collapsed";
 export function DashboardShell({
   children,
   user,
+  planName = "free",
   mode = "creator",
 }: {
   children: React.ReactNode;
   user: DbUser;
+  planName?: "free" | "pro" | "business";
   mode?: "creator" | "admin";
 }) {
   const pathname = usePathname();
@@ -52,6 +54,8 @@ export function DashboardShell({
   const { dictionary } = usePreferences();
   const supabase = createClient();
   const displayUsername = user.username ? `@${user.username}` : "@creator";
+  const planLabel =
+    planName === "business" ? "Business" : planName === "pro" ? "Pro" : "Free";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") {
@@ -276,7 +280,9 @@ export function DashboardShell({
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7a6a61]">
               Plan
             </p>
-            <p className="mt-1 text-sm font-semibold text-[#231d19]">{collapsed ? "Free" : "Free Creator"}</p>
+            <p className="mt-1 text-sm font-semibold text-[#231d19]">
+              {collapsed ? planLabel : `${planLabel} Creator`}
+            </p>
           </div>
           <nav className="flex h-full flex-col">
             <div className="space-y-1">

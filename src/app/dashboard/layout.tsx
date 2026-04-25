@@ -2,6 +2,7 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { redirect } from "next/navigation";
 import { requireCurrentUser } from "@/server/current-user";
 import { isAdminEmail } from "@/server/admin-access";
+import { getEffectiveCreatorPlan } from "@/server/subscription-policy";
 
 export default async function DashboardLayout({
   children,
@@ -12,9 +13,10 @@ export default async function DashboardLayout({
   if (isAdminEmail(user.email)) {
     redirect("/admin");
   }
+  const effectivePlan = await getEffectiveCreatorPlan(user.id);
 
   return (
-    <DashboardShell user={user}>
+    <DashboardShell user={user} planName={effectivePlan.planName}>
       {children}
     </DashboardShell>
   );

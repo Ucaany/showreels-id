@@ -10,6 +10,8 @@ import { showFeedbackAlert } from "@/lib/feedback-alert";
 type LinkProfilePayload = {
   slug: string;
   publicUrl: string;
+  usernameChangeCount?: number;
+  usernameChangeLimit?: number;
 };
 
 export default function SettingsLinkProfilePage() {
@@ -21,6 +23,8 @@ export default function SettingsLinkProfilePage() {
     available: boolean;
     reason: string;
   } | null>(null);
+  const [usernameChangeCount, setUsernameChangeCount] = useState(0);
+  const [usernameChangeLimit, setUsernameChangeLimit] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,6 +38,8 @@ export default function SettingsLinkProfilePage() {
       if (cancelled) return;
       setSlug(payload.slug);
       setInitialSlug(payload.slug);
+      setUsernameChangeCount(payload.usernameChangeCount || 0);
+      setUsernameChangeLimit(payload.usernameChangeLimit || 0);
       setLoading(false);
     };
     void load();
@@ -100,6 +106,8 @@ export default function SettingsLinkProfilePage() {
     const payload = (await response.json()) as LinkProfilePayload;
     setSlug(payload.slug);
     setInitialSlug(payload.slug);
+    setUsernameChangeCount(payload.usernameChangeCount || 0);
+    setUsernameChangeLimit(payload.usernameChangeLimit || 0);
     setAvailability(null);
     await showFeedbackAlert({
       title: "Slug profile berhasil diperbarui",
@@ -144,6 +152,11 @@ export default function SettingsLinkProfilePage() {
               <p className="mt-1 text-xs text-[#655850]">
                 Hanya huruf kecil, angka, dash, dan underscore. Panjang 3-30 karakter.
               </p>
+              {usernameChangeLimit > 0 ? (
+                <p className="mt-1 text-xs text-[#655850]">
+                  Limit ubah username: {usernameChangeCount}/{usernameChangeLimit} per 30 hari.
+                </p>
+              ) : null}
               {normalizedSlug !== initialSlug && availability ? (
                 <p
                   className={`mt-1 text-xs ${

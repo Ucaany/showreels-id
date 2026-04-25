@@ -6,6 +6,7 @@ import { linkProfileSchema } from "@/lib/settings-schemas";
 import { sanitizeUsername } from "@/lib/username-rules";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 const USERNAME_CHANGE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -21,12 +22,15 @@ export async function GET() {
     );
   }
 
+  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
   const slug = currentUser.username || "creator";
   return NextResponse.json({
     slug,
     publicUrl: `/creator/${slug}`,
     usernameChangeCount: currentUser.usernameChangeCount || 0,
     usernameChangeWindowStart: currentUser.usernameChangeWindowStart,
+    usernameChangeLimit: entitlementState.entitlements.usernameChangesPer30Days,
+    planName: entitlementState.effectivePlan.planName,
   });
 }
 
@@ -51,6 +55,8 @@ export async function PUT(request: Request) {
     );
   }
 
+  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
+  const usernameChangeLimit = entitlementState.entitlements.usernameChangesPer30Days;
   const username = sanitizeUsername(parsed.data.slug);
 
   const existingUser = await db.query.users.findFirst({
@@ -73,14 +79,14 @@ export async function PUT(request: Request) {
     if (shouldResetWindow) {
       usernameChangeCount = 1;
       usernameChangeWindowStart = now;
-    } else if ((currentUser.usernameChangeCount || 0) >= 3) {
+    } else if ((currentUser.usernameChangeCount || 0) >= usernameChangeLimit) {
       const activeWindowStart = currentUser.usernameChangeWindowStart ?? now;
       const resetAt = new Date(
         activeWindowStart.getTime() + USERNAME_CHANGE_WINDOW_MS
       );
       return NextResponse.json(
         {
-          error: `Batas perubahan slug tercapai (3x/30 hari). Coba lagi setelah ${resetAt.toLocaleDateString(
+          error: `Batas perubahan slug tercapai (${usernameChangeLimit}x/30 hari). Coba lagi setelah ${resetAt.toLocaleDateString(
             "id-ID",
             {
               day: "2-digit",
@@ -88,6 +94,7 @@ export async function PUT(request: Request) {
               year: "numeric",
             }
           )}.`,
+          code: "username_change_limit_exceeded",
         },
         { status: 429 }
       );
@@ -117,5 +124,7 @@ export async function PUT(request: Request) {
     usernameChangeCount: updated?.usernameChangeCount || usernameChangeCount,
     usernameChangeWindowStart:
       updated?.usernameChangeWindowStart || usernameChangeWindowStart,
+    usernameChangeLimit,
+    planName: entitlementState.effectivePlan.planName,
   });
 }

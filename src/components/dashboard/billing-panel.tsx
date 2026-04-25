@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ArrowUpRight, CreditCard, Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
 import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
 
 type PlanName = "free" | "pro" | "business";
@@ -15,8 +14,19 @@ type PlanConfig = {
   name: PlanName;
   label: string;
   monthly: number;
-  yearly: number;
+  yearlyLegacy: number;
   benefits: string[];
+};
+
+type BillingEntitlements = {
+  linkBuilderMax: number | null;
+  usernameChangesPer30Days: number;
+  analyticsMaxDays: number;
+  customThumbnailEnabled: boolean;
+  whitelabelEnabled: boolean;
+  creatorGroupEnabled: boolean;
+  supportEnabled: boolean;
+  themeSwitchComingSoon: boolean;
 };
 
 type PlanPayload = {
@@ -62,28 +72,37 @@ function formatDate(value: string | Date | null) {
 
 export function BillingPanel({
   initialPlan,
+  effectivePlan,
+  entitlements,
   catalog,
   initialTransactions,
   billingEmail,
   paymentMethod,
   midtransReady,
+  creatorGroupLink,
+  supportLink,
 }: {
   initialPlan: PlanPayload;
+  effectivePlan: PlanName;
+  entitlements: BillingEntitlements;
   catalog: Record<PlanName, PlanConfig>;
   initialTransactions: TransactionPayload[];
   billingEmail: string;
   paymentMethod: string;
   midtransReady: boolean;
+  creatorGroupLink: string;
+  supportLink: string;
 }) {
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [activePlan, setActivePlan] = useState(initialPlan);
+  const [effectivePlanName, setEffectivePlanName] = useState<PlanName>(effectivePlan);
+  const [entitlementsState, setEntitlementsState] = useState<BillingEntitlements>(entitlements);
   const [transactions, setTransactions] = useState(initialTransactions);
   const [submittingPlan, setSubmittingPlan] = useState<PlanName | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const activePlanLabel = useMemo(
-    () => catalog[activePlan.planName]?.label || activePlan.planName,
-    [activePlan.planName, catalog]
+    () => catalog[effectivePlanName]?.label || effectivePlanName,
+    [effectivePlanName, catalog]
   );
 
   const handleRefresh = async () => {
@@ -95,8 +114,16 @@ export function BillingPanel({
     if (planRes.ok) {
       const payload = (await planRes.json()) as {
         plan: PlanPayload;
+        effectivePlan?: { planName?: PlanName };
+        entitlements?: BillingEntitlements;
       };
       setActivePlan(payload.plan);
+      if (payload.effectivePlan?.planName) {
+        setEffectivePlanName(payload.effectivePlan.planName);
+      }
+      if (payload.entitlements) {
+        setEntitlementsState(payload.entitlements);
+      }
     }
     if (txRes.ok) {
       const payload = (await txRes.json()) as { transactions: TransactionPayload[] };
@@ -139,61 +166,13 @@ export function BillingPanel({
 
     const confirmed = await confirmFeedbackAction({
       title: `Upgrade ke ${catalog[planName].label}?`,
-      text: `Kamu akan diarahkan ke halaman pembayaran Midtrans (${billingCycle}).`,
+      text: "Kamu akan diarahkan ke halaman pembayaran Midtrans (bulanan).",
       confirmButtonText: "Lanjutkan",
     });
     if (!confirmed) return;
 
     setSubmittingPlan(planName);
-    const response = await fetch("/api/billing/upgrade", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        planName,
-        billingCycle,
-      }),
-    });
-    const payload = (await response.json().catch(() => null)) as
-      | {
-          error?: string;
-          code?: string;
-          mode?: "free" | "paid";
-          redirectUrl?: string;
-        }
-      | null;
-    setSubmittingPlan(null);
-
-    if (!response.ok) {
-      await showFeedbackAlert({
-        title:
-          payload?.code === "midtrans_not_configured"
-            ? "Midtrans belum aktif"
-            : "Upgrade gagal",
-        text:
-          payload?.error ||
-          "Sistem belum bisa membuat transaksi. Coba beberapa saat lagi.",
-        icon: payload?.code === "midtrans_not_configured" ? "warning" : "error",
-      });
-      return;
-    }
-
-    if (payload?.mode === "paid" && payload.redirectUrl) {
-      await showFeedbackAlert({
-        title: "Transaksi dibuat",
-        text: "Kamu akan diarahkan ke pembayaran Midtrans.",
-        icon: "success",
-        timer: 1100,
-      });
-      window.location.assign(payload.redirectUrl);
-      return;
-    }
-
-    await showFeedbackAlert({
-      title: "Upgrade berhasil",
-      icon: "success",
-      timer: 1200,
-    });
-    await handleRefresh();
+    window.location.assign(`/dashboard/payment?plan=${planName}`);
   };
 
   return (
@@ -221,12 +200,12 @@ export function BillingPanel({
       <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
-            <p className="text-sm font-medium text-[#6a5d56]">Active Plan</p>
+            <p className="text-sm font-medium text-[#6a5d56]">Effective Plan</p>
             <h2 className="mt-1 font-display text-2xl font-semibold text-[#201b18]">
               {activePlanLabel}
             </h2>
             <p className="mt-1 text-sm text-[#5f524b]">
-              Status:{" "}
+              Status subscription:{" "}
               <span className="font-semibold capitalize text-[#201b18]">{activePlan.status}</span>
             </p>
             <p className="mt-1 text-sm text-[#5f524b]">
@@ -237,20 +216,16 @@ export function BillingPanel({
             </p>
             <p className="mt-1 text-sm text-[#5f524b]">
               Payment method:{" "}
-              <span className="font-semibold text-[#201b18] capitalize">{paymentMethod}</span>
+              <span className="font-semibold capitalize text-[#201b18]">{paymentMethod}</span>
             </p>
           </div>
 
           <div className="rounded-2xl border border-[#e4dad4] bg-white p-3">
             <p className="text-xs font-semibold text-[#6f625a]">Cycle pembelian</p>
-            <Select
-              value={billingCycle}
-              onChange={(event) => setBillingCycle(event.target.value as BillingCycle)}
-              className="mt-2 min-w-[180px]"
-            >
-              <option value="monthly">Bulanan</option>
-              <option value="yearly">Tahunan</option>
-            </Select>
+            <p className="mt-2 text-sm font-semibold text-[#201b18]">Bulanan saja</p>
+            <p className="mt-1 text-xs text-[#6f625a]">
+              Data tahunan lama tetap tampil sebagai histori transaksi.
+            </p>
           </div>
         </div>
       </Card>
@@ -264,19 +239,80 @@ export function BillingPanel({
         </Card>
       ) : null}
 
+      <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
+        <h2 className="text-lg font-semibold text-[#201b18]">Entitlements Aktif</h2>
+        <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl border border-[#e4dad4] bg-white p-3">
+            <p className="text-xs text-[#6f625a]">Link Builder</p>
+            <p className="mt-1 text-sm font-semibold text-[#201b18]">
+              {typeof entitlementsState.linkBuilderMax === "number"
+                ? `Maks ${entitlementsState.linkBuilderMax} link`
+                : "Unlimited"}
+            </p>
+          </div>
+          <div className="rounded-xl border border-[#e4dad4] bg-white p-3">
+            <p className="text-xs text-[#6f625a]">Analytics</p>
+            <p className="mt-1 text-sm font-semibold text-[#201b18]">
+              {entitlementsState.analyticsMaxDays} hari
+            </p>
+          </div>
+          <div className="rounded-xl border border-[#e4dad4] bg-white p-3">
+            <p className="text-xs text-[#6f625a]">Username Changes</p>
+            <p className="mt-1 text-sm font-semibold text-[#201b18]">
+              {entitlementsState.usernameChangesPer30Days}x / 30 hari
+            </p>
+          </div>
+          <div className="rounded-xl border border-[#e4dad4] bg-white p-3">
+            <p className="text-xs text-[#6f625a]">Whitelabel</p>
+            <p className="mt-1 text-sm font-semibold text-[#201b18]">
+              {entitlementsState.whitelabelEnabled ? "Business Unlocked" : "Business Only"}
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      {(entitlementsState.creatorGroupEnabled || entitlementsState.supportEnabled) &&
+      (creatorGroupLink || supportLink) ? (
+        <section className="grid gap-3 md:grid-cols-2">
+          {entitlementsState.creatorGroupEnabled && creatorGroupLink ? (
+            <Card className="dashboard-clean-card border-border bg-surface p-4">
+              <h3 className="text-base font-semibold text-[#201b18]">Grup Khusus Creator</h3>
+              <p className="mt-1 text-sm text-[#5f524b]">
+                Akses komunitas creator untuk update dan networking.
+              </p>
+              <Link href={creatorGroupLink} target="_blank" className="mt-3 inline-block">
+                <Button size="sm" variant="secondary">
+                  Buka Grup
+                </Button>
+              </Link>
+            </Card>
+          ) : null}
+          {entitlementsState.supportEnabled && supportLink ? (
+            <Card className="dashboard-clean-card border-border bg-surface p-4">
+              <h3 className="text-base font-semibold text-[#201b18]">Contact Support</h3>
+              <p className="mt-1 text-sm text-[#5f524b]">
+                Hubungi tim support creator untuk bantuan prioritas.
+              </p>
+              <Link href={supportLink} target="_blank" className="mt-3 inline-block">
+                <Button size="sm" variant="secondary">
+                  Hubungi Support
+                </Button>
+              </Link>
+            </Card>
+          ) : null}
+        </section>
+      ) : null}
+
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {(Object.keys(catalog) as PlanName[]).map((planName) => {
           const plan = catalog[planName];
-          const isCurrent = planName === activePlan.planName;
-          const price = billingCycle === "yearly" ? plan.yearly : plan.monthly;
+          const isCurrent = planName === effectivePlanName;
 
           return (
             <Card key={plan.name} className="dashboard-clean-card border-border bg-surface p-4">
               <p className="text-sm font-semibold text-[#201b18]">{plan.label}</p>
-              <p className="mt-1 text-2xl font-semibold text-[#201b18]">{toIdr(price)}</p>
-              <p className="text-xs text-[#635750]">
-                {billingCycle === "yearly" ? "per tahun" : "per bulan"}
-              </p>
+              <p className="mt-1 text-2xl font-semibold text-[#201b18]">{toIdr(plan.monthly)}</p>
+              <p className="text-xs text-[#635750]">per bulan</p>
               <ul className="mt-3 space-y-1 text-sm text-[#5f524b]">
                 {plan.benefits.map((benefit) => (
                   <li key={benefit}>- {benefit}</li>

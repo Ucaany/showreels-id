@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 import {
+  clampAnalyticsRangeByMaxDays,
+  countAnalyticsRangeDays,
   getCreatorTrafficAnalytics,
   resolveAnalyticsPeriod,
 } from "@/server/creator-analytics";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 export async function GET(request: Request) {
   const currentUser = await getCurrentUser();
@@ -19,11 +22,17 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const range = resolveAnalyticsPeriod({
+  const requestedRange = resolveAnalyticsPeriod({
     period: searchParams.get("period"),
     start: searchParams.get("start"),
     end: searchParams.get("end"),
   });
+  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
+  const appliedRange = clampAnalyticsRangeByMaxDays({
+    range: requestedRange,
+    maxDays: entitlementState.entitlements.analyticsMaxDays,
+  });
+  const range = appliedRange.range;
 
   const analytics = await getCreatorTrafficAnalytics({
     userId: currentUser.id,
@@ -32,9 +41,14 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json({
-    period: range.period,
+    period: requestedRange.period,
+    appliedPeriod: appliedRange.appliedPeriod,
     startDay: range.startDay,
     endDay: range.endDay,
+    requestedRangeDays: countAnalyticsRangeDays(requestedRange),
+    appliedRangeDays: appliedRange.appliedRangeDays,
+    analyticsMaxDays: entitlementState.entitlements.analyticsMaxDays,
+    planName: entitlementState.effectivePlan.planName,
     points: analytics.points,
   });
 }

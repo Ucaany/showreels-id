@@ -747,6 +747,7 @@ export function LandingPage({
   const pricingPlans = useMemo(
     () => [
       {
+        id: "free" as const,
         name: "Free",
         monthlyPrice: "Rp0",
         yearlyPrice: "Rp0",
@@ -758,9 +759,11 @@ export function LandingPage({
             ? "Custom links + social/contact links"
             : "Custom links + social/contact links",
         ],
+        chooseHref: "/auth/signup",
         featured: false,
       },
       {
+        id: "pro" as const,
         name: "Pro",
         monthlyPrice: "Rp49.000",
         yearlyPrice: "Rp490.000",
@@ -774,9 +777,11 @@ export function LandingPage({
             ? "Sources: YouTube, Drive, Instagram, Facebook, Vimeo"
             : "Sumber: YouTube, Drive, Instagram, Facebook, Vimeo",
         ],
+        chooseHref: "/dashboard/payment?plan=pro",
         featured: true,
       },
       {
+        id: "business" as const,
         name: "Team",
         monthlyPrice: "Rp149.000",
         yearlyPrice: "Rp1.490.000",
@@ -784,12 +789,13 @@ export function LandingPage({
         points: [
           locale === "en" ? "Everything in Pro" : "Semua fitur Pro",
           locale === "en"
-            ? "Consistent creator profile format for studio roster"
-            : "Format profil creator yang konsisten untuk roster studio",
+            ? "Whitelabel branding removal on public page"
+            : "Hapus branding showreels.id pada halaman publik",
           locale === "en"
-            ? "Portfolio presentation flow for multi-talent showcase"
-            : "Alur presentasi portfolio untuk showcase multi talent",
+            ? "Theme switch coming soon"
+            : "Ganti tema (coming soon)",
         ],
+        chooseHref: "/dashboard/payment?plan=business",
         featured: false,
       },
     ],
@@ -1360,28 +1366,6 @@ export function LandingPage({
                   >
                     {dictionary.landingPricingMonthlyLabel}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setBillingCycle("yearly")}
-                    className={cn(
-                      "inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-[0.84rem] font-bold tracking-[-0.008em] transition",
-                      billingCycle === "yearly"
-                        ? "bg-[#2f73ff] text-white"
-                        : "text-[#4f5b71] hover:text-[#1c2435]"
-                    )}
-                  >
-                    {dictionary.landingPricingYearlyLabel}
-                    <span
-                      className={cn(
-                        "rounded-full px-2 py-0.5 text-[0.64rem] font-semibold uppercase tracking-[0.12em]",
-                        billingCycle === "yearly"
-                          ? "bg-white/20 text-white"
-                          : "bg-[#eaf1ff] text-[#2f66e4]"
-                      )}
-                    >
-                      {dictionary.landingPricingYearlySave}
-                    </span>
-                  </button>
                 </div>
               </div>
 
@@ -1405,34 +1389,16 @@ export function LandingPage({
                       {plan.name}
                     </p>
                     <p className="mt-2.5 text-[2.2rem] font-semibold tracking-[-0.04em] sm:text-[2.5rem]">
-                      {billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice}
+                      {plan.monthlyPrice}
                       <span
                         className={cn(
                           "ml-1 text-[0.84rem] font-medium tracking-[-0.006em]",
                           plan.featured ? "text-white/70" : "text-[#776860]"
                         )}
                       >
-                        {billingCycle === "yearly"
-                          ? locale === "en"
-                            ? "/year"
-                            : "/tahun"
-                          : locale === "en"
-                            ? "/month"
-                            : "/bulan"}
+                        {locale === "en" ? "/month" : "/bulan"}
                       </span>
                     </p>
-                    {billingCycle === "yearly" && plan.name !== "Free" ? (
-                      <p
-                        className={cn(
-                          "mt-1 inline-flex rounded-full border px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.12em]",
-                          plan.featured
-                            ? "border-white/30 bg-white/10 text-white"
-                            : "border-[#d8e4ff] bg-[#edf3ff] text-[#2254c2]"
-                        )}
-                      >
-                        {dictionary.landingPricingYearlySave}
-                      </p>
-                    ) : null}
                     <p
                       className={cn(
                         "text-body-base mt-2",
@@ -1462,7 +1428,7 @@ export function LandingPage({
                     </ul>
 
                     <div className="mt-5">
-                      <Link href="/auth/signup">
+                      <Link href={plan.chooseHref}>
                         <Button
                           className={cn(
                             "relative z-10 w-full !font-extrabold !opacity-100 !shadow-none",

@@ -11,6 +11,8 @@ type SummaryPayload = {
   uniqueVisitors: number;
   topPage: string | null;
   topPageViews: number;
+  appliedPeriod?: PeriodValue;
+  analyticsMaxDays?: number;
 };
 
 type Point = {
@@ -64,16 +66,19 @@ export function CreatorTrafficPanel({
   const [points, setPoints] = useState<Point[]>([]);
   const [topPages, setTopPages] = useState<TopPage[]>([]);
   const [recent, setRecent] = useState<Recent[]>([]);
+  const [analyticsMaxDays, setAnalyticsMaxDays] = useState(30);
+  const [appliedPeriod, setAppliedPeriod] = useState<PeriodValue>("7d");
 
   const query = useMemo(() => {
+    const resolvedPeriod = analyticsMaxDays < 30 && period === "30d" ? "7d" : period;
     const params = new URLSearchParams();
-    params.set("period", period);
-    if (period === "custom" && start && end) {
+    params.set("period", resolvedPeriod);
+    if (resolvedPeriod === "custom" && start && end) {
       params.set("start", start);
       params.set("end", end);
     }
     return params.toString();
-  }, [period, start, end]);
+  }, [analyticsMaxDays, period, start, end]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -108,6 +113,8 @@ export function CreatorTrafficPanel({
         topPage: summaryPayload.topPage || null,
         topPageViews: summaryPayload.topPageViews || 0,
       });
+      setAppliedPeriod(summaryPayload.appliedPeriod || "7d");
+      setAnalyticsMaxDays(summaryPayload.analyticsMaxDays || 30);
       setPoints(trafficPayload.points || []);
       setTopPages(topPayload.topPages || []);
       setRecent(topPayload.recent || []);
@@ -141,11 +148,18 @@ export function CreatorTrafficPanel({
           >
             <option value="today">Hari ini</option>
             <option value="7d">7 hari terakhir</option>
-            <option value="30d">30 hari terakhir</option>
+            <option value="30d" disabled={analyticsMaxDays < 30}>
+              {analyticsMaxDays < 30 ? "30 hari (Pro/Business)" : "30 hari terakhir"}
+            </option>
             <option value="custom">Custom range</option>
           </Select>
         </div>
       </div>
+      {appliedPeriod !== period ? (
+        <p className="mt-2 text-xs text-[#6c5f58]">
+          Periode disesuaikan otomatis ke {appliedPeriod.toUpperCase()} sesuai limit plan.
+        </p>
+      ) : null}
 
       {period === "custom" ? (
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -167,6 +181,9 @@ export function CreatorTrafficPanel({
               className="mt-1 h-11 w-full rounded-xl border border-[#d7cec7] bg-white px-3 text-sm text-[#201b18] outline-none focus:border-[#ef5f49] focus:ring-2 focus:ring-[#f1b8ad]"
             />
           </label>
+          <p className="text-xs text-[#6c5f58] sm:col-span-2">
+            Range custom mengikuti limit plan maksimal {analyticsMaxDays} hari.
+          </p>
         </div>
       ) : null}
 

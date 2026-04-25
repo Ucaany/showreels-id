@@ -4,6 +4,7 @@ import { VideoForm } from "@/components/dashboard/video-form";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { requireCurrentUser } from "@/server/current-user";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 export default async function EditVideoPage({
   params,
@@ -11,6 +12,7 @@ export default async function EditVideoPage({
   params: Promise<{ id: string }>;
 }) {
   const user = await requireCurrentUser();
+  const entitlementState = await getCreatorEntitlementsForUser(user.id);
   const { id } = await params;
 
   const video = await db.query.videos.findFirst({
@@ -24,6 +26,7 @@ export default async function EditVideoPage({
   return (
     <VideoForm
       mode="edit"
+      customThumbnailEnabled={entitlementState.entitlements.customThumbnailEnabled}
       initialVideo={{
         id: video.id,
         title: video.title,

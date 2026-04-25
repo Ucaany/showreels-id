@@ -19,6 +19,12 @@ import { videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { requireCurrentUser } from "@/server/current-user";
 import { getRequestLocale } from "@/server/request-locale";
+import {
+  getCreatorEntitlementsForUser,
+  getCreatorGroupLink,
+  getPlanLabel,
+  getSupportLink,
+} from "@/server/subscription-policy";
 
 function toIdr(value: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -31,6 +37,12 @@ function toIdr(value: number) {
 export default async function DashboardPage() {
   const locale = await getRequestLocale();
   const user = await requireCurrentUser();
+  const entitlementState = await getCreatorEntitlementsForUser(user.id);
+  const planName = entitlementState.effectivePlan.planName;
+  const planLabel = getPlanLabel(planName);
+  const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
+  const creatorGroupLink = getCreatorGroupLink();
+  const supportLink = getSupportLink();
 
   const myVideos = isDatabaseConfigured
     ? await db.query.videos.findMany({
@@ -118,6 +130,26 @@ export default async function DashboardPage() {
       description: "Lihat plan aktif, transaksi, dan invoice.",
       cta: "Buka Billing",
     },
+    ...(entitlementState.entitlements.creatorGroupEnabled && creatorGroupLink
+      ? [
+          {
+            href: creatorGroupLink,
+            title: "Grup Khusus Creator",
+            description: "Masuk grup komunitas creator untuk update dan networking.",
+            cta: "Buka Grup",
+          },
+        ]
+      : []),
+    ...(entitlementState.entitlements.supportEnabled && supportLink
+      ? [
+          {
+            href: supportLink,
+            title: "Contact Support",
+            description: "Hubungi support untuk bantuan prioritas akun creator.",
+            cta: "Hubungi Support",
+          },
+        ]
+      : []),
   ];
 
   const hasNoData = activeLinks.length === 0 && publicVideosCount === 0;
@@ -149,9 +181,14 @@ export default async function DashboardPage() {
 
         <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
           <p className="text-sm font-medium text-[#655952]">Status akun</p>
-          <h2 className="mt-1 font-display text-xl font-semibold text-[#201b18]">Creator Free</h2>
+          <h2 className="mt-1 font-display text-xl font-semibold text-[#201b18]">
+            Creator {planLabel}
+          </h2>
           <p className="mt-2 text-sm leading-6 text-[#5f524b]">
-            Maksimal 10 custom links untuk plan Free. Upgrade plan tersedia di menu Billing.
+            {typeof linkBuilderMax === "number"
+              ? `Maksimal ${linkBuilderMax} link builder pada plan ${planLabel}.`
+              : `Link builder tanpa batas pada plan ${planLabel}.`}{" "}
+            Analytics hingga {entitlementState.entitlements.analyticsMaxDays} hari.
           </p>
           <Link href="/dashboard/billing" className="mt-4 inline-block">
             <Button variant="secondary" size="sm">
@@ -227,7 +264,11 @@ export default async function DashboardPage() {
             <Card key={item.href} className="dashboard-clean-card border-border bg-surface p-4">
               <h3 className="text-base font-semibold text-[#201b18]">{item.title}</h3>
               <p className="mt-1 text-sm leading-6 text-[#5f524b]">{item.description}</p>
-              <Link href={item.href} className="mt-4 inline-block">
+              <Link
+                href={item.href}
+                target={item.href.startsWith("http") ? "_blank" : undefined}
+                className="mt-4 inline-block"
+              >
                 <Button size="sm" variant="secondary">
                   {item.cta}
                 </Button>

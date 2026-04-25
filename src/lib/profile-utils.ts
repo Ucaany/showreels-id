@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/i18n";
 
 export const MAX_CUSTOM_LINKS_FREE_PLAN = 10;
-export const MAX_CUSTOM_LINKS = MAX_CUSTOM_LINKS_FREE_PLAN;
+export const MAX_CUSTOM_LINKS = 250;
 export const MAX_LINK_TITLE_LENGTH = 60;
 export const MAX_LINK_DESCRIPTION_LENGTH = 140;
 
@@ -87,7 +87,7 @@ export function formatJoinedMonthYear(value: Date, locale: Locale): string {
 
 export function normalizeCustomLinks(
   value: unknown,
-  maxLinks: number = MAX_CUSTOM_LINKS_FREE_PLAN
+  maxLinks: number = MAX_CUSTOM_LINKS
 ): CustomLinkItem[] {
   if (!Array.isArray(value)) {
     return [];

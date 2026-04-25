@@ -124,6 +124,52 @@ export function resolveAnalyticsPeriod(input: {
   };
 }
 
+export function countAnalyticsRangeDays(range: AnalyticsPeriodRange) {
+  const startDate = fromYmd(range.startDay);
+  const endDate = fromYmd(range.endDay);
+  if (!startDate || !endDate || endDate.getTime() < startDate.getTime()) {
+    return 1;
+  }
+
+  const diff = Math.floor(
+    (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
+  );
+  return Math.max(1, diff + 1);
+}
+
+export function clampAnalyticsRangeByMaxDays(input: {
+  range: AnalyticsPeriodRange;
+  maxDays: number;
+}) {
+  const safeMaxDays = Math.max(1, Math.min(30, Math.trunc(input.maxDays || 7)));
+  const currentDays = countAnalyticsRangeDays(input.range);
+
+  if (currentDays <= safeMaxDays) {
+    return {
+      range: input.range,
+      appliedPeriod: input.range.period,
+      appliedRangeDays: currentDays,
+    };
+  }
+
+  const endDate = fromYmd(input.range.endDay) || new Date();
+  const startDate = subtractWibDays(endDate, safeMaxDays - 1);
+  const startDay = toYmd(startDate);
+  const appliedPeriod: AnalyticsPeriod =
+    safeMaxDays <= 1 ? "today" : safeMaxDays <= 7 ? "7d" : "30d";
+
+  return {
+    range: {
+      period: appliedPeriod,
+      startDay,
+      endDay: input.range.endDay,
+      startAtUtc: getWibDayStartUtc(new Date(`${startDay}T00:00:00+07:00`)),
+    },
+    appliedPeriod,
+    appliedRangeDays: safeMaxDays,
+  };
+}
+
 function enumerateDays(startDay: string, endDay: string) {
   const startDate = fromYmd(startDay);
   const endDate = fromYmd(endDay);

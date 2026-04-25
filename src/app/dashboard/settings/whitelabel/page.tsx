@@ -110,6 +110,12 @@ export default function SettingsWhitelabelPage() {
                 className="h-5 w-5 accent-[#2f73ff]"
               />
             </label>
+            <div className="rounded-2xl border border-dashed border-[#d9cec7] bg-[#faf6f3] p-4">
+              <p className="text-sm font-semibold text-[#201b18]">Ganti Tema</p>
+              <p className="mt-1 text-sm text-[#5f524b]">
+                Fitur ganti tema khusus Business sedang disiapkan (coming soon).
+              </p>
+            </div>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? "Menyimpan..." : "Simpan Whitelabel"}
             </Button>
@@ -121,7 +127,7 @@ export default function SettingsWhitelabelPage() {
               <div>
                 <p className="text-sm font-semibold text-amber-700">Fitur terkunci</p>
                 <p className="text-sm text-amber-700">
-                  Fitur hapus whitelabel tersedia di plan Pro/Business.
+                  Fitur hapus whitelabel tersedia di plan Business.
                 </p>
               </div>
             </div>

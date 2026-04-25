@@ -9,8 +9,46 @@ type PlanConfig = {
   name: BillingPlanName;
   label: string;
   monthly: number;
-  yearly: number;
+  yearlyLegacy: number;
   benefits: string[];
+};
+
+type MidtransAction = {
+  name: string;
+  method: string;
+  url: string;
+};
+
+type MidtransChargePayload = {
+  order_id?: string;
+  transaction_id?: string;
+  transaction_status?: string;
+  payment_type?: string;
+  gross_amount?: string | number;
+  currency?: string;
+  expiry_time?: string;
+  actions?: Array<{
+    name?: string;
+    method?: string;
+    url?: string;
+  }>;
+  status_code?: string;
+  status_message?: string;
+  error_messages?: string[];
+  fraud_status?: string;
+};
+
+type BillingTransactionRow = typeof billingTransactions.$inferSelect;
+
+export type BillingPaymentSummary = {
+  invoiceId: string;
+  amount: number;
+  currency: string;
+  status: BillingTransactionRow["status"];
+  transactionStatus: string;
+  expiresAt: string | null;
+  qrUrl: string | null;
+  qrActions: MidtransAction[];
 };
 
 const PLAN_CATALOG: Record<BillingPlanName, PlanConfig> = {
@@ -18,43 +56,50 @@ const PLAN_CATALOG: Record<BillingPlanName, PlanConfig> = {
     name: "free",
     label: "Free",
     monthly: 0,
-    yearly: 0,
+    yearlyLegacy: 0,
     benefits: [
-      "Maksimal 10 custom links",
-      "Profile publik + video showcase",
-      "Dashboard analytics traffic",
+      "Maksimal 10 link builder",
+      "Analitik traffic 7 hari",
+      "Quota video public 10/source platform",
     ],
   },
   pro: {
     name: "pro",
     label: "Pro",
     monthly: 49000,
-    yearly: 490000,
+    yearlyLegacy: 490000,
     benefits: [
-      "Link builder lanjutan",
-      "Whitelabel toggle",
-      "Analytics dashboard lengkap",
+      "Semua fitur Free",
+      "Link builder tanpa batas",
+      "Quota video public 50/source platform",
+      "Creator group + contact support",
     ],
   },
   business: {
     name: "business",
     label: "Business",
     monthly: 149000,
-    yearly: 1490000,
+    yearlyLegacy: 1490000,
     benefits: [
       "Semua fitur Pro",
-      "Prioritas support",
-      "Akses penuh billing settings",
+      "Whitelabel halaman publik",
+      "Theme switch (coming soon)",
     ],
   },
 };
 
-function midtransBaseUrl() {
-  const isProduction =
-    (process.env.MIDTRANS_IS_PRODUCTION || "").toLowerCase() === "true";
-  return isProduction
-    ? "https://app.midtrans.com"
-    : "https://app.sandbox.midtrans.com";
+function isMidtransProduction() {
+  return (process.env.MIDTRANS_IS_PRODUCTION || "").toLowerCase() === "true";
+}
+
+export function getMidtransCoreApiBaseUrl() {
+  return isMidtransProduction()
+    ? "https://api.midtrans.com"
+    : "https://api.sandbox.midtrans.com";
+}
+
+function getMidtransAuthorizationHeader(serverKey: string) {
+  return `Basic ${Buffer.from(`${serverKey}:`).toString("base64")}`;
 }
 
 function buildInvoiceId(userId: string) {
@@ -69,6 +114,44 @@ function buildInvoiceId(userId: string) {
   return `INV-${y}${m}${d}-${hh}${mm}${ss}-${suffix}`;
 }
 
+function toMidtransActions(payload: Record<string, unknown>) {
+  const rawActions = payload.actions;
+  if (!Array.isArray(rawActions)) {
+    return [] as MidtransAction[];
+  }
+
+  return rawActions
+    .map((action) => {
+      const item = action as Record<string, unknown>;
+      const name = typeof item.name === "string" ? item.name : "";
+      const method = typeof item.method === "string" ? item.method : "";
+      const url = typeof item.url === "string" ? item.url : "";
+
+      if (!name || !url) {
+        return null;
+      }
+
+      return {
+        name,
+        method,
+        url,
+      };
+    })
+    .filter((action): action is MidtransAction => Boolean(action));
+}
+
+function getQrisActionUrl(
+  actions: MidtransAction[],
+  fallback: string | null | undefined
+) {
+  const directQrAction =
+    actions.find((action) => action.name === "generate-qr-code") ||
+    actions.find((action) => action.name === "deeplink-redirect") ||
+    actions[0];
+
+  return directQrAction?.url || fallback || null;
+}
+
 export function isMidtransConfigured() {
   return Boolean((process.env.MIDTRANS_SERVER_KEY || "").trim());
 }
@@ -79,7 +162,31 @@ export function getPlanCatalog() {
 
 export function getPlanPrice(planName: BillingPlanName, cycle: BillingCycle) {
   const selected = PLAN_CATALOG[planName];
-  return cycle === "yearly" ? selected.yearly : selected.monthly;
+  return cycle === "yearly" ? selected.yearlyLegacy : selected.monthly;
+}
+
+export function toBillingPaymentSummary(
+  transaction: BillingTransactionRow
+): BillingPaymentSummary {
+  const payload = (transaction.rawPayload || {}) as Record<string, unknown>;
+  const actions = toMidtransActions(payload);
+  const transactionStatus =
+    typeof payload.transaction_status === "string"
+      ? payload.transaction_status
+      : transaction.status;
+  const expiresAt =
+    typeof payload.expiry_time === "string" ? payload.expiry_time : null;
+
+  return {
+    invoiceId: transaction.invoiceId,
+    amount: transaction.amount,
+    currency: transaction.currency,
+    status: transaction.status,
+    transactionStatus,
+    expiresAt,
+    qrActions: actions,
+    qrUrl: getQrisActionUrl(actions, transaction.redirectUrl),
+  };
 }
 
 export async function getOrCreateSubscription(userId: string) {
@@ -124,24 +231,38 @@ export async function getOrCreateSubscription(userId: string) {
 
 export async function getBillingTransactions(userId: string) {
   if (!isDatabaseConfigured) {
-    return [] as Array<
-      {
-        id: string;
-        invoiceId: string;
-        amount: number;
-        currency: string;
-        status: string;
-        createdAt: Date;
-        planName: string;
-        billingCycle: string;
-      }
-    >;
+    return [] as Array<{
+      id: string;
+      invoiceId: string;
+      amount: number;
+      currency: string;
+      status: string;
+      createdAt: Date;
+      planName: string;
+      billingCycle: string;
+    }>;
   }
 
   return db.query.billingTransactions.findMany({
     where: eq(billingTransactions.userId, userId),
     orderBy: desc(billingTransactions.createdAt),
     limit: 30,
+  });
+}
+
+export async function getBillingTransactionByInvoiceForUser(
+  userId: string,
+  invoiceId: string
+) {
+  if (!isDatabaseConfigured) {
+    return null;
+  }
+
+  return db.query.billingTransactions.findFirst({
+    where: and(
+      eq(billingTransactions.userId, userId),
+      eq(billingTransactions.invoiceId, invoiceId)
+    ),
   });
 }
 
@@ -152,6 +273,14 @@ export async function createUpgradeTransaction(input: {
   targetPlan: BillingPlanName;
   billingCycle: BillingCycle;
 }) {
+  if (input.billingCycle !== "monthly") {
+    return {
+      ok: false as const,
+      code: "invalid_billing_cycle",
+      message: "Cycle billing tahunan tidak lagi tersedia. Gunakan cycle bulanan.",
+    };
+  }
+
   const subscription = await getOrCreateSubscription(input.userId);
   const amount = getPlanPrice(input.targetPlan, input.billingCycle);
   const invoiceId = buildInvoiceId(input.userId);
@@ -200,7 +329,7 @@ export async function createUpgradeTransaction(input: {
 
     return {
       ok: true as const,
-      mode: "free",
+      mode: "free" as const,
       transaction,
       subscription: updatedSubscription,
     };
@@ -215,15 +344,16 @@ export async function createUpgradeTransaction(input: {
     };
   }
 
-  const serverKey = process.env.MIDTRANS_SERVER_KEY || "";
-  const response = await fetch(`${midtransBaseUrl()}/snap/v1/transactions`, {
+  const serverKey = (process.env.MIDTRANS_SERVER_KEY || "").trim();
+  const response = await fetch(`${getMidtransCoreApiBaseUrl()}/v2/charge`, {
     method: "POST",
     headers: {
-      Authorization: `Basic ${Buffer.from(`${serverKey}:`).toString("base64")}`,
+      Authorization: getMidtransAuthorizationHeader(serverKey),
       "Content-Type": "application/json",
       Accept: "application/json",
     },
     body: JSON.stringify({
+      payment_type: "qris",
       transaction_details: {
         order_id: invoiceId,
         gross_amount: amount,
@@ -240,36 +370,32 @@ export async function createUpgradeTransaction(input: {
         first_name: input.fullName || "Creator",
         email: input.email,
       },
+      qris: {
+        acquirer: "gopay",
+      },
       custom_field1: input.targetPlan,
       custom_field2: input.billingCycle,
       custom_field3: input.userId,
-      enabled_payments: [
-        "gopay",
-        "bank_transfer",
-        "credit_card",
-        "qris",
-        "shopeepay",
-      ],
     }),
   });
 
   const payload = (await response.json().catch(() => null)) as
-    | {
-        token?: string;
-        redirect_url?: string;
-        error_messages?: string[];
-      }
+    | MidtransChargePayload
     | null;
 
-  if (!response.ok || !payload?.token || !payload.redirect_url) {
+  if (!response.ok || !payload?.order_id) {
     return {
       ok: false as const,
       code: "midtrans_error",
       message:
         payload?.error_messages?.[0] ||
+        payload?.status_message ||
         "Gagal membuat transaksi Midtrans. Coba ulang beberapa saat lagi.",
     };
   }
+
+  const payloadRecord = payload as unknown as Record<string, unknown>;
+  const qrisUrl = getQrisActionUrl(toMidtransActions(payloadRecord), "");
 
   const [transaction] = await db
     .insert(billingTransactions)
@@ -280,15 +406,15 @@ export async function createUpgradeTransaction(input: {
       planName: input.targetPlan,
       billingCycle: input.billingCycle,
       amount,
-      currency: "IDR",
+      currency: payload.currency || "IDR",
       status: "pending",
       provider: "midtrans",
-      providerReference: invoiceId,
-      snapToken: payload.token,
-      redirectUrl: payload.redirect_url,
-      paymentMethod: "midtrans",
+      providerReference: payload.transaction_id || invoiceId,
+      snapToken: "",
+      redirectUrl: qrisUrl || "",
+      paymentMethod: payload.payment_type || "qris",
       description: `Upgrade ke ${PLAN_CATALOG[input.targetPlan].label}`,
-      rawPayload: payload as Record<string, unknown>,
+      rawPayload: payloadRecord,
     })
     .returning();
 
@@ -305,10 +431,9 @@ export async function createUpgradeTransaction(input: {
 
   return {
     ok: true as const,
-    mode: "paid",
+    mode: "paid" as const,
     transaction,
-    snapToken: payload.token,
-    redirectUrl: payload.redirect_url,
+    payment: toBillingPaymentSummary(transaction),
   };
 }
 
@@ -349,7 +474,7 @@ export async function handleMidtransWebhook(payload: {
   order_id?: string;
   transaction_status?: string;
   payment_type?: string;
-  gross_amount?: string;
+  gross_amount?: string | number;
   currency?: string;
   fraud_status?: string;
 }) {
@@ -381,7 +506,7 @@ export async function handleMidtransWebhook(payload: {
       paymentMethod: payload.payment_type || transaction.paymentMethod,
       currency: payload.currency || transaction.currency,
       amount:
-        Number(payload.gross_amount || transaction.amount) || transaction.amount,
+        Number(payload.gross_amount ?? transaction.amount) || transaction.amount,
       paidAt: isPaid ? new Date() : transaction.paidAt,
       rawPayload: {
         ...(transaction.rawPayload || {}),
@@ -403,7 +528,11 @@ export async function handleMidtransWebhook(payload: {
     const renewalDate = isPaid
       ? new Date(
           Date.now() +
-            (transaction.billingCycle === "yearly" ? 365 : 30) * 24 * 60 * 60 * 1000
+            (transaction.billingCycle === "yearly" ? 365 : 30) *
+              24 *
+              60 *
+              60 *
+              1000
         )
       : subscription.renewalDate;
 
@@ -425,4 +554,61 @@ export async function handleMidtransWebhook(payload: {
     ok: true as const,
     transaction: updatedTransaction,
   };
+}
+
+export async function refreshBillingTransactionStatusFromMidtrans(input: {
+  userId: string;
+  invoiceId: string;
+}) {
+  const transaction = await getBillingTransactionByInvoiceForUser(
+    input.userId,
+    input.invoiceId
+  );
+  if (!transaction) {
+    return null;
+  }
+
+  if (!isMidtransConfigured() || transaction.provider !== "midtrans") {
+    return transaction;
+  }
+
+  const serverKey = (process.env.MIDTRANS_SERVER_KEY || "").trim();
+  const response = await fetch(
+    `${getMidtransCoreApiBaseUrl()}/v2/${encodeURIComponent(input.invoiceId)}/status`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: getMidtransAuthorizationHeader(serverKey),
+        Accept: "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return transaction;
+  }
+
+  const payload = (await response.json().catch(() => null)) as
+    | MidtransChargePayload
+    | null;
+
+  if (!payload?.order_id || !payload.transaction_status) {
+    return transaction;
+  }
+
+  await handleMidtransWebhook({
+    order_id: payload.order_id,
+    transaction_status: payload.transaction_status,
+    payment_type: payload.payment_type,
+    gross_amount: payload.gross_amount,
+    currency: payload.currency,
+    fraud_status: payload.fraud_status,
+  });
+
+  const latest = await getBillingTransactionByInvoiceForUser(
+    input.userId,
+    input.invoiceId
+  );
+
+  return latest || transaction;
 }

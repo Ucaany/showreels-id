@@ -8,10 +8,33 @@ import { Card } from "@/components/ui/card";
 import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
 import { createClient } from "@/lib/supabase/client";
 
-export function SettingsHub({ username }: { username: string }) {
+type SettingsHubEntitlements = {
+  usernameChangesPer30Days: number;
+  analyticsMaxDays: number;
+  customThumbnailEnabled: boolean;
+  whitelabelEnabled: boolean;
+  creatorGroupEnabled: boolean;
+  supportEnabled: boolean;
+  themeSwitchComingSoon: boolean;
+};
+
+export function SettingsHub({
+  username,
+  planName,
+  entitlements,
+  creatorGroupLink,
+  supportLink,
+}: {
+  username: string;
+  planName: "free" | "pro" | "business";
+  entitlements: SettingsHubEntitlements;
+  creatorGroupLink: string;
+  supportLink: string;
+}) {
   const supabase = createClient();
   const [deleteText, setDeleteText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const planLabel = planName === "business" ? "Business" : planName === "pro" ? "Pro" : "Free";
 
   const handleDeleteAccount = async () => {
     if (deleteText.trim().toUpperCase() !== "HAPUS AKUN") {
@@ -75,6 +98,16 @@ export function SettingsHub({ username }: { username: string }) {
         <p className="mt-2 text-sm text-[#60534c]">
           Atur privasi, slug profil, payment, whitelabel, keamanan, dan penghapusan akun.
         </p>
+        <div className="mt-4 rounded-2xl border border-[#e3d8d2] bg-white p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7d6f67]">
+            Plan Aktif
+          </p>
+          <p className="mt-1 text-lg font-semibold text-[#201b18]">{planLabel}</p>
+          <p className="mt-1 text-sm text-[#5e514a]">
+            Batas ubah username: {entitlements.usernameChangesPer30Days}x/30 hari · Analytics{" "}
+            {entitlements.analyticsMaxDays} hari
+          </p>
+        </div>
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -109,8 +142,19 @@ export function SettingsHub({ username }: { username: string }) {
             <p className="mt-1 text-sm text-[#5e514a]">
               Aktifkan/nonaktifkan branding Showreels.id sesuai plan.
             </p>
+            <p className="mt-2 text-xs text-[#6f625a]">
+              {entitlements.whitelabelEnabled ? "Business unlocked" : "Business only"}
+            </p>
           </Card>
         </Link>
+        <Card className="dashboard-clean-card border-border bg-surface p-4">
+          <h2 className="text-base font-semibold text-[#201b18]">Ganti Tema</h2>
+          <p className="mt-1 text-sm text-[#5e514a]">
+            {entitlements.themeSwitchComingSoon
+              ? "Fitur coming soon tersedia untuk plan Business."
+              : "Fitur coming soon khusus plan Business."}
+          </p>
+        </Card>
         <Link href="/dashboard/settings/security">
           <Card className="dashboard-clean-card border-border bg-surface p-4">
             <h2 className="text-base font-semibold text-[#201b18]">Security</h2>
@@ -119,6 +163,26 @@ export function SettingsHub({ username }: { username: string }) {
             </p>
           </Card>
         </Link>
+        {entitlements.creatorGroupEnabled && creatorGroupLink ? (
+          <Link href={creatorGroupLink} target="_blank">
+            <Card className="dashboard-clean-card border-border bg-surface p-4">
+              <h2 className="text-base font-semibold text-[#201b18]">Grup Khusus Creator</h2>
+              <p className="mt-1 text-sm text-[#5e514a]">
+                Akses komunitas creator untuk update produk dan networking.
+              </p>
+            </Card>
+          </Link>
+        ) : null}
+        {entitlements.supportEnabled && supportLink ? (
+          <Link href={supportLink} target="_blank">
+            <Card className="dashboard-clean-card border-border bg-surface p-4">
+              <h2 className="text-base font-semibold text-[#201b18]">Contact Support</h2>
+              <p className="mt-1 text-sm text-[#5e514a]">
+                Hubungi support tim Showreels untuk bantuan akun creator.
+              </p>
+            </Card>
+          </Link>
+        ) : null}
       </div>
 
       <Card className="dashboard-clean-card border-rose-200 bg-rose-50 p-4 sm:p-5">

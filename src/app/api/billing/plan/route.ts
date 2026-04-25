@@ -3,6 +3,7 @@ import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 import { getPlanCatalog, getOrCreateSubscription } from "@/server/billing";
 import { getOrCreateCreatorSettings } from "@/server/creator-settings";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 export async function GET() {
   const currentUser = await getCurrentUser();
@@ -16,22 +17,26 @@ export async function GET() {
     );
   }
 
-  const [subscription, settings] = await Promise.all([
+  const [subscription, settings, entitlementState] = await Promise.all([
     getOrCreateSubscription(currentUser.id),
     getOrCreateCreatorSettings({
       userId: currentUser.id,
       billingEmail: currentUser.contactEmail || currentUser.email,
     }),
+    getCreatorEntitlementsForUser(currentUser.id),
   ]);
 
   return NextResponse.json({
     plan: subscription,
+    effectivePlan: entitlementState.effectivePlan,
+    entitlements: entitlementState.entitlements,
     settings: {
       billingEmail: settings.billingEmail || currentUser.contactEmail || currentUser.email,
       paymentMethod: settings.paymentMethod,
       taxInfo: settings.taxInfo,
       invoiceNotes: settings.invoiceNotes,
     },
+    billingCycle: "monthly",
     catalog: getPlanCatalog(),
   });
 }

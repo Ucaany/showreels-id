@@ -1,14 +1,15 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { billingSubscriptions, creatorSettings } from "@/db/schema";
+import { creatorSettings } from "@/db/schema";
 import { whitelabelSettingsSchema } from "@/lib/settings-schemas";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 import { getOrCreateCreatorSettings } from "@/server/creator-settings";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 function isWhitelabelAvailable(planName: string) {
-  return planName === "pro" || planName === "business";
+  return planName === "business";
 }
 
 export async function GET() {
@@ -23,22 +24,20 @@ export async function GET() {
     );
   }
 
-  const [settings, subscription] = await Promise.all([
+  const [settings, entitlementState] = await Promise.all([
     getOrCreateCreatorSettings({
       userId: currentUser.id,
       billingEmail: currentUser.contactEmail || currentUser.email,
     }),
-    db.query.billingSubscriptions.findFirst({
-      where: eq(billingSubscriptions.userId, currentUser.id),
-      columns: { planName: true },
-    }),
+    getCreatorEntitlementsForUser(currentUser.id),
   ]);
 
-  const planName = subscription?.planName || "free";
+  const planName = entitlementState.effectivePlan.planName;
+  const available = isWhitelabelAvailable(planName);
   return NextResponse.json({
-    available: isWhitelabelAvailable(planName),
+    available,
     planName,
-    enabled: settings.whitelabelEnabled,
+    enabled: available ? settings.whitelabelEnabled : false,
   });
 }
 
@@ -63,14 +62,14 @@ export async function PUT(request: Request) {
     );
   }
 
-  const subscription = await db.query.billingSubscriptions.findFirst({
-    where: eq(billingSubscriptions.userId, currentUser.id),
-    columns: { planName: true },
-  });
-  const planName = subscription?.planName || "free";
+  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
+  const planName = entitlementState.effectivePlan.planName;
   if (!isWhitelabelAvailable(planName)) {
     return NextResponse.json(
-      { error: "Fitur whitelabel hanya tersedia untuk plan Pro/Business." },
+      {
+        error: "Fitur whitelabel hanya tersedia untuk plan Business.",
+        code: "feature_not_available_for_plan",
+      },
       { status: 403 }
     );
   }

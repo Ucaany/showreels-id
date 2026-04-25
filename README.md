@@ -22,6 +22,9 @@ Next.js 16 App Router project for a video portfolio platform with:
    - `OWNER_EMAIL`
    - `OWNER_PASSWORD`
    - `NEXT_PUBLIC_APP_URL`
+   - `MIDTRANS_SERVER_KEY`
+   - `MIDTRANS_CLIENT_KEY`
+   - `MIDTRANS_IS_PRODUCTION` (`false` for sandbox, `true` for live)
 3. Install dependencies:
 
 ```bash
@@ -126,3 +129,13 @@ Vercel environment variable docs: [vercel.com/docs/environment-variables](https:
 - Media URLs for avatar/cover/thumbnail/gallery are URL-only (`http/https`) to keep DB usage lean.
 - The app builds with `next build --webpack` because this machine falls back to the WASM SWC path on Windows.
 - If `npm run dev` is already using a port, start another one with `npm run dev -- --port 3003`.
+
+## Billing (Midtrans Core API QRIS)
+
+- Billing upgrade now uses Midtrans Core API (`/v2/charge`) with `payment_type: qris`.
+- Payment page route: `/dashboard/payment?plan=pro|business`.
+- Webhook endpoint: `/api/billing/midtrans/webhook`.
+- Required env:
+  - `MIDTRANS_SERVER_KEY`
+  - `MIDTRANS_CLIENT_KEY` (reserved for frontend/public usage when needed)
+  - `MIDTRANS_IS_PRODUCTION=false` for sandbox, `true` for production

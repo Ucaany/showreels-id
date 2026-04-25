@@ -4,13 +4,13 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import {
   createLinkItem,
-  LINK_BUILDER_MAX_ITEMS,
   linkCreateSchema,
   normalizeOrder,
   normalizeStoredLinks,
 } from "@/lib/link-builder";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,10 +33,12 @@ export async function GET() {
   }
 
   const links = normalizeStoredLinks(currentUser.customLinks);
+  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
 
   return NextResponse.json({
     links,
-    maxLinks: LINK_BUILDER_MAX_ITEMS,
+    maxLinks: entitlementState.entitlements.linkBuilderMax,
+    planName: entitlementState.effectivePlan.planName,
   });
 }
 
@@ -58,10 +60,15 @@ export async function POST(request: Request) {
     );
   }
 
+  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
+  const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
   const existing = normalizeStoredLinks(currentUser.customLinks);
-  if (existing.length >= LINK_BUILDER_MAX_ITEMS) {
+  if (typeof linkBuilderMax === "number" && existing.length >= linkBuilderMax) {
     return NextResponse.json(
-      { error: `Maksimal ${LINK_BUILDER_MAX_ITEMS} link untuk paket Free.` },
+      {
+        error: `Batas link builder plan ${entitlementState.effectivePlan.planName.toUpperCase()} sudah tercapai (${linkBuilderMax} link).`,
+        code: "link_limit_exceeded",
+      },
       { status: 403 }
     );
   }

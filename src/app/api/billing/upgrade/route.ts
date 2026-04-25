@@ -6,8 +6,7 @@ import { getCurrentUser } from "@/server/current-user";
 
 const upgradeSchema = z.object({
   planName: z.enum(["pro", "business"]),
-  billingCycle: z.enum(["monthly", "yearly"]).default("monthly"),
-});
+}).strict();
 
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser();
@@ -35,13 +34,15 @@ export async function POST(request: Request) {
     fullName: currentUser.name || "Creator",
     email: currentUser.contactEmail || currentUser.email,
     targetPlan: parsed.data.planName,
-    billingCycle: parsed.data.billingCycle,
+    billingCycle: "monthly",
   });
 
   if (!result.ok) {
     const status =
       result.code === "midtrans_not_configured"
         ? 412
+        : result.code === "invalid_billing_cycle"
+          ? 400
         : result.code === "db_not_ready"
           ? 503
           : 502;

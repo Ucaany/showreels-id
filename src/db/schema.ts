@@ -127,6 +127,11 @@ export const videos = pgTable(
   (table) => ({
     userIdIdx: index("videos_user_id_idx").on(table.userId),
     slugIdx: index("videos_public_slug_idx").on(table.publicSlug),
+    sourceVisibilityIdx: index("videos_user_source_visibility_idx").on(
+      table.userId,
+      table.source,
+      table.visibility
+    ),
   })
 );
 
