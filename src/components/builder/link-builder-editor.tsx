@@ -53,6 +53,11 @@ import {
   isUsernameFormatValid,
   sanitizeUsername,
 } from "@/lib/username-rules";
+import {
+  type ExperienceItem,
+  parseExperiencePayload,
+  serializeExperiencePayload,
+} from "@/lib/experience-items";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type MobileTab = "edit" | "preview";
@@ -90,6 +95,8 @@ type EditableLink = CustomLinkItem & {
   isDirty?: boolean;
 };
 
+type ExperienceDraft = Omit<ExperienceItem, "id">;
+
 function SortableLinkItem({
   link,
   index,
@@ -119,7 +126,7 @@ function SortableLinkItem({
         transform: CSS.Transform.toString(transform),
         transition,
       }}
-      className={`rounded-2xl border border-[#ddd3cd] bg-white p-3 shadow-sm ${
+      className={`rounded-2xl border border-[#d6e2f7] bg-white p-3 shadow-sm ${
         isDragging ? "opacity-80" : ""
       }`}
     >
@@ -275,15 +282,28 @@ export function LinkBuilderEditor({
     username: user.username || "",
     role: user.role || "",
     bio: user.bio || "",
-    experience: user.experience || "",
     websiteUrl: user.websiteUrl || "",
     instagramUrl: user.instagramUrl || "",
     youtubeUrl: user.youtubeUrl || "",
     facebookUrl: user.facebookUrl || "",
     threadsUrl: user.threadsUrl || "",
   });
+  const [experienceItems, setExperienceItems] = useState<ExperienceItem[]>(() =>
+    parseExperiencePayload(user.experience || "")
+  );
+  const [newExperience, setNewExperience] = useState<ExperienceDraft>({
+    title: "",
+    organization: "",
+    period: "",
+    description: "",
+    skills: "",
+  });
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasMountedRef = useRef(false);
+  const serializedExperience = useMemo(
+    () => serializeExperiencePayload(experienceItems),
+    [experienceItems]
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -299,6 +319,16 @@ export function LinkBuilderEditor({
       return;
     }
 
+    if (serializedExperience.length > 700) {
+      setSaveStatus("error");
+      await showFeedbackAlert({
+        title: "Experience terlalu panjang",
+        text: "Ringkas item experience agar total maksimal 700 karakter.",
+        icon: "error",
+      });
+      return;
+    }
+
     setIsSavingNow(true);
     setSaveStatus("saving");
 
@@ -309,7 +339,7 @@ export function LinkBuilderEditor({
       avatarUrl: user.image || "",
       coverImageUrl: user.coverImageUrl || "",
       bio: profileFields.bio,
-      experience: profileFields.experience,
+      experience: serializedExperience,
       birthDate: user.birthDate || "",
       city: user.city || "",
       address: user.address || "",
@@ -376,13 +406,56 @@ export function LinkBuilderEditor({
     profileFields.username,
     profileFields.role,
     profileFields.bio,
-    profileFields.experience,
+    serializedExperience,
     profileFields.websiteUrl,
     profileFields.instagramUrl,
     profileFields.youtubeUrl,
     profileFields.facebookUrl,
     profileFields.threadsUrl,
   ]);
+
+  const handleAddExperience = () => {
+    if (
+      !newExperience.title.trim() &&
+      !newExperience.organization.trim() &&
+      !newExperience.period.trim() &&
+      !newExperience.description.trim() &&
+      !newExperience.skills.trim()
+    ) {
+      return;
+    }
+
+    const nextItem: ExperienceItem = {
+      id: `exp-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+      title: newExperience.title.trim().slice(0, 70),
+      organization: newExperience.organization.trim().slice(0, 70),
+      period: newExperience.period.trim().slice(0, 40),
+      description: newExperience.description.trim().slice(0, 220),
+      skills: newExperience.skills.trim().slice(0, 120),
+    };
+
+    setExperienceItems((prev) => [...prev, nextItem]);
+    setNewExperience({
+      title: "",
+      organization: "",
+      period: "",
+      description: "",
+      skills: "",
+    });
+  };
+
+  const updateExperienceItem = (
+    id: string,
+    patch: Partial<Omit<ExperienceItem, "id">>
+  ) => {
+    setExperienceItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...patch } : item))
+    );
+  };
+
+  const handleDeleteExperience = (id: string) => {
+    setExperienceItems((prev) => prev.filter((item) => item.id !== id));
+  };
 
   const handleAddLink = async () => {
     const title = newLink.title.trim();
@@ -579,6 +652,16 @@ export function LinkBuilderEditor({
     () => links.filter((item) => item.enabled !== false).slice(0, 8),
     [links]
   );
+  const previewExperiences = useMemo(
+    () =>
+      experienceItems
+        .filter(
+          (item) =>
+            item.title || item.organization || item.period || item.description || item.skills
+        )
+        .slice(0, 2),
+    [experienceItems]
+  );
   const isLinkLimitReached =
     typeof linkBuilderMax === "number" && links.length >= linkBuilderMax;
   const maxLinksLabel =
@@ -607,10 +690,10 @@ export function LinkBuilderEditor({
 
   return (
     <div className="space-y-4">
-      <Card className="dashboard-clean-card border-[#ddd3cd] bg-white/90 p-4 sm:p-5">
+      <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#e24f3b]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2f73ff]">
               Satulink Builder
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -645,7 +728,7 @@ export function LinkBuilderEditor({
             <div className="inline-flex rounded-full border border-[#d8ccc4] bg-white p-1">
               <button
                 type="button"
-                className="dashboard-tap-target rounded-full bg-[#1a1412] px-4 text-xs font-semibold text-white"
+                className="dashboard-tap-target rounded-full bg-[#2f73ff] px-4 text-xs font-semibold text-white"
               >
                 Editor
               </button>
@@ -693,8 +776,8 @@ export function LinkBuilderEditor({
             type="button"
             className={`h-9 rounded-full px-4 text-xs font-semibold transition ${
               mobileTab === "edit"
-                ? "bg-[#1a1412] text-white"
-                : "text-[#5e514b] hover:bg-[#f2ebe7]"
+                ? "bg-[#2f73ff] text-white"
+                : "text-[#5e514b] hover:bg-[#edf4ff]"
             }`}
             onClick={() => setMobileTab("edit")}
           >
@@ -704,8 +787,8 @@ export function LinkBuilderEditor({
             type="button"
             className={`h-9 rounded-full px-4 text-xs font-semibold transition ${
               mobileTab === "preview"
-                ? "bg-[#1a1412] text-white"
-                : "text-[#5e514b] hover:bg-[#f2ebe7]"
+                ? "bg-[#2f73ff] text-white"
+                : "text-[#5e514b] hover:bg-[#edf4ff]"
             }`}
             onClick={() => setMobileTab("preview")}
           >
@@ -716,9 +799,9 @@ export function LinkBuilderEditor({
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
         <div className={`${mobileTab === "edit" ? "block" : "hidden"} space-y-4 md:block`}>
-          <Card className="dashboard-clean-card border-[#ddd3cd] bg-white/90 p-4 sm:p-5">
+          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
             <div className="mb-4 flex items-center gap-2">
-              <PencilLine className="h-4 w-4 text-[#e24f3b]" />
+              <PencilLine className="h-4 w-4 text-[#2f73ff]" />
               <h2 className="text-lg font-semibold text-[#201b18]">Bio & Experience</h2>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -762,15 +845,147 @@ export function LinkBuilderEditor({
                 placeholder="Ceritakan profil singkat kamu."
               />
             </div>
-            <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-[#5f524b]">Experience highlight</label>
-              <Textarea
-                value={profileFields.experience}
-                onChange={(event) =>
-                  setProfileFields((prev) => ({ ...prev, experience: event.target.value }))
-                }
-                placeholder="Tulis pengalaman utama, skill, dan fokus layanan."
-              />
+
+            <div className="mt-3 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[#3f5f93]">
+                  Experience
+                </label>
+                <span className="text-xs font-medium text-[#5b7198]">
+                  {serializedExperience.length}/700
+                </span>
+              </div>
+
+              <div className="grid gap-2 rounded-xl border border-dashed border-[#c9dbf6] bg-white p-3">
+                <Input
+                  value={newExperience.title}
+                  onChange={(event) =>
+                    setNewExperience((prev) => ({ ...prev, title: event.target.value }))
+                  }
+                  placeholder="Judul role / pengalaman"
+                />
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    value={newExperience.organization}
+                    onChange={(event) =>
+                      setNewExperience((prev) => ({
+                        ...prev,
+                        organization: event.target.value,
+                      }))
+                    }
+                    placeholder="Project / perusahaan / klien"
+                  />
+                  <Input
+                    value={newExperience.period}
+                    onChange={(event) =>
+                      setNewExperience((prev) => ({ ...prev, period: event.target.value }))
+                    }
+                    placeholder="Periode (contoh: 2024 - sekarang)"
+                  />
+                </div>
+                <Textarea
+                  value={newExperience.description}
+                  onChange={(event) =>
+                    setNewExperience((prev) => ({
+                      ...prev,
+                      description: event.target.value,
+                    }))
+                  }
+                  placeholder="Deskripsi singkat pengalaman"
+                  className="min-h-20"
+                />
+                <Input
+                  value={newExperience.skills}
+                  onChange={(event) =>
+                    setNewExperience((prev) => ({ ...prev, skills: event.target.value }))
+                  }
+                  placeholder="Skill/tag (contoh: Editing, Motion, Color Grading)"
+                />
+                <div>
+                  <Button size="sm" type="button" onClick={handleAddExperience}>
+                    <Plus className="h-4 w-4" />
+                    Tambah Experience
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-3 space-y-2">
+                {experienceItems.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-[#c9dbf6] bg-white px-3 py-2 text-sm text-[#5b7198]">
+                    Belum ada experience. Tambahkan minimal satu item agar profil lebih kuat.
+                  </p>
+                ) : (
+                  experienceItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-xl border border-[#dce7f8] bg-white p-3"
+                    >
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-[#1b2e4f]">
+                          {item.title || "Experience"}
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="danger"
+                          onClick={() => handleDeleteExperience(item.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Hapus
+                        </Button>
+                      </div>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <Input
+                          value={item.title}
+                          onChange={(event) =>
+                            updateExperienceItem(item.id, {
+                              title: event.target.value.slice(0, 70),
+                            })
+                          }
+                          placeholder="Judul role"
+                        />
+                        <Input
+                          value={item.organization}
+                          onChange={(event) =>
+                            updateExperienceItem(item.id, {
+                              organization: event.target.value.slice(0, 70),
+                            })
+                          }
+                          placeholder="Project / perusahaan"
+                        />
+                        <Input
+                          value={item.period}
+                          onChange={(event) =>
+                            updateExperienceItem(item.id, {
+                              period: event.target.value.slice(0, 40),
+                            })
+                          }
+                          placeholder="Periode"
+                        />
+                        <Input
+                          value={item.skills}
+                          onChange={(event) =>
+                            updateExperienceItem(item.id, {
+                              skills: event.target.value.slice(0, 120),
+                            })
+                          }
+                          placeholder="Skill/tag"
+                        />
+                      </div>
+                      <Textarea
+                        value={item.description}
+                        onChange={(event) =>
+                          updateExperienceItem(item.id, {
+                            description: event.target.value.slice(0, 220),
+                          })
+                        }
+                        placeholder="Deskripsi pengalaman"
+                        className="mt-2 min-h-20"
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -829,10 +1044,10 @@ export function LinkBuilderEditor({
             </div>
           </Card>
 
-          <Card className="dashboard-clean-card border-[#ddd3cd] bg-white/90 p-4 sm:p-5">
+          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e24f3b]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f73ff]">
                   Custom Link
                 </p>
                 <h2 className="text-lg font-semibold text-[#201b18]">
@@ -841,7 +1056,7 @@ export function LinkBuilderEditor({
               </div>
               <Button
                 size="sm"
-                className="bg-[#ef4f3f] hover:bg-[#dd4839]"
+                className="bg-[#2f73ff] hover:bg-[#225fe0]"
                 onClick={handleAddLink}
                 disabled={isLinkLimitReached}
               >
@@ -861,7 +1076,7 @@ export function LinkBuilderEditor({
               ))}
             </div>
 
-            <div className="grid gap-3 rounded-2xl border border-dashed border-[#d9cec7] bg-[#faf6f3] p-3">
+            <div className="grid gap-3 rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] p-3">
               <Input
                 value={newLink.title}
                 maxLength={MAX_LINK_TITLE_LENGTH}
@@ -889,10 +1104,10 @@ export function LinkBuilderEditor({
 
             <div className="mt-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6b5e56]">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5b7198]">
                   {links.length} Blocks
                 </p>
-                <span className="rounded-full border border-[#e0d4ce] bg-white px-2.5 py-1 text-xs font-semibold text-[#6b5e56]">
+                <span className="rounded-full border border-[#e0d4ce] bg-white px-2.5 py-1 text-xs font-semibold text-[#5b7198]">
                   {previewLinks.length} active · Plan {planName.toUpperCase()}
                 </span>
               </div>
@@ -905,13 +1120,13 @@ export function LinkBuilderEditor({
               </div>
 
               {links.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-[#d9cec7] bg-[#f7f3f0] px-4 py-3 text-sm text-[#6b5e56]">
+                <p className="rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-4 py-3 text-sm text-[#5b7198]">
                   Belum ada link. Tambahkan link pertama untuk mulai membangun halaman Showreels kamu.
                 </p>
               ) : null}
 
               {links.length > 0 && filteredLinks.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-[#d9cec7] bg-[#f7f3f0] px-4 py-3 text-sm text-[#6b5e56]">
+                <p className="rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-4 py-3 text-sm text-[#5b7198]">
                   Tidak ada block yang cocok dengan kata kunci pencarian.
                 </p>
               ) : null}
@@ -958,7 +1173,7 @@ export function LinkBuilderEditor({
         </div>
 
         <div className={`${mobileTab === "preview" ? "block" : "hidden"} space-y-4 md:block`}>
-          <Card className="dashboard-clean-card border-[#ddd3cd] bg-white/90 p-4 sm:p-5">
+          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-[#201b18]">Live Preview</h2>
               <div className="flex flex-wrap items-center gap-2">
@@ -968,8 +1183,8 @@ export function LinkBuilderEditor({
                     onClick={() => setDeviceMode("desktop")}
                     className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
                       deviceMode === "desktop"
-                        ? "bg-[#1a1412] text-white"
-                        : "text-[#5e514b] hover:bg-[#f2ebe7]"
+                        ? "bg-[#2f73ff] text-white"
+                        : "text-[#5e514b] hover:bg-[#edf4ff]"
                     }`}
                   >
                     <Monitor className="h-3.5 w-3.5" />
@@ -980,8 +1195,8 @@ export function LinkBuilderEditor({
                     onClick={() => setDeviceMode("android")}
                     className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
                       deviceMode === "android"
-                        ? "bg-[#1a1412] text-white"
-                        : "text-[#5e514b] hover:bg-[#f2ebe7]"
+                        ? "bg-[#2f73ff] text-white"
+                        : "text-[#5e514b] hover:bg-[#edf4ff]"
                     }`}
                   >
                     <Smartphone className="h-3.5 w-3.5" />
@@ -1009,10 +1224,23 @@ export function LinkBuilderEditor({
                     <p className="mt-2 max-h-[4.5rem] overflow-hidden text-sm leading-6 text-[#4f433d]">
                       {profileFields.bio || "Bio akan muncul di sini saat kamu mengetik."}
                     </p>
+                    <div className="mt-3 space-y-1">
+                      {previewExperiences.length === 0 ? (
+                        <p className="text-xs text-[#5b7198]">Experience belum ditambahkan.</p>
+                      ) : (
+                        previewExperiences.map((item) => (
+                          <p key={item.id} className="text-xs text-[#5f524b]">
+                            {item.title || "Experience"}
+                            {item.organization ? ` - ${item.organization}` : ""}
+                            {item.period ? ` (${item.period})` : ""}
+                          </p>
+                        ))
+                      )}
+                    </div>
 
                     <div className="mt-4 grid gap-2">
                       {previewLinks.length === 0 ? (
-                        <p className="rounded-xl border border-dashed border-[#d9cec7] bg-[#f8f4f1] px-3 py-2 text-xs text-[#6c6059]">
+                        <p className="rounded-xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-3 py-2 text-xs text-[#5b7198]">
                           Belum ada link aktif.
                         </p>
                       ) : (
@@ -1044,10 +1272,23 @@ export function LinkBuilderEditor({
                     <p className="mt-3 max-h-[4.5rem] overflow-hidden text-sm leading-6 text-[#4f433d]">
                       {profileFields.bio || "Bio akan muncul di sini saat kamu mengetik."}
                     </p>
+                    <div className="mt-2 space-y-1 text-left">
+                      {previewExperiences.length === 0 ? (
+                        <p className="text-xs text-[#5b7198]">Experience belum ditambahkan.</p>
+                      ) : (
+                        previewExperiences.map((item) => (
+                          <p key={item.id} className="text-xs text-[#5f524b]">
+                            {item.title || "Experience"}
+                            {item.organization ? ` - ${item.organization}` : ""}
+                            {item.period ? ` (${item.period})` : ""}
+                          </p>
+                        ))
+                      )}
+                    </div>
 
                     <div className="mt-4 space-y-2 text-left">
                       {previewLinks.length === 0 ? (
-                        <p className="rounded-xl border border-dashed border-[#d9cec7] bg-[#f8f4f1] px-3 py-2 text-xs text-[#6c6059]">
+                        <p className="rounded-xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-3 py-2 text-xs text-[#5b7198]">
                           Belum ada link aktif.
                         </p>
                       ) : (
@@ -1058,7 +1299,7 @@ export function LinkBuilderEditor({
                           >
                             <p className="text-sm font-semibold text-[#2b241f]">{link.title}</p>
                             {link.description ? (
-                              <p className="mt-0.5 text-xs text-[#6b5e56]">{link.description}</p>
+                              <p className="mt-0.5 text-xs text-[#5b7198]">{link.description}</p>
                             ) : null}
                           </div>
                         ))
@@ -1097,3 +1338,4 @@ export function LinkBuilderEditor({
     </div>
   );
 }
+

@@ -1,17 +1,9 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import {
-  Coins,
-  FolderOpen,
-  Link2,
-  Plus,
-  UserRoundPen,
-  Video,
-} from "lucide-react";
-import { CopyProfileLinkButton } from "@/components/dashboard/copy-profile-link-button";
+import { FolderOpen, Link2, Video } from "lucide-react";
 import { CreatorTrafficPanel } from "@/components/dashboard/creator-traffic-panel";
 import { DashboardGreetingCard } from "@/components/dashboard/dashboard-greeting-card";
-import { DashboardLivePreviewCard } from "@/components/dashboard/dashboard-live-preview-card";
+import { ShareProfileActions } from "@/components/dashboard/share-profile-actions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { db, isDatabaseConfigured } from "@/db";
@@ -19,30 +11,10 @@ import { videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { requireCurrentUser } from "@/server/current-user";
 import { getRequestLocale } from "@/server/request-locale";
-import {
-  getCreatorEntitlementsForUser,
-  getCreatorGroupLink,
-  getPlanLabel,
-  getSupportLink,
-} from "@/server/subscription-policy";
-
-function toIdr(value: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 export default async function DashboardPage() {
   const locale = await getRequestLocale();
   const user = await requireCurrentUser();
-  const entitlementState = await getCreatorEntitlementsForUser(user.id);
-  const planName = entitlementState.effectivePlan.planName;
-  const planLabel = getPlanLabel(planName);
-  const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
-  const creatorGroupLink = getCreatorGroupLink();
-  const supportLink = getSupportLink();
 
   const myVideos = isDatabaseConfigured
     ? await db.query.videos.findMany({
@@ -51,12 +23,6 @@ export default async function DashboardPage() {
         columns: {
           id: true,
           visibility: true,
-          title: true,
-          source: true,
-          sourceUrl: true,
-          thumbnailUrl: true,
-          publicSlug: true,
-          createdAt: true,
         },
       })
     : [];
@@ -64,95 +30,59 @@ export default async function DashboardPage() {
   const normalizedLinks = normalizeCustomLinks(user.customLinks);
   const activeLinks = normalizedLinks.filter((link) => link.enabled !== false);
   const publicVideosCount = myVideos.filter((video) => video.visibility === "public").length;
-  const draftCount = myVideos.filter((video) => video.visibility === "draft").length;
-  const privateCount = myVideos.filter((video) => video.visibility === "private").length;
-  const semiPrivateCount = myVideos.filter((video) => video.visibility === "semi_private").length;
 
   const metricCards = [
     {
-      label: "Total Links",
+      label: "Total Link",
       value: String(activeLinks.length),
       icon: Link2,
-      helper: "Link aktif yang tampil",
-      className: "bg-[#edf8ef] text-[#2d8555]",
-    },
-    {
-      label: "Video Publik",
-      value: String(publicVideosCount),
-      icon: FolderOpen,
-      helper: "Karya yang bisa diakses client",
-      className: "bg-[#fff3ea] text-[#c0672f]",
+      helper: "Link aktif pada halaman publik",
+      tone: "bg-[#e9f2ff] text-[#2f73ff]",
     },
     {
       label: "Total Video",
       value: String(myVideos.length),
       icon: Video,
-      helper: `Draft ${draftCount} - Private ${privateCount}`,
-      className: "bg-[#eef2ff] text-[#4659ce]",
+      helper: "Jumlah seluruh video creator",
+      tone: "bg-[#edf4ff] text-[#225fe0]",
     },
     {
-      label: "Revenue",
-      value: toIdr(0),
-      icon: Coins,
-      helper: "Terhubung dari billing plan",
-      className: "bg-[#f6f0ff] text-[#6d4aad]",
+      label: "Video Publik",
+      value: String(publicVideosCount),
+      icon: FolderOpen,
+      helper: "Video yang bisa dilihat client",
+      tone: "bg-[#f1f7ff] text-[#1f58e3]",
     },
-  ];
+  ] as const;
 
   const quickActions = [
     {
-      href: "/dashboard/link-builder",
-      title: "Buka Link Builder",
-      description: "Tambah dan atur link bio kamu.",
-      cta: "Kelola Link",
-    },
-    {
       href: "/dashboard/videos",
       title: "Kelola Video",
-      description: "Atur semua video portfolio dari satu halaman.",
+      description: "Tambah, edit, dan atur visibilitas video portfolio.",
       cta: "Buka Kelola Video",
-    },
-    {
-      href: "/dashboard/analytics",
-      title: "Buka Analytics",
-      description: "Lihat performa traffic profile dan video.",
-      cta: "Lihat Analytics",
     },
     {
       href: "/dashboard/profile",
       title: "Edit Profile",
-      description: "Perbarui identitas visual creator.",
-      cta: "Edit Profil",
+      description: "Perbarui bio, role, serta identitas creator kamu.",
+      cta: "Edit Profile",
+    },
+    {
+      href: "/dashboard/analytics",
+      title: "Buka Analitik",
+      description: "Pantau perkembangan traffic 7 hari dan 30 hari.",
+      cta: "Lihat Analitik",
     },
     {
       href: "/dashboard/billing",
-      title: "Kelola Billing",
-      description: "Lihat plan aktif, transaksi, dan invoice.",
+      title: "Kelola Subscription",
+      description: "Cek plan aktif, transaksi, dan pengelolaan billing.",
       cta: "Buka Billing",
     },
-    ...(entitlementState.entitlements.creatorGroupEnabled && creatorGroupLink
-      ? [
-          {
-            href: creatorGroupLink,
-            title: "Grup Khusus Creator",
-            description: "Masuk grup komunitas creator untuk update dan networking.",
-            cta: "Buka Grup",
-          },
-        ]
-      : []),
-    ...(entitlementState.entitlements.supportEnabled && supportLink
-      ? [
-          {
-            href: supportLink,
-            title: "Contact Support",
-            description: "Hubungi support untuk bantuan prioritas akun creator.",
-            cta: "Hubungi Support",
-          },
-        ]
-      : []),
-  ];
+  ] as const;
 
-  const hasNoData = activeLinks.length === 0 && publicVideosCount === 0;
+  const hasNoData = activeLinks.length === 0 && myVideos.length === 0;
 
   return (
     <div className="space-y-6">
@@ -162,187 +92,106 @@ export default async function DashboardPage() {
         userName={user.name ?? "Creator"}
       />
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
-          <p className="text-sm font-medium text-[#655952]">Link publik siap dibagikan</p>
-          <h2 className="mt-1 font-display text-xl font-semibold text-[#201b18] sm:text-2xl">
-            Share halaman creator kamu sekarang
+      <section className="space-y-3">
+        <div>
+          <p className="text-sm font-medium text-[#5873a0]">Card 1</p>
+          <h2 className="font-display text-2xl font-semibold text-[#1b2e4f]">
+            Greetings + Traffic Analisa Video
           </h2>
-          <p className="mt-2 text-sm leading-6 text-[#5f524b]">
-            Satu link untuk menampilkan bio, sosial media, dan portofolio kamu ke klien.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link href={`/creator/${user.username || "creator"}`} target="_blank">
-              <Button size="sm">Buka Public Link</Button>
-            </Link>
-            <CopyProfileLinkButton username={user.username || "creator"} />
-          </div>
-        </Card>
+        </div>
+        <CreatorTrafficPanel compact periodMode="dashboard" />
+      </section>
 
-        <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
-          <p className="text-sm font-medium text-[#655952]">Status akun</p>
-          <h2 className="mt-1 font-display text-xl font-semibold text-[#201b18]">
-            Creator {planLabel}
+      <section className="space-y-3">
+        <div>
+          <p className="text-sm font-medium text-[#5873a0]">Card 2</p>
+          <h2 className="font-display text-2xl font-semibold text-[#1b2e4f]">
+            Share Link + Ringkasan Performa Konten
           </h2>
-          <p className="mt-2 text-sm leading-6 text-[#5f524b]">
-            {typeof linkBuilderMax === "number"
-              ? `Maksimal ${linkBuilderMax} link builder pada plan ${planLabel}.`
-              : `Link builder tanpa batas pada plan ${planLabel}.`}{" "}
-            Analytics hingga {entitlementState.entitlements.analyticsMaxDays} hari.
-          </p>
-          <Link href="/dashboard/billing" className="mt-4 inline-block">
-            <Button variant="secondary" size="sm">
-              Lihat Detail Plan
-            </Button>
-          </Link>
-        </Card>
+        </div>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white p-4 sm:p-5">
+            <p className="text-sm font-medium text-[#5873a0]">Share link postingan</p>
+            <h3 className="mt-1 text-xl font-semibold text-[#1b2e4f] sm:text-2xl">
+              Bagikan halaman creator kamu
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-[#4f658f]">
+              Copy link, buka public profile, dan bagikan melalui popup share lengkap
+              dengan QR code.
+            </p>
+            <div className="mt-4">
+              <ShareProfileActions username={user.username || "creator"} />
+            </div>
+          </Card>
+
+          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white p-4 sm:p-5">
+            <p className="text-sm font-medium text-[#5873a0]">Ringkasan performa konten</p>
+            <h3 className="mt-1 text-xl font-semibold text-[#1b2e4f] sm:text-2xl">
+              Insight utama creator
+            </h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {metricCards.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.label}
+                    className="rounded-xl border border-[#d9e5f7] bg-[#fbfdff] p-3.5"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex h-9 w-9 items-center justify-center rounded-xl ${item.tone}`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <p className="text-xs font-semibold text-[#5b7198]">{item.label}</p>
+                    </div>
+                    <p className="mt-2 text-2xl font-semibold text-[#1b2e4f]">{item.value}</p>
+                    <p className="mt-1 text-xs text-[#5b7198]">{item.helper}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        </div>
       </section>
 
       {hasNoData ? (
-        <Card className="dashboard-clean-card border-dashed border-[#d9cec7] bg-[#f8f3ef] p-5">
-          <h2 className="font-display text-xl font-semibold text-[#201b18]">
-            Mulai bangun halaman Showreels kamu
-          </h2>
-          <p className="mt-2 text-sm text-[#5e514b]">
-            Tambahkan bio, link sosial, dan portofolio pertamamu untuk tampil lebih profesional.
+        <Card className="dashboard-clean-card border-dashed border-[#cfdcf2] bg-[#f6faff] p-5">
+          <h3 className="text-xl font-semibold text-[#1b2e4f]">
+            Belum ada data performa
+          </h3>
+          <p className="mt-2 text-sm text-[#4f658f]">
+            Mulai bagikan link kamu atau upload video pertama untuk melihat traffic
+            dan metrik dashboard.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link href="/dashboard/link-builder">
-              <Button>
-                <Plus className="h-4 w-4" />
-                Mulai dari Link Builder
-              </Button>
+              <Button>Mulai dari Build Link</Button>
             </Link>
-            <Link href="/dashboard/profile">
-              <Button variant="secondary">
-                <UserRoundPen className="h-4 w-4" />
-                Lengkapi Profile
-              </Button>
+            <Link href="/dashboard/videos/new">
+              <Button variant="secondary">Tambah Video Pertama</Button>
             </Link>
           </div>
         </Card>
       ) : null}
 
-      <section>
-        <div className="mb-3">
-          <p className="text-sm font-medium text-[#655952]">Creator Summary</p>
-          <h2 className="font-display text-2xl font-semibold text-[#201b18]">
-            Ringkasan performa dan konten
-          </h2>
+      <section className="space-y-3">
+        <div>
+          <p className="text-sm font-medium text-[#5873a0]">Card 3</p>
+          <h2 className="font-display text-2xl font-semibold text-[#1b2e4f]">Quick Action</h2>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {metricCards.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Card
-                key={item.label}
-                className="dashboard-clean-card border-border bg-surface p-4"
-              >
-                <div className="flex items-center gap-2">
-                  <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${item.className}`}>
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <p className="text-xs font-semibold text-[#71625a]">{item.label}</p>
-                </div>
-                <p className="mt-3 font-display text-2xl font-semibold text-[#201b18]">{item.value}</p>
-                <p className="mt-1 text-xs text-[#6a5d56]">{item.helper}</p>
-              </Card>
-            );
-          })}
-        </div>
-      </section>
-
-      <CreatorTrafficPanel compact />
-
-      <section>
-        <div className="mb-3">
-          <p className="text-sm font-medium text-[#655952]">Quick Actions</p>
-          <h2 className="font-display text-2xl font-semibold text-[#201b18]">Aksi cepat creator</h2>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2">
           {quickActions.map((item) => (
-            <Card key={item.href} className="dashboard-clean-card border-border bg-surface p-4">
-              <h3 className="text-base font-semibold text-[#201b18]">{item.title}</h3>
-              <p className="mt-1 text-sm leading-6 text-[#5f524b]">{item.description}</p>
-              <Link
-                href={item.href}
-                target={item.href.startsWith("http") ? "_blank" : undefined}
-                className="mt-4 inline-block"
-              >
+            <Card key={item.href} className="dashboard-clean-card border-[#d6e2f7] bg-white p-4">
+              <h3 className="text-base font-semibold text-[#1b2e4f]">{item.title}</h3>
+              <p className="mt-1 text-sm leading-6 text-[#4f658f]">{item.description}</p>
+              <Link href={item.href} className="mt-4 inline-block">
                 <Button size="sm" variant="secondary">
                   {item.cta}
                 </Button>
               </Link>
             </Card>
           ))}
-        </div>
-      </section>
-
-      <section>
-        <DashboardLivePreviewCard
-          username={user.username || "creator"}
-          displayName={user.name || "Creator"}
-          role={user.role || ""}
-          bio={user.bio || ""}
-          links={normalizedLinks}
-        />
-      </section>
-
-      <section>
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl font-semibold text-[#201b18]">
-                  Video Portfolio Summary
-                </h2>
-                <p className="text-sm text-[#5f524b]">
-                  Ringkasan status video portofolio kamu dalam satu panel.
-                </p>
-              </div>
-              <Link href="/dashboard/videos">
-                <Button variant="secondary">Buka Kelola Video</Button>
-              </Link>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-xl border border-[#e4dad4] bg-white px-4 py-3">
-                <p className="text-xs text-[#71625a]">Total Video</p>
-                <p className="font-display text-2xl font-semibold text-[#201b18]">{myVideos.length}</p>
-              </div>
-              <div className="rounded-xl border border-[#e4dad4] bg-white px-4 py-3">
-                <p className="text-xs text-[#71625a]">Public</p>
-                <p className="font-display text-2xl font-semibold text-[#201b18]">{publicVideosCount}</p>
-              </div>
-              <div className="rounded-xl border border-[#e4dad4] bg-white px-4 py-3">
-                <p className="text-xs text-[#71625a]">Semi Private</p>
-                <p className="font-display text-2xl font-semibold text-[#201b18]">{semiPrivateCount}</p>
-              </div>
-              <div className="rounded-xl border border-[#e4dad4] bg-white px-4 py-3">
-                <p className="text-xs text-[#71625a]">Draft + Private</p>
-                <p className="font-display text-2xl font-semibold text-[#201b18]">
-                  {draftCount + privateCount}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
-            <p className="text-sm font-medium text-[#655952]">Section Baru</p>
-            <h3 className="mt-1 font-display text-xl font-semibold text-[#201b18]">Kelola Video</h3>
-            <p className="mt-2 text-sm leading-6 text-[#5f524b]">
-              Masuk ke halaman kelola video untuk tambah, edit, filter, dan publish karya terbaru.
-            </p>
-            <div className="mt-4 space-y-2">
-              <Link href="/dashboard/videos" className="block">
-                <Button className="w-full">Buka Kelola Video</Button>
-              </Link>
-              <Link href="/dashboard/videos/new" className="block">
-                <Button variant="secondary" className="w-full">
-                  Tambah Video Baru
-                </Button>
-              </Link>
-            </div>
-          </Card>
         </div>
       </section>
     </div>
