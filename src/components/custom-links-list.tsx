@@ -31,7 +31,7 @@ export function CustomLinksList({
     return (
       <p
         className={cn(
-          "rounded-2xl border border-dashed border-[#e0d4ce] bg-white/75 px-4 py-3 text-sm text-[#6b5d56]",
+          "rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-4 py-3 text-sm text-[#5f78a3]",
           className
         )}
       >
@@ -49,12 +49,12 @@ export function CustomLinksList({
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              "group flex w-full items-center justify-between rounded-2xl border border-[#dfd4ce] bg-white px-4 text-left text-[#231d19] transition hover:border-[#e65a46] hover:bg-[#fff8f6]",
+              "group flex w-full items-center justify-between rounded-2xl border border-[#d4e2f8] bg-white px-4 text-left text-[#243a5f] transition hover:border-[#2f73ff] hover:bg-[#eff6ff]",
               compact ? "h-11 text-sm" : "h-12 text-[0.95rem]"
             )}
           >
             <span className="truncate pr-3 font-semibold">{link.title}</span>
-            <ArrowUpRight className="h-4 w-4 shrink-0 text-[#85766e] transition group-hover:text-[#e65a46]" />
+            <ArrowUpRight className="h-4 w-4 shrink-0 text-[#6a83ae] transition group-hover:text-[#2f73ff]" />
           </Link>
         ))}
     </div>

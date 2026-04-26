@@ -148,12 +148,12 @@ export function DashboardShell({
 
   return (
     <div className="min-h-screen bg-canvas text-[#201b18]">
-      <header className="sticky top-0 z-30 border-b border-[#e2d9d3] bg-[#f7f4f1]/95 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-[#d5e1f4] bg-[#f7fbff]/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="dashboard-tap-target hidden items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18] lg:inline-flex"
+              className="dashboard-tap-target hidden items-center justify-center rounded-xl border border-[#cfdcf2] bg-white text-[#1f3f6f] lg:inline-flex"
               onClick={() => setCollapsed((prev) => !prev)}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -166,11 +166,11 @@ export function DashboardShell({
             <Link
               href={authProfileHref}
               target="_blank"
-              className="rounded-full border border-[#ded3cd] bg-white px-3 py-2 text-xs font-semibold text-[#4f433d] shadow-sm transition hover:border-[#b9aca5] hover:text-[#201b18]"
+              className="rounded-full border border-[#cfdcf2] bg-white px-3 py-2 text-xs font-semibold text-[#47679b] shadow-sm transition hover:border-[#acc7f2] hover:text-[#1f3f6f]"
             >
               {displayUsername}
             </Link>
-            <div className="flex items-center gap-2 rounded-full border border-[#ded3cd] bg-white px-3 py-2 shadow-sm">
+            <div className="flex items-center gap-2 rounded-full border border-[#cfdcf2] bg-white px-3 py-2 shadow-sm">
               <AvatarBadge
                 name={user.name || "Creator"}
                 avatarUrl={user.image || ""}
@@ -189,7 +189,7 @@ export function DashboardShell({
 
           <button
             type="button"
-            className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18] md:hidden"
+            className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#cfdcf2] bg-white text-[#1f3f6f] md:hidden"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-label="Open dashboard menu"
           >
@@ -206,19 +206,19 @@ export function DashboardShell({
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu backdrop"
           />
-          <div className="absolute left-0 top-0 flex h-full w-[88%] max-w-[340px] flex-col border-r border-[#ded3cd] bg-[#f8f5f2] p-4 shadow-2xl">
+          <div className="absolute left-0 top-0 flex h-full w-[88%] max-w-[340px] flex-col border-r border-[#cfdcf2] bg-[#f7fbff] p-4 shadow-2xl">
             <div className="mb-5 flex items-center justify-between">
               <AppLogo />
               <button
                 type="button"
-                className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#ded3cd] bg-white text-[#201b18]"
+                className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#cfdcf2] bg-white text-[#1f3f6f]"
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Close menu"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="mb-4 rounded-2xl border border-[#ded3cd] bg-white p-3">
+            <div className="mb-4 rounded-2xl border border-[#cfdcf2] bg-white p-3">
               <div className="flex items-center gap-2">
                 <AvatarBadge
                   name={user.name || "Creator"}
@@ -249,8 +249,8 @@ export function DashboardShell({
                     className={cn(
                       "flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-medium transition",
                       active
-                        ? "bg-[#ffe8e2] text-[#cb4a36] ring-1 ring-[#f1c3b7]"
-                        : "text-[#4f433d] hover:bg-white hover:text-[#201b18]"
+                        ? "bg-[#eaf2ff] text-[#1f58e3] ring-1 ring-[#bfd6ff]"
+                        : "text-[#4f658f] hover:bg-white hover:text-[#1f3f6f]"
                     )}
                   >
                     <span className="flex items-center gap-2">
@@ -279,19 +279,19 @@ export function DashboardShell({
       <div className="dashboard-shell-container flex gap-4">
         <aside
           className={cn(
-            "hidden shrink-0 rounded-2xl border border-[#ddd3cd] bg-gradient-to-b from-[#fffefe] to-[#f7f2ee] p-3 shadow-card transition-all duration-200 lg:sticky lg:top-[96px] lg:block lg:h-[calc(100vh-112px)]",
+            "hidden shrink-0 rounded-2xl border border-[#d5e1f4] bg-gradient-to-b from-[#ffffff] to-[#f6faff] p-3 shadow-card transition-all duration-200 lg:sticky lg:top-[96px] lg:block lg:h-[calc(100vh-112px)]",
             sidebarWidthClass
           )}
         >
-          <div className={cn("mb-4 rounded-xl bg-[#f5efea] p-3", collapsed ? "text-center" : "")}>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7a6a61]">
+          <div className={cn("mb-4 rounded-xl bg-[#edf4ff] p-3", collapsed ? "text-center" : "")}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#57709b]">
               Plan
             </p>
-            <p className="mt-1 text-sm font-semibold text-[#231d19]">
+            <p className="mt-1 text-sm font-semibold text-[#1f3f6f]">
               {collapsed ? planLabel : `${planLabel} Creator`}
             </p>
           </div>
-          <nav className="flex h-full min-h-0 flex-col">
+          <nav className="flex min-h-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
             {primaryNavItems.map((item) => {
               const Icon = item.icon;
@@ -309,8 +309,8 @@ export function DashboardShell({
                       ? "h-11 justify-center"
                       : "h-11 justify-between px-3",
                     active
-                      ? "bg-[#ffe8e2] text-[#cb4a36] ring-1 ring-[#f1c3b7]"
-                      : "text-[#4f433d] hover:bg-[#f1ebe6] hover:text-[#201b18]"
+                      ? "bg-[#eaf2ff] text-[#1f58e3] ring-1 ring-[#bfd6ff]"
+                      : "text-[#4f658f] hover:bg-[#edf4ff] hover:text-[#1f3f6f]"
                   )}
                 >
                   <span className="flex items-center gap-2">
@@ -344,8 +344,8 @@ export function DashboardShell({
                           ? "h-11 justify-center"
                           : "h-11 justify-between px-3",
                         active
-                          ? "bg-[#ffe8e2] text-[#cb4a36] ring-1 ring-[#f1c3b7]"
-                          : "text-[#4f433d] hover:bg-[#f1ebe6] hover:text-[#201b18]"
+                          ? "bg-[#eaf2ff] text-[#1f58e3] ring-1 ring-[#bfd6ff]"
+                          : "text-[#4f658f] hover:bg-[#edf4ff] hover:text-[#1f3f6f]"
                       )}
                     >
                       <span className="flex items-center gap-2">
@@ -362,8 +362,8 @@ export function DashboardShell({
                 })}
               </div>
               {!collapsed ? (
-                <div className="rounded-2xl border border-[#e4d8d1] bg-[#f8f3ef] p-3">
-                  <p className="text-xs font-semibold text-[#7a6a61]">Akun</p>
+                <div className="rounded-2xl border border-[#d5e1f4] bg-[#f6faff] p-3">
+                  <p className="text-xs font-semibold text-[#57709b]">Akun</p>
                   <p className="mt-1 truncate text-sm font-semibold text-[#201b18]">{user.email}</p>
                 </div>
               ) : null}

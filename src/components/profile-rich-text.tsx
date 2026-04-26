@@ -1,4 +1,8 @@
 import { Fragment } from "react";
+import {
+  EXPERIENCE_STORAGE_PREFIX,
+  parseExperiencePayload,
+} from "@/lib/experience-items";
 
 function parseBlocks(content: string) {
   return content
@@ -34,6 +38,50 @@ export function ProfileRichText({
   const trimmed = (content || "").trim();
   if (!trimmed) {
     return <p className={`text-sm leading-7 text-slate-500 ${className}`.trim()}>{emptyLabel}</p>;
+  }
+
+  if (trimmed.startsWith(EXPERIENCE_STORAGE_PREFIX)) {
+    const experienceItems = parseExperiencePayload(trimmed);
+    if (experienceItems.length === 0) {
+      return (
+        <p className={`text-sm leading-7 text-slate-500 ${className}`.trim()}>
+          {emptyLabel}
+        </p>
+      );
+    }
+
+    return (
+      <div className={`space-y-3 ${className}`.trim()}>
+        {experienceItems.map((item) => (
+          <article
+            key={item.id}
+            className="rounded-2xl border border-slate-200/80 bg-white p-4"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-slate-900">
+                {item.title || "Experience"}
+              </h3>
+              {item.period ? (
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600">
+                  {item.period}
+                </span>
+              ) : null}
+            </div>
+            {item.organization ? (
+              <p className="mt-1 text-sm text-slate-700">{item.organization}</p>
+            ) : null}
+            {item.description ? (
+              <p className="mt-2 text-sm leading-7 text-slate-700">{item.description}</p>
+            ) : null}
+            {item.skills ? (
+              <p className="mt-2 text-xs font-medium text-slate-500">
+                Skills: {item.skills}
+              </p>
+            ) : null}
+          </article>
+        ))}
+      </div>
+    );
   }
 
   const blocks = parseBlocks(trimmed);

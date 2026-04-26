@@ -17,6 +17,7 @@ import { usePreferences } from "@/hooks/use-preferences";
 import { getAuthRedirectUrl } from "@/lib/auth-redirect-url";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 import { getSafeNextPath } from "@/lib/safe-next-path";
+import { cn } from "@/lib/cn";
 
 const loginSchema = z.object({
   email: z.email("Format email belum valid."),
@@ -108,7 +109,7 @@ export function LoginForm({
       ? "/auth/signup"
       : `/auth/signup?next=${encodeURIComponent(safeNextPath)}`;
   const altActionClassName =
-    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#d7cec7] bg-white px-4 text-sm font-semibold text-[#201b18] shadow-sm transition hover:bg-[#fbf7f4] focus:outline-none focus:ring-2 focus:ring-[#e6c2b9] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#cad9f4] bg-white px-4 text-sm font-semibold text-[#1b365f] shadow-sm transition hover:bg-[#edf4ff] focus:outline-none focus:ring-2 focus:ring-[#b7d2ff] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -117,6 +118,7 @@ export function LoginForm({
       password: "",
     },
   });
+  const isFormDisabled = form.formState.isSubmitting || authLock.isLocked || authUnavailable;
 
   const onInvalidSubmit = () => {
     const attempt = authLock.registerFailure();
@@ -238,10 +240,18 @@ export function LoginForm({
 
         <div className="space-y-2">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <Mail className="h-4 w-4 text-[#e24f3b]" />
+            <Mail className="h-4 w-4 text-[#2f73ff]" />
             Email
           </label>
-          <Input placeholder="nama@email.com" {...form.register("email")} />
+          <Input
+            placeholder="nama@email.com"
+            disabled={isFormDisabled}
+            className={cn(
+              form.formState.errors.email &&
+                "border-rose-300 focus:border-rose-500 focus:ring-rose-200"
+            )}
+            {...form.register("email")}
+          />
           <p className="mt-1 text-xs text-rose-600">
             {form.formState.errors.email?.message}
           </p>
@@ -250,12 +260,12 @@ export function LoginForm({
         <div className="space-y-2">
           <div className="mb-2 flex items-center justify-between gap-3">
             <label className="flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-              <LockKeyhole className="h-4 w-4 text-[#e24f3b]" />
+              <LockKeyhole className="h-4 w-4 text-[#2f73ff]" />
               Password
             </label>
             <Link
               href="/auth/forgot-password"
-              className="text-xs font-semibold text-[#e24f3b] hover:text-[#cf402d]"
+              className="text-xs font-semibold text-[#2f73ff] hover:text-[#225fe0]"
             >
               Lupa password?
             </Link>
@@ -264,13 +274,18 @@ export function LoginForm({
             <Input
               type={showPassword ? "text" : "password"}
               placeholder="********"
-              className="pr-11"
+              disabled={isFormDisabled}
+              className={cn(
+                "pr-11",
+                form.formState.errors.password &&
+                  "border-rose-300 focus:border-rose-500 focus:ring-rose-200"
+              )}
               {...form.register("password")}
             />
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#7a6c64] transition hover:text-[#514640]"
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#5a78ad] transition hover:text-[#2f73ff]"
               aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -288,9 +303,9 @@ export function LoginForm({
         ) : null}
 
         <Button
-          className="w-full"
+          className="w-full bg-[#2f73ff] text-white hover:bg-[#225fe0] focus-visible:ring-[#8eb3ff]"
           type="submit"
-          disabled={form.formState.isSubmitting || authLock.isLocked || authUnavailable}
+          disabled={isFormDisabled}
         >
           {authLock.isLocked
             ? "Login terkunci"
@@ -304,7 +319,7 @@ export function LoginForm({
           <span>atau</span>
           <span className="h-px bg-[#e0d6d0]" />
         </div>
-        <p className="pt-1 text-center text-sm text-[#625650]">{dictionary.noAccount}</p>
+        <p className="pt-1 text-center text-sm text-[#5b7095]">{dictionary.noAccount}</p>
         <div className="space-y-2">
           {googleEnabled ? (
             <button
