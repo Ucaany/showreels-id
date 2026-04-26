@@ -17,6 +17,7 @@ export interface ProfileUpdateInput {
   youtubeUrl: string;
   facebookUrl: string;
   threadsUrl: string;
+  linkedinUrl: string;
   customLinks?: Array<{
     id: string;
     title: string;
@@ -64,6 +65,7 @@ export const profileService = {
         youtubeUrl: payload.youtubeUrl.trim(),
         facebookUrl: payload.facebookUrl.trim(),
         threadsUrl: payload.threadsUrl.trim(),
+        linkedinUrl: payload.linkedinUrl.trim(),
         customLinks: payload.customLinks || [],
         skills: payload.skills,
       };

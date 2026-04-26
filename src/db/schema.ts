@@ -54,6 +54,7 @@ export const users = pgTable(
     youtubeUrl: text("youtube_url").notNull().default(""),
     facebookUrl: text("facebook_url").notNull().default(""),
     threadsUrl: text("threads_url").notNull().default(""),
+    linkedinUrl: text("linkedin_url").notNull().default(""),
     customLinks: jsonb("custom_links")
       .$type<DbCustomLink[]>()
       .notNull()

@@ -38,6 +38,7 @@ const legacyUserColumns = {
   youtubeUrl: users.youtubeUrl,
   facebookUrl: users.facebookUrl,
   threadsUrl: users.threadsUrl,
+  linkedinUrl: users.linkedinUrl,
   profileVisibility: users.profileVisibility,
   skills: users.skills,
   isBlocked: users.isBlocked,

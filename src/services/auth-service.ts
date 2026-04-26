@@ -96,6 +96,7 @@ export const authService = {
       youtubeUrl: "",
       facebookUrl: "",
       threadsUrl: "",
+      linkedinUrl: "",
       skills: [],
       profileVisibility: "public",
       createdAt: new Date().toISOString(),

@@ -19,6 +19,7 @@ const demoUser: UserProfile = {
   youtubeUrl: "https://youtube.com/@videocreator",
   facebookUrl: "",
   threadsUrl: "https://threads.net/@videocreator",
+  linkedinUrl: "https://linkedin.com/in/videocreator",
   skills: ["Video Editing", "Storytelling", "Color Grading", "Motion Graphics"],
   profileVisibility: "public",
   createdAt: "2026-01-12T04:30:00.000Z",

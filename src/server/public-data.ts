@@ -28,6 +28,28 @@ function isEntitledSubscriptionStatus(status: string | null | undefined) {
   return status === "active" || status === "trial";
 }
 
+async function isBusinessPlanActiveForUser(userId: string) {
+  try {
+    const subscription = await db.query.billingSubscriptions.findFirst({
+      where: eq(billingSubscriptions.userId, userId),
+      columns: {
+        planName: true,
+        status: true,
+      },
+    });
+
+    return Boolean(
+      subscription?.planName === "business" &&
+        isEntitledSubscriptionStatus(subscription?.status)
+    );
+  } catch (error) {
+    if (isMissingBillingSchemaError(error)) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 async function isWhitelabelActiveForUser(userId: string) {
   try {
     const [settings, subscription] = await Promise.all([
@@ -316,6 +338,7 @@ export async function getPublicProfile(
         youtubeUrl: true,
         facebookUrl: true,
         threadsUrl: true,
+        linkedinUrl: true,
         customLinks: true,
         profileVisibility: true,
         skills: true,
@@ -353,13 +376,19 @@ export async function getPublicProfile(
       },
     });
 
+    const [whitelabelEnabled, businessPlanActive] = await Promise.all([
+      isWhitelabelActiveForUser(user.id),
+      isBusinessPlanActiveForUser(user.id),
+    ]);
+
     return {
       user: {
         ...user,
         customLinks: normalizeCustomLinks(user.customLinks),
       },
       videos: profileVideos,
-      whitelabelEnabled: await isWhitelabelActiveForUser(user.id),
+      whitelabelEnabled,
+      businessPlanActive,
     };
   } catch (error) {
     console.error("Failed to load public profile", error);
@@ -414,6 +443,7 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
             youtubeUrl: true,
             facebookUrl: true,
             threadsUrl: true,
+            linkedinUrl: true,
             customLinks: true,
             profileVisibility: true,
           },

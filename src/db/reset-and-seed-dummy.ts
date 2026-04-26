@@ -18,6 +18,7 @@ type DummyCreatorSeed = {
   youtubeUrl: string;
   facebookUrl: string;
   threadsUrl: string;
+  linkedinUrl: string;
   avatarUrl: string;
   coverImageUrl: string;
   skills: string[];
@@ -46,6 +47,7 @@ function createDummyCreator(
     youtubeUrl: `https://youtube.com/@${username}edit`,
     facebookUrl: `https://facebook.com/${username}edit`,
     threadsUrl: `https://threads.net/@${username}edit`,
+    linkedinUrl: `https://linkedin.com/in/${username}edit`,
     avatarUrl,
     coverImageUrl,
     skills,
@@ -317,6 +319,7 @@ async function resetAndSeedDummy() {
         youtubeUrl: creator.youtubeUrl,
         facebookUrl: creator.facebookUrl,
         threadsUrl: creator.threadsUrl,
+        linkedinUrl: creator.linkedinUrl,
         skills: creator.skills,
         image: creator.avatarUrl,
         coverImageUrl: creator.coverImageUrl,
@@ -344,6 +347,7 @@ async function resetAndSeedDummy() {
           youtubeUrl: creator.youtubeUrl,
           facebookUrl: creator.facebookUrl,
           threadsUrl: creator.threadsUrl,
+          linkedinUrl: creator.linkedinUrl,
           skills: creator.skills,
           image: creator.avatarUrl,
           coverImageUrl: creator.coverImageUrl,

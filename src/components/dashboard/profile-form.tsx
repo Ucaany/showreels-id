@@ -82,6 +82,7 @@ const schema = z.object({
   youtubeUrl: z.string().max(300, "URL terlalu panjang."),
   facebookUrl: z.string().max(300, "URL terlalu panjang."),
   threadsUrl: z.string().max(300, "URL terlalu panjang."),
+  linkedinUrl: z.string().max(300, "URL terlalu panjang."),
   customLinks: z
     .array(
       z.object({
@@ -233,6 +234,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
       youtubeUrl: user.youtubeUrl || "",
       facebookUrl: user.facebookUrl || "",
       threadsUrl: user.threadsUrl || "",
+      linkedinUrl: user.linkedinUrl || "",
       customLinks: normalizeCustomLinks(user.customLinks).map((link) => ({
         id: link.id,
         title: link.title,
@@ -304,6 +306,10 @@ export function ProfileForm({ user }: { user: DbUser }) {
   const watchedThreads = useWatch({
     control: form.control,
     name: "threadsUrl",
+  });
+  const watchedLinkedin = useWatch({
+    control: form.control,
+    name: "linkedinUrl",
   });
   const watchedCustomLinks = useWatch({
     control: form.control,
@@ -433,6 +439,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
       youtubeUrl: normalizeSocialUrl(values.youtubeUrl || ""),
       facebookUrl: normalizeSocialUrl(values.facebookUrl || ""),
       threadsUrl: normalizeSocialUrl(values.threadsUrl || ""),
+      linkedinUrl: normalizeSocialUrl(values.linkedinUrl || ""),
       avatarCropX: avatarCropValues.x,
       avatarCropY: avatarCropValues.y,
       avatarCropZoom: avatarCropValues.zoom,
@@ -550,6 +557,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
     watchedExperience,
     watchedFacebook,
     watchedInstagram,
+    watchedLinkedin,
     watchedName,
     watchedPhoneNumber,
     watchedRole,
@@ -562,8 +570,8 @@ export function ProfileForm({ user }: { user: DbUser }) {
   return (
     <>
       <div className="dashboard-profile-mobile grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="space-y-5">
-          <Card className="dashboard-profile-card overflow-hidden border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))] p-0">
+        <div className="dashboard-stack">
+          <Card className="dashboard-profile-card dashboard-panel overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))] p-0">
             <div className="border-b border-slate-200 px-4 py-4 sm:px-6 sm:py-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-4">
@@ -590,7 +598,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
               </div>
             </div>
 
-            <form onSubmit={onSubmit} className="space-y-5 px-4 py-4 sm:px-6 sm:py-5">
+            <form onSubmit={onSubmit} className="dashboard-stack px-4 py-4 sm:px-6 sm:py-5">
               <div className="grid gap-5 lg:grid-cols-2">
                 <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="mb-4 flex items-center gap-2">
@@ -1003,6 +1011,15 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       {...form.register("threadsUrl")}
                     />
                   </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      LinkedIn
+                    </label>
+                    <Input
+                      placeholder="linkedin.com/in/username"
+                      {...form.register("linkedinUrl")}
+                    />
+                  </div>
                   <div className="sm:col-span-2">
                     <label className="mb-2 block text-sm font-medium text-slate-700">
                       Skills
@@ -1181,8 +1198,8 @@ export function ProfileForm({ user }: { user: DbUser }) {
           </Card>
         </div>
 
-        <div className="space-y-5 xl:sticky xl:top-24 xl:h-fit">
-          <Card className="space-y-4 border-border bg-surface">
+        <div className="dashboard-stack xl:sticky xl:top-24 xl:h-fit">
+          <Card className="dashboard-panel space-y-4">
             <h2 className="font-display text-lg font-semibold text-slate-900">
               {dictionary.publicProfile}
             </h2>
@@ -1252,6 +1269,11 @@ export function ProfileForm({ user }: { user: DbUser }) {
                 {normalizeSocialUrl(watchedWebsiteUrl || user.websiteUrl || "") ||
                   "Belum diisi"}
               </p>
+              <p>
+                LinkedIn:{" "}
+                {normalizeSocialUrl(watchedLinkedin || user.linkedinUrl || "") ||
+                  "Belum diisi"}
+              </p>
             </div>
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -1288,6 +1310,9 @@ export function ProfileForm({ user }: { user: DbUser }) {
               )}
               threadsUrl={normalizeSocialUrl(
                 watchedThreads || user.threadsUrl || ""
+              )}
+              linkedinUrl={normalizeSocialUrl(
+                watchedLinkedin || user.linkedinUrl || ""
               )}
             />
           </Card>

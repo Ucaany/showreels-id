@@ -48,6 +48,7 @@ export interface UserProfile {
   youtubeUrl: string;
   facebookUrl: string;
   threadsUrl: string;
+  linkedinUrl: string;
   customLinks?: CustomLinkEntry[];
   skills: string[];
   profileVisibility: ProfileVisibility;

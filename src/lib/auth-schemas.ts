@@ -174,6 +174,7 @@ export const profileSchema = z.object({
   youtubeUrl: socialUrlSchema.default(""),
   facebookUrl: socialUrlSchema.default(""),
   threadsUrl: socialUrlSchema.default(""),
+  linkedinUrl: socialUrlSchema.default(""),
   customLinks: customLinksSchema,
   skills: z.array(z.string()).default([]),
   avatarCropX: cropPercentSchema,

@@ -1,0 +1,2 @@
+ALTER TABLE "users"
+ADD COLUMN IF NOT EXISTS "linkedin_url" text NOT NULL DEFAULT '';
