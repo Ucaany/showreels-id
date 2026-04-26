@@ -57,14 +57,9 @@ export function isLinkedinSchemaError(error: unknown) {
     return true;
   }
 
-  const mentionsColumn =
-    message.includes("linkedin_url") ||
-    message.includes('column "linkedin_url"') ||
-    message.includes("users.linkedin_url");
-
-  if (!mentionsColumn) {
-    return false;
+  if (message.includes("linkedin_url")) {
+    return true;
   }
 
-  return message.includes("does not exist");
+  return message.includes("column") && message.includes("does not exist");
 }
