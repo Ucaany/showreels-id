@@ -1,19 +1,18 @@
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
 import {
   createLinkItem,
   linkCreateSchema,
   normalizeOrder,
-  normalizeStoredLinks,
 } from "@/lib/link-builder";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
+import { buildLinkLockedJsonResponse, requireBuildLinkAccess } from "@/server/link-builder-access";
 import {
-  buildLinkLockedJsonResponse,
-  requireBuildLinkAccess,
-} from "@/server/link-builder-access";
+  getEditableLinks,
+  isLinkLimitReached,
+  saveLinkBuilderDraft,
+  validateLinkLimit,
+} from "@/server/link-builder-storage";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -35,7 +34,7 @@ export async function GET() {
     return forbiddenOwnerResponse();
   }
 
-  const links = normalizeStoredLinks(currentUser.customLinks);
+  const links = getEditableLinks(currentUser);
   const { entitlementState, allowed } = await requireBuildLinkAccess(currentUser.id);
 
   return NextResponse.json({
@@ -69,30 +68,28 @@ export async function POST(request: Request) {
     return buildLinkLockedJsonResponse();
   }
   const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
-  const existing = normalizeStoredLinks(currentUser.customLinks);
-  if (typeof linkBuilderMax === "number" && existing.length >= linkBuilderMax) {
+  const existing = getEditableLinks(currentUser);
+  if (parsed.data.enabled !== false && isLinkLimitReached(existing, linkBuilderMax)) {
     return NextResponse.json(
       {
-        error: `Batas link builder plan ${entitlementState.effectivePlan.planName.toUpperCase()} sudah tercapai (${linkBuilderMax} link).`,
-        code: "link_limit_exceeded",
+        error: `Batas ${linkBuilderMax} link tercapai. Upgrade ke Creator untuk menambahkan lebih banyak link dan fitur desain.`,
+        code: "LINK_LIMIT_REACHED",
+        maxLinks: linkBuilderMax,
       },
       { status: 403 }
     );
   }
 
   const nextLinks = normalizeOrder([...existing, createLinkItem(parsed.data, existing)]);
+  const limitState = validateLinkLimit(nextLinks, linkBuilderMax);
+  if (!limitState.ok) {
+    return NextResponse.json(limitState, { status: 403 });
+  }
 
-  const [updated] = await db
-    .update(users)
-    .set({
-      customLinks: nextLinks,
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, currentUser.id))
-    .returning({ customLinks: users.customLinks });
+  const savedLinks = await saveLinkBuilderDraft(currentUser.id, nextLinks);
 
   return NextResponse.json({
-    links: normalizeStoredLinks(updated?.customLinks ?? nextLinks),
-    status: "saved",
+    links: savedLinks,
+    status: "draft_saved",
   });
 }

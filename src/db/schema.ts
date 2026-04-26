@@ -14,12 +14,17 @@ import {
 
 export interface DbCustomLink {
   id: string;
+  type?: string;
   title: string;
   url: string;
+  value?: string;
   description?: string;
   platform?: string;
   badge?: string;
   thumbnailUrl?: string;
+  style?: string;
+  iconKey?: string;
+  iconUrl?: string;
   enabled: boolean;
   order: number;
 }
@@ -59,6 +64,11 @@ export const users = pgTable(
       .$type<DbCustomLink[]>()
       .notNull()
       .default(sql`'[]'::jsonb`),
+    linkBuilderDraft: jsonb("link_builder_draft")
+      .$type<DbCustomLink[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    linkBuilderPublishedAt: timestamp("link_builder_published_at", { mode: "date" }),
     profileVisibility: text("profile_visibility")
       .$type<"private" | "semi_private" | "public">()
       .notNull()

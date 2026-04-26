@@ -46,6 +46,8 @@ export async function POST(request: Request) {
     const status =
       result.code === "midtrans_not_configured"
         ? 412
+        : result.code === "same_plan_active"
+          ? 409
         : result.code === "invalid_billing_cycle"
           ? 400
         : result.code === "db_not_ready" || result.code === "billing_schema_missing"

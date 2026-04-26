@@ -1,18 +1,16 @@
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
 import {
   linkCreateSchema,
   normalizeOrder,
-  normalizeStoredLinks,
 } from "@/lib/link-builder";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
+import { buildLinkLockedJsonResponse, requireBuildLinkAccess } from "@/server/link-builder-access";
 import {
-  buildLinkLockedJsonResponse,
-  requireBuildLinkAccess,
-} from "@/server/link-builder-access";
+  getEditableLinks,
+  saveLinkBuilderDraft,
+  validateLinkLimit,
+} from "@/server/link-builder-storage";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -51,7 +49,7 @@ export async function PUT(
     );
   }
 
-  const currentLinks = normalizeStoredLinks(currentUser.customLinks);
+  const currentLinks = getEditableLinks(currentUser);
   const targetIndex = currentLinks.findIndex((link) => link.id === id);
   if (targetIndex < 0) {
     return NextResponse.json({ error: "Link tidak ditemukan." }, { status: 404 });
@@ -71,24 +69,23 @@ export async function PUT(
             badge: parsed.data.badge?.trim() || undefined,
             thumbnailUrl: parsed.data.thumbnailUrl || undefined,
             style: parsed.data.style?.trim() || undefined,
+            iconKey: parsed.data.iconKey?.trim() || undefined,
+            iconUrl: parsed.data.iconUrl || undefined,
             enabled: parsed.data.enabled !== false,
           }
         : link
     )
   );
+  const limitState = validateLinkLimit(nextLinks, access.entitlementState.entitlements.linkBuilderMax);
+  if (!limitState.ok) {
+    return NextResponse.json(limitState, { status: 403 });
+  }
 
-  const [updated] = await db
-    .update(users)
-    .set({
-      customLinks: nextLinks,
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, currentUser.id))
-    .returning({ customLinks: users.customLinks });
+  const savedLinks = await saveLinkBuilderDraft(currentUser.id, nextLinks);
 
   return NextResponse.json({
-    links: normalizeStoredLinks(updated?.customLinks ?? nextLinks),
-    status: "saved",
+    links: savedLinks,
+    status: "draft_saved",
   });
 }
 
@@ -109,24 +106,17 @@ export async function DELETE(
   }
 
   const { id } = await context.params;
-  const currentLinks = normalizeStoredLinks(currentUser.customLinks);
+  const currentLinks = getEditableLinks(currentUser);
   const nextLinks = normalizeOrder(currentLinks.filter((link) => link.id !== id));
 
   if (nextLinks.length === currentLinks.length) {
     return NextResponse.json({ error: "Link tidak ditemukan." }, { status: 404 });
   }
 
-  const [updated] = await db
-    .update(users)
-    .set({
-      customLinks: nextLinks,
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, currentUser.id))
-    .returning({ customLinks: users.customLinks });
+  const savedLinks = await saveLinkBuilderDraft(currentUser.id, nextLinks);
 
   return NextResponse.json({
-    links: normalizeStoredLinks(updated?.customLinks ?? nextLinks),
-    status: "saved",
+    links: savedLinks,
+    status: "draft_saved",
   });
 }

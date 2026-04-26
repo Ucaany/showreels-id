@@ -197,10 +197,10 @@ export function BillingPanel({
   useEffect(() => {
     if (searchParams.get("payment") !== "success") return;
     void showFeedbackAlert({
-      title: "Pembayaran diproses",
-      text: "Status paket sedang disinkronkan dari Midtrans.",
+      title: "Terima kasih sudah berlangganan",
+      text: "Paket kamu sudah aktif. Sekarang kamu bisa menggunakan fitur Showreels.id sesuai paket yang dipilih.",
       icon: "success",
-      timer: 1600,
+      confirmButtonText: "Masuk Dashboard",
     });
     const refreshTimer = window.setTimeout(() => {
       void handleRefresh();

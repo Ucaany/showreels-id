@@ -16,6 +16,8 @@ export interface CustomLinkItem {
   badge?: string;
   thumbnailUrl?: string;
   style?: string;
+  iconKey?: string;
+  iconUrl?: string;
   enabled: boolean;
   order: number;
 }
@@ -107,8 +109,10 @@ export function normalizeCustomLinks(
       const source = entry as Record<string, unknown>;
       const type = String(source.type || source.blockType || "link").trim().slice(0, 30);
       const title = String(source.title || "").trim().slice(0, MAX_LINK_TITLE_LENGTH);
-      const url = normalizeSocialUrl(String(source.url || source.value || ""));
-      if (!title || !url) {
+      const rawUrl = String(source.url || source.value || "").trim();
+      const url = normalizeSocialUrl(rawUrl);
+      const nonClickableBlock = ["divider", "text"].includes(type);
+      if (!title || (!url && !nonClickableBlock)) {
         return null;
       }
       const value = String(source.value || "").trim().slice(0, 500);
@@ -119,6 +123,8 @@ export function normalizeCustomLinks(
       const badge = String(source.badge || "").trim().slice(0, 30);
       const thumbnailUrl = normalizeSocialUrl(String(source.thumbnailUrl || ""));
       const style = String(source.style || "").trim().slice(0, 40);
+      const iconKey = String(source.iconKey || "").trim().slice(0, 40);
+      const iconUrl = normalizeSocialUrl(String(source.iconUrl || ""));
 
       const providedId = String(source.id || "").trim();
       const safeId =
@@ -139,7 +145,7 @@ export function normalizeCustomLinks(
         id,
         type: type || "link",
         title,
-        url,
+        url: url || "",
         enabled: source.enabled !== false,
         order,
       };
@@ -161,6 +167,12 @@ export function normalizeCustomLinks(
       }
       if (style) {
         nextItem.style = style;
+      }
+      if (iconKey) {
+        nextItem.iconKey = iconKey;
+      }
+      if (iconUrl) {
+        nextItem.iconUrl = iconUrl;
       }
 
       return nextItem;

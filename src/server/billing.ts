@@ -466,6 +466,19 @@ export async function createUpgradeTransaction(input: {
 
   try {
     const subscription = await getOrCreateSubscription(input.userId);
+    const activePlan = normalizeBillingPlanName(subscription.planName);
+    if (
+      subscription.status === "active" &&
+      amount > 0 &&
+      activePlan === normalizedTargetPlan
+    ) {
+      return {
+        ok: false as const,
+        code: "same_plan_active",
+        message:
+          "Paket ini sudah aktif. Kamu bisa perpanjang, membatalkan, atau memilih paket lain.",
+      };
+    }
 
     if (amount <= 0) {
       const [transaction] = await db
@@ -696,6 +709,14 @@ export async function handleMidtransWebhook(payload: {
     const mappedSubscriptionStatus = mapSubscriptionStatus(transactionStatus);
     const isPaid = mappedTransactionStatus === "paid";
     const normalizedTransactionPlan = normalizeBillingPlanName(transaction.planName);
+    const grossAmount = Number(payload.gross_amount ?? transaction.amount) || transaction.amount;
+
+    if (Math.round(grossAmount) !== Math.round(transaction.amount)) {
+      return {
+        ok: false as const,
+        message: "Nominal Midtrans tidak sesuai dengan invoice backend.",
+      };
+    }
 
     const [updatedTransaction] = await db
       .update(billingTransactions)
@@ -703,8 +724,7 @@ export async function handleMidtransWebhook(payload: {
         status: mappedTransactionStatus,
         paymentMethod: payload.payment_type || transaction.paymentMethod,
         currency: payload.currency || transaction.currency,
-        amount:
-          Number(payload.gross_amount ?? transaction.amount) || transaction.amount,
+        amount: grossAmount,
         paidAt: isPaid ? new Date() : transaction.paidAt,
         rawPayload: {
           ...(transaction.rawPayload || {}),

@@ -251,6 +251,21 @@ export function PricingSubscriptionPage({
   }, [canUseCreatorBilling, isLoggedIn, locale, loginHref, midtransReady]);
 
   const handleContinueCheckout = async () => {
+    if (
+      effectivePlan === selectedPlan &&
+      (subscriptionStatus === "active" || subscriptionStatus === "trial")
+    ) {
+      await showFeedbackAlert({
+        title: locale === "en" ? "Plan already active" : "Paket sudah aktif",
+        text:
+          locale === "en"
+            ? "You can renew, cancel, or switch to another plan from Billing."
+            : "Kamu bisa perpanjang, membatalkan, atau beralih ke paket lain dari Billing.",
+        icon: "info",
+      });
+      return;
+    }
+
     if (selectedPlan === "free") {
       if (!canUseCreatorBilling) {
         if (!isLoggedIn) {
@@ -328,13 +343,27 @@ export function PricingSubscriptionPage({
     if (selectedPlan === "free") {
       return;
     }
+    if (
+      effectivePlan === selectedPlan &&
+      (subscriptionStatus === "active" || subscriptionStatus === "trial")
+    ) {
+      return;
+    }
 
     autoCheckoutRef.current = true;
     const timer = window.setTimeout(() => {
       void createPaidTransaction(selectedPlan);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [autoCheckoutIntent, createPaidTransaction, isLoggedIn, isOwner, selectedPlan]);
+  }, [
+    autoCheckoutIntent,
+    createPaidTransaction,
+    effectivePlan,
+    isLoggedIn,
+    isOwner,
+    selectedPlan,
+    subscriptionStatus,
+  ]);
 
   return (
     <div className="min-h-screen bg-[#f6f4f2] pb-14 pt-10 sm:pb-20 sm:pt-14">
@@ -574,9 +603,20 @@ export function PricingSubscriptionPage({
                 </Button>
                 <Button
                   onClick={() => setFlowStep("confirmation")}
-                  disabled={loadingAction}
+                  disabled={
+                    loadingAction ||
+                    (effectivePlan === selectedPlan &&
+                      (subscriptionStatus === "active" || subscriptionStatus === "trial"))
+                  }
                 >
-                  {locale === "en" ? "Continue" : "Lanjutkan"}
+                  {effectivePlan === selectedPlan &&
+                  (subscriptionStatus === "active" || subscriptionStatus === "trial")
+                    ? locale === "en"
+                      ? "Current plan"
+                      : "Plan aktif"
+                    : locale === "en"
+                      ? "Continue"
+                      : "Lanjutkan"}
                 </Button>
               </div>
             </div>
@@ -682,60 +722,6 @@ export function PricingSubscriptionPage({
             </Card>
           ) : null}
 
-          <Card className="mt-6 border-[#dfd6d0] bg-[#fcfaf8] p-4 sm:p-6">
-            <h2 className="text-xl font-semibold text-[#201b18]">
-              {locale === "en" ? "Full capabilities by plan" : "Capability lengkap per plan"}
-            </h2>
-            <p className="mt-2 text-sm text-[#5f534c]">
-              {locale === "en"
-                ? "Every point below reflects current Showreels capabilities."
-                : "Seluruh poin di bawah menampilkan capability Showreels saat ini."}
-            </p>
-            <div className="mt-4 grid gap-3 lg:grid-cols-3">
-              {plans.map((plan) => (
-                <div
-                  key={`full-${plan.id}`}
-                  className={cn(
-                    "rounded-2xl border p-4",
-                    plan.featured
-                      ? "border-[#bfd6ff] bg-[#f2f7ff]"
-                      : "border-[#e5dbd5] bg-white"
-                  )}
-                >
-                  <p className="text-sm font-semibold text-[#201b18]">{plan.name}</p>
-                  <p className="mt-1 text-lg font-semibold text-[#2f73ff]">{toIdr(plan.price)}</p>
-                  <ul className="mt-3 space-y-2 text-sm">
-                    {plan.points.map((point) => {
-                      const unavailable = point.status === "unavailable";
-                      const comingSoon = point.status === "coming_soon";
-                      return (
-                        <li key={`full-point-${plan.id}-${point.id}`} className="flex items-start gap-2">
-                          <span
-                            className={cn(
-                              "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ring-1",
-                              unavailable
-                                ? "bg-[#f0eae6] text-[#8c7f78] ring-[#e5d7cf]"
-                                : "bg-emerald-50 text-emerald-600 ring-emerald-200"
-                            )}
-                          >
-                            {unavailable ? <X className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
-                          </span>
-                          <span className={cn(unavailable ? "text-[#8e7f77] line-through" : "text-[#2f2723]")}>
-                            {point.label}
-                            {comingSoon ? (
-                              <span className="ml-2 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
-                                {comingSoonLabel}
-                              </span>
-                            ) : null}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </Card>
         </section>
       </div>
     </div>

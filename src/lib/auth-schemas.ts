@@ -86,6 +86,14 @@ const customLinkSchema = z.object({
     .transform((value) => normalizeSocialUrl(value))
     .optional()
     .default(""),
+  iconKey: z.string().trim().max(40, "Icon terlalu panjang.").optional().default(""),
+  iconUrl: z
+    .string()
+    .trim()
+    .max(300, "URL icon terlalu panjang.")
+    .transform((value) => normalizeSocialUrl(value))
+    .optional()
+    .default(""),
   enabled: z.boolean().default(true),
   order: z.coerce.number().int().min(0).max(99).default(0),
 });
@@ -178,7 +186,7 @@ export const profileSchema = z.object({
   facebookUrl: socialUrlSchema.default(""),
   threadsUrl: socialUrlSchema.default(""),
   linkedinUrl: socialUrlSchema.default(""),
-  customLinks: customLinksSchema,
+  customLinks: customLinksSchema.optional(),
   skills: z.array(z.string()).default([]),
   avatarCropX: cropPercentSchema,
   avatarCropY: cropPercentSchema,

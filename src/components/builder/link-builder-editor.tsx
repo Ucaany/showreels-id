@@ -22,7 +22,9 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   ArrowDown,
   ArrowUp,
+  ChevronDown,
   Copy,
+  Download,
   Eye,
   ExternalLink,
   GripVertical,
@@ -34,11 +36,11 @@ import {
   PlayCircle,
   PencilLine,
   Plus,
-  QrCode,
   Rocket,
   Save,
   Search,
   Share2,
+  Sparkles,
   Smartphone,
   Trash2,
   Type,
@@ -100,6 +102,8 @@ type LinkBuilderUser = {
   coverCropY: number;
   coverCropZoom: number;
   customLinks: unknown;
+  linkBuilderDraft?: unknown;
+  linkBuilderPublishedAt?: Date | string | null;
 };
 
 type EditableLink = CustomLinkItem & {
@@ -114,6 +118,7 @@ function SortableLinkItem({
   total,
   onMove,
   onDelete,
+  onDuplicate,
   onToggle,
   onChange,
   onSave,
@@ -123,6 +128,7 @@ function SortableLinkItem({
   total: number;
   onMove: (index: number, delta: -1 | 1) => void;
   onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
   onToggle: (id: string, enabled: boolean) => void;
   onChange: (id: string, patch: Partial<EditableLink>) => void;
   onSave: (id: string) => void;
@@ -181,6 +187,10 @@ function SortableLinkItem({
           <Button size="sm" variant="secondary" onClick={() => onSave(link.id)}>
             <Save className="h-3.5 w-3.5" />
             Simpan
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => onDuplicate(link.id)}>
+            <Copy className="h-3.5 w-3.5" />
+            Duplicate
           </Button>
           <Button size="sm" variant="danger" onClick={() => onDelete(link.id)}>
             <Trash2 className="h-3.5 w-3.5" />
@@ -274,13 +284,17 @@ export function LinkBuilderEditor({
   const [mobileTab, setMobileTab] = useState<MobileTab>("edit");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("mobile");
   const [isAddBlockOpen, setIsAddBlockOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [blockSearch, setBlockSearch] = useState("");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [isSavingNow, setIsSavingNow] = useState(false);
   const [links, setLinks] = useState<EditableLink[]>(() =>
-    normalizeCustomLinks(user.customLinks, linkBuilderMax ?? MAX_CUSTOM_LINKS).map((link) => ({
-      ...link,
-    }))
+    normalizeCustomLinks(
+      normalizeCustomLinks(user.linkBuilderDraft, MAX_CUSTOM_LINKS).length > 0
+        ? user.linkBuilderDraft
+        : user.customLinks,
+      MAX_CUSTOM_LINKS
+    ).map((link) => ({ ...link }))
   );
   const [newLink, setNewLink] = useState({
     type: "link",
@@ -291,6 +305,7 @@ export function LinkBuilderEditor({
     platform: "",
     badge: "",
     style: "card",
+    iconKey: "link",
   });
   const [linkSearch, setLinkSearch] = useState("");
   const [profileFields, setProfileFields] = useState({
@@ -315,8 +330,12 @@ export function LinkBuilderEditor({
     description: "",
     skills: "",
   });
+  const [bioSuggestions, setBioSuggestions] = useState<string[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const linkAutoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasMountedRef = useRef(false);
+  const linksMountedRef = useRef(false);
   const serializedExperience = useMemo(
     () => serializeExperiencePayload(experienceItems),
     [experienceItems]
@@ -333,7 +352,7 @@ export function LinkBuilderEditor({
     const normalizedUsername = sanitizeUsername(profileFields.username);
     if (!isUsernameFormatValid(normalizedUsername) || isReservedUsername(normalizedUsername)) {
       setSaveStatus("error");
-      return;
+      return false;
     }
 
     if (serializedExperience.length > 700) {
@@ -343,7 +362,7 @@ export function LinkBuilderEditor({
         text: "Ringkas item experience agar total maksimal 700 karakter.",
         icon: "error",
       });
-      return;
+      return false;
     }
 
     setIsSavingNow(true);
@@ -368,10 +387,6 @@ export function LinkBuilderEditor({
       facebookUrl: normalizeSocialUrl(profileFields.facebookUrl || ""),
       threadsUrl: normalizeSocialUrl(profileFields.threadsUrl || ""),
       linkedinUrl: normalizeSocialUrl(profileFields.linkedinUrl || ""),
-      customLinks: links.map((link, index) => ({
-        ...link,
-        order: index,
-      })),
       skills: user.skills || [],
       avatarCropX: user.avatarCropX || 0,
       avatarCropY: user.avatarCropY || 0,
@@ -391,11 +406,12 @@ export function LinkBuilderEditor({
 
     if (!response.ok) {
       setSaveStatus("error");
-      return;
+      return false;
     }
 
     setSaveStatus("saved");
     window.setTimeout(() => setSaveStatus("idle"), 1600);
+    return true;
   };
 
   useEffect(() => {
@@ -432,6 +448,53 @@ export function LinkBuilderEditor({
     profileFields.threadsUrl,
     profileFields.linkedinUrl,
   ]);
+
+  useEffect(() => {
+    if (!linksMountedRef.current) {
+      linksMountedRef.current = true;
+      return;
+    }
+
+    if (!links.some((link) => link.isDirty)) {
+      return;
+    }
+
+    if (linkAutoSaveTimerRef.current) {
+      clearTimeout(linkAutoSaveTimerRef.current);
+    }
+
+    linkAutoSaveTimerRef.current = setTimeout(async () => {
+      setSaveStatus("saving");
+      const response = await fetch("/api/link-page/draft", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          links: links.map((link, order) => ({ ...link, order })),
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { links?: EditableLink[]; code?: string; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.links) {
+        setSaveStatus("error");
+        if (payload?.code === "LINK_LIMIT_REACHED") {
+          await showFreeLimitModal();
+        }
+        return;
+      }
+
+      setLinks(payload.links.map((link) => ({ ...link, isDirty: false })));
+      setSaveStatus("saved");
+      window.setTimeout(() => setSaveStatus("idle"), 1600);
+    }, 900);
+
+    return () => {
+      if (linkAutoSaveTimerRef.current) {
+        clearTimeout(linkAutoSaveTimerRef.current);
+      }
+    };
+  }, [links]);
 
   const handleAddExperience = () => {
     if (
@@ -479,11 +542,19 @@ export function LinkBuilderEditor({
   const handleAddLink = async () => {
     const title = newLink.title.trim();
     const url = normalizeSocialUrl(newLink.url);
+    const urlRequired = !["divider", "text"].includes(newLink.type);
 
-    if (!title || !url) {
+    if (isLinkLimitReached) {
+      await showFreeLimitModal();
+      return false;
+    }
+
+    if (!title || (urlRequired && !url)) {
       await showFeedbackAlert({
         title: "Data link belum lengkap",
-        text: "Isi judul dan URL valid terlebih dahulu.",
+        text: urlRequired
+          ? "Isi judul dan URL valid terlebih dahulu."
+          : "Isi judul block terlebih dahulu.",
         icon: "error",
       });
       return;
@@ -501,13 +572,18 @@ export function LinkBuilderEditor({
         platform: newLink.platform,
         badge: newLink.badge,
         style: newLink.style,
+        iconKey: newLink.iconKey,
       }),
     });
 
     if (!response.ok) {
       const payload = (await response.json().catch(() => null)) as
-        | { error?: string }
+        | { error?: string; code?: string }
         | null;
+      if (payload?.code === "LINK_LIMIT_REACHED") {
+        await showFreeLimitModal();
+        return;
+      }
       await showFeedbackAlert({
         title: "Gagal menambahkan link",
         text: payload?.error || "Coba ulang beberapa saat lagi.",
@@ -527,6 +603,7 @@ export function LinkBuilderEditor({
       platform: "",
       badge: "",
       style: "card",
+      iconKey: "link",
     });
     setBlockSearch("");
     setIsAddBlockOpen(false);
@@ -570,6 +647,51 @@ export function LinkBuilderEditor({
     });
   };
 
+  const handleDuplicateLink = async (id: string) => {
+    if (isLinkLimitReached) {
+      await showFreeLimitModal();
+      return;
+    }
+
+    const source = links.find((link) => link.id === id);
+    if (!source) return;
+
+    const nextLinks = [
+      ...links,
+      {
+        ...source,
+        id: crypto.randomUUID(),
+        title: `${source.title} Copy`.slice(0, MAX_LINK_TITLE_LENGTH),
+        order: links.length,
+        isDirty: false,
+      },
+    ].map((link, order) => ({ ...link, order }));
+
+    const response = await fetch("/api/link-page/draft", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ links: nextLinks }),
+    });
+    const payload = (await response.json().catch(() => null)) as
+      | { links?: EditableLink[]; code?: string; error?: string }
+      | null;
+
+    if (!response.ok || !payload?.links) {
+      if (payload?.code === "LINK_LIMIT_REACHED") {
+        await showFreeLimitModal();
+        return;
+      }
+      await showFeedbackAlert({
+        title: "Gagal duplicate block",
+        text: payload?.error || "Coba ulang beberapa saat.",
+        icon: "error",
+      });
+      return;
+    }
+
+    setLinks(payload.links.map((link) => ({ ...link, isDirty: false })));
+  };
+
   const handleToggleLink = async (id: string, enabled: boolean) => {
     setLinks((prev) => prev.map((link) => (link.id === id ? { ...link, enabled } : link)));
 
@@ -580,9 +702,16 @@ export function LinkBuilderEditor({
     });
 
     if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as
+        | { code?: string; error?: string }
+        | null;
+      if (payload?.code === "LINK_LIMIT_REACHED") {
+        await showFreeLimitModal();
+        return;
+      }
       await showFeedbackAlert({
         title: "Gagal mengubah status link",
-        text: "Coba ulang beberapa saat.",
+        text: payload?.error || "Coba ulang beberapa saat.",
         icon: "error",
       });
       return;
@@ -609,6 +738,8 @@ export function LinkBuilderEditor({
         badge: current.badge || "",
         thumbnailUrl: current.thumbnailUrl || "",
         style: current.style || "card",
+        iconKey: current.iconKey || current.platform?.toLowerCase().replace(/\s+/g, "") || "link",
+        iconUrl: current.iconUrl || "",
         enabled: current.enabled !== false,
       }),
     });
@@ -699,7 +830,8 @@ export function LinkBuilderEditor({
     [experienceItems]
   );
   const isLinkLimitReached =
-    typeof linkBuilderMax === "number" && links.length >= linkBuilderMax;
+    typeof linkBuilderMax === "number" &&
+    links.filter((item) => item.enabled !== false).length >= linkBuilderMax;
   const maxLinksLabel =
     typeof linkBuilderMax === "number" ? String(linkBuilderMax) : "Unlimited";
   const filteredLinks = useMemo(() => {
@@ -714,6 +846,8 @@ export function LinkBuilderEditor({
     );
   }, [links, linkSearch]);
   const publicPath = `/creator/${sanitizeUsername(profileFields.username || "creator")}`;
+  const absolutePublicUrl =
+    typeof window === "undefined" ? publicPath : `${window.location.origin}${publicPath}`;
   const portfolioPath = `${publicPath}/portfolio`;
   const quickBlockOptions = [
     { key: "link", type: "link", category: "Basic", label: "Link", helper: "Tambahkan URL", icon: Link2 },
@@ -723,6 +857,10 @@ export function LinkBuilderEditor({
     { key: "youtube", type: "youtube", category: "Media", label: "YouTube", helper: "Embed video via URL", icon: PlayCircle },
     { key: "spotify", type: "spotify", category: "Social", label: "Spotify", helper: "Embed musik via URL", icon: Music2 },
     { key: "divider", type: "divider", category: "Basic", label: "Divider", helper: "Garis pemisah berbentuk block", icon: Minus },
+    { key: "shopee", type: "commerce", category: "Commerce", label: "Shopee", helper: "Link toko atau produk", icon: Link2 },
+    { key: "tokopedia", type: "commerce", category: "Commerce", label: "Tokopedia", helper: "Link toko atau produk", icon: Link2 },
+    { key: "tiktokshop", type: "commerce", category: "Commerce", label: "TikTok Shop", helper: "Link produk TikTok Shop", icon: Link2 },
+    { key: "whatsapp", type: "commerce", category: "Commerce", label: "WhatsApp Chat", helper: "Chat order cepat", icon: Link2 },
   ] as const;
   const filteredQuickBlockOptions = quickBlockOptions.filter((item) => {
     const keyword = blockSearch.trim().toLowerCase();
@@ -730,12 +868,25 @@ export function LinkBuilderEditor({
     return `${item.label} ${item.helper}`.toLowerCase().includes(keyword);
   });
 
+  async function showFreeLimitModal() {
+    const confirmed = await confirmFeedbackAction({
+      title: "Batas 5 link tercapai",
+      text: "Upgrade ke Creator untuk menambahkan lebih banyak link dan fitur desain.",
+      confirmButtonText: "Upgrade ke Creator",
+      cancelButtonText: "Nanti dulu",
+    });
+    if (confirmed) {
+      window.location.assign("/payment?plan=creator&intent=checkout");
+    }
+  }
+
   const openAddBlockModal = (option?: (typeof quickBlockOptions)[number]) => {
     if (option) {
       setNewLink((prev) => ({
         ...prev,
         type: option.type,
         platform: option.label === "Portfolio" ? "Portfolio Video" : option.label,
+        iconKey: option.key,
         title:
           prev.title || (option.label === "Portfolio" ? "Lihat Portfolio Video" : option.label),
         url: prev.url || (option.label === "Portfolio" ? portfolioPath : prev.url),
@@ -746,7 +897,7 @@ export function LinkBuilderEditor({
   };
 
   const handleCopyPublicLink = async () => {
-    await navigator.clipboard.writeText(`${window.location.origin}${publicPath}`);
+    await navigator.clipboard.writeText(absolutePublicUrl);
     await showFeedbackAlert({
       title: "Link profile berhasil disalin",
       icon: "success",
@@ -755,13 +906,75 @@ export function LinkBuilderEditor({
   };
 
   const handlePublish = async () => {
-    await saveProfileNow();
+    const profileSaved = await saveProfileNow();
+    if (profileSaved === false) return;
+    setIsSavingNow(true);
+    const response = await fetch("/api/link-page/publish", { method: "POST" });
+    const payload = (await response.json().catch(() => null)) as
+      | { links?: EditableLink[]; error?: string; code?: string; message?: string }
+      | null;
+    setIsSavingNow(false);
+
+    if (!response.ok || !payload?.links) {
+      if (payload?.code === "LINK_LIMIT_REACHED") {
+        await showFreeLimitModal();
+        return;
+      }
+      await showFeedbackAlert({
+        title: "Publish gagal",
+        text: payload?.error || payload?.message || "Coba ulang beberapa saat lagi.",
+        icon: "error",
+      });
+      return;
+    }
+
+    setLinks(payload.links.map((link) => ({ ...link, isDirty: false })));
     await showFeedbackAlert({
       title: "Build Link dipublish",
-      text: "Block aktif, profil, dan preview publik sudah diperbarui.",
+      text: "Draft kamu sekarang tampil di halaman publik.",
       icon: "success",
       timer: 1400,
     });
+  };
+
+  const handleGenerateBio = async () => {
+    if (!profileFields.role.trim() && experienceItems.length === 0) {
+      await showFeedbackAlert({
+        title: "Lengkapi role atau experience",
+        text: "Isi role/profesi atau experience dulu agar hasil bio lebih relevan.",
+        icon: "info",
+      });
+      return;
+    }
+
+    setAiLoading(true);
+    const response = await fetch("/api/ai/generate-bio", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        display_name: profileFields.fullName,
+        role: profileFields.role,
+        experience: experienceItems.map((item) =>
+          [item.title, item.organization, item.description].filter(Boolean).join(" - ")
+        ),
+        skills: user.skills || [],
+      }),
+    });
+    const payload = (await response.json().catch(() => null)) as
+      | { suggestions?: string[]; error?: string }
+      | null;
+    setAiLoading(false);
+
+    if (!response.ok || !payload?.suggestions?.length) {
+      await showFeedbackAlert({
+        title: "Gagal membuat bio",
+        text: payload?.error || "Coba ulang beberapa saat.",
+        icon: "error",
+      });
+      return;
+    }
+
+    setBioSuggestions(payload.suggestions);
   };
 
   return (
@@ -782,24 +995,6 @@ export function LinkBuilderEditor({
               <span className="inline-flex max-w-full items-center rounded-full border border-[#d4e3fb] bg-[#edf4ff] px-3 py-1 text-xs font-semibold text-[#2f73ff]">
                 {publicPath}
               </span>
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handleCopyPublicLink}
-                className="dashboard-tap-target inline-flex h-8 items-center justify-center rounded-lg border border-[#d6e2f7] bg-white px-2.5 text-xs font-semibold text-[#32558a] hover:bg-[#f6faff]"
-              >
-                <Copy className="mr-1 h-3.5 w-3.5" />
-                Copy
-              </button>
-              <Link
-                href={publicPath}
-                target="_blank"
-                className="dashboard-tap-target inline-flex h-8 items-center justify-center rounded-lg border border-[#d6e2f7] bg-white px-2.5 text-xs font-semibold text-[#32558a] hover:bg-[#f6faff]"
-              >
-                <ExternalLink className="mr-1 h-3.5 w-3.5" />
-                Open
-              </Link>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -822,19 +1017,10 @@ export function LinkBuilderEditor({
               size="sm"
               variant="secondary"
               className="h-9 px-3 text-xs font-semibold"
-              onClick={handleCopyPublicLink}
+              onClick={() => setIsShareOpen(true)}
             >
               <Share2 className="h-4 w-4" />
               Share
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="h-9 px-3 text-xs font-semibold"
-              onClick={handleCopyPublicLink}
-            >
-              <QrCode className="h-4 w-4" />
-              QR
             </Button>
             <div className="rounded-full border border-[#d8ccc4] bg-white px-3 py-2 text-xs font-semibold text-[#5d5049]">
               {saveStatus === "saving"
@@ -879,9 +1065,21 @@ export function LinkBuilderEditor({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
         <div className={`${mobileTab === "edit" ? "block" : "hidden"} space-y-4 md:block`}>
           <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <PencilLine className="h-4 w-4 text-[#2f73ff]" />
-              <h2 className="text-lg font-semibold text-[#201b18]">Bio & Experience</h2>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <PencilLine className="h-4 w-4 text-[#2f73ff]" />
+                <h2 className="text-lg font-semibold text-[#201b18]">Bio & Experience</h2>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={handleGenerateBio}
+                disabled={aiLoading}
+              >
+                <Sparkles className="h-4 w-4" />
+                {aiLoading ? "Membuat bio..." : "Generate with AI"}
+              </Button>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
@@ -924,18 +1122,41 @@ export function LinkBuilderEditor({
                 placeholder="Ceritakan profil singkat kamu."
               />
             </div>
-
-            <div className="mt-3 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-[#3f5f93]">
-                  Experience
-                </label>
-                <span className="text-xs font-medium text-[#5b7198]">
-                  {serializedExperience.length}/700
-                </span>
+            {bioSuggestions.length > 0 ? (
+              <div className="mt-3 grid gap-2">
+                {bioSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() =>
+                      setProfileFields((prev) => ({
+                        ...prev,
+                        bio: suggestion.slice(0, 240),
+                      }))
+                    }
+                    className="rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] px-3 py-2 text-left text-sm text-[#244064] transition hover:border-[#2f73ff]"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
               </div>
+            ) : null}
 
-              <div className="grid gap-2 rounded-xl border border-dashed border-[#c9dbf6] bg-white p-3">
+            <details
+              className="mt-3 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3"
+              open={experienceItems.length === 0}
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#3f5f93]">
+                  Experience ({experienceItems.length})
+                </span>
+                <span className="inline-flex items-center gap-2 text-xs font-medium text-[#5b7198]">
+                  {serializedExperience.length}/700
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </span>
+              </summary>
+
+              <div className="mt-3 grid gap-2 rounded-xl border border-dashed border-[#c9dbf6] bg-white p-3">
                 <Input
                   value={newExperience.title}
                   onChange={(event) =>
@@ -1065,9 +1286,16 @@ export function LinkBuilderEditor({
                   ))
                 )}
               </div>
-            </div>
+            </details>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <details className="mt-4 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#3f5f93]">
+                  Social Links
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 text-[#5b7198]" />
+              </summary>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Input
                 value={profileFields.websiteUrl}
                 onBlur={(event) =>
@@ -1133,7 +1361,8 @@ export function LinkBuilderEditor({
                 }
                 placeholder="LinkedIn"
               />
-            </div>
+              </div>
+            </details>
           </Card>
 
           <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
@@ -1149,8 +1378,7 @@ export function LinkBuilderEditor({
               <Button
                 size="sm"
                 className="bg-[#2f73ff] hover:bg-[#225fe0]"
-                onClick={() => openAddBlockModal()}
-                disabled={isLinkLimitReached}
+                onClick={() => (isLinkLimitReached ? void showFreeLimitModal() : openAddBlockModal())}
               >
                 <Plus className="h-4 w-4" />
                 Tambah Block
@@ -1212,6 +1440,7 @@ export function LinkBuilderEditor({
                           total={links.length}
                           onMove={handleLocalMove}
                           onDelete={handleDeleteLink}
+                          onDuplicate={handleDuplicateLink}
                           onToggle={handleToggleLink}
                           onSave={handleSaveLink}
                           onChange={(id, patch) =>
@@ -1274,9 +1503,9 @@ export function LinkBuilderEditor({
                   deviceMode === "desktop" ? "max-w-[380px]" : "max-w-[340px]"
                 }`}
               >
-                <div className="relative rounded-[42px] border-[10px] border-[#0c121d] bg-[#111827] p-3 shadow-[0_24px_48px_rgba(16,29,55,0.3)]">
-                  <div className="absolute left-1/2 top-2 h-6 w-32 -translate-x-1/2 rounded-full bg-[#05080d]" />
-                  <div className="rounded-[30px] bg-[#f8fbff] px-5 pb-6 pt-12 text-center">
+                <div className="relative rounded-[36px] border-[7px] border-[#0c121d] bg-[#111827] p-2 shadow-[0_24px_48px_rgba(16,29,55,0.3)]">
+                  <div className="absolute left-1/2 top-1.5 h-4 w-24 -translate-x-1/2 rounded-full bg-[#05080d]" />
+                  <div className="h-[620px] overflow-y-auto rounded-[28px] bg-[#f8fbff] px-5 pb-6 pt-12 text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-[#2f73ff] to-[#5b8dff] text-2xl font-semibold text-white shadow">
                       {(profileFields.fullName || "C").slice(0, 1).toUpperCase()}
                     </div>
@@ -1292,15 +1521,28 @@ export function LinkBuilderEditor({
                           Belum ada link aktif.
                         </p>
                       ) : (
-                        previewLinks.slice(0, 4).map((link) => (
-                          <div
-                            key={link.id}
-                            className="flex items-center gap-2 rounded-xl border border-[#dce7f8] bg-white px-3 py-2"
-                          >
-                            <span className="h-4 w-4 rounded-[5px] bg-[#5f6cff]" />
-                            <p className="truncate text-sm font-medium text-[#1f2a44]">{link.title}</p>
-                          </div>
-                        ))
+                        previewLinks.map((link) =>
+                          link.type === "divider" ? (
+                            <div
+                              key={link.id}
+                              className={`my-3 border-[#cfe0fa] ${
+                                link.style === "dashed"
+                                  ? "border-t border-dashed"
+                                  : link.style === "solid"
+                                    ? "border-t-2"
+                                    : "border-t"
+                              }`}
+                            />
+                          ) : (
+                            <div
+                              key={link.id}
+                              className="flex items-center gap-2 rounded-xl border border-[#dce7f8] bg-white px-3 py-2"
+                            >
+                              <span className="h-4 w-4 rounded-[5px] bg-[#5f6cff]" />
+                              <p className="truncate text-sm font-medium text-[#1f2a44]">{link.title}</p>
+                            </div>
+                          )
+                        )
                       )}
                     </div>
                     {previewExperiences.length > 0 ? (
@@ -1321,31 +1563,21 @@ export function LinkBuilderEditor({
                 <Link2 className="mr-1.5 h-3.5 w-3.5" />
                 {publicPath}
               </span>
-              <Button size="sm" variant="secondary" onClick={handleCopyPublicLink}>
-                <Copy className="h-4 w-4" />
-                Copy
-              </Button>
-              <Link href={publicPath} target="_blank">
-                <Button size="sm" variant="secondary">
-                  <ExternalLink className="h-4 w-4" />
-                  Open
-                </Button>
-              </Link>
             </div>
           </Card>
         </div>
       </div>
 
       {isAddBlockOpen ? (
-        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-[#0f2347]/55 p-4">
+        <div className="fixed inset-0 z-[95] flex items-end justify-center bg-[#0f2347]/55 p-2 sm:items-center sm:p-4">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
             aria-label="Close add block modal backdrop"
             onClick={() => setIsAddBlockOpen(false)}
           />
-          <div className="relative z-[96] w-full max-w-[860px] rounded-[1.4rem] border border-[#c8d9f4] bg-white p-4 shadow-xl sm:p-5">
-            <div className="flex items-start justify-between gap-3">
+          <div className="relative z-[96] max-h-[88vh] w-full max-w-[860px] overflow-hidden rounded-t-[1.4rem] border border-[#c8d9f4] bg-white shadow-xl sm:rounded-[1.4rem]">
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[#d6e2f7] bg-white p-4 sm:p-5">
               <h3 className="text-2xl font-semibold text-[#1a2b48]">Add a block</h3>
               <button
                 type="button"
@@ -1357,7 +1589,8 @@ export function LinkBuilderEditor({
               </button>
             </div>
 
-            <div className="relative mt-4">
+            <div className="max-h-[calc(88vh-76px)] overflow-y-auto p-4 sm:p-5">
+            <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa2c8]" />
               <Input
                 value={blockSearch}
@@ -1423,6 +1656,46 @@ export function LinkBuilderEditor({
                   onChange={(event) => setNewLink((prev) => ({ ...prev, badge: event.target.value }))}
                   placeholder="Badge (opsional)"
                 />
+                <select
+                  value={newLink.iconKey}
+                  onChange={(event) =>
+                    setNewLink((prev) => ({ ...prev, iconKey: event.target.value }))
+                  }
+                  className="h-11 rounded-xl border border-[#d6e2f7] bg-white px-3 text-sm text-[#1f2a44]"
+                >
+                  {[
+                    "link",
+                    "website",
+                    "instagram",
+                    "tiktok",
+                    "youtube",
+                    "facebook",
+                    "threads",
+                    "x",
+                    "linkedin",
+                    "whatsapp",
+                    "telegram",
+                    "discord",
+                    "spotify",
+                    "github",
+                    "gdrive",
+                    "maps",
+                    "shopee",
+                    "tokopedia",
+                    "tiktokshop",
+                    "email",
+                    "phone",
+                    "portfolio",
+                    "video",
+                    "divider",
+                    "image",
+                    "text",
+                  ].map((icon) => (
+                    <option key={icon} value={icon}>
+                      {icon}
+                    </option>
+                  ))}
+                </select>
                 <div className="sm:col-span-2">
                   <Textarea
                     value={newLink.description}
@@ -1449,11 +1722,115 @@ export function LinkBuilderEditor({
                   type="button"
                   className="h-9 bg-[#2f73ff] px-3 text-xs font-semibold hover:bg-[#225fe0]"
                   onClick={handleAddLink}
-                  disabled={isLinkLimitReached}
                 >
                   <Plus className="h-4 w-4" />
                   Tambah Block
                 </Button>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isShareOpen ? (
+        <div className="fixed inset-0 z-[98] flex items-end justify-center bg-[#0f2347]/55 p-2 sm:items-center sm:p-4">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label="Close share modal backdrop"
+            onClick={() => setIsShareOpen(false)}
+          />
+          <div className="relative z-[99] max-h-[88vh] w-full max-w-[560px] overflow-hidden rounded-t-[1.4rem] border border-[#c8d9f4] bg-white shadow-xl sm:rounded-[1.4rem]">
+            <div className="flex items-start justify-between gap-3 border-b border-[#d6e2f7] bg-white p-4">
+              <div>
+                <h3 className="text-xl font-semibold text-[#142033]">Share Build Link</h3>
+                <p className="text-xs text-[#6078a2]">Copy, social share, dan QR disatukan di sini.</p>
+              </div>
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#cfdcf2] text-[#44608d] hover:bg-[#eff5ff]"
+                onClick={() => setIsShareOpen(false)}
+                aria-label="Close share modal"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-[calc(88vh-76px)] overflow-y-auto p-4">
+              <div className="rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3">
+                <p className="truncate text-sm font-semibold text-[#142033]">{absolutePublicUrl}</p>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  <Button type="button" size="sm" onClick={handleCopyPublicLink}>
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
+                  <Link href={publicPath} target="_blank">
+                    <Button type="button" size="sm" variant="secondary" className="w-full">
+                      <ExternalLink className="h-4 w-4" />
+                      Open
+                    </Button>
+                  </Link>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={async () => {
+                      if (navigator.share) {
+                        await navigator.share({
+                          title: profileFields.fullName || "Showreels",
+                          url: absolutePublicUrl,
+                        });
+                      } else {
+                        await handleCopyPublicLink();
+                      }
+                    }}
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Native
+                  </Button>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-[180px_1fr]">
+                <div className="rounded-2xl border border-[#d6e2f7] bg-white p-3 text-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(
+                      absolutePublicUrl
+                    )}`}
+                    alt="QR code"
+                    className="mx-auto h-36 w-36 rounded-xl"
+                  />
+                  <a
+                    href={`https://api.qrserver.com/v1/create-qr-code/?size=640x640&data=${encodeURIComponent(
+                      absolutePublicUrl
+                    )}`}
+                    download="showreels-qr.png"
+                    className="mt-3 inline-flex h-9 items-center justify-center rounded-xl border border-[#d6e2f7] bg-[#f7fbff] px-3 text-xs font-semibold text-[#2f73ff]"
+                  >
+                    <Download className="mr-1 h-4 w-4" />
+                    Download QR
+                  </a>
+                </div>
+                <div className="grid gap-2">
+                  {[
+                    ["WhatsApp", `https://wa.me/?text=${encodeURIComponent(absolutePublicUrl)}`],
+                    ["Telegram", `https://t.me/share/url?url=${encodeURIComponent(absolutePublicUrl)}`],
+                    ["Facebook", `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(absolutePublicUrl)}`],
+                    ["X/Twitter", `https://twitter.com/intent/tweet?url=${encodeURIComponent(absolutePublicUrl)}`],
+                    ["LinkedIn", `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(absolutePublicUrl)}`],
+                  ].map(([label, href]) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#d6e2f7] bg-white px-3 text-sm font-semibold text-[#244064] hover:border-[#2f73ff] hover:bg-[#f7fbff]"
+                    >
+                      <Share2 className="h-4 w-4 text-[#2f73ff]" />
+                      {label}
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1461,9 +1838,33 @@ export function LinkBuilderEditor({
       ) : null}
 
       <div className="fixed inset-x-0 bottom-3 z-20 px-3 md:hidden">
-        <Button className="w-full" onClick={saveProfileNow} disabled={isSavingNow}>
-          {isSavingNow ? "Menyimpan..." : "Simpan Sekarang"}
-        </Button>
+        <div className="mx-auto grid max-w-sm grid-cols-3 gap-2 rounded-[1.25rem] border border-[#cfe0ff] bg-white/95 p-2 shadow-[0_18px_42px_rgba(24,58,115,0.22)] backdrop-blur">
+          <button
+            type="button"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#edf4ff] text-[#2f73ff]"
+            aria-label="Preview"
+            onClick={() => setMobileTab("preview")}
+          >
+            <Eye className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#2f73ff] text-white"
+            aria-label="Publish"
+            onClick={handlePublish}
+            disabled={isSavingNow}
+          >
+            <Rocket className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#edf4ff] text-[#2f73ff]"
+            aria-label="Share"
+            onClick={() => setIsShareOpen(true)}
+          >
+            <Share2 className="h-5 w-5" />
+          </button>
+        </div>
       </div>
     </div>
   );

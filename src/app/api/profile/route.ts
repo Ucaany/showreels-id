@@ -138,14 +138,20 @@ export async function PATCH(request: Request) {
     usernameChangeWindowStart,
     updatedAt: new Date(),
   };
+  const hasCustomLinksPayload =
+    Boolean(body) && typeof body === "object" && "customLinks" in body;
 
   try {
     const [updated] = await db
       .update(users)
-      .set({
-        ...updatePayload,
-        customLinks: parsed.data.customLinks,
-      })
+      .set(
+        hasCustomLinksPayload
+          ? {
+              ...updatePayload,
+              customLinks: parsed.data.customLinks || [],
+            }
+          : updatePayload
+      )
       .where(eq(users.id, currentUser.id))
       .returning();
 

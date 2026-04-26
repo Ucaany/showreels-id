@@ -20,7 +20,6 @@ import { db, isDatabaseConfigured } from "@/db";
 import { videos, visitorEvents } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { requireCurrentUser } from "@/server/current-user";
-import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 type QuickAction = {
   href: string;
@@ -37,9 +36,7 @@ function formatNumber(value: number) {
 
 export default async function DashboardPage() {
   const user = await requireCurrentUser();
-  const entitlementState = await getCreatorEntitlementsForUser(user.id);
-  const planName = entitlementState.effectivePlan.planName;
-  const canUseBuildLink = planName !== "free";
+  const canUseBuildLink = true;
 
   const myVideos = isDatabaseConfigured
     ? await db.query.videos.findMany({
@@ -114,7 +111,7 @@ export default async function DashboardPage() {
         : "Upgrade ke Creator untuk membuka Build Link.",
       cta: canUseBuildLink ? "Buka Builder" : "Upgrade Creator",
       icon: canUseBuildLink ? Wand2 : Lock,
-      locked: !canUseBuildLink,
+      locked: false,
     },
     {
       href: "/dashboard/videos/new",
@@ -191,7 +188,7 @@ export default async function DashboardPage() {
         </div>
       </Card>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {metricCards.map((item) => {
           const Icon = item.icon;
           return (
@@ -208,7 +205,7 @@ export default async function DashboardPage() {
               <p className="mt-1 font-display text-3xl font-semibold tracking-[-0.04em] text-[#142033]">
                 {formatNumber(item.value)}
               </p>
-              <p className="mt-1 text-xs leading-5 text-[#6078a2]">{item.helper}</p>
+              <p className="mt-1 hidden text-xs leading-5 text-[#6078a2] sm:block">{item.helper}</p>
             </Card>
           );
         })}

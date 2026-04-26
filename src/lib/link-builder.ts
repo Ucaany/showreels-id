@@ -12,7 +12,7 @@ export type LinkItem = CustomLinkItem;
 
 export const LINK_BUILDER_MAX_ITEMS = MAX_CUSTOM_LINKS;
 
-export const linkCreateSchema = z.object({
+const linkBaseSchema = z.object({
   type: z.string().trim().max(30, "Tipe block terlalu panjang.").optional().default("link"),
   title: z
     .string()
@@ -24,9 +24,8 @@ export const linkCreateSchema = z.object({
     .trim()
     .max(300, "URL terlalu panjang.")
     .transform((value) => normalizeSocialUrl(value))
-    .refine((value) => value.startsWith("http"), {
-      message: "Masukkan URL yang valid.",
-    }),
+    .optional()
+    .default(""),
   description: z
     .string()
     .trim()
@@ -47,12 +46,38 @@ export const linkCreateSchema = z.object({
     .default(""),
   value: z.string().trim().max(500, "Value block terlalu panjang.").optional().default(""),
   style: z.string().trim().max(40, "Style block terlalu panjang.").optional().default(""),
+  iconKey: z.string().trim().max(40, "Icon terlalu panjang.").optional().default(""),
+  iconUrl: z
+    .string()
+    .trim()
+    .max(300, "URL icon terlalu panjang.")
+    .transform((value) => normalizeSocialUrl(value))
+    .optional()
+    .default(""),
   enabled: z.boolean().optional().default(true),
 });
 
-export const linkUpdateSchema = linkCreateSchema.extend({
+function validateLinkUrl(
+  value: z.infer<typeof linkBaseSchema>,
+  ctx: z.RefinementCtx
+) {
+  const type = value.type || "link";
+  const nonClickableBlock = ["divider", "text"].includes(type);
+  if (!nonClickableBlock && !value.url.startsWith("http")) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["url"],
+      message: "Masukkan URL yang valid.",
+    });
+  }
+}
+
+export const linkCreateSchema = linkBaseSchema.superRefine(validateLinkUrl);
+
+export const linkUpdateSchema = linkBaseSchema.extend({
   id: z.string().trim().min(1).max(80),
-});
+  order: z.coerce.number().int().min(0).max(LINK_BUILDER_MAX_ITEMS).optional().default(0),
+}).superRefine(validateLinkUrl);
 
 export const linkToggleSchema = z.object({
   enabled: z.boolean(),
@@ -60,6 +85,10 @@ export const linkToggleSchema = z.object({
 
 export const linkReorderSchema = z.object({
   ids: z.array(z.string().trim().min(1).max(80)).min(1),
+});
+
+export const linkDraftSchema = z.object({
+  links: z.array(linkUpdateSchema).max(LINK_BUILDER_MAX_ITEMS),
 });
 
 export function normalizeStoredLinks(
@@ -84,6 +113,8 @@ export function createLinkItem(
     badge: payload.badge?.trim() || undefined,
     thumbnailUrl: payload.thumbnailUrl || undefined,
     style: payload.style?.trim() || undefined,
+    iconKey: payload.iconKey?.trim() || undefined,
+    iconUrl: payload.iconUrl || undefined,
     enabled: payload.enabled !== false,
     order: existing.length,
   };

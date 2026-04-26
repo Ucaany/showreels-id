@@ -1,18 +1,12 @@
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { users } from "@/db/schema";
 import {
   linkReorderSchema,
   normalizeOrder,
-  normalizeStoredLinks,
 } from "@/lib/link-builder";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
-import {
-  buildLinkLockedJsonResponse,
-  requireBuildLinkAccess,
-} from "@/server/link-builder-access";
+import { buildLinkLockedJsonResponse, requireBuildLinkAccess } from "@/server/link-builder-access";
+import { getEditableLinks, saveLinkBuilderDraft } from "@/server/link-builder-storage";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -47,7 +41,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const currentLinks = normalizeStoredLinks(currentUser.customLinks);
+  const currentLinks = getEditableLinks(currentUser);
   const idSet = new Set(currentLinks.map((link) => link.id));
   const incomingSet = new Set(parsed.data.ids);
 
@@ -68,17 +62,12 @@ export async function PATCH(request: Request) {
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
   );
 
-  const [updated] = await db
-    .update(users)
-    .set({
-      customLinks: nextLinks,
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, currentUser.id))
-    .returning({ customLinks: users.customLinks });
+  const savedLinks = await saveLinkBuilderDraft(currentUser.id, nextLinks);
 
   return NextResponse.json({
-    links: normalizeStoredLinks(updated?.customLinks ?? nextLinks),
-    status: "saved",
+    links: savedLinks,
+    status: "draft_saved",
   });
 }
+
+export const POST = PATCH;
