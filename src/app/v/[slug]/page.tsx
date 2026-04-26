@@ -162,7 +162,12 @@ export default async function PublicVideoPage({
                 youtubeUrl={video.author.youtubeUrl}
                 facebookUrl={video.author.facebookUrl}
                 threadsUrl={video.author.threadsUrl}
-                linkedinUrl={video.author.linkedinUrl}
+                linkedinUrl={
+                  "linkedinUrl" in video.author &&
+                  typeof video.author.linkedinUrl === "string"
+                    ? video.author.linkedinUrl
+                    : ""
+                }
               />
               {video.author.username ? (
                 <div className="space-y-2">

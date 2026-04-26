@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions, creatorSettings, users, videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
+import { isLinkedinSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
 import { getThumbnailCandidates } from "@/lib/video-utils";
@@ -101,6 +102,176 @@ function buildCreatorFilter(adminEmails: string[]) {
         visibilityFilter
       )
     : and(ne(users.role, "owner"), visibilityFilter);
+}
+
+const publicProfileUserColumns = {
+  id: true,
+  name: true,
+  email: true,
+  image: true,
+  avatarCropX: true,
+  avatarCropY: true,
+  avatarCropZoom: true,
+  coverImageUrl: true,
+  coverCropX: true,
+  coverCropY: true,
+  coverCropZoom: true,
+  username: true,
+  role: true,
+  bio: true,
+  experience: true,
+  city: true,
+  contactEmail: true,
+  phoneNumber: true,
+  websiteUrl: true,
+  instagramUrl: true,
+  youtubeUrl: true,
+  facebookUrl: true,
+  threadsUrl: true,
+  customLinks: true,
+  profileVisibility: true,
+  skills: true,
+  createdAt: true,
+} as const;
+
+const publicVideoAuthorColumns = {
+  id: true,
+  name: true,
+  email: true,
+  image: true,
+  avatarCropX: true,
+  avatarCropY: true,
+  avatarCropZoom: true,
+  username: true,
+  role: true,
+  bio: true,
+  city: true,
+  contactEmail: true,
+  phoneNumber: true,
+  websiteUrl: true,
+  instagramUrl: true,
+  youtubeUrl: true,
+  facebookUrl: true,
+  threadsUrl: true,
+  customLinks: true,
+  profileVisibility: true,
+} as const;
+
+async function findPublicUserByUsername(username: string) {
+  try {
+    return await db.query.users.findFirst({
+      where: eq(users.username, username),
+      columns: {
+        ...publicProfileUserColumns,
+        linkedinUrl: true,
+      },
+    });
+  } catch (error) {
+    if (!isLinkedinSchemaError(error)) {
+      throw error;
+    }
+
+    console.warn("db_schema_mismatch public profile without linkedin_url", {
+      username,
+      ...summarizeError(error),
+    });
+
+    const fallback = await db.query.users.findFirst({
+      where: eq(users.username, username),
+      columns: publicProfileUserColumns,
+    });
+
+    if (!fallback) {
+      return fallback;
+    }
+
+    return {
+      ...fallback,
+      linkedinUrl: "",
+    };
+  }
+}
+
+async function findPublicVideoBySlug(slug: string) {
+  try {
+    return await db.query.videos.findFirst({
+      where: eq(videos.publicSlug, slug),
+      columns: {
+        id: true,
+        userId: true,
+        title: true,
+        description: true,
+        tags: true,
+        visibility: true,
+        thumbnailUrl: true,
+        extraVideoUrls: true,
+        imageUrls: true,
+        sourceUrl: true,
+        source: true,
+        aspectRatio: true,
+        outputType: true,
+        durationLabel: true,
+        publicSlug: true,
+        createdAt: true,
+      },
+      with: {
+        author: {
+          columns: {
+            ...publicVideoAuthorColumns,
+            linkedinUrl: true,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    if (!isLinkedinSchemaError(error)) {
+      throw error;
+    }
+
+    console.warn("db_schema_mismatch public video without linkedin_url", {
+      slug,
+      ...summarizeError(error),
+    });
+
+    const fallback = await db.query.videos.findFirst({
+      where: eq(videos.publicSlug, slug),
+      columns: {
+        id: true,
+        userId: true,
+        title: true,
+        description: true,
+        tags: true,
+        visibility: true,
+        thumbnailUrl: true,
+        extraVideoUrls: true,
+        imageUrls: true,
+        sourceUrl: true,
+        source: true,
+        aspectRatio: true,
+        outputType: true,
+        durationLabel: true,
+        publicSlug: true,
+        createdAt: true,
+      },
+      with: {
+        author: {
+          columns: publicVideoAuthorColumns,
+        },
+      },
+    });
+
+    if (!fallback?.author) {
+      return fallback;
+    }
+
+    return {
+      ...fallback,
+      author: {
+        ...fallback.author,
+        linkedinUrl: "",
+      },
+    };
+  }
 }
 
 async function fetchCompletePublicVideos(
@@ -312,39 +483,7 @@ export async function getPublicProfile(
   }
 
   try {
-    const user = await db.query.users.findFirst({
-      where: eq(users.username, username),
-      columns: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        avatarCropX: true,
-        avatarCropY: true,
-        avatarCropZoom: true,
-        coverImageUrl: true,
-        coverCropX: true,
-        coverCropY: true,
-        coverCropZoom: true,
-        username: true,
-        role: true,
-        bio: true,
-        experience: true,
-        city: true,
-        contactEmail: true,
-        phoneNumber: true,
-        websiteUrl: true,
-        instagramUrl: true,
-        youtubeUrl: true,
-        facebookUrl: true,
-        threadsUrl: true,
-        linkedinUrl: true,
-        customLinks: true,
-        profileVisibility: true,
-        skills: true,
-        createdAt: true,
-      },
-    });
+    const user = await findPublicUserByUsername(username);
 
     if (!user || user.role === "owner" || isAdminEmail(user.email)) {
       return null;
@@ -402,79 +541,51 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
   }
 
   try {
-    const video = await db.query.videos.findFirst({
-      where: eq(videos.publicSlug, slug),
-      columns: {
-        id: true,
-        userId: true,
-        title: true,
-        description: true,
-        tags: true,
-        visibility: true,
-        thumbnailUrl: true,
-        extraVideoUrls: true,
-        imageUrls: true,
-        sourceUrl: true,
-        source: true,
-        aspectRatio: true,
-        outputType: true,
-        durationLabel: true,
-        publicSlug: true,
-        createdAt: true,
-      },
-      with: {
-        author: {
-          columns: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            avatarCropX: true,
-            avatarCropY: true,
-            avatarCropZoom: true,
-            username: true,
-            role: true,
-            bio: true,
-            city: true,
-            contactEmail: true,
-            phoneNumber: true,
-            websiteUrl: true,
-            instagramUrl: true,
-            youtubeUrl: true,
-            facebookUrl: true,
-            threadsUrl: true,
-            linkedinUrl: true,
-            customLinks: true,
-            profileVisibility: true,
-          },
-        },
-      },
-    });
+    const video = await findPublicVideoBySlug(slug);
+    const normalizedVideo =
+      video && video.author
+        ? {
+            ...video,
+            author: {
+              ...video.author,
+              linkedinUrl:
+                "linkedinUrl" in video.author &&
+                typeof video.author.linkedinUrl === "string"
+                  ? video.author.linkedinUrl
+                  : "",
+            },
+          }
+        : video;
 
     if (
-      !video ||
-      video.author?.role === "owner" ||
-      isAdminEmail(video.author?.email)
+      !normalizedVideo ||
+      normalizedVideo.author?.role === "owner" ||
+      isAdminEmail(normalizedVideo.author?.email)
     ) {
       return null;
     }
 
-    const isOwner = Boolean(viewerUserId && viewerUserId === video.author.id);
-    if (video.author.profileVisibility === "private" && !isOwner) {
+    const isOwner = Boolean(
+      viewerUserId && viewerUserId === normalizedVideo.author.id
+    );
+    if (normalizedVideo.author.profileVisibility === "private" && !isOwner) {
       return null;
     }
 
-    if (video.visibility === "draft" || video.visibility === "private") {
-      return isOwner ? video : null;
+    if (
+      normalizedVideo.visibility === "draft" ||
+      normalizedVideo.visibility === "private"
+    ) {
+      return isOwner ? normalizedVideo : null;
     }
 
     return {
-      ...video,
+      ...normalizedVideo,
       author: {
-        ...video.author,
-        customLinks: normalizeCustomLinks(video.author.customLinks),
+        ...normalizedVideo.author,
+        customLinks: normalizeCustomLinks(normalizedVideo.author.customLinks),
       },
-      whitelabelEnabled: await isWhitelabelActiveForUser(video.author.id),
+      whitelabelEnabled: await isWhitelabelActiveForUser(normalizedVideo.author.id),
     };
   } catch (error) {
     console.error("Failed to load public video", error);

@@ -48,3 +48,23 @@ export function isCustomLinksSchemaError(error: unknown) {
 
   return message.includes("does not exist");
 }
+
+export function isLinkedinSchemaError(error: unknown) {
+  const code = readErrorCode(error);
+  const message = readErrorMessage(error).toLowerCase();
+
+  const mentionsColumn =
+    message.includes("linkedin_url") ||
+    message.includes('column "linkedin_url"') ||
+    message.includes("users.linkedin_url");
+
+  if (!mentionsColumn) {
+    return false;
+  }
+
+  if (code === UNDEFINED_COLUMN_CODE) {
+    return true;
+  }
+
+  return message.includes("does not exist");
+}
