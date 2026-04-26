@@ -13,6 +13,7 @@ export type LinkItem = CustomLinkItem;
 export const LINK_BUILDER_MAX_ITEMS = MAX_CUSTOM_LINKS;
 
 export const linkCreateSchema = z.object({
+  type: z.string().trim().max(30, "Tipe block terlalu panjang.").optional().default("link"),
   title: z
     .string()
     .trim()
@@ -44,6 +45,8 @@ export const linkCreateSchema = z.object({
     .transform((value) => normalizeSocialUrl(value))
     .optional()
     .default(""),
+  value: z.string().trim().max(500, "Value block terlalu panjang.").optional().default(""),
+  style: z.string().trim().max(40, "Style block terlalu panjang.").optional().default(""),
   enabled: z.boolean().optional().default(true),
 });
 
@@ -72,12 +75,15 @@ export function createLinkItem(
 ): LinkItem {
   return {
     id: crypto.randomUUID(),
+    type: payload.type || "link",
     title: payload.title.trim(),
     url: payload.url,
+    value: payload.value?.trim() || undefined,
     description: payload.description?.trim() || undefined,
     platform: payload.platform?.trim() || undefined,
     badge: payload.badge?.trim() || undefined,
     thumbnailUrl: payload.thumbnailUrl || undefined,
+    style: payload.style?.trim() || undefined,
     enabled: payload.enabled !== false,
     order: existing.length,
   };

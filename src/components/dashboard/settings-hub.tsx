@@ -36,7 +36,6 @@ function SettingsNavCard({
   meta,
   icon,
   external = false,
-  emoji,
   disabled = false,
 }: {
   href?: string;
@@ -45,7 +44,6 @@ function SettingsNavCard({
   meta?: string;
   icon: ComponentType<{ className?: string }>;
   external?: boolean;
-  emoji?: string;
   disabled?: boolean;
 }) {
   const Icon = icon;
@@ -61,10 +59,7 @@ function SettingsNavCard({
         </span>
         <ChevronRight className="h-4 w-4 text-[#7d95bd]" />
       </div>
-      <h2 className="mt-3 text-base font-semibold text-[#1b2e4f]">
-        {emoji ? `${emoji} ` : ""}
-        {title}
-      </h2>
+      <h2 className="mt-3 text-base font-semibold text-[#1b2e4f]">{title}</h2>
       <p className="mt-1 text-sm leading-6 text-[#4f658f]">{description}</p>
       {meta ? <p className="mt-2 text-xs font-medium text-[#5f78a3]">{meta}</p> : null}
     </Card>
@@ -193,14 +188,12 @@ export function SettingsHub({
         <SettingsNavCard
           href="/dashboard/settings/privacy"
           icon={Shield}
-          emoji="🔒"
           title="Privasi Creator"
           description="Public profile, indexing, email publik, sosial, dan statistik publik."
         />
         <SettingsNavCard
           href="/dashboard/settings/link-profile"
           icon={Link2}
-          emoji="🔗"
           title="Link Profile"
           description="Ganti slug, cek ketersediaan username, dan URL publik profile."
           meta={`/creator/${username}`}
@@ -208,21 +201,18 @@ export function SettingsHub({
         <SettingsNavCard
           href="/dashboard/settings/payment"
           icon={CreditCard}
-          emoji="💳"
           title="Payment"
           description="Billing email, payment method default, tax info, dan invoice note."
         />
         <SettingsNavCard
           href="/dashboard/settings/whitelabel"
           icon={Palette}
-          emoji="🎨"
           title="Whitelabel"
           description="Aktifkan/nonaktifkan branding Showreels.id sesuai plan."
           meta={entitlements.whitelabelEnabled ? "Business unlocked" : "Business only"}
         />
         <SettingsNavCard
           icon={Sparkles}
-          emoji="✨"
           title="Ganti Tema"
           description={
             entitlements.themeSwitchComingSoon
@@ -235,7 +225,6 @@ export function SettingsHub({
         <SettingsNavCard
           href="/dashboard/settings/security"
           icon={KeyRound}
-          emoji="🛡️"
           title="Security"
           description="Ganti password akun dan logout dari semua perangkat."
         />
@@ -244,7 +233,6 @@ export function SettingsHub({
             href={creatorGroupLink}
             external
             icon={Users}
-            emoji="👥"
             title="Grup Khusus Creator"
             description="Akses komunitas creator untuk update produk dan networking."
           />
@@ -254,7 +242,6 @@ export function SettingsHub({
             href={supportLink}
             external
             icon={Shield}
-            emoji="🤝"
             title="Contact Support"
             description="Hubungi support tim Showreels untuk bantuan akun creator."
           />
@@ -267,7 +254,7 @@ export function SettingsHub({
             <ShieldAlert className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-rose-700">🚨 Hapus Akun</h2>
+            <h2 className="text-base font-semibold text-rose-700">Hapus Akun</h2>
             <p className="mt-1 text-sm leading-6 text-rose-700">
               Ketik <span className="font-semibold">HAPUS AKUN</span> untuk melanjutkan
               penghapusan permanen.

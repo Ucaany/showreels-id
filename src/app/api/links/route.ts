@@ -10,7 +10,10 @@ import {
 } from "@/lib/link-builder";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
-import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
+import {
+  buildLinkLockedJsonResponse,
+  requireBuildLinkAccess,
+} from "@/server/link-builder-access";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,10 +36,11 @@ export async function GET() {
   }
 
   const links = normalizeStoredLinks(currentUser.customLinks);
-  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
+  const { entitlementState, allowed } = await requireBuildLinkAccess(currentUser.id);
 
   return NextResponse.json({
     links,
+    locked: !allowed,
     maxLinks: entitlementState.entitlements.linkBuilderMax,
     planName: entitlementState.effectivePlan.planName,
   });
@@ -60,7 +64,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
+  const { entitlementState, allowed } = await requireBuildLinkAccess(currentUser.id);
+  if (!allowed) {
+    return buildLinkLockedJsonResponse();
+  }
   const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
   const existing = normalizeStoredLinks(currentUser.customLinks);
   if (typeof linkBuilderMax === "number" && existing.length >= linkBuilderMax) {

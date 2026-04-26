@@ -9,6 +9,10 @@ import {
 } from "@/lib/link-builder";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
+import {
+  buildLinkLockedJsonResponse,
+  requireBuildLinkAccess,
+} from "@/server/link-builder-access";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -32,6 +36,10 @@ export async function PUT(
   if (isAdminEmail(currentUser.email)) {
     return forbiddenOwnerResponse();
   }
+  const access = await requireBuildLinkAccess(currentUser.id);
+  if (!access.allowed) {
+    return buildLinkLockedJsonResponse();
+  }
 
   const { id } = await context.params;
   const body = await request.json().catch(() => null);
@@ -54,12 +62,15 @@ export async function PUT(
       link.id === id
         ? {
             ...link,
+            type: parsed.data.type || link.type || "link",
             title: parsed.data.title.trim(),
             url: parsed.data.url,
+            value: parsed.data.value?.trim() || undefined,
             description: parsed.data.description?.trim() || undefined,
             platform: parsed.data.platform?.trim() || undefined,
             badge: parsed.data.badge?.trim() || undefined,
             thumbnailUrl: parsed.data.thumbnailUrl || undefined,
+            style: parsed.data.style?.trim() || undefined,
             enabled: parsed.data.enabled !== false,
           }
         : link
@@ -91,6 +102,10 @@ export async function DELETE(
   }
   if (isAdminEmail(currentUser.email)) {
     return forbiddenOwnerResponse();
+  }
+  const access = await requireBuildLinkAccess(currentUser.id);
+  if (!access.allowed) {
+    return buildLinkLockedJsonResponse();
   }
 
   const { id } = await context.params;

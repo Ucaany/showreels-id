@@ -38,7 +38,7 @@ const PLAN_LABELS: Record<CreatorPlanName, string> = {
 const ENTITLEMENTS_BY_PLAN: Record<CreatorPlanName, CreatorPlanEntitlements> = {
   free: {
     planName: "free",
-    linkBuilderMax: 10,
+    linkBuilderMax: 0,
     usernameChangesPer30Days: 2,
     analyticsMaxDays: 7,
     customThumbnailEnabled: false,

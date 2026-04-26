@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowUpRight,
   LayoutGrid,
+  Link2,
   List,
   PencilLine,
   Search,
@@ -346,6 +347,17 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                           title="Edit video"
                         >
                           <PencilLine className="h-4 w-4" />
+                        </Button>
+                      </Link>
+
+                      <Link href="/dashboard/link-builder">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          aria-label="Tambahkan ke Build Link"
+                          title="Tambahkan ke Build Link"
+                        >
+                          <Link2 className="h-4 w-4" />
                         </Button>
                       </Link>
 

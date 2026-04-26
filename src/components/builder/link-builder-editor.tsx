@@ -34,6 +34,8 @@ import {
   PlayCircle,
   PencilLine,
   Plus,
+  QrCode,
+  Rocket,
   Save,
   Search,
   Share2,
@@ -281,11 +283,14 @@ export function LinkBuilderEditor({
     }))
   );
   const [newLink, setNewLink] = useState({
+    type: "link",
     title: "",
     url: "",
+    value: "",
     description: "",
     platform: "",
     badge: "",
+    style: "card",
   });
   const [linkSearch, setLinkSearch] = useState("");
   const [profileFields, setProfileFields] = useState({
@@ -488,11 +493,14 @@ export function LinkBuilderEditor({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        type: newLink.type,
         title,
         url,
+        value: newLink.value || url,
         description: newLink.description,
         platform: newLink.platform,
         badge: newLink.badge,
+        style: newLink.style,
       }),
     });
 
@@ -510,7 +518,16 @@ export function LinkBuilderEditor({
 
     const payload = (await response.json()) as { links: EditableLink[] };
     setLinks(payload.links.map((link) => ({ ...link, isDirty: false })));
-    setNewLink({ title: "", url: "", description: "", platform: "", badge: "" });
+    setNewLink({
+      type: "link",
+      title: "",
+      url: "",
+      value: "",
+      description: "",
+      platform: "",
+      badge: "",
+      style: "card",
+    });
     setBlockSearch("");
     setIsAddBlockOpen(false);
     await showFeedbackAlert({
@@ -583,12 +600,15 @@ export function LinkBuilderEditor({
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        type: current.type || "link",
         title: current.title,
         url: normalizeSocialUrl(current.url),
+        value: current.value || current.url,
         description: current.description || "",
         platform: current.platform || "",
         badge: current.badge || "",
         thumbnailUrl: current.thumbnailUrl || "",
+        style: current.style || "card",
         enabled: current.enabled !== false,
       }),
     });
@@ -696,13 +716,13 @@ export function LinkBuilderEditor({
   const publicPath = `/creator/${sanitizeUsername(profileFields.username || "creator")}`;
   const portfolioPath = `${publicPath}/portfolio`;
   const quickBlockOptions = [
-    { key: "link", label: "Link", helper: "Tambahkan URL", icon: Link2 },
-    { key: "portfolio", label: "Portfolio", helper: "Link ke portfolio video", icon: Video },
-    { key: "text", label: "Text", helper: "Blok teks bebas", icon: Type },
-    { key: "image", label: "Image", helper: "Embed gambar", icon: ImageIcon },
-    { key: "youtube", label: "YouTube", helper: "Embed video", icon: PlayCircle },
-    { key: "spotify", label: "Spotify", helper: "Embed musik", icon: Music2 },
-    { key: "divider", label: "Divider", helper: "Garis pemisah", icon: Minus },
+    { key: "link", type: "link", category: "Basic", label: "Link", helper: "Tambahkan URL", icon: Link2 },
+    { key: "portfolio", type: "portfolio", category: "Portfolio", label: "Portfolio", helper: "Link ke portfolio video", icon: Video },
+    { key: "text", type: "text", category: "Basic", label: "Text", helper: "Blok teks bebas sebagai link catatan", icon: Type },
+    { key: "image", type: "image", category: "Media", label: "Image", helper: "Embed gambar via URL", icon: ImageIcon },
+    { key: "youtube", type: "youtube", category: "Media", label: "YouTube", helper: "Embed video via URL", icon: PlayCircle },
+    { key: "spotify", type: "spotify", category: "Social", label: "Spotify", helper: "Embed musik via URL", icon: Music2 },
+    { key: "divider", type: "divider", category: "Basic", label: "Divider", helper: "Garis pemisah berbentuk block", icon: Minus },
   ] as const;
   const filteredQuickBlockOptions = quickBlockOptions.filter((item) => {
     const keyword = blockSearch.trim().toLowerCase();
@@ -710,14 +730,16 @@ export function LinkBuilderEditor({
     return `${item.label} ${item.helper}`.toLowerCase().includes(keyword);
   });
 
-  const openAddBlockModal = (platform?: string) => {
-    if (platform) {
+  const openAddBlockModal = (option?: (typeof quickBlockOptions)[number]) => {
+    if (option) {
       setNewLink((prev) => ({
         ...prev,
-        platform: platform === "Portfolio" ? "Portfolio Video" : platform,
+        type: option.type,
+        platform: option.label === "Portfolio" ? "Portfolio Video" : option.label,
         title:
-          prev.title || (platform === "Portfolio" ? "Lihat Portfolio Video" : platform),
-        url: prev.url || (platform === "Portfolio" ? portfolioPath : prev.url),
+          prev.title || (option.label === "Portfolio" ? "Lihat Portfolio Video" : option.label),
+        url: prev.url || (option.label === "Portfolio" ? portfolioPath : prev.url),
+        value: prev.value || (option.label === "Portfolio" ? portfolioPath : prev.value),
       }));
     }
     setIsAddBlockOpen(true);
@@ -729,6 +751,16 @@ export function LinkBuilderEditor({
       title: "Link profile berhasil disalin",
       icon: "success",
       timer: 1100,
+    });
+  };
+
+  const handlePublish = async () => {
+    await saveProfileNow();
+    await showFeedbackAlert({
+      title: "Build Link dipublish",
+      text: "Block aktif, profil, dan preview publik sudah diperbarui.",
+      icon: "success",
+      timer: 1400,
     });
   };
 
@@ -779,12 +811,30 @@ export function LinkBuilderEditor({
             </Link>
             <Button
               size="sm"
+              className="h-9 bg-[#2f73ff] px-3 text-xs font-semibold hover:bg-[#225fe0]"
+              onClick={handlePublish}
+              disabled={isSavingNow}
+            >
+              <Rocket className="h-4 w-4" />
+              Publish
+            </Button>
+            <Button
+              size="sm"
               variant="secondary"
               className="h-9 px-3 text-xs font-semibold"
               onClick={handleCopyPublicLink}
             >
               <Share2 className="h-4 w-4" />
               Share
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-9 px-3 text-xs font-semibold"
+              onClick={handleCopyPublicLink}
+            >
+              <QrCode className="h-4 w-4" />
+              QR
             </Button>
             <div className="rounded-full border border-[#d8ccc4] bg-white px-3 py-2 text-xs font-semibold text-[#5d5049]">
               {saveStatus === "saving"
@@ -1328,11 +1378,14 @@ export function LinkBuilderEditor({
                     <button
                       key={item.key}
                       type="button"
-                      onClick={() => openAddBlockModal(item.label)}
+                      onClick={() => openAddBlockModal(item)}
                       className="rounded-xl border border-[#d8e5fa] bg-[#f7fbff] px-3 py-3 text-left transition hover:border-[#aac7f5] hover:bg-[#edf4ff]"
                     >
                       <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#2f73ff]">
                         <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="mt-2 inline-flex rounded-full border border-[#d6e4fb] bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6078a2]">
+                        {item.category}
                       </span>
                       <p className="mt-2 text-sm font-semibold text-[#1f2a44]">{item.label}</p>
                       <p className="text-xs text-[#6b7ca1]">{item.helper}</p>

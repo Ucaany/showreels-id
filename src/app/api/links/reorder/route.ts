@@ -9,6 +9,10 @@ import {
 } from "@/lib/link-builder";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
+import {
+  buildLinkLockedJsonResponse,
+  requireBuildLinkAccess,
+} from "@/server/link-builder-access";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,6 +32,10 @@ export async function PATCH(request: Request) {
   }
   if (isAdminEmail(currentUser.email)) {
     return forbiddenOwnerResponse();
+  }
+  const access = await requireBuildLinkAccess(currentUser.id);
+  if (!access.allowed) {
+    return buildLinkLockedJsonResponse();
   }
 
   const body = await request.json().catch(() => null);

@@ -7,12 +7,15 @@ export const MAX_LINK_DESCRIPTION_LENGTH = 140;
 
 export interface CustomLinkItem {
   id: string;
+  type?: string;
   title: string;
   url: string;
+  value?: string;
   description?: string;
   platform?: string;
   badge?: string;
   thumbnailUrl?: string;
+  style?: string;
   enabled: boolean;
   order: number;
 }
@@ -102,17 +105,20 @@ export function normalizeCustomLinks(
       }
 
       const source = entry as Record<string, unknown>;
+      const type = String(source.type || source.blockType || "link").trim().slice(0, 30);
       const title = String(source.title || "").trim().slice(0, MAX_LINK_TITLE_LENGTH);
-      const url = normalizeSocialUrl(String(source.url || ""));
+      const url = normalizeSocialUrl(String(source.url || source.value || ""));
       if (!title || !url) {
         return null;
       }
+      const value = String(source.value || "").trim().slice(0, 500);
       const description = String(source.description || "")
         .trim()
         .slice(0, MAX_LINK_DESCRIPTION_LENGTH);
       const platform = String(source.platform || "").trim().slice(0, 30);
       const badge = String(source.badge || "").trim().slice(0, 30);
       const thumbnailUrl = normalizeSocialUrl(String(source.thumbnailUrl || ""));
+      const style = String(source.style || "").trim().slice(0, 40);
 
       const providedId = String(source.id || "").trim();
       const safeId =
@@ -131,12 +137,16 @@ export function normalizeCustomLinks(
 
       const nextItem: CustomLinkItem = {
         id,
+        type: type || "link",
         title,
         url,
         enabled: source.enabled !== false,
         order,
       };
 
+      if (value) {
+        nextItem.value = value;
+      }
       if (description) {
         nextItem.description = description;
       }
@@ -148,6 +158,9 @@ export function normalizeCustomLinks(
       }
       if (thumbnailUrl) {
         nextItem.thumbnailUrl = thumbnailUrl;
+      }
+      if (style) {
+        nextItem.style = style;
       }
 
       return nextItem;

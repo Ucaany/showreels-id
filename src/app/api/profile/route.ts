@@ -46,20 +46,6 @@ export async function PATCH(request: Request) {
 
   const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
   const usernameChangeLimit = entitlementState.entitlements.usernameChangesPer30Days;
-  const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
-
-  if (
-    typeof linkBuilderMax === "number" &&
-    parsed.data.customLinks.length > linkBuilderMax
-  ) {
-    return NextResponse.json(
-      {
-        error: `Paket ${entitlementState.effectivePlan.planName.toUpperCase()} mendukung maksimal ${linkBuilderMax} link builder.`,
-        code: "link_limit_exceeded",
-      },
-      { status: 403 }
-    );
-  }
 
   const existingUser = await db.query.users.findFirst({
     where: and(eq(users.username, username), ne(users.id, currentUser.id)),

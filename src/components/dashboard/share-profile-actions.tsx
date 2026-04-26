@@ -13,12 +13,14 @@ import {
   Share2,
   X,
 } from "lucide-react";
-import { SiInstagram } from "react-icons/si";
+import { SiFacebook, SiInstagram } from "react-icons/si";
+import { FaLinkedinIn } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 
 type ShareProfileActionsProps = {
   username: string;
+  iconOnlyOnMobile?: boolean;
 };
 
 function getShareChannels(publicLink: string) {
@@ -39,6 +41,18 @@ function getShareChannels(publicLink: string) {
       icon: Send,
     },
     {
+      id: "facebook",
+      label: "Facebook",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`,
+      icon: SiFacebook,
+    },
+    {
+      id: "linkedin",
+      label: "LinkedIn",
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedLink}`,
+      icon: FaLinkedinIn,
+    },
+    {
       id: "x",
       label: "X / Twitter",
       href: `https://x.com/intent/tweet?url=${encodedLink}&text=${encodedText}`,
@@ -47,7 +61,7 @@ function getShareChannels(publicLink: string) {
   ] as const;
 }
 
-export function ShareProfileActions({ username }: ShareProfileActionsProps) {
+export function ShareProfileActions({ username, iconOnlyOnMobile = false }: ShareProfileActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -134,16 +148,16 @@ export function ShareProfileActions({ username }: ShareProfileActionsProps) {
       <div className="flex flex-wrap gap-2">
         <Button type="button" size="sm" onClick={() => setIsOpen(true)}>
           <Share2 className="h-4 w-4" />
-          Share Link
+          <span className={iconOnlyOnMobile ? "sr-only sm:not-sr-only" : ""}>Share Link</span>
         </Button>
         <Button type="button" variant="secondary" size="sm" onClick={handleCopy}>
           <Copy className="h-4 w-4" />
-          Copy Link
+          <span className={iconOnlyOnMobile ? "sr-only sm:not-sr-only" : ""}>Copy Link</span>
         </Button>
         <Link href={publicPath} target="_blank">
           <Button type="button" variant="secondary" size="sm">
             <ExternalLink className="h-4 w-4" />
-            Buka Public Link
+            <span className={iconOnlyOnMobile ? "sr-only sm:not-sr-only" : ""}>Buka Public Link</span>
           </Button>
         </Link>
       </div>
@@ -183,7 +197,7 @@ export function ShareProfileActions({ username }: ShareProfileActionsProps) {
               <p className="truncate text-sm font-medium text-[#2c4c80]">{publicLink}</p>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {shareChannels.map((channel) => {
                 const Icon = channel.icon;
                 return (

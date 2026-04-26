@@ -52,6 +52,7 @@ const socialUrlSchema = z
 
 const customLinkSchema = z.object({
   id: z.string().trim().min(1, "ID custom link tidak valid.").max(80),
+  type: z.string().trim().max(30, "Tipe block terlalu panjang.").optional().default("link"),
   title: z
     .string()
     .trim()
@@ -65,6 +66,7 @@ const customLinkSchema = z.object({
     .refine((value) => value.startsWith("http"), {
       message: "Masukkan URL custom link yang valid.",
     }),
+  value: z.string().trim().max(500, "Value block terlalu panjang.").optional().default(""),
   description: z
     .string()
     .trim()
@@ -76,6 +78,7 @@ const customLinkSchema = z.object({
     .default(""),
   platform: z.string().trim().max(30, "Platform terlalu panjang.").optional().default(""),
   badge: z.string().trim().max(30, "Badge terlalu panjang.").optional().default(""),
+  style: z.string().trim().max(40, "Style block terlalu panjang.").optional().default(""),
   thumbnailUrl: z
     .string()
     .trim()
