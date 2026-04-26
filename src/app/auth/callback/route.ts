@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isCustomLinksSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
+import {
+  isCustomLinksSchemaError,
+  isLinkedinSchemaError,
+  summarizeError,
+} from "@/lib/db-schema-mismatch";
 import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
 import { syncUserProfile } from "@/server/auth-profile";
@@ -52,7 +56,8 @@ export async function GET(request: NextRequest) {
           getAuthSuccessUrl(destination, request.url)
         );
       } catch (syncError) {
-        const mismatch = isCustomLinksSchemaError(syncError);
+        const mismatch =
+          isCustomLinksSchemaError(syncError) || isLinkedinSchemaError(syncError);
         console.error("account_sync_failed", {
           context: mismatch ? "db_schema_mismatch" : "callback_unexpected_error",
           ...summarizeError(syncError),

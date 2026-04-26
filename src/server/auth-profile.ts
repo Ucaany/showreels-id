@@ -2,7 +2,11 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { users, videos, type DbUser } from "@/db/schema";
 import { normalizeAvatarUrl } from "@/lib/avatar-utils";
-import { isCustomLinksSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
+import {
+  isCustomLinksSchemaError,
+  isLinkedinSchemaError,
+  summarizeError,
+} from "@/lib/db-schema-mismatch";
 import { ensureUniqueUsername, sanitizeUsername } from "@/lib/username";
 import { isAdminEmail } from "@/server/admin-access";
 
@@ -38,7 +42,6 @@ const legacyUserColumns = {
   youtubeUrl: users.youtubeUrl,
   facebookUrl: users.facebookUrl,
   threadsUrl: users.threadsUrl,
-  linkedinUrl: users.linkedinUrl,
   profileVisibility: users.profileVisibility,
   skills: users.skills,
   isBlocked: users.isBlocked,
@@ -56,6 +59,7 @@ function withDefaultCustomLinks<T extends Record<string, unknown>>(row: T): DbUs
   return {
     ...row,
     customLinks: [],
+    linkedinUrl: "",
   } as unknown as DbUser;
 }
 
@@ -155,7 +159,10 @@ export async function syncUserProfile(authUser: AuthProfileUserLike) {
 
     return created;
   } catch (error) {
-    if (!isCustomLinksSchemaError(error)) {
+    const schemaMismatch =
+      isCustomLinksSchemaError(error) || isLinkedinSchemaError(error);
+
+    if (!schemaMismatch) {
       throw error;
     }
 
