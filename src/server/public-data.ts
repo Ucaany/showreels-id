@@ -395,11 +395,6 @@ const landingStatsCache = unstable_cache(
       },
     });
 
-    const featuredVideos = (await fetchCompletePublicVideos(adminEmailsCsv, 12)).slice(
-      0,
-      6
-    );
-
     return {
       creatorCount: creatorCount?.value ?? 0,
       videoCount: videoCount?.value ?? 0,
@@ -407,7 +402,6 @@ const landingStatsCache = unstable_cache(
         ...creator,
         image: sanitizeMediaUrl(creator.image) || null,
       })),
-      featuredVideos,
     };
   },
   ["landing-stats-v3"],
@@ -427,7 +421,6 @@ export async function getLandingStats() {
       creatorCount: 0,
       videoCount: 0,
       featuredCreators: [],
-      featuredVideos: [],
     };
   }
 
@@ -440,10 +433,6 @@ export async function getLandingStats() {
         ...creator,
         createdAt: new Date(creator.createdAt),
       })),
-      featuredVideos: cached.featuredVideos.map((video) => ({
-        ...video,
-        createdAt: new Date(video.createdAt),
-      })),
     };
   } catch (error) {
     console.error("Failed to load landing stats", error);
@@ -451,7 +440,6 @@ export async function getLandingStats() {
       creatorCount: 0,
       videoCount: 0,
       featuredCreators: [],
-      featuredVideos: [],
     };
   }
 }

@@ -138,6 +138,20 @@ ON CONFLICT ("user_id") DO NOTHING;
 `));
 
   await db.execute(sql.raw(`
+UPDATE "billing_subscriptions"
+SET "plan_name" = 'creator'
+WHERE "plan_name" = 'pro';
+
+UPDATE "billing_subscriptions"
+SET "next_plan_name" = 'creator'
+WHERE "next_plan_name" = 'pro';
+
+UPDATE "billing_transactions"
+SET "plan_name" = 'creator'
+WHERE "plan_name" = 'pro';
+`));
+
+  await db.execute(sql.raw(`
 CREATE INDEX IF NOT EXISTS "videos_user_source_visibility_idx"
 ON "videos" USING btree ("user_id", "source", "visibility");
 `));

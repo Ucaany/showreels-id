@@ -43,7 +43,7 @@ export function DashboardShell({
 }: {
   children: React.ReactNode;
   user: DbUser;
-  planName?: "free" | "pro" | "business";
+  planName?: "free" | "creator" | "business";
   mode?: "creator" | "admin";
 }) {
   const pathname = usePathname();
@@ -55,7 +55,7 @@ export function DashboardShell({
   const supabase = createClient();
   const displayUsername = user.username ? `@${user.username}` : "@creator";
   const planLabel =
-    planName === "business" ? "Business" : planName === "pro" ? "Pro" : "Free";
+    planName === "business" ? "Business" : planName === "creator" ? "Creator" : "Free";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") {
@@ -97,7 +97,9 @@ export function DashboardShell({
           },
         ];
 
-  const sidebarWidthClass = collapsed ? "lg:w-[90px]" : "lg:w-[288px]";
+  const sidebarWidthClass = collapsed
+    ? "lg:w-[var(--dashboard-sidebar-collapsed-width)]"
+    : "lg:w-[var(--dashboard-sidebar-width)]";
 
   const isNavItemActive = (item: NavItem) => {
     if (item.matchPrefix) {
@@ -147,13 +149,13 @@ export function DashboardShell({
   };
 
   return (
-    <div className="min-h-screen bg-canvas text-[#201b18]">
-      <header className="sticky top-0 z-30 border-b border-[#d5e1f4] bg-[#f7fbff]/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 px-4 py-3 sm:px-6">
+    <div className="dashboard-surface min-h-screen text-[#1d2333]">
+      <header className="sticky top-0 z-30 border-b border-[#dbe4f6] bg-white/86 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-[1420px] items-center justify-between gap-3 px-3 py-3 sm:px-6">
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="dashboard-tap-target hidden items-center justify-center rounded-xl border border-[#cfdcf2] bg-white text-[#1f3f6f] lg:inline-flex"
+              className="dashboard-tap-target hidden items-center justify-center rounded-xl border border-[#d3ddf2] bg-white text-[#2c4a80] shadow-sm lg:inline-flex"
               onClick={() => setCollapsed((prev) => !prev)}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -162,15 +164,15 @@ export function DashboardShell({
             <AppLogo />
           </div>
 
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-2.5 md:flex">
             <Link
               href={authProfileHref}
               target="_blank"
-              className="rounded-full border border-[#cfdcf2] bg-white px-3 py-2 text-xs font-semibold text-[#47679b] shadow-sm transition hover:border-[#acc7f2] hover:text-[#1f3f6f]"
+              className="rounded-full border border-[#d5e0f5] bg-white px-3 py-2 text-xs font-semibold text-[#47679b] shadow-sm transition hover:border-[#a8c2f3] hover:text-[#1f58e3]"
             >
               {displayUsername}
             </Link>
-            <div className="flex items-center gap-2 rounded-full border border-[#cfdcf2] bg-white px-3 py-2 shadow-sm">
+            <div className="flex items-center gap-2 rounded-full border border-[#d5e0f5] bg-white px-3 py-2 shadow-sm">
               <AvatarBadge
                 name={user.name || "Creator"}
                 avatarUrl={user.image || ""}
@@ -189,7 +191,7 @@ export function DashboardShell({
 
           <button
             type="button"
-            className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#cfdcf2] bg-white text-[#1f3f6f] md:hidden"
+            className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#d3ddf2] bg-white text-[#2c4a80] shadow-sm md:hidden"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-label="Open dashboard menu"
           >
@@ -199,26 +201,26 @@ export function DashboardShell({
       </header>
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-40 bg-[#201b18]/35 md:hidden">
+        <div className="fixed inset-0 z-40 bg-[#1c2438]/42 md:hidden">
           <button
             type="button"
             className="absolute inset-0 h-full w-full cursor-default"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu backdrop"
           />
-          <div className="absolute left-0 top-0 flex h-full w-[88%] max-w-[340px] flex-col border-r border-[#cfdcf2] bg-[#f7fbff] p-4 shadow-2xl">
+          <div className="absolute left-0 top-0 flex h-full w-[88%] max-w-[340px] flex-col border-r border-[#cfdbf2] bg-[#f4f8ff] p-4 shadow-2xl">
             <div className="mb-5 flex items-center justify-between">
               <AppLogo />
               <button
                 type="button"
-                className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#cfdcf2] bg-white text-[#1f3f6f]"
+                className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#d3ddf2] bg-white text-[#2c4a80]"
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Close menu"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="mb-4 rounded-2xl border border-[#cfdcf2] bg-white p-3">
+            <div className="mb-4 rounded-2xl border border-[#d2ddf3] bg-white p-3">
               <div className="flex items-center gap-2">
                 <AvatarBadge
                   name={user.name || "Creator"}
@@ -249,8 +251,8 @@ export function DashboardShell({
                     className={cn(
                       "flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-medium transition",
                       active
-                        ? "bg-[#eaf2ff] text-[#1f58e3] ring-1 ring-[#bfd6ff]"
-                        : "text-[#4f658f] hover:bg-white hover:text-[#1f3f6f]"
+                        ? "bg-[#edf3ff] text-[#1f58e3] ring-1 ring-[#bdd2ff]"
+                        : "text-[#506890] hover:bg-white hover:text-[#1f3f6f]"
                     )}
                   >
                     <span className="flex items-center gap-2">
@@ -261,7 +263,7 @@ export function DashboardShell({
                 );
               })}
             </nav>
-            <div className="mt-4 border-t border-[#e2d8d2] pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-4">
+            <div className="mt-4 border-t border-[#e0e7f5] pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-4">
               <Button
                 variant="secondary"
                 size="sm"
@@ -276,14 +278,14 @@ export function DashboardShell({
         </div>
       ) : null}
 
-      <div className="dashboard-shell-container flex gap-4">
+      <div className="dashboard-shell-container flex gap-4 lg:items-start">
         <aside
           className={cn(
-            "hidden shrink-0 rounded-2xl border border-[#d5e1f4] bg-gradient-to-b from-[#ffffff] to-[#f6faff] p-3 shadow-card transition-all duration-200 lg:sticky lg:top-[96px] lg:block lg:h-[calc(100vh-112px)]",
+            "dashboard-panel hidden shrink-0 overflow-hidden p-3 transition-all duration-200 lg:sticky lg:top-[90px] lg:block lg:h-[calc(100vh-108px)]",
             sidebarWidthClass
           )}
         >
-          <div className={cn("mb-4 rounded-xl bg-[#edf4ff] p-3", collapsed ? "text-center" : "")}>
+          <div className={cn("mb-4 rounded-xl border border-[#d5e0f5] bg-[#edf4ff] p-3", collapsed ? "text-center" : "")}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#57709b]">
               Plan
             </p>
@@ -310,7 +312,7 @@ export function DashboardShell({
                       : "h-11 justify-between px-3",
                     active
                       ? "bg-[#eaf2ff] text-[#1f58e3] ring-1 ring-[#bfd6ff]"
-                      : "text-[#4f658f] hover:bg-[#edf4ff] hover:text-[#1f3f6f]"
+                      : "text-[#4f658f] hover:bg-[#eff4ff] hover:text-[#1f3f6f]"
                   )}
                 >
                   <span className="flex items-center gap-2">
@@ -326,7 +328,7 @@ export function DashboardShell({
               );
             })}
             </div>
-            <div className="space-y-3 border-t border-[#e2d8d2] pt-4">
+            <div className="space-y-3 border-t border-[#e0e8f5] pt-4">
               <div className="space-y-1">
                 {secondaryNavItems.map((item) => {
                   const Icon = item.icon;
@@ -345,7 +347,7 @@ export function DashboardShell({
                           : "h-11 justify-between px-3",
                         active
                           ? "bg-[#eaf2ff] text-[#1f58e3] ring-1 ring-[#bfd6ff]"
-                          : "text-[#4f658f] hover:bg-[#edf4ff] hover:text-[#1f3f6f]"
+                          : "text-[#4f658f] hover:bg-[#eff4ff] hover:text-[#1f3f6f]"
                       )}
                     >
                       <span className="flex items-center gap-2">
@@ -362,7 +364,7 @@ export function DashboardShell({
                 })}
               </div>
               {!collapsed ? (
-                <div className="rounded-2xl border border-[#d5e1f4] bg-[#f6faff] p-3">
+                <div className="rounded-2xl border border-[#d5e1f4] bg-[#f4f8ff] p-3">
                   <p className="text-xs font-semibold text-[#57709b]">Akun</p>
                   <p className="mt-1 truncate text-sm font-semibold text-[#201b18]">{user.email}</p>
                 </div>
@@ -382,7 +384,7 @@ export function DashboardShell({
           </nav>
         </aside>
 
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="dashboard-stack dashboard-compact-mobile min-w-0 flex-1">{children}</main>
       </div>
     </div>
   );

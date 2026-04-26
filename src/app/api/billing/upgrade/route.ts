@@ -5,7 +5,12 @@ import { createUpgradeTransaction } from "@/server/billing";
 import { getCurrentUser } from "@/server/current-user";
 
 const upgradeSchema = z.object({
-  planName: z.enum(["pro", "business"]),
+  planName: z.enum(["creator", "business", "pro"]).transform((value) => {
+    if (value === "pro") {
+      return "creator";
+    }
+    return value;
+  }),
 }).strict();
 
 export async function POST(request: Request) {

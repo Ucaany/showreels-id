@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "framer-motion";
@@ -10,8 +9,6 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
-  LayoutGrid,
-  List,
   LogOut,
   Menu,
   PlayCircle,
@@ -21,22 +18,12 @@ import {
 } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { AvatarBadge } from "@/components/avatar-badge";
-import { SitePreferences } from "@/components/site-preferences";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/cn";
-import {
-  getPlanFeatureChecklist,
-  getPlanFeatureComingSoonLabel,
-} from "@/lib/plan-feature-matrix";
 import { createClient } from "@/lib/supabase/client";
-import { getThumbnailCandidates } from "@/lib/video-utils";
-import { getVideoSourceBadgeMeta } from "@/lib/video-source-badge";
-
-const CREATOR_ROTATION_INTERVAL_MS = 5 * 60 * 1000;
-const CREATOR_DEVICE_SEED_KEY = "showreels-featured-creator-seed-v2";
 
 const THEME_PREVIEWS = [
   {
@@ -118,12 +105,12 @@ const PREVIEW_PLATFORM_ROWS = [
 ] as const;
 
 type UsernameStatus = "idle" | "checking" | "invalid" | "available" | "taken";
-type PricingPlanId = "free" | "pro" | "business";
+type PricingPlanId = "free" | "creator" | "business";
 
 const PRICING_PLAN_HREF_BY_ID: Record<PricingPlanId, string> = {
-  free: "/auth/signup",
-  pro: "/dashboard/payment?plan=pro",
-  business: "/dashboard/payment?plan=business",
+  free: "/payment?plan=free",
+  creator: "/payment?plan=creator",
+  business: "/payment?plan=business",
 };
 
 function createSeededHash(value: string) {
@@ -133,18 +120,6 @@ function createSeededHash(value: string) {
     hash = Math.imul(hash, 16777619);
   }
   return hash >>> 0;
-}
-
-function seededShuffle<T extends { id: string }>(items: T[], seed: string): T[] {
-  const result = [...items];
-
-  for (let index = result.length - 1; index > 0; index -= 1) {
-    const hash = createSeededHash(`${seed}-${result[index].id}-${index}`);
-    const swapIndex = hash % (index + 1);
-    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
-  }
-
-  return result;
 }
 
 function sanitizeUsernameInput(value: string) {
@@ -320,7 +295,7 @@ function PhonePreviewMockup({
           className={cn(
             "relative z-10 text-center tracking-[-0.008em]",
             compact ? "text-[0.72rem]" : "text-[0.86rem]",
-            isLightTone ? "text-white/80" : "text-[#3f5480]"
+            isLightTone ? "text-white" : "text-[#3f5480]"
           )}
         >
           @{handle}
@@ -391,22 +366,6 @@ interface LandingPageProps {
     city: string;
     createdAt: Date;
   }>;
-  featuredVideos: Array<{
-    id: string;
-    title: string;
-    publicSlug: string;
-    description: string;
-    createdAt: Date;
-    sourceUrl: string;
-    thumbnailUrl: string;
-    outputType: string;
-    durationLabel: string;
-    author: {
-      username: string | null;
-      name: string | null;
-      image: string | null;
-    };
-  }>;
   currentUser?: {
     name: string | null;
     username: string | null;
@@ -419,19 +378,14 @@ export function LandingPage({
   creatorCount,
   videoCount,
   featuredCreators,
-  featuredVideos,
   currentUser = null,
 }: LandingPageProps) {
-  const { dictionary, locale } = usePreferences();
+  const { dictionary, locale, setLocale } = usePreferences();
   const prefersReducedMotion = useReducedMotion();
   const year = new Date().getFullYear();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
-  const [latestVideosView, setLatestVideosView] = useState<"grid" | "list">("grid");
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [creatorDeviceSeed, setCreatorDeviceSeed] = useState("creator-seed-default");
-  const [creatorTimeBucket, setCreatorTimeBucket] = useState(0);
 
   const [usernameInput, setUsernameInput] = useState("");
   const [usernameAsyncStatus, setUsernameAsyncStatus] = useState<
@@ -445,52 +399,6 @@ export function LandingPage({
     () => sanitizeUsernameInput(usernameInput),
     [usernameInput]
   );
-
-  useEffect(() => {
-    const syncViewport = () => {
-      setIsDesktop(window.innerWidth >= 1024);
-    };
-
-    syncViewport();
-    window.addEventListener("resize", syncViewport);
-    return () => window.removeEventListener("resize", syncViewport);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const syncSeed = () => {
-      const fromStorage = window.localStorage.getItem(CREATOR_DEVICE_SEED_KEY);
-      if (fromStorage) {
-        setCreatorDeviceSeed(fromStorage);
-        return;
-      }
-
-      const nextSeed =
-        window.crypto?.randomUUID?.() ||
-        `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      window.localStorage.setItem(CREATOR_DEVICE_SEED_KEY, nextSeed);
-      setCreatorDeviceSeed(nextSeed);
-    };
-
-    const timeout = window.setTimeout(syncSeed, 0);
-    return () => window.clearTimeout(timeout);
-  }, []);
-
-  useEffect(() => {
-    const rotate = () => {
-      setCreatorTimeBucket(Math.floor(Date.now() / CREATOR_ROTATION_INTERVAL_MS));
-    };
-
-    const initialSync = window.setTimeout(rotate, 0);
-    const timer = window.setInterval(rotate, CREATOR_ROTATION_INTERVAL_MS);
-    return () => {
-      window.clearTimeout(initialSync);
-      window.clearInterval(timer);
-    };
-  }, []);
 
   const rawUsernameInput = usernameInput.trim();
   const isUsernameFormatValid = /^[a-zA-Z0-9_]{3,24}$/.test(rawUsernameInput);
@@ -551,31 +459,6 @@ export function LandingPage({
       window.clearTimeout(timeout);
     };
   }, [isUsernameFormatValid, rawUsernameInput]);
-
-  const featuredCreatorCards = useMemo(() => {
-    const creatorsWithBio = featuredCreators.filter(
-      (creator) => creator.bio && creator.bio.trim().length > 0
-    );
-    const creatorsWithoutBio = featuredCreators.filter(
-      (creator) => !creator.bio || creator.bio.trim().length === 0
-    );
-
-    const seedBase = `${creatorDeviceSeed}-${creatorTimeBucket}`;
-    const shuffledWithBio = seededShuffle(creatorsWithBio, `${seedBase}-with-bio`);
-    const shuffledWithoutBio = seededShuffle(
-      creatorsWithoutBio,
-      `${seedBase}-without-bio`
-    );
-
-    return [...shuffledWithBio, ...shuffledWithoutBio].slice(0, 6);
-  }, [featuredCreators, creatorDeviceSeed, creatorTimeBucket]);
-
-  const latestVideoRows = useMemo(() => featuredVideos.slice(0, 6), [featuredVideos]);
-  const maxVisibleVideos = isDesktop ? 3 : 2;
-  const visibleLatestVideos = useMemo(
-    () => latestVideoRows.slice(0, maxVisibleVideos),
-    [latestVideoRows, maxVisibleVideos]
-  );
 
   const marketingFeatures = useMemo(
     () => [
@@ -754,9 +637,6 @@ export function LandingPage({
     ]
   );
 
-  const featureLocale = locale === "en" ? "en" : "id";
-  const comingSoonLabel = getPlanFeatureComingSoonLabel(featureLocale);
-
   const pricingPlans = useMemo(
     () => [
       {
@@ -764,30 +644,26 @@ export function LandingPage({
         name: "Free",
         monthlyPrice: "Rp0",
         subtitle: dictionary.landingPricingFree,
-        points: getPlanFeatureChecklist("free", featureLocale),
         featured: false,
       },
       {
-        id: "pro" as PricingPlanId,
-        name: "Pro",
-        monthlyPrice: "Rp49.000",
-        subtitle: dictionary.landingPricingPro,
-        points: getPlanFeatureChecklist("pro", featureLocale),
+        id: "creator" as PricingPlanId,
+        name: "Creator",
+        monthlyPrice: "Rp25.000",
+        subtitle: dictionary.landingPricingCreator,
         featured: true,
       },
       {
         id: "business" as PricingPlanId,
         name: "Business",
-        monthlyPrice: "Rp149.000",
+        monthlyPrice: "Rp49.000",
         subtitle: dictionary.landingPricingTeam,
-        points: getPlanFeatureChecklist("business", featureLocale),
         featured: false,
       },
     ],
     [
-      featureLocale,
+      dictionary.landingPricingCreator,
       dictionary.landingPricingFree,
-      dictionary.landingPricingPro,
       dictionary.landingPricingTeam,
     ]
   );
@@ -826,6 +702,10 @@ export function LandingPage({
         : usernameStatus === "checking"
           ? "bg-amber-500"
           : "bg-[#b3a39a]";
+  const desktopLanguageLinkClass =
+    "inline-flex min-h-10 items-center px-1 text-[0.9rem] font-semibold text-black transition hover:text-[#2f73ff]";
+  const mobileLanguageLinkClass =
+    "inline-flex items-center px-1 py-1 text-[0.95rem] font-semibold text-black transition hover:text-[#2f73ff]";
 
   return (
     <LazyMotion features={domAnimation} strict>
@@ -834,79 +714,104 @@ export function LandingPage({
           <div className="mx-auto flex min-h-[4.55rem] w-full max-w-[1160px] items-center justify-between gap-4 px-4 py-2.5 sm:px-6 lg:px-8">
             <AppLogo />
 
-            <nav className="hidden items-center gap-1 text-[0.95rem] font-semibold tracking-[-0.012em] text-[#35537f] lg:flex">
+            <nav className="hidden items-center gap-5 text-[0.95rem] font-semibold tracking-[-0.012em] text-[#0f1115] lg:flex">
               <a
                 href="#features"
-                className="inline-flex min-h-11 items-center rounded-full px-3.5 transition hover:bg-[#edf4ff] hover:text-[#1f4fb8]"
+                className="inline-flex min-h-11 items-center transition hover:text-[#2f73ff]"
               >
                 {dictionary.landingNavFeatures}
               </a>
               <a
                 href="#themes"
-                className="inline-flex min-h-11 items-center rounded-full px-3.5 transition hover:bg-[#edf4ff] hover:text-[#1f4fb8]"
+                className="inline-flex min-h-11 items-center transition hover:text-[#2f73ff]"
               >
                 {dictionary.landingNavThemes}
               </a>
               <a
                 href="#pricing"
-                className="inline-flex min-h-11 items-center rounded-full px-3.5 transition hover:bg-[#edf4ff] hover:text-[#1f4fb8]"
+                className="inline-flex min-h-11 items-center transition hover:text-[#2f73ff]"
               >
                 {dictionary.landingNavPricing}
               </a>
               <a
                 href="#faq"
-                className="inline-flex min-h-11 items-center rounded-full px-3.5 transition hover:bg-[#edf4ff] hover:text-[#1f4fb8]"
+                className="inline-flex min-h-11 items-center transition hover:text-[#2f73ff]"
               >
                 {dictionary.landingNavFaq}
               </a>
             </nav>
 
             <div className="hidden items-center gap-2.5 lg:flex">
-              <SitePreferences compact />
+              <div className="inline-flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLocale("id")}
+                  className={cn(
+                    desktopLanguageLinkClass,
+                    locale === "id" ? "border-b-2 border-black" : "border-b-2 border-transparent"
+                  )}
+                  aria-label={`${dictionary.language} ID`}
+                >
+                  ID
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLocale("en")}
+                  className={cn(
+                    desktopLanguageLinkClass,
+                    locale === "en" ? "border-b-2 border-black" : "border-b-2 border-transparent"
+                  )}
+                  aria-label={`${dictionary.language} EN`}
+                >
+                  EN
+                </button>
+              </div>
               {currentUser ? (
                 <>
-                  <Link href="/dashboard">
-                    <Button variant="secondary" size="sm">
-                      Dashboard
-                    </Button>
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex min-h-11 items-center px-2 text-[0.95rem] font-semibold tracking-[-0.012em] text-black transition hover:text-[#2f73ff]"
+                  >
+                    Dashboard
                   </Link>
-                  <div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#ccdbf5] bg-white px-2.5 py-1.5">
+                  <div className="inline-flex min-h-11 items-center gap-2 px-1">
                     <AvatarBadge
                       name={currentUser.name || "Creator"}
                       avatarUrl={currentUser.image || ""}
                       size="sm"
                     />
-                    <span className="pr-1 text-sm font-semibold text-[#2f4570]">
+                    <span className="pr-1 text-sm font-semibold text-black">
                       @{currentUser.username || "creator"}
                     </span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
+                    type="button"
+                    className="inline-flex min-h-11 items-center px-2 text-[0.95rem] font-semibold tracking-[-0.012em] text-black transition hover:text-[#2f73ff]"
                     onClick={async () => {
                       const supabase = createClient();
                       await supabase?.auth.signOut();
                       window.location.replace("/");
                     }}
                   >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
+                    <span className="inline-flex items-center gap-1.5">
+                      <LogOut className="h-4 w-4" />
+                      Sign out
+                    </span>
+                  </button>
                 </>
               ) : (
                 <>
                   <Link
                     href="/auth/login"
-                    className="inline-flex min-h-11 items-center rounded-full px-3.5 text-[0.95rem] font-semibold tracking-[-0.012em] text-[#2f4f83] transition hover:bg-[#edf4ff] hover:text-[#1f4fb8]"
+                    className="inline-flex min-h-11 items-center px-2 text-[0.95rem] font-semibold tracking-[-0.012em] text-black transition hover:text-[#2f73ff]"
                   >
                     {loginLabel}
                   </Link>
-                  <Link href="/auth/signup">
-                    <Button
-                      size="sm"
-                      className="!shadow-none bg-[#2f73ff] font-extrabold text-white hover:bg-[#225fe0]"
-                    >
-                      {dictionary.landingClaimCta}
-                    </Button>
+                  <Link
+                    href="/auth/signup"
+                    className="inline-flex min-h-11 items-center px-2 text-[0.95rem] font-semibold tracking-[-0.012em] text-black transition hover:text-[#2f73ff]"
+                  >
+                    {dictionary.signup}
                   </Link>
                 </>
               )}
@@ -948,46 +853,71 @@ export function LandingPage({
                 <a
                   href="#features"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#2e4e82] transition hover:bg-white"
+                  className="block px-1 py-2 text-[0.95rem] font-semibold tracking-[-0.01em] text-black transition hover:text-[#2f73ff]"
                 >
                   {dictionary.landingNavFeatures}
                 </a>
                 <a
                   href="#themes"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#2e4e82] transition hover:bg-white"
+                  className="block px-1 py-2 text-[0.95rem] font-semibold tracking-[-0.01em] text-black transition hover:text-[#2f73ff]"
                 >
                   {dictionary.landingNavThemes}
                 </a>
                 <a
                   href="#pricing"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#2e4e82] transition hover:bg-white"
+                  className="block px-1 py-2 text-[0.95rem] font-semibold tracking-[-0.01em] text-black transition hover:text-[#2f73ff]"
                 >
                   {dictionary.landingNavPricing}
                 </a>
                 <a
                   href="#faq"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-[1rem] px-4 py-3.5 text-[0.95rem] font-semibold tracking-[-0.01em] text-[#2e4e82] transition hover:bg-white"
+                  className="block px-1 py-2 text-[0.95rem] font-semibold tracking-[-0.01em] text-black transition hover:text-[#2f73ff]"
                 >
                   {dictionary.landingNavFaq}
                 </a>
               </div>
 
               <div className="border-t border-[#d5e1f4] pt-5">
-                <SitePreferences />
+                <div className="inline-flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setLocale("id")}
+                    className={cn(
+                      mobileLanguageLinkClass,
+                      locale === "id" ? "border-b-2 border-black" : "border-b-2 border-transparent"
+                    )}
+                    aria-label={`${dictionary.language} ID`}
+                  >
+                    ID
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLocale("en")}
+                    className={cn(
+                      mobileLanguageLinkClass,
+                      locale === "en" ? "border-b-2 border-black" : "border-b-2 border-transparent"
+                    )}
+                    aria-label={`${dictionary.language} EN`}
+                  >
+                    EN
+                  </button>
+                </div>
                 <div className="mt-6 space-y-3">
                   {currentUser ? (
                     <>
-                      <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="secondary" className="w-full">
-                          Dashboard
-                        </Button>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block py-2 text-[0.95rem] font-semibold text-black transition hover:text-[#2f73ff]"
+                      >
+                        Dashboard
                       </Link>
-                      <Button
-                        variant="ghost"
-                        className="w-full"
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 py-2 text-[0.95rem] font-semibold text-black transition hover:text-[#2f73ff]"
                         onClick={async () => {
                           const supabase = createClient();
                           await supabase?.auth.signOut();
@@ -996,28 +926,24 @@ export function LandingPage({
                       >
                         <LogOut className="h-4 w-4" />
                         Sign out
-                      </Button>
+                      </button>
                     </>
                   ) : (
                     <>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="flex items-center gap-5">
                         <Link
                           href="/auth/login"
                           onClick={() => setMobileMenuOpen(false)}
-                          className="min-w-0"
+                          className="inline-flex min-h-10 items-center text-[0.95rem] font-semibold text-black transition hover:text-[#2f73ff]"
                         >
-                          <Button variant="secondary" className="w-full">
-                            {loginLabel}
-                          </Button>
+                          {loginLabel}
                         </Link>
                         <Link
                           href="/auth/signup"
                           onClick={() => setMobileMenuOpen(false)}
-                          className="min-w-0"
+                          className="inline-flex min-h-10 items-center text-[0.95rem] font-semibold text-black transition hover:text-[#2f73ff]"
                         >
-                          <Button className="w-full !shadow-none bg-[#2f73ff] font-extrabold text-white hover:bg-[#225fe0]">
-                            {dictionary.landingClaimCta}
-                          </Button>
+                          {dictionary.signup}
                         </Link>
                       </div>
                     </>
@@ -1029,7 +955,7 @@ export function LandingPage({
         ) : null}
 
         <main className="overflow-x-clip pb-14 pt-[4.72rem] sm:pt-[4.95rem]">
-          <section className="mx-auto w-full max-w-[1160px] overflow-hidden px-4 pb-12 pt-16 sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
+          <section className="mx-auto w-full max-w-[1160px] overflow-visible px-4 pb-12 pt-16 sm:overflow-hidden sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
             <div className="grid items-center gap-9 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] lg:gap-11">
               <div className="mx-auto min-w-0 max-w-[36rem] text-center lg:mx-0 lg:text-left">
                 <Badge className="max-w-[calc(100vw-2rem)] overflow-hidden rounded-full border border-black/20 bg-transparent px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] !text-[#111111] shadow-none backdrop-blur-[1px] sm:text-eyebrow">
@@ -1062,8 +988,8 @@ export function LandingPage({
                     );
                   }}
                 >
-                  <div className="flex items-stretch gap-[3px]">
-                    <div className="flex min-w-0 flex-1 items-center gap-1 rounded-[0.9rem] bg-white/55 px-2.5 sm:gap-1.5 sm:rounded-[0.95rem] sm:px-3">
+                  <div className="grid min-w-0 grid-cols-1 items-stretch gap-[3px] min-[380px]:grid-cols-[minmax(0,1fr)_auto]">
+                    <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden rounded-[0.9rem] bg-white/55 px-2.5 sm:gap-1.5 sm:rounded-[0.95rem] sm:px-3">
                       <label
                         htmlFor="hero-username"
                         className="shrink-0 text-[0.8rem] font-semibold tracking-[-0.006em] text-[#1f2b44] sm:text-[0.89rem]"
@@ -1088,7 +1014,7 @@ export function LandingPage({
                     </div>
                     <Button
                       type="submit"
-                      className="h-[2.62rem] w-[5.5rem] shrink-0 !shadow-none bg-[#2f73ff] px-2 font-bold text-white hover:bg-[#225fe0] sm:h-[2.85rem] sm:w-[6.8rem] sm:px-4"
+                      className="h-[2.62rem] w-full shrink-0 !shadow-none bg-[#2f73ff] px-4 font-bold text-white hover:bg-[#225fe0] min-[380px]:w-[5.5rem] min-[380px]:px-2 sm:h-[2.85rem] sm:w-[6.8rem] sm:px-4"
                       disabled={usernameStatus !== "available"}
                     >
                       {dictionary.landingHeroInputAction}
@@ -1149,6 +1075,7 @@ export function LandingPage({
                   footer="showreels.id/creator.demo"
                   backgroundVideoSrc={prefersReducedMotion ? undefined : "/hero-loop.mp4"}
                   avatarSize="lg"
+                  textTone="light"
                   compactHeight
                 />
 
@@ -1180,10 +1107,10 @@ export function LandingPage({
                   }}
                 >
                   <p className="text-[#80726a]">
-                    {locale === "en" ? "Video slug" : "Slug video"}
+                    {locale === "en" ? "Your link" : "Link kamu"}
                   </p>
                   <p className="text-[1.05rem] font-semibold text-[#1f1a17]">
-                    /v/demo-reel-2026
+                    {locale === "en" ? "your-username" : "username kamu"}
                   </p>
                 </m.div>
               </m.div>
@@ -1347,133 +1274,72 @@ export function LandingPage({
           >
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
               <div className="text-center">
-                <Badge className={sectionBadgeClass}>
+                <Badge className="rounded-full border border-[#bcd3ff] bg-[#eaf2ff] px-2.5 py-1 text-eyebrow font-semibold uppercase text-[#2f73ff] shadow-none">
                   {dictionary.landingPricingBadge}
                 </Badge>
-                <h2 className={sectionTitleClass}>
-                  {dictionary.landingPricingTitleLead}{" "}
-                  <span className={accentTextClass}>{dictionary.landingPricingTitleAccent}</span>
+                <h2 className="mt-3 font-display text-section-display font-extrabold text-[#1f58d8]">
+                  <span className="text-[#2f73ff]">{dictionary.landingPricingTitleLead}</span>{" "}
+                  <span className="font-accent text-[#2b67e9]">
+                    {dictionary.landingPricingTitleAccent}
+                  </span>
                 </h2>
                 <p className={centeredSectionDescriptionClass}>
                   {dictionary.landingPricingDescription}
                 </p>
               </div>
 
-              <div className="mt-8 grid gap-3.5 lg:grid-cols-3">
-                {pricingPlans.map((plan) => (
-                  <article
-                    key={plan.name}
-                    className={cn(
-                      "flex h-full flex-col rounded-[1.45rem] border p-5 shadow-sm sm:p-6",
-                      plan.featured
-                        ? "border-[#1f1a17] bg-[#1a1412] text-white"
-                        : "border-[#ddd3cd] bg-white text-[#201b18]"
-                    )}
-                  >
-                    <p
+              <div className="mt-8 rounded-[2rem] border border-[#d7e3fb] bg-white p-5 shadow-[0_20px_48px_-34px_rgba(25,42,74,0.28)] sm:p-7 lg:p-9">
+                <div className="text-center">
+                  <h3 className="font-display text-[clamp(1.45rem,3.2vw,2.25rem)] font-semibold tracking-[-0.03em] text-[#153063]">
+                    {locale === "en" ? "Choose your perfect plan" : "Pilih paket terbaikmu"}
+                  </h3>
+                  <p className="mt-2 text-sm text-[#5a6e91] sm:text-base">
+                    {locale === "en"
+                      ? "Pick once, then continue to secure Midtrans checkout."
+                      : "Pilih paket yang cocok, lalu lanjutkan ke checkout Midtrans yang aman."}
+                  </p>
+                </div>
+
+                <div className="mt-7 grid gap-3.5 lg:grid-cols-3">
+                  {pricingPlans.map((plan) => (
+                    <Link
+                      key={plan.name}
+                      href={PRICING_PLAN_HREF_BY_ID[plan.id]}
                       className={cn(
-                        "text-helper font-semibold uppercase tracking-[0.14em]",
-                        plan.featured ? "text-[#c8dbff]" : "text-[#6d7890]"
+                        "relative flex h-full flex-col overflow-hidden rounded-[1.35rem] border p-5 transition hover:-translate-y-0.5 sm:p-6",
+                        plan.featured
+                          ? "border-[#2f73ff] bg-[#f7faff] text-[#201b18] shadow-[0_16px_30px_-22px_rgba(47,115,255,0.5)]"
+                          : "border-[#e4ebf7] bg-[#fbfcff] text-[#201b18]"
                       )}
                     >
-                      {plan.name}
-                    </p>
-                    <p className="mt-2.5 text-[2.2rem] font-semibold tracking-[-0.04em] sm:text-[2.5rem]">
-                      {plan.monthlyPrice}
-                      <span
-                        className={cn(
-                          "ml-1 text-[0.84rem] font-medium tracking-[-0.006em]",
-                          plan.featured ? "text-white/70" : "text-[#776860]"
-                        )}
-                      >
-                        {locale === "en" ? "/month" : "/bulan"}
-                      </span>
-                    </p>
-                    <p
-                      className={cn(
-                        "text-body-base mt-2",
-                        plan.featured ? "text-white/80" : "text-[#60524b]"
-                      )}
-                    >
-                      {plan.subtitle}
-                    </p>
+                      {plan.featured ? (
+                        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-[#d5e3ff] bg-[#eef5ff] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2f73ff]">
+                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#2f73ff]" />
+                          {locale === "en" ? "Most popular" : "Paling populer"}
+                        </span>
+                      ) : null}
 
-                    <ul className="mt-4 flex-1 space-y-3">
-                      {plan.points.map((point) => {
-                        const isUnavailable = point.status === "unavailable";
-                        const isComingSoon = point.status === "coming_soon";
+                      <p className="text-helper font-semibold uppercase tracking-[0.14em] text-[#5b6f95]">
+                        {plan.name}
+                      </p>
+                      <p className="mt-2.5 text-[2.05rem] font-semibold tracking-[-0.04em] text-[#141d2d] sm:text-[2.3rem]">
+                        {plan.monthlyPrice}
+                        <span className="ml-1 text-[0.84rem] font-medium tracking-[-0.006em] text-[#6f7f99]">
+                          {locale === "en" ? "/month" : "/bulan"}
+                        </span>
+                      </p>
+                      <p className="text-body-base mt-2 text-[#54627a]">{plan.subtitle}</p>
+                    </Link>
+                  ))}
+                </div>
 
-                        return (
-                          <li
-                            key={`${plan.id}-${point.id}`}
-                            className="flex items-start gap-2 text-[0.88rem] tracking-[-0.008em]"
-                          >
-                            <span
-                              className={cn(
-                                "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ring-1",
-                                isUnavailable
-                                  ? plan.featured
-                                    ? "bg-white/10 text-white/55 ring-white/20"
-                                    : "bg-[#f0eae6] text-[#8c7f78] ring-[#e5d7cf]"
-                                  : plan.featured
-                                    ? "bg-emerald-400/20 text-emerald-200 ring-emerald-300/40"
-                                    : "bg-emerald-50 text-emerald-600 ring-emerald-200"
-                              )}
-                              aria-hidden="true"
-                            >
-                              {isUnavailable ? (
-                                <X className="h-3.5 w-3.5" />
-                              ) : (
-                                <Check className="h-3.5 w-3.5" />
-                              )}
-                            </span>
-                            <span
-                              className={cn(
-                                "min-w-0 leading-snug",
-                                isUnavailable
-                                  ? plan.featured
-                                    ? "text-white/55 line-through"
-                                    : "text-[#8e7f77] line-through"
-                                  : plan.featured
-                                    ? "text-white"
-                                    : "text-[#201b18]"
-                              )}
-                            >
-                              {point.label}
-                              {isComingSoon ? (
-                                <span
-                                  className={cn(
-                                    "ml-2 inline-flex rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]",
-                                    plan.featured
-                                      ? "border-emerald-200/45 bg-emerald-400/15 text-emerald-200"
-                                      : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                  )}
-                                >
-                                  {comingSoonLabel}
-                                </span>
-                              ) : null}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-
-                    <div className="mt-5">
-                      <Link href={PRICING_PLAN_HREF_BY_ID[plan.id]}>
-                        <Button
-                          className={cn(
-                            "relative z-10 w-full !font-extrabold !opacity-100 !shadow-none",
-                            plan.featured
-                              ? "!bg-white !text-[#1f4fb8] ring-1 ring-[#d5e2ff] hover:!bg-[#eef4ff]"
-                              : "!bg-[#2f73ff] !text-white hover:!bg-[#225fe0] focus-visible:!ring-[#8eb3ff]"
-                          )}
-                        >
-                          {locale === "en" ? "Choose" : "Pilih"}
-                        </Button>
-                      </Link>
-                    </div>
-                  </article>
-                ))}
+                <div className="mt-6 flex justify-center">
+                  <Link href="/payment?plan=creator">
+                    <Button className="!shadow-none bg-[#2f73ff] px-6 font-extrabold text-white hover:bg-[#225fe0]">
+                      {locale === "en" ? "Choose plan & continue" : "Pilih paket & lanjutkan"}
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </section>
@@ -1574,234 +1440,6 @@ export function LandingPage({
                   ))}
                 </div>
               </div>
-            </div>
-          </section>
-
-          <section className="mx-auto w-full max-w-[1160px] px-4 py-12 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
-            <div className="text-center">
-              <Badge className={sectionBadgeClass}>
-                {locale === "en" ? "Community" : "Komunitas"}
-              </Badge>
-              <h2 className={sectionTitleClass}>
-                {locale === "en" ? "Featured creators" : "Community Creator Pilihan"}
-              </h2>
-              <p className={centeredSectionDescriptionClass}>
-                {locale === "en"
-                  ? "Discover creators with complete profiles, strong reels, and clear specialization."
-                  : "Temukan creator dengan profil lengkap, reel terbaik, dan spesialisasi yang jelas."}
-              </p>
-            </div>
-            <div className="mt-7 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-              {featuredCreatorCards.length === 0 ? (
-                <p className="text-body-base rounded-2xl border border-dashed border-[#d3def1] bg-white p-8 text-center text-[#5f6f8e] sm:col-span-2 lg:col-span-3">
-                  {locale === "en" ? "No creators yet." : "Belum ada creator."}
-                </p>
-              ) : (
-                featuredCreatorCards.map((creator) => (
-                  <Link
-                    key={creator.id}
-                    href={creator.username ? `/creator/${creator.username}` : "/auth/signup"}
-                    className="surface-panel rounded-[1.2rem] p-3.5 transition hover:-translate-y-0.5"
-                  >
-                    <div className="flex items-center gap-3">
-                      <AvatarBadge
-                        name={creator.name || "Creator"}
-                        avatarUrl={creator.image || ""}
-                        size="md"
-                      />
-                      <div className="min-w-0">
-                        <p className="truncate text-card-title font-semibold text-[#201b18]">
-                          {creator.name || "Creator"}
-                        </p>
-                        <p className="truncate text-helper text-[#627294]">
-                          @{creator.username || "creator"}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-body-base mt-2.5 line-clamp-2 text-[#4f5f7e]">
-                      {creator.bio?.trim() ||
-                        (locale === "en"
-                          ? "Bio has not been added yet."
-                          : "Bio belum ditambahkan.")}
-                    </p>
-                  </Link>
-                ))
-              )}
-            </div>
-          </section>
-
-          <section className="mx-auto w-full max-w-[1160px] px-4 pb-12 sm:px-6 sm:pb-14 lg:px-8 lg:pb-16">
-            <div className="text-center">
-              <Badge className={sectionBadgeClass}>
-                {locale === "en" ? "Latest videos" : "Video terbaru"}
-              </Badge>
-              <h2 className={sectionTitleClass}>
-                {locale === "en"
-                  ? "Latest videos from creators"
-                  : "Video Terbaru dari Creator"}
-              </h2>
-              <p className={centeredSectionDescriptionClass}>
-                {locale === "en"
-                  ? "Review fresh uploads quickly with consistent card previews and metadata."
-                  : "Lihat upload terbaru dengan kartu video yang konsisten dan metadata yang mudah dibaca."}
-              </p>
-            </div>
-
-            <div className="mt-6 flex justify-center">
-              <div className="inline-flex items-center gap-1 rounded-full border border-[#cbdbf5] bg-white p-1">
-                <button
-                  type="button"
-                  onClick={() => setLatestVideosView("grid")}
-                  className={cn(
-                    "inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.86rem] font-semibold tracking-[-0.008em] transition",
-                    latestVideosView === "grid"
-                      ? "bg-[#2f73ff] text-white"
-                      : "text-[#3d5a8f] hover:bg-[#edf4ff]"
-                  )}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                  Grid
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLatestVideosView("list")}
-                  className={cn(
-                    "inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.86rem] font-semibold tracking-[-0.008em] transition",
-                    latestVideosView === "list"
-                      ? "bg-[#2f73ff] text-white"
-                      : "text-[#3d5a8f] hover:bg-[#edf4ff]"
-                  )}
-                >
-                  <List className="h-4 w-4" />
-                  List
-                </button>
-              </div>
-            </div>
-
-            <div
-              className={cn(
-                "mt-5",
-                latestVideosView === "grid"
-                  ? "grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3"
-                  : "space-y-3.5"
-              )}
-            >
-              {visibleLatestVideos.length === 0 ? (
-                <p className="text-body-base rounded-2xl border border-dashed border-[#d3def1] bg-white p-8 text-center text-[#5f6f8e]">
-                  {locale === "en" ? "No video yet." : "Belum ada video."}
-                </p>
-              ) : (
-                visibleLatestVideos.map((video) => {
-                  const thumbnail =
-                    getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
-                  const sourceMeta = getVideoSourceBadgeMeta(video.sourceUrl);
-                  const postedDateLabel = new Intl.DateTimeFormat(
-                    locale === "en" ? "en-US" : "id-ID",
-                    {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    }
-                  ).format(new Date(video.createdAt));
-
-                  return (
-                    <Link
-                      key={video.id}
-                      href={`/v/${video.publicSlug}`}
-                      className={cn(
-                        "group surface-panel overflow-hidden rounded-[1.2rem] p-3.5 transition hover:-translate-y-0.5",
-                        latestVideosView === "list"
-                          ? "grid gap-3 sm:grid-cols-[180px_minmax(0,1fr)]"
-                          : "flex h-full flex-col"
-                      )}
-                    >
-                      <div className="overflow-hidden rounded-xl bg-[#efe7e3]">
-                        {thumbnail ? (
-                          <Image
-                            src={thumbnail}
-                            alt={`Thumbnail ${video.title}`}
-                            width={440}
-                            height={248}
-                            className="aspect-video h-full w-full object-cover"
-                            unoptimized
-                            loading="lazy"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <div className="flex aspect-video items-center justify-center text-sm font-medium text-[#6f625a]">
-                            <span className="inline-flex items-center gap-1">
-                              <PlayCircle className="h-4 w-4 text-[#2f66e4]" />
-                              Video
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div
-                        className={cn(
-                          "flex min-w-0 flex-1 flex-col gap-2.5",
-                          latestVideosView === "list" ? "mt-3.5 sm:mt-0" : "mt-4"
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-2.5">
-                          <p className="line-clamp-2 text-[0.92rem] font-semibold tracking-[-0.012em] text-[#1f1a17] sm:text-[0.97rem]">
-                            {video.title}
-                          </p>
-                          <span
-                            className={cn(
-                              "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold sm:text-xs",
-                              sourceMeta.className
-                            )}
-                          >
-                            {sourceMeta.label}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2.5">
-                          <AvatarBadge
-                            name={video.author?.name || "Creator"}
-                            avatarUrl={video.author?.image || ""}
-                            size="sm"
-                          />
-                          <div className="min-w-0">
-                            <p className="truncate text-[0.89rem] font-semibold tracking-[-0.008em] text-[#4a3d37]">
-                              {video.author?.name || "Creator"}
-                            </p>
-                            <p className="truncate text-helper text-[#627294]">
-                              @{video.author?.username || "creator"}
-                            </p>
-                          </div>
-                        </div>
-
-                        <p className="text-body-base line-clamp-2 text-[#4f5f7e]">
-                          {video.description}
-                        </p>
-
-                        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-[#dbe5f6] pt-2.5 text-helper text-[#5f6f8e]">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="rounded-full bg-[#edf4ff] px-2 py-0.5">
-                              {video.durationLabel || "-"}
-                            </span>
-                            <span className="rounded-full bg-[#edf4ff] px-2 py-0.5">
-                              {video.outputType || "-"}
-                            </span>
-                          </div>
-                          <span>{postedDateLabel}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })
-              )}
-            </div>
-
-            <div className="mt-5 flex justify-center">
-              <Link href="/videos">
-                <Button variant="secondary">
-                  {locale === "en" ? "View all videos" : "Lihat semua video"}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
             </div>
           </section>
 

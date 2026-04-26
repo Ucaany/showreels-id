@@ -10,7 +10,7 @@ import {
 import { ensureBillingSchema } from "@/server/billing-schema-bootstrap";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
 
-export type BillingPlanName = "free" | "pro" | "business";
+export type BillingPlanName = "free" | "creator" | "business";
 export type BillingCycle = "monthly" | "yearly";
 
 type PlanConfig = {
@@ -91,23 +91,33 @@ const PLAN_CATALOG: Record<BillingPlanName, PlanConfig> = {
     benefits: getPlanFeatureBullets("free", "id"),
     benefitItems: getPlanFeatureChecklist("free", "id"),
   },
-  pro: {
-    name: "pro",
-    label: "Pro",
-    monthly: 49000,
-    yearlyLegacy: 490000,
-    benefits: getPlanFeatureBullets("pro", "id"),
-    benefitItems: getPlanFeatureChecklist("pro", "id"),
+  creator: {
+    name: "creator",
+    label: "Creator",
+    monthly: 25000,
+    yearlyLegacy: 250000,
+    benefits: getPlanFeatureBullets("creator", "id"),
+    benefitItems: getPlanFeatureChecklist("creator", "id"),
   },
   business: {
     name: "business",
     label: "Business",
-    monthly: 149000,
-    yearlyLegacy: 1490000,
+    monthly: 49000,
+    yearlyLegacy: 490000,
     benefits: getPlanFeatureBullets("business", "id"),
     benefitItems: getPlanFeatureChecklist("business", "id"),
   },
 };
+
+function normalizeBillingPlanName(value: string | null | undefined): BillingPlanName {
+  if (value === "business") {
+    return "business";
+  }
+  if (value === "creator" || value === "pro") {
+    return "creator";
+  }
+  return "free";
+}
 
 function getMidtransServerKey() {
   return normalizeEnvValue(process.env.MIDTRANS_SERVER_KEY);
@@ -159,6 +169,53 @@ function buildInvoiceId(userId: string) {
   const ss = String(now.getSeconds()).padStart(2, "0");
   const suffix = userId.replace(/-/g, "").slice(0, 6).toUpperCase();
   return `INV-${y}${m}${d}-${hh}${mm}${ss}-${suffix}`;
+}
+
+function normalizeOrigin(value: string | undefined) {
+  const trimmed = (value || "").trim().replace(/\/+$/, "");
+  if (!trimmed) return "";
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return "";
+  }
+}
+
+function getAppOrigin() {
+  const explicitOrigin = normalizeOrigin(process.env.NEXT_PUBLIC_APP_URL);
+  if (explicitOrigin) {
+    return explicitOrigin;
+  }
+
+  const projectProductionOrigin = normalizeOrigin(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined
+  );
+  if (projectProductionOrigin) {
+    return projectProductionOrigin;
+  }
+
+  const deploymentOrigin = normalizeOrigin(
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined
+  );
+  if (deploymentOrigin) {
+    return deploymentOrigin;
+  }
+
+  return "https://showreels-id.vercel.app";
+}
+
+function getMidtransCallbacks(input: { targetPlan: BillingPlanName; invoiceId: string }) {
+  const origin = getAppOrigin();
+  const invoice = encodeURIComponent(input.invoiceId);
+  const plan = encodeURIComponent(input.targetPlan);
+
+  return {
+    finish: `${origin}/dashboard/billing?payment=success&invoice=${invoice}&plan=${plan}`,
+    unfinish: `${origin}/payment?plan=${plan}&payment=pending&invoice=${invoice}`,
+    error: `${origin}/payment?plan=${plan}&payment=error&invoice=${invoice}`,
+  };
 }
 
 function toMidtransActions(payload: Record<string, unknown>) {
@@ -284,7 +341,11 @@ export async function getOrCreateSubscription(userId: string) {
       where: eq(billingSubscriptions.userId, userId),
     });
     if (existing) {
-      return existing;
+      return {
+        ...existing,
+        planName: normalizeBillingPlanName(existing.planName),
+        nextPlanName: normalizeBillingPlanName(existing.nextPlanName),
+      };
     }
 
     const [created] = await db
@@ -300,7 +361,11 @@ export async function getOrCreateSubscription(userId: string) {
       })
       .returning();
 
-    return created;
+    return {
+      ...created,
+      planName: normalizeBillingPlanName(created.planName),
+      nextPlanName: normalizeBillingPlanName(created.nextPlanName),
+    };
   } catch (error) {
     if (isMissingBillingSchemaError(error)) {
       return buildFallbackSubscription(userId);
@@ -324,11 +389,15 @@ export async function getBillingTransactions(userId: string) {
   }
 
   try {
-    return await db.query.billingTransactions.findMany({
+    const transactions = await db.query.billingTransactions.findMany({
       where: eq(billingTransactions.userId, userId),
       orderBy: desc(billingTransactions.createdAt),
       limit: 30,
     });
+    return transactions.map((transaction) => ({
+      ...transaction,
+      planName: normalizeBillingPlanName(transaction.planName),
+    }));
   } catch (error) {
     if (isMissingBillingSchemaError(error)) {
       return [];
@@ -346,12 +415,19 @@ export async function getBillingTransactionByInvoiceForUser(
   }
 
   try {
-    return await db.query.billingTransactions.findFirst({
+    const transaction = await db.query.billingTransactions.findFirst({
       where: and(
         eq(billingTransactions.userId, userId),
         eq(billingTransactions.invoiceId, invoiceId)
       ),
     });
+    if (!transaction) {
+      return null;
+    }
+    return {
+      ...transaction,
+      planName: normalizeBillingPlanName(transaction.planName),
+    };
   } catch (error) {
     if (isMissingBillingSchemaError(error)) {
       return null;
@@ -367,6 +443,8 @@ export async function createUpgradeTransaction(input: {
   targetPlan: BillingPlanName;
   billingCycle: BillingCycle;
 }) {
+  const normalizedTargetPlan = normalizeBillingPlanName(input.targetPlan);
+
   if (input.billingCycle !== "monthly") {
     return {
       ok: false as const,
@@ -375,7 +453,7 @@ export async function createUpgradeTransaction(input: {
     };
   }
 
-  const amount = getPlanPrice(input.targetPlan, input.billingCycle);
+  const amount = getPlanPrice(normalizedTargetPlan, input.billingCycle);
   const invoiceId = buildInvoiceId(input.userId);
 
   if (!isDatabaseConfigured) {
@@ -442,6 +520,10 @@ export async function createUpgradeTransaction(input: {
 
     const runtime = getMidtransRuntimeConfig();
     const serverKey = getMidtransServerKey();
+    const callbacks = getMidtransCallbacks({
+      targetPlan: normalizedTargetPlan,
+      invoiceId,
+    });
     const response = await fetch(`${runtime.snapApiBaseUrl}/snap/v1/transactions`, {
       method: "POST",
       headers: {
@@ -456,10 +538,10 @@ export async function createUpgradeTransaction(input: {
         },
         item_details: [
           {
-            id: `${input.targetPlan}-${input.billingCycle}`,
+            id: `${normalizedTargetPlan}-${input.billingCycle}`,
             price: amount,
             quantity: 1,
-            name: `Showreels ${PLAN_CATALOG[input.targetPlan].label} (${input.billingCycle})`,
+            name: `Showreels ${PLAN_CATALOG[normalizedTargetPlan].label} (${input.billingCycle})`,
           },
         ],
         customer_details: {
@@ -470,9 +552,10 @@ export async function createUpgradeTransaction(input: {
           secure: true,
         },
         enabled_payments: ["credit_card", "qris"],
-        custom_field1: input.targetPlan,
+        custom_field1: normalizedTargetPlan,
         custom_field2: input.billingCycle,
         custom_field3: input.userId,
+        callbacks,
       }),
     });
 
@@ -499,7 +582,7 @@ export async function createUpgradeTransaction(input: {
         userId: input.userId,
         subscriptionId: subscription.id,
         invoiceId,
-        planName: input.targetPlan,
+        planName: normalizedTargetPlan,
         billingCycle: input.billingCycle,
         amount,
         currency: payload.currency || "IDR",
@@ -509,7 +592,7 @@ export async function createUpgradeTransaction(input: {
         snapToken: payload.token,
         redirectUrl: payload.redirect_url,
         paymentMethod: "snap",
-        description: `Upgrade ke ${PLAN_CATALOG[input.targetPlan].label}`,
+        description: `Upgrade ke ${PLAN_CATALOG[normalizedTargetPlan].label}`,
         rawPayload: payloadRecord,
       })
       .returning();
@@ -518,7 +601,7 @@ export async function createUpgradeTransaction(input: {
       .update(billingSubscriptions)
       .set({
         status: "pending",
-        nextPlanName: input.targetPlan,
+        nextPlanName: normalizedTargetPlan,
         billingCycle: input.billingCycle,
         price: amount,
         updatedAt: new Date(),
@@ -612,6 +695,7 @@ export async function handleMidtransWebhook(payload: {
     const mappedTransactionStatus = mapMidtransStatus(transactionStatus);
     const mappedSubscriptionStatus = mapSubscriptionStatus(transactionStatus);
     const isPaid = mappedTransactionStatus === "paid";
+    const normalizedTransactionPlan = normalizeBillingPlanName(transaction.planName);
 
     const [updatedTransaction] = await db
       .update(billingTransactions)
@@ -653,8 +737,12 @@ export async function handleMidtransWebhook(payload: {
       await db
         .update(billingSubscriptions)
         .set({
-          planName: isPaid ? transaction.planName : subscription.planName,
-          nextPlanName: isPaid ? transaction.planName : subscription.nextPlanName,
+          planName: isPaid
+            ? normalizedTransactionPlan
+            : normalizeBillingPlanName(subscription.planName),
+          nextPlanName: isPaid
+            ? normalizedTransactionPlan
+            : normalizeBillingPlanName(subscription.nextPlanName),
           status: mappedSubscriptionStatus,
           price: transaction.amount,
           billingCycle: transaction.billingCycle,

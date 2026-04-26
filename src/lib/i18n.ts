@@ -28,7 +28,7 @@ export const dictionaries = {
     landingHeroTitleLead: "Satu link.",
     landingHeroTitleAccent: "Karya videomu.",
     landingHeroDescription:
-      "Presentasikan profil, keahlian, dan karya video terbaik dalam satu halaman publik yang rapi, profesional, dan mudah dibagikan ke klien.",
+      "Tampilkan identitas creator, keahlian utama, dan karya video terbaikmu dalam satu halaman publik yang bersih, profesional, dan siap dibagikan ke klien.",
     landingHeroInputHint: "Cek username kamu sekarang",
     landingHeroInputPlaceholder: "nama_kamu",
     landingHeroInputAction: "Ambil",
@@ -68,12 +68,12 @@ export const dictionaries = {
     landingPricingTitleLead: "Paket fleksibel untuk",
     landingPricingTitleAccent: "creator yang berkembang.",
     landingPricingDescription:
-      "Struktur paket tetap Free, Pro, dan Business. Seluruh poin hanya menampilkan capability Showreels saat ini.",
+      "Pilih paket Free, Creator, atau Business sesuai fase perkembanganmu, lalu lanjutkan checkout dengan alur pembayaran yang sederhana.",
     landingPricingMonthlyLabel: "Bulanan",
     landingPricingYearlyLabel: "Tahunan",
     landingPricingYearlySave: "Hemat 2 bulan",
     landingPricingFree: "Mulai profil publik personal",
-    landingPricingPro: "Kontrol visibilitas lebih detail",
+    landingPricingCreator: "Kontrol dan kapasitas lebih untuk creator aktif",
     landingPricingTeam: "Cocok untuk studio dan agency",
     landingTestimonialsBadge: "Testimoni",
     landingTestimonialsTitleLead: "Dari creator,",
@@ -99,8 +99,6 @@ export const dictionaries = {
     statCreators: "Kreator aktif",
     statVideos: "Video tersimpan",
     statProfiles: "Profil publik siap dibagikan",
-    featuredCreators: "Kreator Pilihan",
-    featuredVideos: "Video Terbaru",
     authLoginTitle: "Masuk ke akunmu",
     authLoginSubtitle:
       "Gunakan email dan password, atau langsung lanjut dengan akun Google.",
@@ -134,8 +132,6 @@ export const dictionaries = {
     profileCustomLinksRemove: "Hapus link",
     profileCustomLinksToggle: "Tampilkan link ini di halaman publik",
     publicPrimaryLinksTitle: "Link Utama",
-    publicVideoLinksTitle: "Link creator (ringkas)",
-    publicVideoLinksCta: "Lihat semua link creator",
   },
   en: {
     language: "Language",
@@ -163,7 +159,7 @@ export const dictionaries = {
     landingHeroTitleLead: "One link.",
     landingHeroTitleAccent: "Your videos.",
     landingHeroDescription:
-      "Present your profile, expertise, and best video work in one polished public page that is professional and easy to share with clients.",
+      "Show your creator identity, key expertise, and best video work in one clean public page that looks professional and is easy to share with clients.",
     landingHeroInputHint: "Check your username now",
     landingHeroInputPlaceholder: "your_name",
     landingHeroInputAction: "Claim",
@@ -203,12 +199,12 @@ export const dictionaries = {
     landingPricingTitleLead: "Flexible plans for",
     landingPricingTitleAccent: "growing creators.",
     landingPricingDescription:
-      "The Free, Pro, and Business structure stays in place. Every bullet below reflects current Showreels capabilities.",
+      "Choose Free, Creator, or Business based on your growth stage, then continue through a simple checkout flow.",
     landingPricingMonthlyLabel: "Monthly",
     landingPricingYearlyLabel: "Yearly",
     landingPricingYearlySave: "Save 2 months",
     landingPricingFree: "Start with a personal public profile",
-    landingPricingPro: "Deeper visibility control",
+    landingPricingCreator: "More control and capacity for active creators",
     landingPricingTeam: "Suitable for studios and agencies",
     landingTestimonialsBadge: "Testimonials",
     landingTestimonialsTitleLead: "From creators,",
@@ -234,8 +230,6 @@ export const dictionaries = {
     statCreators: "Active creators",
     statVideos: "Stored videos",
     statProfiles: "Share-ready public profiles",
-    featuredCreators: "Featured Creators",
-    featuredVideos: "Latest Videos",
     authLoginTitle: "Sign in to your account",
     authLoginSubtitle:
       "Use your email and password, or continue instantly with Google.",
@@ -270,8 +264,6 @@ export const dictionaries = {
     profileCustomLinksRemove: "Remove link",
     profileCustomLinksToggle: "Show this link on public pages",
     publicPrimaryLinksTitle: "Primary Links",
-    publicVideoLinksTitle: "Creator links (quick access)",
-    publicVideoLinksCta: "See all creator links",
   },
 } as const;
 

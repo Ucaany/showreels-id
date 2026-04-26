@@ -41,7 +41,6 @@ export default async function HomePage({
       creatorCount={stats.creatorCount}
       videoCount={stats.videoCount}
       featuredCreators={stats.featuredCreators}
-      featuredVideos={stats.featuredVideos}
       currentUser={landingUser}
     />
   );

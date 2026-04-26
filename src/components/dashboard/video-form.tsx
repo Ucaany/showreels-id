@@ -660,7 +660,7 @@ export function VideoForm({
               </p>
             ) : (
               <p className="mt-1 text-xs text-amber-700">
-                Custom thumbnail terkunci di plan Free. Upgrade ke Pro/Business untuk mengaktifkan.
+                Custom thumbnail terkunci di plan Free. Upgrade ke Creator/Business untuk mengaktifkan.
               </p>
             )}
             {!manualThumbnailUrl && source ? (

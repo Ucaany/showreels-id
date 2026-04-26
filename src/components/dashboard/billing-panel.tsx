@@ -12,7 +12,7 @@ import {
   type PlanFeatureChecklistItem,
 } from "@/lib/plan-feature-matrix";
 
-type PlanName = "free" | "pro" | "business";
+type PlanName = "free" | "creator" | "business";
 type BillingCycle = "monthly" | "yearly";
 
 type PlanConfig = {
@@ -148,7 +148,7 @@ export function BillingPanel({
     if (planName === "free") {
       const confirmed = await confirmFeedbackAction({
         title: "Downgrade ke Free?",
-        text: "Akses fitur Pro/Business akan nonaktif setelah downgrade.",
+        text: "Akses fitur Creator/Business akan nonaktif setelah downgrade.",
         confirmButtonText: "Ya, downgrade",
       });
       if (!confirmed) return;
@@ -184,7 +184,7 @@ export function BillingPanel({
     if (!confirmed) return;
 
     setSubmittingPlan(planName);
-    window.location.assign(`/dashboard/payment?plan=${planName}`);
+    window.location.assign(`/payment?plan=${planName}&intent=checkout`);
   };
 
   return (

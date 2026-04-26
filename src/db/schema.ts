@@ -215,7 +215,7 @@ export const billingSubscriptions = pgTable(
       .references(() => users.id, { onDelete: "cascade" })
       .unique(),
     planName: text("plan_name")
-      .$type<"free" | "pro" | "business">()
+      .$type<"free" | "creator" | "business">()
       .notNull()
       .default("free"),
     billingCycle: text("billing_cycle")
@@ -230,7 +230,7 @@ export const billingSubscriptions = pgTable(
     currency: text("currency").notNull().default("IDR"),
     renewalDate: timestamp("renewal_date", { mode: "date" }),
     nextPlanName: text("next_plan_name")
-      .$type<"free" | "pro" | "business">()
+      .$type<"free" | "creator" | "business">()
       .notNull()
       .default("free"),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
@@ -256,7 +256,7 @@ export const billingTransactions = pgTable(
     }),
     invoiceId: text("invoice_id").notNull().unique(),
     planName: text("plan_name")
-      .$type<"free" | "pro" | "business">()
+      .$type<"free" | "creator" | "business">()
       .notNull()
       .default("free"),
     billingCycle: text("billing_cycle")

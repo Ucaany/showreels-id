@@ -4,6 +4,7 @@ import {
   getBillingTransactions,
   getOrCreateSubscription,
   getPlanCatalog,
+  refreshBillingTransactionStatusFromMidtrans,
 } from "@/server/billing";
 import { requireCurrentUser } from "@/server/current-user";
 import { getOrCreateCreatorSettings } from "@/server/creator-settings";
@@ -13,9 +14,32 @@ import {
   getSupportLink,
 } from "@/server/subscription-policy";
 
-export default async function DashboardBillingPage() {
+type DashboardBillingPageProps = {
+  searchParams?: Promise<{
+    invoice?: string;
+    payment?: string;
+    plan?: string;
+  }>;
+};
+
+export default async function DashboardBillingPage({
+  searchParams,
+}: DashboardBillingPageProps) {
   const user = await requireCurrentUser();
   const midtransRuntime = getMidtransRuntimeConfig();
+  const params = searchParams ? await searchParams : {};
+  const invoiceId = typeof params.invoice === "string" ? params.invoice.trim() : "";
+
+  if (invoiceId) {
+    try {
+      await refreshBillingTransactionStatusFromMidtrans({
+        userId: user.id,
+        invoiceId,
+      });
+    } catch (error) {
+      console.error("Failed to refresh Midtrans payment status", error);
+    }
+  }
 
   const [subscription, transactions, settings, entitlementState] = await Promise.all([
     getOrCreateSubscription(user.id),
@@ -31,7 +55,7 @@ export default async function DashboardBillingPage() {
     <BillingPanel
       initialPlan={{
         ...subscription,
-        planName: subscription.planName as "free" | "pro" | "business",
+        planName: subscription.planName as "free" | "creator" | "business",
         billingCycle: subscription.billingCycle as "monthly" | "yearly",
         status: subscription.status as "active" | "trial" | "expired" | "failed" | "pending",
         renewalDate: subscription.renewalDate?.toISOString() || null,
@@ -41,7 +65,7 @@ export default async function DashboardBillingPage() {
       catalog={getPlanCatalog()}
       initialTransactions={transactions.map((transaction) => ({
         ...transaction,
-        planName: transaction.planName as "free" | "pro" | "business",
+        planName: transaction.planName as "free" | "creator" | "business",
         billingCycle: transaction.billingCycle as "monthly" | "yearly",
         status: transaction.status as "pending" | "paid" | "failed" | "cancelled" | "expired",
         createdAt: transaction.createdAt.toISOString(),

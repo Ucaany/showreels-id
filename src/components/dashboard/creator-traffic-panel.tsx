@@ -19,7 +19,7 @@ type SummaryPayload = {
   analyticsMaxDays?: number;
   requestedRangeDays?: number;
   appliedRangeDays?: number;
-  planName?: "free" | "pro" | "business";
+  planName?: "free" | "creator" | "business";
 };
 
 type Point = {
@@ -132,12 +132,12 @@ export function CreatorTrafficPanel({
   }, [query]);
 
   return (
-    <Card
-      className={`dashboard-clean-card border-[#d6e2f7] bg-white ${compact ? "p-4" : "p-4 sm:p-5"} ${className}`}
-    >
+    <Card className={`dashboard-panel ${compact ? "p-4" : "p-4 sm:p-5"} ${className}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-[#5873a0]">Traffic Overview</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5f79a8]">
+            Traffic Overview
+          </p>
           <h2 className="font-display text-2xl font-semibold text-[#1b2e4f]">
             Analytics Trafik Creator
           </h2>
@@ -184,14 +184,14 @@ export function CreatorTrafficPanel({
             <Link href="/dashboard/billing" className="w-full sm:w-auto">
               <Button size="sm" className="w-full sm:w-auto">
                 <Sparkles className="h-4 w-4" />
-                Upgrade Pro/Business
+                Upgrade Creator/Business
               </Button>
             </Link>
           </div>
         </div>
       ) : null}
 
-      {appliedPeriod !== effectivePeriod || hasRangeClamp ? (
+      {periodMode === "full" && (appliedPeriod !== effectivePeriod || hasRangeClamp) ? (
         <div className="mt-3 rounded-2xl border border-[#d5e1f4] bg-[#f6faff] p-3">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2f73ff]">
             Range disesuaikan
@@ -231,8 +231,8 @@ export function CreatorTrafficPanel({
         </div>
       ) : null}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-[#dce7f8] bg-white p-4">
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="dashboard-kpi-card p-3.5 sm:p-4">
           <div className="flex items-center gap-2 text-[#4f658f]">
             <Eye className="h-4 w-4 text-[#2f73ff]" />
             <p className="text-xs font-semibold uppercase tracking-[0.14em]">Total Views</p>
@@ -241,7 +241,7 @@ export function CreatorTrafficPanel({
             {summary.totalViews}
           </p>
         </div>
-        <div className="rounded-2xl border border-[#dce7f8] bg-white p-4">
+        <div className="dashboard-kpi-card p-3.5 sm:p-4">
           <div className="flex items-center gap-2 text-[#4f658f]">
             <Activity className="h-4 w-4 text-[#2f73ff]" />
             <p className="text-xs font-semibold uppercase tracking-[0.14em]">

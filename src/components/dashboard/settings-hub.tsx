@@ -51,7 +51,7 @@ function SettingsNavCard({
   const Icon = icon;
   const body = (
     <Card
-      className={`dashboard-clean-card h-full border-[#d6e2f7] bg-white p-4 transition ${
+      className={`dashboard-panel h-full p-4 transition ${
         disabled ? "opacity-80" : "hover:-translate-y-0.5 hover:border-[#bfd6ff] hover:shadow-md"
       }`}
     >
@@ -89,7 +89,7 @@ export function SettingsHub({
   supportLink,
 }: {
   username: string;
-  planName: "free" | "pro" | "business";
+  planName: "free" | "creator" | "business";
   entitlements: SettingsHubEntitlements;
   creatorGroupLink: string;
   supportLink: string;
@@ -97,9 +97,14 @@ export function SettingsHub({
   const supabase = createClient();
   const [deleteText, setDeleteText] = useState("");
   const [deleting, setDeleting] = useState(false);
-  const planLabel = planName === "business" ? "Business" : planName === "pro" ? "Pro" : "Free";
+  const planLabel =
+    planName === "business" ? "Business" : planName === "creator" ? "Creator" : "Free";
   const planBadge =
-    planName === "business" ? "💼 Business" : planName === "pro" ? "⚡ Pro" : "🆓 Free";
+    planName === "business"
+      ? "Business"
+      : planName === "creator"
+        ? "Creator"
+        : "Free";
 
   const handleDeleteAccount = async () => {
     if (deleteText.trim().toUpperCase() !== "HAPUS AKUN") {
@@ -152,8 +157,8 @@ export function SettingsHub({
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="dashboard-clean-card border-[#d6e2f7] bg-gradient-to-b from-[#ffffff] to-[#f6faff] p-4 sm:p-5">
+    <div className="dashboard-stack">
+      <Card className="dashboard-panel bg-gradient-to-b from-[#ffffff] to-[#f6faff] p-4 sm:p-5">
         <div className="inline-flex items-center gap-2 rounded-full border border-[#d5e1f4] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#2f73ff]">
           <Sparkles className="h-3.5 w-3.5" />
           Settings
@@ -256,7 +261,7 @@ export function SettingsHub({
         ) : null}
       </div>
 
-      <Card className="dashboard-clean-card border-rose-200 bg-gradient-to-b from-rose-50 to-white p-4 sm:p-5">
+      <Card className="dashboard-panel border-rose-200 bg-gradient-to-b from-rose-50 to-white p-4 sm:p-5">
         <div className="flex items-start gap-2.5">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-white text-rose-600">
             <ShieldAlert className="h-4 w-4" />
@@ -289,4 +294,3 @@ export function SettingsHub({
     </div>
   );
 }
-

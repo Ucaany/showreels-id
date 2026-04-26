@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 
-type PlanName = "pro" | "business";
+type PlanName = "creator" | "business";
 type PaymentStatus = "pending" | "paid" | "failed" | "cancelled" | "expired";
 
 type MidtransConfig = {

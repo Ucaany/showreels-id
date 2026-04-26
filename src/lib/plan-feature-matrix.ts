@@ -1,5 +1,5 @@
 export type PlanFeatureLocale = "id" | "en";
-export type PlanFeaturePlanName = "free" | "pro" | "business";
+export type PlanFeaturePlanName = "free" | "creator" | "business";
 export type PlanFeatureStatus = "available" | "unavailable" | "coming_soon";
 
 type LocalizedText = Record<PlanFeatureLocale, string>;
@@ -24,7 +24,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
         text: { id: "Maksimal 10 link", en: "Up to 10 links" },
         status: "available",
       },
-      pro: {
+      creator: {
         text: { id: "Tanpa batas", en: "Unlimited" },
         status: "available",
       },
@@ -42,7 +42,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
         text: { id: "Maksimal 7 hari", en: "Up to 7 days" },
         status: "available",
       },
-      pro: {
+      creator: {
         text: { id: "Maksimal 30 hari", en: "Up to 30 days" },
         status: "available",
       },
@@ -60,7 +60,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
         text: { id: "2x / 30 hari", en: "2 changes / 30 days" },
         status: "available",
       },
-      pro: {
+      creator: {
         text: { id: "3x / 30 hari", en: "3 changes / 30 days" },
         status: "available",
       },
@@ -78,7 +78,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
         text: { id: "Tidak tersedia", en: "Not available" },
         status: "unavailable",
       },
-      pro: {
+      creator: {
         text: { id: "Tersedia", en: "Available" },
         status: "available",
       },
@@ -96,7 +96,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
         text: { id: "10 video / platform", en: "10 videos / platform" },
         status: "available",
       },
-      pro: {
+      creator: {
         text: { id: "50 video / platform", en: "50 videos / platform" },
         status: "available",
       },
@@ -114,7 +114,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
         text: { id: "Tidak termasuk", en: "Not included" },
         status: "unavailable",
       },
-      pro: {
+      creator: {
         text: { id: "Termasuk", en: "Included" },
         status: "available",
       },
@@ -132,7 +132,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
         text: { id: "Support standar", en: "Standard support" },
         status: "available",
       },
-      pro: {
+      creator: {
         text: { id: "Support prioritas", en: "Priority support" },
         status: "available",
       },
@@ -150,7 +150,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
         text: { id: "Tidak tersedia", en: "Not available" },
         status: "unavailable",
       },
-      pro: {
+      creator: {
         text: { id: "Tidak tersedia", en: "Not available" },
         status: "unavailable",
       },
@@ -168,7 +168,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
         text: { id: "Tidak tersedia", en: "Not available" },
         status: "unavailable",
       },
-      pro: {
+      creator: {
         text: { id: "Tidak tersedia", en: "Not available" },
         status: "unavailable",
       },

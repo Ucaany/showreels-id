@@ -267,7 +267,7 @@ export function LinkBuilderEditor({
 }: {
   user: LinkBuilderUser;
   linkBuilderMax: number | null;
-  planName: "free" | "pro" | "business";
+  planName: "free" | "creator" | "business";
 }) {
   const [mobileTab, setMobileTab] = useState<MobileTab>("edit");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("mobile");

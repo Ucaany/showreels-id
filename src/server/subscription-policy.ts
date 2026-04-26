@@ -31,7 +31,7 @@ export interface EffectiveCreatorPlan {
 
 const PLAN_LABELS: Record<CreatorPlanName, string> = {
   free: "Free",
-  pro: "Pro",
+  creator: "Creator",
   business: "Business",
 };
 
@@ -54,8 +54,8 @@ const ENTITLEMENTS_BY_PLAN: Record<CreatorPlanName, CreatorPlanEntitlements> = {
     supportEnabled: false,
     themeSwitchComingSoon: false,
   },
-  pro: {
-    planName: "pro",
+  creator: {
+    planName: "creator",
     linkBuilderMax: null,
     usernameChangesPer30Days: 3,
     analyticsMaxDays: 30,
@@ -95,7 +95,10 @@ const ENTITLEMENTS_BY_PLAN: Record<CreatorPlanName, CreatorPlanEntitlements> = {
 const ENTITLED_SUBSCRIPTION_STATUSES = new Set(["active", "trial"]);
 
 function normalizePlanName(value: string | null | undefined): CreatorPlanName {
-  if (value === "pro" || value === "business") {
+  if (value === "pro" || value === "creator") {
+    return "creator";
+  }
+  if (value === "business") {
     return value;
   }
   return "free";
