@@ -38,7 +38,7 @@ function getOauthErrorMessage(code: string) {
     return "Proses callback Google bermasalah. Coba lagi beberapa saat.";
   }
   if (normalized === "account_sync") {
-    return "Login berhasil, tetapi profil akun belum bisa disiapkan. Coba lagi beberapa saat.";
+    return "";
   }
   return "";
 }
