@@ -49,17 +49,20 @@ export function isCustomLinksSchemaError(error: unknown) {
   return message.includes("does not exist");
 }
 
-export function isLinkedinSchemaError(error: unknown) {
+export function isUsersSchemaMismatchError(error: unknown) {
   const code = readErrorCode(error);
   const message = readErrorMessage(error).toLowerCase();
 
-  if (code === UNDEFINED_COLUMN_CODE) {
+  const isMissingColumnCode = code === UNDEFINED_COLUMN_CODE;
+  const mentionsUsersTable =
+    message.includes("users.") ||
+    message.includes('relation "users"') ||
+    message.includes('table "users"');
+  const mentionsMissingColumn = message.includes("column") && message.includes("does not exist");
+
+  if (isMissingColumnCode && mentionsUsersTable) {
     return true;
   }
 
-  if (message.includes("linkedin_url")) {
-    return true;
-  }
-
-  return message.includes("column") && message.includes("does not exist");
+  return mentionsUsersTable && mentionsMissingColumn;
 }
