@@ -53,6 +53,10 @@ export function isLinkedinSchemaError(error: unknown) {
   const code = readErrorCode(error);
   const message = readErrorMessage(error).toLowerCase();
 
+  if (code === UNDEFINED_COLUMN_CODE) {
+    return true;
+  }
+
   const mentionsColumn =
     message.includes("linkedin_url") ||
     message.includes('column "linkedin_url"') ||
@@ -60,10 +64,6 @@ export function isLinkedinSchemaError(error: unknown) {
 
   if (!mentionsColumn) {
     return false;
-  }
-
-  if (code === UNDEFINED_COLUMN_CODE) {
-    return true;
   }
 
   return message.includes("does not exist");
