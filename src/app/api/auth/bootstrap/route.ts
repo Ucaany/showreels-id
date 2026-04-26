@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   isCustomLinksSchemaError,
-  isLinkedinSchemaError,
+  isUsersSchemaMismatchError,
   summarizeError,
 } from "@/lib/db-schema-mismatch";
 import { getSafeNextPath } from "@/lib/safe-next-path";
@@ -41,21 +41,25 @@ export async function POST(request: Request) {
     });
   } catch (syncError) {
     const mismatch =
-      isCustomLinksSchemaError(syncError) || isLinkedinSchemaError(syncError);
+      isCustomLinksSchemaError(syncError) || isUsersSchemaMismatchError(syncError);
     console.error("account_sync_failed", {
       context: mismatch ? "db_schema_mismatch" : "unexpected_error",
       ...summarizeError(syncError),
       userId: user.id,
     });
-    await supabase.auth.signOut();
 
-    return NextResponse.json(
-      {
-        code: "account_sync_failed",
-        error:
-          "Login berhasil, tetapi profil akun belum bisa disiapkan. Coba lagi beberapa saat.",
-      },
-      { status: 503 }
-    );
+    if (mismatch) {
+      return NextResponse.json({
+        ok: true,
+        redirectTo: next,
+        degradedSync: true,
+      });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      redirectTo: next,
+      degradedSync: true,
+    });
   }
 }

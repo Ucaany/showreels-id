@@ -3,7 +3,29 @@ import { redirect } from "next/navigation";
 import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { syncUserProfile } from "@/server/auth-profile";
+import { createFallbackAuthProfile, syncUserProfile } from "@/server/auth-profile";
+
+function isMissingAuthSessionError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : "";
+  const name =
+    typeof (error as { name?: unknown }).name === "string"
+      ? (error as { name: string }).name
+      : "";
+
+  return (
+    name === "AuthSessionMissingError" ||
+    message.toLowerCase().includes("auth session missing")
+  );
+}
 
 export async function getCurrentAuthUser() {
   if (!isSupabaseConfigured()) {
@@ -17,7 +39,9 @@ export async function getCurrentAuthUser() {
   } = await supabase.auth.getUser();
 
   if (error) {
-    console.error("Failed to load authenticated Supabase user", error);
+    if (!isMissingAuthSessionError(error)) {
+      console.error("Failed to load authenticated Supabase user", error);
+    }
     return null;
   }
 
@@ -35,7 +59,7 @@ export async function getCurrentUser() {
     return user.isBlocked ? null : user;
   } catch (error) {
     console.error("Failed to load current user", error);
-    return null;
+    return createFallbackAuthProfile(authUser);
   }
 }
 

@@ -69,6 +69,20 @@ function withDefaultCustomLinks<T extends Record<string, unknown>>(row: T): DbUs
   } as unknown as DbUser;
 }
 
+export function createFallbackAuthProfile(authUser: AuthProfileUserLike): DbUser {
+  const email = authUser.email?.trim().toLowerCase() || "";
+  const desiredRole = email ? (isAdminEmail(email) ? "owner" : "") : "";
+
+  return withDefaultCustomLinks({
+    id: authUser.id,
+    email,
+    name: getPreferredName(authUser).trim(),
+    image: getPreferredAvatar(authUser),
+    username: sanitizeUsername(getPreferredUsername(authUser)) || "creator",
+    role: desiredRole,
+  });
+}
+
 function readErrorCode(error: unknown): string {
   if (!error || typeof error !== "object") {
     return "";
@@ -166,14 +180,7 @@ export async function syncUserProfile(authUser: AuthProfileUserLike) {
   const desiredAvatar = getPreferredAvatar(authUser);
 
   if (!isDatabaseConfigured) {
-    return withDefaultCustomLinks({
-      id: authUser.id,
-      email,
-      name: desiredName,
-      image: desiredAvatar,
-      username: sanitizeUsername(getPreferredUsername(authUser)) || "creator",
-      role: desiredRole,
-    });
+    return createFallbackAuthProfile(authUser);
   }
 
   try {
@@ -222,7 +229,12 @@ export async function syncUserProfile(authUser: AuthProfileUserLike) {
     const uniqueEmailConflict = isUniqueEmailConflictError(error);
 
     if (!schemaMismatch && !uniqueEmailConflict) {
-      throw error;
+      console.error("syncUserProfile using fallback after unexpected error", {
+        userId: authUser.id,
+        ...summarizeError(error),
+      });
+
+      return createFallbackAuthProfile(authUser);
     }
 
     console.warn("syncUserProfile fallback mode activated", {
@@ -302,14 +314,7 @@ export async function syncUserProfile(authUser: AuthProfileUserLike) {
         ...summarizeError(fallbackError),
       });
 
-      return withDefaultCustomLinks({
-        id: authUser.id,
-        email,
-        name: desiredName,
-        image: desiredAvatar,
-        username: sanitizeUsername(getPreferredUsername(authUser)) || "creator",
-        role: desiredRole,
-      });
+      return createFallbackAuthProfile(authUser);
     }
   }
 }

@@ -45,15 +45,24 @@ async function finalizeSignedInSession(nextPath: string) {
     }
   );
   const payload = (await response.json().catch(() => null)) as
-    | { error?: string; redirectTo?: string }
+    | { error?: string; redirectTo?: string; code?: string }
     | null;
 
   if (!response.ok) {
+    if (payload?.code === "account_blocked") {
+      return {
+        ok: false as const,
+        blocked: true,
+        message:
+          payload.error ||
+          "Akun ini sedang diblokir dan belum bisa digunakan.",
+      };
+    }
+
     return {
-      ok: false as const,
-      message:
-        payload?.error ||
-        "Akun berhasil dibuat, tetapi profilnya belum bisa disiapkan.",
+      ok: true as const,
+      redirectTo: nextPath,
+      degradedSync: true,
     };
   }
 
@@ -193,10 +202,12 @@ export function SignupForm({
       const bootstrapResult = await finalizeSignedInSession(safeNextPath);
 
       if (!bootstrapResult.ok) {
-        await supabase.auth.signOut();
+        if (bootstrapResult.blocked) {
+          await supabase.auth.signOut();
+        }
         setSubmitError(bootstrapResult.message);
         void showFeedbackAlert({
-          title: "Profil belum siap",
+          title: bootstrapResult.blocked ? "Akun diblokir" : "Profil belum siap",
           text: bootstrapResult.message,
           icon: "warning",
         });

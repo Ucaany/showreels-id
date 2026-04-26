@@ -71,11 +71,20 @@ async function finalizeSignedInSession(nextPath: string) {
     | null;
 
   if (!response.ok) {
+    if (payload?.code === "account_blocked") {
+      return {
+        ok: false as const,
+        blocked: true,
+        message:
+          payload.error ||
+          "Akun ini sedang diblokir dan belum bisa digunakan.",
+      };
+    }
+
     return {
-      ok: false as const,
-      message:
-        payload?.error ||
-        "Login berhasil, tetapi akun belum bisa masuk ke aplikasi.",
+      ok: true as const,
+      redirectTo: nextPath,
+      degradedSync: true,
     };
   }
 
@@ -178,10 +187,12 @@ export function LoginForm({
       const bootstrapResult = await finalizeSignedInSession(safeNextPath);
 
       if (!bootstrapResult.ok) {
-        await supabase.auth.signOut();
+        if (bootstrapResult.blocked) {
+          await supabase.auth.signOut();
+        }
         setSubmitError(bootstrapResult.message);
         void showFeedbackAlert({
-          title: "Login tertahan",
+          title: bootstrapResult.blocked ? "Akun diblokir" : "Login tertahan",
           text: bootstrapResult.message,
           icon: "warning",
         });

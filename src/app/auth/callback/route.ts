@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   isCustomLinksSchemaError,
-  isLinkedinSchemaError,
+  isUsersSchemaMismatchError,
   summarizeError,
 } from "@/lib/db-schema-mismatch";
 import { getSafeNextPath } from "@/lib/safe-next-path";
@@ -57,16 +57,21 @@ export async function GET(request: NextRequest) {
         );
       } catch (syncError) {
         const mismatch =
-          isCustomLinksSchemaError(syncError) || isLinkedinSchemaError(syncError);
+          isCustomLinksSchemaError(syncError) || isUsersSchemaMismatchError(syncError);
         console.error("account_sync_failed", {
           context: mismatch ? "db_schema_mismatch" : "callback_unexpected_error",
           ...summarizeError(syncError),
           userId: user.id,
         });
-        await supabase.auth.signOut();
+
+        if (mismatch) {
+          return NextResponse.redirect(
+            getAuthSuccessUrl(next, request.url)
+          );
+        }
 
         return NextResponse.redirect(
-          makeLoginErrorUrl(request.url, "account_sync", next)
+          getAuthSuccessUrl(next, request.url)
         );
       }
     }
