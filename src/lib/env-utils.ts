@@ -17,5 +17,16 @@ export function normalizeEnvValue(value?: string | null) {
 
 export function hasPlaceholderEnvValue(value?: string | null) {
   const normalized = normalizeEnvValue(value);
-  return !normalized || normalized.includes("<") || normalized.includes(">");
+  const lower = normalized.toLowerCase();
+
+  return (
+    !normalized ||
+    normalized === "\"\"" ||
+    normalized === "''" ||
+    normalized.includes("<") ||
+    normalized.includes(">") ||
+    lower.includes("[your-password]") ||
+    lower.includes("your-password") ||
+    lower.includes("replace_me")
+  );
 }

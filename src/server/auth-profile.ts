@@ -1,10 +1,10 @@
 import { eq, sql } from "drizzle-orm";
-import { db } from "@/db";
+import { db, isDatabaseConfigured } from "@/db";
 import { users, videos, type DbUser } from "@/db/schema";
 import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import {
   isCustomLinksSchemaError,
-  isLinkedinSchemaError,
+  isUsersSchemaMismatchError,
   summarizeError,
 } from "@/lib/db-schema-mismatch";
 import { ensureUniqueUsername, sanitizeUsername } from "@/lib/username";
@@ -16,51 +16,98 @@ export type AuthProfileUserLike = {
   user_metadata?: Record<string, unknown> | null;
 };
 
-const legacyUserColumns = {
+const fallbackUserColumns = {
   id: users.id,
   name: users.name,
   email: users.email,
   image: users.image,
-  coverImageUrl: users.coverImageUrl,
-  avatarCropX: users.avatarCropX,
-  avatarCropY: users.avatarCropY,
-  avatarCropZoom: users.avatarCropZoom,
-  coverCropX: users.coverCropX,
-  coverCropY: users.coverCropY,
-  coverCropZoom: users.coverCropZoom,
   username: users.username,
   role: users.role,
-  bio: users.bio,
-  experience: users.experience,
-  birthDate: users.birthDate,
-  city: users.city,
-  address: users.address,
-  contactEmail: users.contactEmail,
-  phoneNumber: users.phoneNumber,
-  websiteUrl: users.websiteUrl,
-  instagramUrl: users.instagramUrl,
-  youtubeUrl: users.youtubeUrl,
-  facebookUrl: users.facebookUrl,
-  threadsUrl: users.threadsUrl,
-  profileVisibility: users.profileVisibility,
-  skills: users.skills,
-  isBlocked: users.isBlocked,
-  blockedAt: users.blockedAt,
-  blockedReason: users.blockedReason,
-  usernameChangeCount: users.usernameChangeCount,
-  usernameChangeWindowStart: users.usernameChangeWindowStart,
-  locale: users.locale,
-  prefersDarkMode: users.prefersDarkMode,
-  createdAt: users.createdAt,
-  updatedAt: users.updatedAt,
 } as const;
 
 function withDefaultCustomLinks<T extends Record<string, unknown>>(row: T): DbUser {
   return {
+    id: "",
+    name: "",
+    email: "",
+    image: null,
+    coverImageUrl: "",
+    avatarCropX: 0,
+    avatarCropY: 0,
+    avatarCropZoom: 100,
+    coverCropX: 0,
+    coverCropY: 0,
+    coverCropZoom: 100,
+    username: "",
+    role: "",
+    bio: "",
+    experience: "",
+    birthDate: "",
+    city: "",
+    address: "",
+    contactEmail: "",
+    phoneNumber: "",
+    websiteUrl: "",
+    instagramUrl: "",
+    youtubeUrl: "",
+    facebookUrl: "",
+    threadsUrl: "",
+    linkedinUrl: "",
+    profileVisibility: "public",
+    skills: [],
+    isBlocked: false,
+    blockedAt: null,
+    blockedReason: "",
+    usernameChangeCount: 0,
+    usernameChangeWindowStart: null,
+    locale: "id",
+    prefersDarkMode: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
     ...row,
     customLinks: [],
-    linkedinUrl: "",
   } as unknown as DbUser;
+}
+
+function readErrorCode(error: unknown): string {
+  if (!error || typeof error !== "object") {
+    return "";
+  }
+  const candidate = (error as { code?: unknown }).code;
+  return typeof candidate === "string" ? candidate : "";
+}
+
+function readErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message.toLowerCase();
+  }
+  if (!error || typeof error !== "object") {
+    return "";
+  }
+  const candidate = (error as { message?: unknown }).message;
+  return typeof candidate === "string" ? candidate.toLowerCase() : "";
+}
+
+function isUniqueEmailConflictError(error: unknown) {
+  const code = readErrorCode(error);
+  const message = readErrorMessage(error);
+  if (code !== "23505") {
+    return false;
+  }
+
+  return (
+    message.includes("users_email_unique") ||
+    (message.includes("email") && message.includes("duplicate"))
+  );
+}
+
+async function safeEnsureUniqueUsername(baseInput: string) {
+  try {
+    return await ensureUniqueUsername(baseInput);
+  } catch {
+    const fallback = sanitizeUsername(baseInput);
+    return fallback || "creator";
+  }
 }
 
 function getPreferredName(user: AuthProfileUserLike) {
@@ -118,6 +165,17 @@ export async function syncUserProfile(authUser: AuthProfileUserLike) {
   const desiredName = getPreferredName(authUser).trim();
   const desiredAvatar = getPreferredAvatar(authUser);
 
+  if (!isDatabaseConfigured) {
+    return withDefaultCustomLinks({
+      id: authUser.id,
+      email,
+      name: desiredName,
+      image: desiredAvatar,
+      username: sanitizeUsername(getPreferredUsername(authUser)) || "creator",
+      role: desiredRole,
+    });
+  }
+
   try {
     const existing = await db.query.users.findFirst({
       where: eq(users.id, authUser.id),
@@ -160,58 +218,99 @@ export async function syncUserProfile(authUser: AuthProfileUserLike) {
     return created;
   } catch (error) {
     const schemaMismatch =
-      isCustomLinksSchemaError(error) || isLinkedinSchemaError(error);
+      isCustomLinksSchemaError(error) || isUsersSchemaMismatchError(error);
+    const uniqueEmailConflict = isUniqueEmailConflictError(error);
 
-    if (!schemaMismatch) {
+    if (!schemaMismatch && !uniqueEmailConflict) {
       throw error;
     }
 
-    console.warn("db_schema_mismatch syncUserProfile fallback to legacy columns", {
+    console.warn("syncUserProfile fallback mode activated", {
       userId: authUser.id,
+      context: schemaMismatch ? "db_schema_mismatch" : "email_unique_conflict",
       ...summarizeError(error),
     });
-
-    const [legacyExisting] = await db
-      .select(legacyUserColumns)
-      .from(users)
-      .where(eq(users.id, authUser.id))
-      .limit(1);
-
-    if (legacyExisting) {
-      const nextUsername =
-        legacyExisting.username ||
-        (await ensureUniqueUsername(getPreferredUsername(authUser)));
-
-      const [legacyUpdated] = await db
-        .update(users)
-        .set({
-          email,
-          name: legacyExisting.name || desiredName,
-          image: legacyExisting.image || desiredAvatar,
-          username: nextUsername,
-          role: desiredRole || legacyExisting.role,
-          updatedAt: new Date(),
-        })
+    try {
+      const [legacyExistingById] = await db
+        .select(fallbackUserColumns)
+        .from(users)
         .where(eq(users.id, authUser.id))
-        .returning(legacyUserColumns);
+        .limit(1);
 
-      return withDefaultCustomLinks(legacyUpdated);
-    }
+      if (legacyExistingById) {
+        const nextUsername =
+          legacyExistingById.username ||
+          (await safeEnsureUniqueUsername(getPreferredUsername(authUser)));
 
-    const username = await ensureUniqueUsername(getPreferredUsername(authUser));
-    const [legacyCreated] = await db
-      .insert(users)
-      .values({
+        const [legacyUpdatedById] = await db
+          .update(users)
+          .set({
+            email,
+            name: legacyExistingById.name || desiredName,
+            image: legacyExistingById.image || desiredAvatar,
+            username: nextUsername,
+            role: desiredRole || legacyExistingById.role,
+          })
+          .where(eq(users.id, authUser.id))
+          .returning(fallbackUserColumns);
+
+        return withDefaultCustomLinks(legacyUpdatedById);
+      }
+
+      const [legacyExistingByEmail] = await db
+        .select(fallbackUserColumns)
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (legacyExistingByEmail) {
+        const nextUsername =
+          legacyExistingByEmail.username ||
+          (await safeEnsureUniqueUsername(getPreferredUsername(authUser)));
+
+        const [legacyUpdatedByEmail] = await db
+          .update(users)
+          .set({
+            name: legacyExistingByEmail.name || desiredName,
+            image: legacyExistingByEmail.image || desiredAvatar,
+            username: nextUsername,
+            role: desiredRole || legacyExistingByEmail.role,
+          })
+          .where(eq(users.id, legacyExistingByEmail.id))
+          .returning(fallbackUserColumns);
+
+        return withDefaultCustomLinks(legacyUpdatedByEmail || legacyExistingByEmail);
+      }
+
+      const username = await safeEnsureUniqueUsername(getPreferredUsername(authUser));
+      const [legacyCreated] = await db
+        .insert(users)
+        .values({
+          id: authUser.id,
+          email,
+          name: desiredName,
+          image: desiredAvatar,
+          username,
+          role: desiredRole,
+        })
+        .returning(fallbackUserColumns);
+
+      return withDefaultCustomLinks(legacyCreated);
+    } catch (fallbackError) {
+      console.error("syncUserProfile fallback failed", {
+        userId: authUser.id,
+        ...summarizeError(fallbackError),
+      });
+
+      return withDefaultCustomLinks({
         id: authUser.id,
         email,
         name: desiredName,
         image: desiredAvatar,
-        username,
+        username: sanitizeUsername(getPreferredUsername(authUser)) || "creator",
         role: desiredRole,
-      })
-      .returning(legacyUserColumns);
-
-    return withDefaultCustomLinks(legacyCreated);
+      });
+    }
   }
 }
 
