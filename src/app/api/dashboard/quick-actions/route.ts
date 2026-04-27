@@ -18,15 +18,9 @@ export async function GET() {
     actions: [
       {
         id: "open-link-builder",
-        title: "Buka Build Link",
+        title: "Buka Link Builder",
         description: "Tambah dan atur urutan link publik creator.",
         href: "/dashboard/link-builder",
-      },
-      {
-        id: "upload-video",
-        title: "Upload Video",
-        description: "Tambah karya video baru ke portofolio publik.",
-        href: "/dashboard/videos/new",
       },
       {
         id: "view-analytics",

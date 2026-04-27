@@ -52,7 +52,6 @@ const socialUrlSchema = z
 
 const customLinkSchema = z.object({
   id: z.string().trim().min(1, "ID custom link tidak valid.").max(80),
-  type: z.string().trim().max(30, "Tipe block terlalu panjang.").optional().default("link"),
   title: z
     .string()
     .trim()
@@ -66,7 +65,6 @@ const customLinkSchema = z.object({
     .refine((value) => value.startsWith("http"), {
       message: "Masukkan URL custom link yang valid.",
     }),
-  value: z.string().trim().max(500, "Value block terlalu panjang.").optional().default(""),
   description: z
     .string()
     .trim()
@@ -78,19 +76,10 @@ const customLinkSchema = z.object({
     .default(""),
   platform: z.string().trim().max(30, "Platform terlalu panjang.").optional().default(""),
   badge: z.string().trim().max(30, "Badge terlalu panjang.").optional().default(""),
-  style: z.string().trim().max(40, "Style block terlalu panjang.").optional().default(""),
   thumbnailUrl: z
     .string()
     .trim()
     .max(300, "URL thumbnail terlalu panjang.")
-    .transform((value) => normalizeSocialUrl(value))
-    .optional()
-    .default(""),
-  iconKey: z.string().trim().max(40, "Icon terlalu panjang.").optional().default(""),
-  iconUrl: z
-    .string()
-    .trim()
-    .max(300, "URL icon terlalu panjang.")
     .transform((value) => normalizeSocialUrl(value))
     .optional()
     .default(""),
@@ -186,7 +175,7 @@ export const profileSchema = z.object({
   facebookUrl: socialUrlSchema.default(""),
   threadsUrl: socialUrlSchema.default(""),
   linkedinUrl: socialUrlSchema.default(""),
-  customLinks: customLinksSchema.optional(),
+  customLinks: customLinksSchema,
   skills: z.array(z.string()).default([]),
   avatarCropX: cropPercentSchema,
   avatarCropY: cropPercentSchema,

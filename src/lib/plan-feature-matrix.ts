@@ -21,7 +21,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
     category: { id: "Link Builder", en: "Link Builder" },
     values: {
       free: {
-        text: { id: "Maksimal 5 link", en: "Up to 5 links" },
+        text: { id: "Maksimal 10 link", en: "Up to 10 links" },
         status: "available",
       },
       creator: {

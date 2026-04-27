@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import {
   ArrowUpRight,
   LayoutGrid,
-  Link2,
   List,
   PencilLine,
   Search,
@@ -102,8 +101,8 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="rounded-xl border border-border bg-white/80 p-3 sm:p-4">
+    <div className="dashboard-stack">
+      <div className="dashboard-panel p-3 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -113,10 +112,10 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 setPage(1);
               }}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                "rounded-full px-3 py-1.5 text-sm font-semibold transition",
                 filter === "all"
                   ? "bg-brand-600 text-white"
-                  : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+                  : "bg-white text-slate-700 ring-1 ring-[#d4dff4] hover:bg-[#f2f6ff]"
               )}
             >
               Semua ({videos.length})
@@ -128,10 +127,10 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 setPage(1);
               }}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                "rounded-full px-3 py-1.5 text-sm font-semibold transition",
                 filter === "draft"
                   ? "bg-brand-600 text-white"
-                  : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+                  : "bg-white text-slate-700 ring-1 ring-[#d4dff4] hover:bg-[#f2f6ff]"
               )}
             >
               Draft ({draftCount})
@@ -143,10 +142,10 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 setPage(1);
               }}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                "rounded-full px-3 py-1.5 text-sm font-semibold transition",
                 filter === "public"
                   ? "bg-brand-600 text-white"
-                  : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+                  : "bg-white text-slate-700 ring-1 ring-[#d4dff4] hover:bg-[#f2f6ff]"
               )}
             >
               Public ({publicCount})
@@ -158,10 +157,10 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 setPage(1);
               }}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                "rounded-full px-3 py-1.5 text-sm font-semibold transition",
                 filter === "semi_private"
                   ? "bg-brand-600 text-white"
-                  : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+                  : "bg-white text-slate-700 ring-1 ring-[#d4dff4] hover:bg-[#f2f6ff]"
               )}
             >
               Semi Private ({semiPrivateCount})
@@ -173,10 +172,10 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 setPage(1);
               }}
               className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                "rounded-full px-3 py-1.5 text-sm font-semibold transition",
                 filter === "private"
                   ? "bg-brand-600 text-white"
-                  : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+                  : "bg-white text-slate-700 ring-1 ring-[#d4dff4] hover:bg-[#f2f6ff]"
               )}
             >
               Private ({privateCount})
@@ -197,10 +196,10 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 setPage(1);
               }}
               placeholder="Cari judul video"
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+              className="h-10 w-full rounded-xl border border-[#d7e1f4] bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
             />
           </label>
-          <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1">
+          <div className="inline-flex items-center gap-1 rounded-full border border-[#d7e1f4] bg-white p-1">
             <button
               type="button"
               onClick={() => {
@@ -211,7 +210,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition",
                 viewMode === "grid"
                   ? "bg-brand-600 text-white"
-                  : "text-slate-600 hover:bg-slate-100"
+                  : "text-slate-600 hover:bg-[#eef4ff]"
               )}
               aria-label="Mode grid"
             >
@@ -228,7 +227,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition",
                 viewMode === "list"
                   ? "bg-brand-600 text-white"
-                  : "text-slate-600 hover:bg-slate-100"
+                  : "text-slate-600 hover:bg-[#eef4ff]"
               )}
               aria-label="Mode list"
             >
@@ -240,7 +239,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
       </div>
 
       {paginatedVideos.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-600">
+        <div className="dashboard-panel border-dashed p-6 text-center text-sm text-slate-600">
           Belum ada video untuk filter atau pencarian ini.
         </div>
       ) : (
@@ -259,36 +258,39 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               <article
                 key={video.id}
                 className={cn(
-                  "rounded-xl border border-border bg-white/85 p-3 transition hover:border-brand-200 hover:shadow-soft",
+                  "dashboard-clean-card rounded-xl border-[#d5e1f6] bg-white/90 p-3 transition hover:border-brand-200 hover:shadow-soft",
                   viewMode === "grid" ? "flex h-full min-h-[292px] flex-col" : ""
                 )}
+              >
+                <div
+                  className={cn(
+                    viewMode === "list"
+                      ? "flex flex-col gap-3 sm:flex-row sm:items-start"
+                      : "flex h-full flex-col gap-3"
+                  )}
                 >
                   <div
                     className={cn(
-                      viewMode === "list"
-                        ? "flex flex-col gap-3 sm:flex-row sm:items-start"
-                      : "flex h-full flex-col gap-3"
+                      "overflow-hidden rounded-lg border border-[#d8e2f4] bg-[#eef2f9]",
+                      viewMode === "list" ? "sm:w-[180px] sm:flex-none" : ""
                     )}
                   >
-                  {viewMode === "grid" ? (
-                    <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                      {thumbnail ? (
-                        <Image
-                          src={thumbnail}
-                          alt={`Thumbnail ${video.title}`}
-                          width={320}
-                          height={180}
-                          className="aspect-video h-full w-full object-cover"
-                          unoptimized
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="flex aspect-video w-full items-center justify-center text-xs text-slate-500">
-                          No thumbnail
-                        </div>
-                      )}
-                    </div>
-                  ) : null}
+                    {thumbnail ? (
+                      <Image
+                        src={thumbnail}
+                        alt={`Thumbnail ${video.title}`}
+                        width={320}
+                        height={180}
+                        className="aspect-video h-full w-full object-cover"
+                        unoptimized
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="flex aspect-video w-full items-center justify-center text-xs text-slate-500">
+                        No thumbnail
+                      </div>
+                    )}
+                  </div>
 
                   <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex flex-wrap items-center gap-2">
@@ -315,18 +317,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                       {formatDateLabel(video.createdAt)}
                     </p>
 
-                    {viewMode === "list" ? (
-                      <p className="mt-1 text-xs text-slate-500">
-                        {getSourceLabel(video.source as never)} · {getVisibilityLabel(video.visibility)}
-                      </p>
-                    ) : null}
-
-                    <div
-                      className={cn(
-                        "mt-3 flex flex-wrap items-center gap-2",
-                        viewMode === "grid" ? "justify-center" : "sm:justify-end"
-                      )}
-                    >
+                    <div className="mt-3 flex flex-wrap items-center gap-2 sm:justify-end">
                       {video.visibility === "public" ||
                       video.visibility === "semi_private" ? (
                         <Link href={`/v/${video.publicSlug}`}>
@@ -358,17 +349,6 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                         </Button>
                       </Link>
 
-                      <Link href="/dashboard/link-builder">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          aria-label="Tambahkan ke Build Link"
-                          title="Tambahkan ke Build Link"
-                        >
-                          <Link2 className="h-4 w-4" />
-                        </Button>
-                      </Link>
-
                       <Button
                         variant="danger"
                         size="sm"
@@ -392,7 +372,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
       )}
 
       {totalPages > 1 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-white/70 p-3">
+        <div className="dashboard-panel flex flex-wrap items-center justify-between gap-3 p-3">
           <Button
             variant="secondary"
             size="sm"

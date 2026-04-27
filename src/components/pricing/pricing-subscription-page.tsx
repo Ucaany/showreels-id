@@ -47,24 +47,9 @@ type PaymentSummary = {
   qrUrl: string | null;
 };
 
-type PaymentRuntimeConfig = {
+type MidtransConfig = {
   mode: "sandbox" | "production";
   serverKeySet: boolean;
-};
-
-type AccountPreview = {
-  name: string | null;
-  email: string | null;
-  username: string | null;
-};
-
-type CheckoutResponse = {
-  success?: boolean;
-  mode?: "paid" | "free";
-  code?: string;
-  message?: string;
-  payment_url?: string | null;
-  payment?: PaymentSummary;
 };
 
 function toIdr(value: number) {
@@ -99,45 +84,26 @@ function getFlowStepLabel(step: FlowStep, locale: "id" | "en") {
   return "Hasil";
 }
 
-function getBusinessBonusCopy(locale: "id" | "en") {
-  if (locale === "en") {
-    return {
-      title: "Business bonus",
-      primary: "Free Resume CV & Portfolio Canva templates",
-      secondary: "Worth Rp50.000, lifetime access.",
-    };
-  }
-
-  return {
-    title: "Bonus Business",
-    primary: "Free template Resume CV & Portofolio Canva",
-    secondary: "Senilai Rp50.000, akses selamanya.",
-  };
-}
-
 export function PricingSubscriptionPage({
   initialPlan,
   autoCheckoutIntent,
   isLoggedIn,
   isOwner,
   planPricing,
-  paymentConfig,
-  account,
+  midtransConfig,
 }: {
   initialPlan: PlanName;
   autoCheckoutIntent: boolean;
   isLoggedIn: boolean;
   isOwner: boolean;
   planPricing: Record<PlanName, number>;
-  paymentConfig: PaymentRuntimeConfig;
-  account: AccountPreview;
+  midtransConfig: MidtransConfig;
 }) {
   const { dictionary, locale } = usePreferences();
   const featureLocale = locale === "en" ? "en" : "id";
   const comingSoonLabel = getPlanFeatureComingSoonLabel(featureLocale);
-  const businessBonus = getBusinessBonusCopy(featureLocale);
   const canUseCreatorBilling = isLoggedIn && !isOwner;
-  const paymentReady = paymentConfig.serverKeySet;
+  const midtransReady = midtransConfig.serverKeySet;
 
   const [selectedPlan, setSelectedPlan] = useState<PlanName>(initialPlan);
   const [flowStep, setFlowStep] = useState<FlowStep>("selection");
@@ -223,30 +189,36 @@ export function PricingSubscriptionPage({
       return false;
     }
 
-    if (!paymentReady) {
+    if (!midtransReady) {
       await showFeedbackAlert({
-        title: locale === "en" ? "Payment unavailable" : "Pembayaran belum aktif",
+        title: locale === "en" ? "Midtrans unavailable" : "Midtrans belum aktif",
         text:
           locale === "en"
-            ? "Payment configuration is not ready. Please contact admin."
-            : "Konfigurasi pembayaran belum lengkap. Hubungi admin.",
+            ? "Server key is missing. Please contact admin."
+            : "Server key Midtrans belum diisi. Hubungi admin.",
         icon: "error",
       });
       return false;
     }
 
     setLoadingAction(true);
-    const response = await fetch("/api/billing/checkout", {
+    const response = await fetch("/api/billing/upgrade", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan_id: planName }),
+      body: JSON.stringify({ planName }),
     });
-    const payload = (await response.json().catch(() => null)) as CheckoutResponse | null;
+    const payload = (await response.json().catch(() => null)) as
+      | {
+          error?: string;
+          mode?: "paid" | "free";
+          payment?: PaymentSummary;
+        }
+      | null;
     setLoadingAction(false);
 
     if (!response.ok || payload?.mode !== "paid" || !payload.payment) {
       const message =
-        payload?.message ||
+        payload?.error ||
         (locale === "en"
           ? "Failed to create transaction. Please try again."
           : "Gagal membuat transaksi. Coba lagi beberapa saat.");
@@ -259,15 +231,14 @@ export function PricingSubscriptionPage({
       return false;
     }
 
-    const paymentUrl = payload.payment_url || payload.payment.redirectUrl;
-    if (!paymentUrl) {
+    if (!payload.payment.redirectUrl) {
       const message =
         locale === "en"
-          ? "Payment page is not available. Please create a new transaction."
-          : "Halaman pembayaran tidak tersedia. Silakan buat transaksi baru.";
+          ? "Hosted checkout URL is not available. Please create a new transaction."
+          : "URL hosted checkout tidak tersedia. Silakan buat transaksi baru.";
       setErrorMessage(message);
       await showFeedbackAlert({
-        title: locale === "en" ? "Payment unavailable" : "Pembayaran tidak tersedia",
+        title: locale === "en" ? "Checkout unavailable" : "Checkout tidak tersedia",
         text: message,
         icon: "error",
       });
@@ -275,26 +246,11 @@ export function PricingSubscriptionPage({
     }
 
     setErrorMessage("");
-    window.location.assign(paymentUrl);
+    window.location.assign(payload.payment.redirectUrl);
     return true;
-  }, [canUseCreatorBilling, isLoggedIn, locale, loginHref, paymentReady]);
+  }, [canUseCreatorBilling, isLoggedIn, locale, loginHref, midtransReady]);
 
   const handleContinueCheckout = async () => {
-    if (
-      effectivePlan === selectedPlan &&
-      (subscriptionStatus === "active" || subscriptionStatus === "trial")
-    ) {
-      await showFeedbackAlert({
-        title: locale === "en" ? "Plan already active" : "Paket sudah aktif",
-        text:
-          locale === "en"
-            ? "You can renew, cancel, or switch to another plan from Billing."
-            : "Kamu bisa perpanjang, membatalkan, atau beralih ke paket lain dari Billing.",
-        icon: "info",
-      });
-      return;
-    }
-
     if (selectedPlan === "free") {
       if (!canUseCreatorBilling) {
         if (!isLoggedIn) {
@@ -372,27 +328,13 @@ export function PricingSubscriptionPage({
     if (selectedPlan === "free") {
       return;
     }
-    if (
-      effectivePlan === selectedPlan &&
-      (subscriptionStatus === "active" || subscriptionStatus === "trial")
-    ) {
-      return;
-    }
 
     autoCheckoutRef.current = true;
     const timer = window.setTimeout(() => {
       void createPaidTransaction(selectedPlan);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [
-    autoCheckoutIntent,
-    createPaidTransaction,
-    effectivePlan,
-    isLoggedIn,
-    isOwner,
-    selectedPlan,
-    subscriptionStatus,
-  ]);
+  }, [autoCheckoutIntent, createPaidTransaction, isLoggedIn, isOwner, selectedPlan]);
 
   return (
     <div className="min-h-screen bg-[#f6f4f2] pb-14 pt-10 sm:pb-20 sm:pt-14">
@@ -540,22 +482,9 @@ export function PricingSubscriptionPage({
                       {locale === "en" ? "Current plan" : "Plan aktif"}
                     </span>
                   ) : null}
-                  {isSelected ? (
-                    <span
-                      className={cn(
-                        "absolute left-4 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]",
-                        isCurrent ? "top-11" : "top-4",
-                        plan.featured
-                          ? "bg-white text-[#2f73ff]"
-                          : "bg-[#eaf2ff] text-[#2f73ff] ring-1 ring-[#cfe0ff]"
-                      )}
-                    >
-                      {locale === "en" ? "Selected plan" : "Plan dipilih"}
-                    </span>
-                  ) : null}
                   <p
                     className={cn(
-                      "mt-8 text-helper font-semibold uppercase tracking-[0.14em]",
+                      "mt-4 text-helper font-semibold uppercase tracking-[0.14em]",
                       plan.featured ? "text-[#dfeaff]" : "text-[#6d7890]"
                     )}
                   >
@@ -575,22 +504,6 @@ export function PricingSubscriptionPage({
                   <p className={cn("mt-2 text-sm", plan.featured ? "text-white/85" : "text-[#5f534c]")}>
                     {plan.description || getDefaultDescription(plan.id, featureLocale)}
                   </p>
-                  {plan.id === "business" ? (
-                    <div
-                      className={cn(
-                        "mt-3 rounded-xl border px-3 py-2 text-xs",
-                        plan.featured
-                          ? "border-white/35 bg-white/10 text-white"
-                          : "border-[#d6e4ff] bg-[#eef4ff] text-[#2a3b60]"
-                      )}
-                    >
-                      <p className="font-semibold uppercase tracking-[0.08em]">{businessBonus.title}</p>
-                      <p className="mt-1">{businessBonus.primary}</p>
-                      <p className={cn("font-semibold", plan.featured ? "text-white" : "text-[#1f3f84]")}>
-                        {businessBonus.secondary}
-                      </p>
-                    </div>
-                  ) : null}
                   <ul className="mt-4 space-y-2.5 text-sm">
                     {plan.points.slice(0, 5).map((point) => {
                       const unavailable = point.status === "unavailable";
@@ -648,11 +561,6 @@ export function PricingSubscriptionPage({
                   {locale === "en" ? "Subscription status" : "Status subscription"}:{" "}
                   <span className="font-semibold capitalize text-[#2b241f]">{subscriptionStatus}</span>
                 </p>
-                {selectedPlan === "business" ? (
-                  <p className="mt-1 text-sm font-medium text-[#1f3f84]">
-                    {businessBonus.primary} - {businessBonus.secondary}
-                  </p>
-                ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -666,20 +574,9 @@ export function PricingSubscriptionPage({
                 </Button>
                 <Button
                   onClick={() => setFlowStep("confirmation")}
-                  disabled={
-                    loadingAction ||
-                    (effectivePlan === selectedPlan &&
-                      (subscriptionStatus === "active" || subscriptionStatus === "trial"))
-                  }
+                  disabled={loadingAction}
                 >
-                  {effectivePlan === selectedPlan &&
-                  (subscriptionStatus === "active" || subscriptionStatus === "trial")
-                    ? locale === "en"
-                      ? "Current plan"
-                      : "Plan aktif"
-                    : locale === "en"
-                      ? "Continue"
-                      : "Lanjutkan"}
+                  {locale === "en" ? "Continue" : "Lanjutkan"}
                 </Button>
               </div>
             </div>
@@ -688,7 +585,7 @@ export function PricingSubscriptionPage({
           {flowStep === "confirmation" ? (
             <Card className="mt-6 border-[#d9cec7] bg-white p-4 sm:p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6f625a]">
-                {locale === "en" ? "Payment confirmation" : "Konfirmasi pembayaran"}
+                {locale === "en" ? "Confirmation" : "Konfirmasi"}
               </p>
               <h2 className="mt-1 text-xl font-semibold text-[#201b18]">
                 {locale === "en"
@@ -697,54 +594,9 @@ export function PricingSubscriptionPage({
               </h2>
               <p className="mt-2 text-sm text-[#63564f]">
                 {locale === "en"
-                  ? "Please review account and plan details before continuing payment."
-                  : "Pastikan informasi akun dan paket sudah benar sebelum lanjut pembayaran."}
+                  ? "Review the capabilities below before starting subscription."
+                  : "Tinjau capability di bawah sebelum memulai berlangganan."}
               </p>
-
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-[#dbe4f6] bg-[#f8fbff] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6078a2]">
-                    {locale === "en" ? "Account" : "Informasi akun"}
-                  </p>
-                  <div className="mt-3 space-y-2 text-sm text-[#2b3444]">
-                    <p>
-                      <span className="font-semibold">{locale === "en" ? "Name" : "Nama"}:</span>{" "}
-                      {account.name?.trim() || (locale === "en" ? "Creator account" : "Akun creator")}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Email:</span>{" "}
-                      {account.email?.trim() || "-"}
-                    </p>
-                    <p>
-                      <span className="font-semibold">{locale === "en" ? "Link" : "Link"}:</span>{" "}
-                      {account.username
-                        ? `showreels-id.vercel.app/creator/${account.username}`
-                        : "-"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-[#dbe4f6] bg-[#f8fbff] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6078a2]">
-                    {locale === "en" ? "Plan details" : "Informasi paket"}
-                  </p>
-                  <div className="mt-3 space-y-2 text-sm text-[#2b3444]">
-                    <p>
-                      <span className="font-semibold">{locale === "en" ? "Plan" : "Paket"}:</span>{" "}
-                      {selectedPlanInfo.name}
-                    </p>
-                    <p>
-                      <span className="font-semibold">{locale === "en" ? "Price" : "Harga"}:</span>{" "}
-                      {toIdr(selectedPlanInfo.price)}
-                      {locale === "en" ? " / month" : " / bulan"}
-                    </p>
-                    <p>
-                      <span className="font-semibold">{locale === "en" ? "Period" : "Periode"}:</span>{" "}
-                      {locale === "en" ? "Monthly subscription" : "Langganan bulanan"}
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               <ul className="mt-4 grid gap-2 sm:grid-cols-2">
                 {selectedPlanInfo.points.map((point) => {
@@ -765,14 +617,6 @@ export function PricingSubscriptionPage({
                 })}
               </ul>
 
-              {selectedPlan === "business" ? (
-                <div className="mt-4 rounded-xl border border-[#d3e2ff] bg-[#eef4ff] p-3 text-sm text-[#1f3f84]">
-                  <p className="font-semibold">{businessBonus.title}</p>
-                  <p>{businessBonus.primary}</p>
-                  <p className="font-semibold">{businessBonus.secondary}</p>
-                </div>
-              ) : null}
-
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <Button variant="secondary" onClick={() => setFlowStep("selection")}>
                   {locale === "en" ? "Back" : "Kembali"}
@@ -784,8 +628,8 @@ export function PricingSubscriptionPage({
                       ? "Confirm Free plan"
                       : "Konfirmasi plan Free"
                     : locale === "en"
-                      ? "Continue payment"
-                      : "Lanjutkan pembayaran"}
+                      ? "Confirm & continue to checkout"
+                      : "Konfirmasi & lanjut checkout"}
                 </Button>
               </div>
             </Card>
@@ -838,6 +682,60 @@ export function PricingSubscriptionPage({
             </Card>
           ) : null}
 
+          <Card className="mt-6 border-[#dfd6d0] bg-[#fcfaf8] p-4 sm:p-6">
+            <h2 className="text-xl font-semibold text-[#201b18]">
+              {locale === "en" ? "Full capabilities by plan" : "Capability lengkap per plan"}
+            </h2>
+            <p className="mt-2 text-sm text-[#5f534c]">
+              {locale === "en"
+                ? "Every point below reflects current Showreels capabilities."
+                : "Seluruh poin di bawah menampilkan capability Showreels saat ini."}
+            </p>
+            <div className="mt-4 grid gap-3 lg:grid-cols-3">
+              {plans.map((plan) => (
+                <div
+                  key={`full-${plan.id}`}
+                  className={cn(
+                    "rounded-2xl border p-4",
+                    plan.featured
+                      ? "border-[#bfd6ff] bg-[#f2f7ff]"
+                      : "border-[#e5dbd5] bg-white"
+                  )}
+                >
+                  <p className="text-sm font-semibold text-[#201b18]">{plan.name}</p>
+                  <p className="mt-1 text-lg font-semibold text-[#2f73ff]">{toIdr(plan.price)}</p>
+                  <ul className="mt-3 space-y-2 text-sm">
+                    {plan.points.map((point) => {
+                      const unavailable = point.status === "unavailable";
+                      const comingSoon = point.status === "coming_soon";
+                      return (
+                        <li key={`full-point-${plan.id}-${point.id}`} className="flex items-start gap-2">
+                          <span
+                            className={cn(
+                              "mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ring-1",
+                              unavailable
+                                ? "bg-[#f0eae6] text-[#8c7f78] ring-[#e5d7cf]"
+                                : "bg-emerald-50 text-emerald-600 ring-emerald-200"
+                            )}
+                          >
+                            {unavailable ? <X className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                          </span>
+                          <span className={cn(unavailable ? "text-[#8e7f77] line-through" : "text-[#2f2723]")}>
+                            {point.label}
+                            {comingSoon ? (
+                              <span className="ml-2 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
+                                {comingSoonLabel}
+                              </span>
+                            ) : null}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </Card>
         </section>
       </div>
     </div>

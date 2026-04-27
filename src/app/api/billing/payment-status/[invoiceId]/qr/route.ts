@@ -28,7 +28,7 @@ export async function GET(
   }
 
   if (!isMidtransConfigured()) {
-    return NextResponse.json({ error: "Layanan pembayaran belum dikonfigurasi." }, { status: 412 });
+    return NextResponse.json({ error: "Midtrans belum dikonfigurasi." }, { status: 412 });
   }
 
   const { invoiceId } = await context.params;
@@ -56,7 +56,7 @@ export async function GET(
 
   if (!upstream.ok) {
     return NextResponse.json(
-      { error: "Gagal mengambil QR pembayaran." },
+      { error: "Gagal mengambil QR dari Midtrans." },
       { status: 502 }
     );
   }
@@ -72,7 +72,7 @@ export async function GET(
       return NextResponse.redirect(redirectUrl);
     }
     return NextResponse.json(
-      { error: "QR pembayaran belum dapat dirender." },
+      { error: "QR Midtrans belum dapat dirender." },
       { status: 502 }
     );
   }

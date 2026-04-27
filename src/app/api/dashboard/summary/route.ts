@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, or, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db, isDatabaseConfigured } from "@/db";
 import { visitorEvents, videos } from "@/db/schema";
@@ -35,39 +35,22 @@ export async function GET() {
   }
 
   const creatorPath = `/creator/${currentUser.username || "creator"}`;
-  const creatorPathPattern = `${creatorPath}%`;
-
-  const publicVideos = await db.query.videos.findMany({
-    where: and(eq(videos.userId, currentUser.id), eq(videos.visibility, "public")),
-    columns: {
-      publicSlug: true,
-    },
-  });
-
-  const publicVideoPaths = publicVideos
-    .map((video) => video.publicSlug?.trim())
-    .filter((value): value is string => Boolean(value))
-    .map((slug) => `/v/${slug}`);
-
-  const analyticsPathFilter =
-    publicVideoPaths.length > 0
-      ? or(
-          sql`${visitorEvents.path} LIKE ${creatorPathPattern}`,
-          inArray(visitorEvents.path, publicVideoPaths)
-        )
-      : sql`${visitorEvents.path} LIKE ${creatorPathPattern}`;
+  const videoPathPrefix = "/v/";
 
   const [viewsResult] = await db
     .select({ value: count() })
     .from(visitorEvents)
-    .where(sql`${visitorEvents.path} LIKE ${creatorPathPattern}`);
+    .where(sql`${visitorEvents.path} LIKE ${`${creatorPath}%`}`);
 
   const [clicksResult] = await db
     .select({ value: count() })
     .from(visitorEvents)
-    .where(analyticsPathFilter);
+    .where(sql`${visitorEvents.path} LIKE ${`${videoPathPrefix}%`}`);
 
-  const productsResultValue = publicVideoPaths.length;
+  const [productsResult] = await db
+    .select({ value: count() })
+    .from(videos)
+    .where(and(eq(videos.userId, currentUser.id), eq(videos.visibility, "public")));
 
   const totalViews = viewsResult?.value ?? 0;
   const totalClicks = clicksResult?.value ?? 0;
@@ -78,7 +61,7 @@ export async function GET() {
     totalLinks: activeLinks.length,
     totalClicks,
     ctr,
-    products: productsResultValue,
+    products: productsResult?.value ?? 0,
     revenue: 0,
     topLink: activeLinks[0]?.title || null,
   });
