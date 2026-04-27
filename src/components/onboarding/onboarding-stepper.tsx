@@ -55,7 +55,7 @@ export function OnboardingStepper({
     coverImageUrl: string;
   };
   linkBuilderMax: number | null;
-  planName: "free" | "pro" | "business";
+  planName: "free" | "creator" | "pro" | "business";
 }) {
   const router = useRouter();
   const payload = getProgressPayload(initialStatus);

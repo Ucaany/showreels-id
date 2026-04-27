@@ -118,12 +118,17 @@ export async function PATCH(request: Request) {
 
     const createdLink = createLinkItem(
       {
+        type: "link",
         title: firstLink.title,
         url: firstLink.url,
+        value: "",
         platform: firstLink.platform || "",
         description: "",
         badge: "",
         thumbnailUrl: "",
+        style: "",
+        iconKey: "",
+        iconUrl: "",
         enabled: true,
       },
       latestLinks
