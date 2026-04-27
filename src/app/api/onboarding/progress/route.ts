@@ -22,7 +22,7 @@ function mapOnboardingValidationMessage(input?: {
   if (field === "username") {
     return "Username wajib diisi dan minimal 3 karakter.";
   }
-  if (field === "firstLink") {
+  if (field === "firstLink" || field === "title" || field === "url" || field === "platform") {
     return "Isi judul dan URL jika ingin menambahkan link pertama.";
   }
 
@@ -94,6 +94,7 @@ export async function PATCH(request: Request) {
       ? normalizeStoredLinks(currentUser.customLinks, linkBuilderMax)
       : normalizeStoredLinks(currentUser.customLinks);
   let firstLinkCreated = onboarding.firstLinkCreated || latestLinks.length > 0;
+  const wantsToAddFirstLink = parsed.data.wantsToAddFirstLink ?? parsed.data.createFirstLink;
   let profilePatchApplied = false;
 
   const profile = parsed.data.profile;
@@ -150,7 +151,7 @@ export async function PATCH(request: Request) {
     }
   }
 
-  if (parsed.data.createFirstLink) {
+  if (parsed.data.createFirstLink && wantsToAddFirstLink) {
     const firstLink = parsed.data.firstLink;
     if (!firstLink) {
       return NextResponse.json(
@@ -159,54 +160,56 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const activeCount = latestLinks.filter((item) => item.enabled !== false).length;
-    if (typeof linkBuilderMax === "number" && activeCount >= linkBuilderMax) {
-      return NextResponse.json(
+    if (!firstLinkCreated) {
+      const activeCount = latestLinks.filter((item) => item.enabled !== false).length;
+      if (typeof linkBuilderMax === "number" && activeCount >= linkBuilderMax) {
+        return NextResponse.json(
+          {
+            error:
+              linkBuilderMax === 5
+                ? "Batas 5 link tercapai. Upgrade ke Creator untuk menambah link."
+                : `Batas ${linkBuilderMax} link tercapai.`,
+            code: "link_limit_exceeded",
+          },
+          { status: 403 }
+        );
+      }
+
+      const createdLink = createLinkItem(
         {
-          error:
-            linkBuilderMax === 5
-              ? "Batas 5 link tercapai. Upgrade ke Creator untuk menambah link."
-              : `Batas ${linkBuilderMax} link tercapai.`,
-          code: "link_limit_exceeded",
+          type: "link",
+          title: firstLink.title,
+          url: firstLink.url,
+          value: "",
+          platform: firstLink.platform || "",
+          description: "",
+          badge: "",
+          thumbnailUrl: "",
+          style: "",
+          iconKey: "",
+          iconUrl: "",
+          enabled: firstLink.enabled !== false,
         },
-        { status: 403 }
+        latestLinks
       );
+
+      const nextLinks = normalizeOrder([...latestLinks, createdLink]);
+      const [updated] = await db
+        .update(users)
+        .set({
+          customLinks: nextLinks,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, currentUser.id))
+        .returning({
+          customLinks: users.customLinks,
+        });
+
+      latestLinks =
+        typeof linkBuilderMax === "number"
+          ? normalizeStoredLinks(updated?.customLinks ?? nextLinks, linkBuilderMax)
+          : normalizeStoredLinks(updated?.customLinks ?? nextLinks);
     }
-
-    const createdLink = createLinkItem(
-      {
-        type: "link",
-        title: firstLink.title,
-        url: firstLink.url,
-        value: "",
-        platform: firstLink.platform || "",
-        description: "",
-        badge: "",
-        thumbnailUrl: "",
-        style: "",
-        iconKey: "",
-        iconUrl: "",
-        enabled: firstLink.enabled !== false,
-      },
-      latestLinks
-    );
-
-    const nextLinks = normalizeOrder([...latestLinks, createdLink]);
-    const [updated] = await db
-      .update(users)
-      .set({
-        customLinks: nextLinks,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, currentUser.id))
-      .returning({
-        customLinks: users.customLinks,
-      });
-
-    latestLinks =
-      typeof linkBuilderMax === "number"
-        ? normalizeStoredLinks(updated?.customLinks ?? nextLinks, linkBuilderMax)
-        : normalizeStoredLinks(updated?.customLinks ?? nextLinks);
     firstLinkCreated = true;
   }
 

@@ -6,6 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Camera,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Globe,
@@ -105,6 +106,17 @@ export function OnboardingStepper({
           enabled?: boolean;
         })
       : {};
+  const payloadOnboarding =
+    payload.onboarding && typeof payload.onboarding === "object"
+      ? (payload.onboarding as {
+          wantsToAddFirstLink?: boolean;
+        })
+      : {};
+  const hasFirstLinkDraft = Boolean(
+    (payloadFirstLink.title || "").trim() ||
+      (payloadFirstLink.url || "").trim() ||
+      (payloadFirstLink.platform || "").trim()
+  );
 
   const [step, setStep] = useState(Math.min(4, Math.max(1, initialStatus.currentStep || 1)));
   const [fullName, setFullName] = useState(payloadProfile.fullName || initialUser.fullName);
@@ -120,6 +132,14 @@ export function OnboardingStepper({
   const [firstLinkPlatform, setFirstLinkPlatform] = useState(payloadFirstLink.platform || "");
   const [firstLinkEnabled, setFirstLinkEnabled] = useState(
     payloadFirstLink.enabled !== false
+  );
+  const [wantsToAddFirstLink, setWantsToAddFirstLink] = useState(
+    typeof payloadOnboarding.wantsToAddFirstLink === "boolean"
+      ? payloadOnboarding.wantsToAddFirstLink
+      : hasFirstLinkDraft
+  );
+  const [optionalMediaExpanded, setOptionalMediaExpanded] = useState(
+    Boolean(payloadProfile.image || payloadProfile.coverImageUrl || initialUser.image || initialUser.coverImageUrl)
   );
   const [busy, setBusy] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
@@ -152,13 +172,25 @@ export function OnboardingStepper({
   const saveProgress = async (input: {
     currentStep?: number;
     createFirstLink?: boolean;
+    wantsToAddFirstLink?: boolean;
   }) => {
+    const shouldCreateFirstLink = Boolean(input.createFirstLink);
+    const resolvedWantsToAddFirstLink = input.wantsToAddFirstLink ?? wantsToAddFirstLink;
+    const normalizedFirstLinkUrl = normalizeSocialUrl(firstLinkUrl);
+    const firstLinkPayload = {
+      title: firstLinkTitle,
+      url: normalizedFirstLinkUrl,
+      platform: firstLinkPlatform,
+      enabled: firstLinkEnabled,
+    };
+
     const response = await fetch("/api/onboarding/progress", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         currentStep: input.currentStep ?? step,
-        createFirstLink: input.createFirstLink ?? false,
+        createFirstLink: shouldCreateFirstLink,
+        wantsToAddFirstLink: resolvedWantsToAddFirstLink,
         profile: {
           fullName,
           username: normalizedUsername,
@@ -167,12 +199,7 @@ export function OnboardingStepper({
           image,
           coverImageUrl,
         },
-        firstLink: {
-          title: firstLinkTitle,
-          url: normalizeSocialUrl(firstLinkUrl),
-          platform: firstLinkPlatform,
-          enabled: firstLinkEnabled,
-        },
+        ...(shouldCreateFirstLink ? { firstLink: firstLinkPayload } : {}),
         progressPayload: {
           profile: {
             fullName,
@@ -181,6 +208,9 @@ export function OnboardingStepper({
             bio,
             image,
             coverImageUrl,
+          },
+          onboarding: {
+            wantsToAddFirstLink: resolvedWantsToAddFirstLink,
           },
           firstLink: {
             title: firstLinkTitle,
@@ -230,10 +260,33 @@ export function OnboardingStepper({
   };
 
   const validateStepTwo = async () => {
-    if (!firstLinkTitle.trim() || !normalizeSocialUrl(firstLinkUrl)) {
+    if (!wantsToAddFirstLink) {
+      return true;
+    }
+
+    if (!firstLinkPlatform.trim()) {
+      await showFeedbackAlert({
+        title: "Pilih jenis link terlebih dahulu",
+        text: "Tentukan platform link utama sebelum lanjut.",
+        icon: "warning",
+      });
+      return false;
+    }
+
+    const normalizedUrl = normalizeSocialUrl(firstLinkUrl);
+    if (!firstLinkTitle.trim() || !normalizedUrl) {
       await showFeedbackAlert({
         title: "Link pertama belum lengkap",
-        text: "Isi judul dan URL link pertama untuk lanjut.",
+        text: "Isi judul dan URL jika ingin menambahkan link pertama.",
+        icon: "warning",
+      });
+      return false;
+    }
+
+    if (!normalizedUrl.startsWith("http")) {
+      await showFeedbackAlert({
+        title: "URL belum valid",
+        text: "Gunakan URL yang diawali http:// atau https://.",
         icon: "warning",
       });
       return false;
@@ -254,10 +307,11 @@ export function OnboardingStepper({
       if (!valid) return;
     }
 
+    const createFirstLink = step === 2 && wantsToAddFirstLink;
     setBusy(true);
     const response = await saveProgress({
       currentStep: Math.min(4, step + 1),
-      createFirstLink: step === 2,
+      createFirstLink,
     });
     const payloadResponse = (await response.json().catch(() => null)) as
       | { error?: string; code?: string }
@@ -288,6 +342,33 @@ export function OnboardingStepper({
 
   const handleSkip = async () => {
     if (busy || step >= 4) return;
+
+    if (step === 2) {
+      setWantsToAddFirstLink(false);
+      setBusy(true);
+      const response = await saveProgress({
+        currentStep: 3,
+        createFirstLink: false,
+        wantsToAddFirstLink: false,
+      });
+      const payloadResponse = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      setBusy(false);
+
+      if (!response.ok) {
+        await showFeedbackAlert({
+          title: "Gagal menyimpan langkah link",
+          text: payloadResponse?.error || "Coba ulang beberapa saat lagi.",
+          icon: "error",
+        });
+        return;
+      }
+
+      setStep(3);
+      setLastDraftLabel("Langkah link dilewati. Progress tersimpan.");
+      return;
+    }
 
     const confirmed = await confirmFeedbackAction({
       title: "Lanjutkan nanti?",
@@ -440,6 +521,7 @@ export function OnboardingStepper({
     firstLinkUrl,
     firstLinkPlatform,
     firstLinkEnabled,
+    wantsToAddFirstLink,
   ]);
 
   return (
@@ -574,27 +656,44 @@ export function OnboardingStepper({
                       placeholder="Ceritakan singkat tentang kamu."
                     />
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold text-[#35598e]">
-                        Foto profile (opsional)
-                      </label>
-                      <Input
-                        value={image}
-                        onChange={(event) => setImage(event.target.value)}
-                        placeholder="https://..."
+                  <div className="rounded-xl border border-[#d8e5fb] bg-[#f9fbff]">
+                    <button
+                      type="button"
+                      onClick={() => setOptionalMediaExpanded((prev) => !prev)}
+                      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm font-semibold text-[#35598e]"
+                    >
+                      <span>Foto & Cover (opsional)</span>
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 text-[#4f73a8] transition-transform",
+                          optionalMediaExpanded ? "rotate-180" : ""
+                        )}
                       />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold text-[#35598e]">
-                        Cover image (opsional)
-                      </label>
-                      <Input
-                        value={coverImageUrl}
-                        onChange={(event) => setCoverImageUrl(event.target.value)}
-                        placeholder="https://..."
-                      />
-                    </div>
+                    </button>
+                    {optionalMediaExpanded ? (
+                      <div className="grid gap-3 border-t border-[#d8e5fb] px-3 py-3 sm:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-[#35598e]">
+                            Foto profile
+                          </label>
+                          <Input
+                            value={image}
+                            onChange={(event) => setImage(event.target.value)}
+                            placeholder="https://..."
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-[#35598e]">
+                            Cover image
+                          </label>
+                          <Input
+                            value={coverImageUrl}
+                            onChange={(event) => setCoverImageUrl(event.target.value)}
+                            placeholder="https://..."
+                          />
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               ) : null}
@@ -602,70 +701,108 @@ export function OnboardingStepper({
               {step === 2 ? (
                 <div className="mt-5 space-y-4">
                   <div>
-                    <p className="text-sm font-semibold text-[#35598e]">
-                      Pilih satu link utama yang ingin kamu tampilkan.
-                    </p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                      {PLATFORM_OPTIONS.map((platform) => {
-                        const Icon = platform.icon;
-                        const active = firstLinkPlatform === platform.id;
-                        return (
-                          <button
-                            key={platform.id}
-                            type="button"
-                            onClick={() => {
-                              setFirstLinkPlatform(platform.id);
-                              if (!firstLinkTitle) {
-                                setFirstLinkTitle(platform.defaultTitle);
-                              }
-                            }}
-                            className={cn(
-                              "flex min-h-12 items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
-                              active
-                                ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
-                                : "border-[#d4e3fb] bg-white text-[#3e6399] hover:border-[#a9c6f5]"
-                            )}
-                          >
-                            <span className="inline-flex min-w-0 items-center gap-2">
-                              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#2f73ff]">
-                                <Icon className="h-4 w-4" />
-                              </span>
-                              <span className="truncate">{platform.title}</span>
-                            </span>
-                            <span
-                              className={cn(
-                                "inline-flex h-4 w-4 shrink-0 rounded-full border",
-                                active ? "border-[#2f73ff] bg-[#2f73ff]" : "border-[#b9ccec]"
-                              )}
-                            />
-                          </button>
-                        );
-                      })}
+                    <p className="text-sm font-semibold text-[#35598e]">Mau tambahkan link pertama sekarang?</p>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={() => setWantsToAddFirstLink(true)}
+                        className={cn(
+                          "rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
+                          wantsToAddFirstLink
+                            ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
+                            : "border-[#d4e3fb] bg-white text-[#466692] hover:border-[#a9c6f5]"
+                        )}
+                      >
+                        Tambahkan link pertama
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setWantsToAddFirstLink(false)}
+                        className={cn(
+                          "rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
+                          !wantsToAddFirstLink
+                            ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
+                            : "border-[#d4e3fb] bg-white text-[#466692] hover:border-[#a9c6f5]"
+                        )}
+                      >
+                        Lewati dulu
+                      </button>
                     </div>
                   </div>
-                  <div className="grid gap-3">
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold text-[#35598e]">Judul tombol</label>
-                      <Input value={firstLinkTitle} onChange={(event) => setFirstLinkTitle(event.target.value)} />
+                  {wantsToAddFirstLink ? (
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm font-semibold text-[#35598e]">
+                          Pilih satu link utama yang ingin kamu tampilkan.
+                        </p>
+                        <div className="mt-2 grid gap-2 min-[360px]:grid-cols-2 lg:grid-cols-3">
+                          {PLATFORM_OPTIONS.map((platform) => {
+                            const Icon = platform.icon;
+                            const active = firstLinkPlatform === platform.id;
+                            return (
+                              <button
+                                key={platform.id}
+                                type="button"
+                                onClick={() => {
+                                  setWantsToAddFirstLink(true);
+                                  setFirstLinkPlatform(platform.id);
+                                  if (!firstLinkTitle) {
+                                    setFirstLinkTitle(platform.defaultTitle);
+                                  }
+                                }}
+                                className={cn(
+                                  "flex min-h-12 items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
+                                  active
+                                    ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
+                                    : "border-[#d4e3fb] bg-white text-[#3e6399] hover:border-[#a9c6f5]"
+                                )}
+                              >
+                                <span className="inline-flex min-w-0 items-center gap-2">
+                                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#2f73ff]">
+                                    <Icon className="h-4 w-4" />
+                                  </span>
+                                  <span className="truncate">{platform.title}</span>
+                                </span>
+                                <span
+                                  className={cn(
+                                    "inline-flex h-4 w-4 shrink-0 rounded-full border",
+                                    active ? "border-[#2f73ff] bg-[#2f73ff]" : "border-[#b9ccec]"
+                                  )}
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      <div className="grid gap-3">
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-[#35598e]">Judul tombol</label>
+                          <Input value={firstLinkTitle} onChange={(event) => setFirstLinkTitle(event.target.value)} />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-sm font-semibold text-[#35598e]">URL</label>
+                          <Input
+                            value={firstLinkUrl}
+                            onChange={(event) => setFirstLinkUrl(event.target.value)}
+                            placeholder="https://..."
+                          />
+                        </div>
+                        <label className="inline-flex items-center gap-2 text-sm font-medium text-[#3a5f98]">
+                          <input
+                            type="checkbox"
+                            checked={firstLinkEnabled}
+                            onChange={(event) => setFirstLinkEnabled(event.target.checked)}
+                            className="h-4 w-4 rounded border-[#b8caea] text-[#2f73ff] focus:ring-[#2f73ff]"
+                          />
+                          Aktifkan link ini
+                        </label>
+                      </div>
                     </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-semibold text-[#35598e]">URL</label>
-                      <Input
-                        value={firstLinkUrl}
-                        onChange={(event) => setFirstLinkUrl(event.target.value)}
-                        placeholder="https://..."
-                      />
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-[#b8cff4] bg-[#f8fbff] px-3 py-3 text-sm text-[#5d7da9]">
+                      Kamu bisa lanjut ke preview tanpa menambahkan link sekarang.
                     </div>
-                    <label className="inline-flex items-center gap-2 text-sm font-medium text-[#3a5f98]">
-                      <input
-                        type="checkbox"
-                        checked={firstLinkEnabled}
-                        onChange={(event) => setFirstLinkEnabled(event.target.checked)}
-                        className="h-4 w-4 rounded border-[#b8caea] text-[#2f73ff] focus:ring-[#2f73ff]"
-                      />
-                      Aktifkan link ini
-                    </label>
-                  </div>
+                  )}
                 </div>
               ) : null}
 
@@ -705,10 +842,14 @@ export function OnboardingStepper({
                         <div className="mt-3 rounded-xl border border-[#d5e3fb] bg-white px-3 py-2">
                           <p className="flex items-center gap-2 text-sm font-semibold text-[#23457b]">
                             <Link2 className="h-4 w-4 text-[#2f73ff]" />
-                            {firstLinkTitle || "Link pertama kamu"}
+                            {wantsToAddFirstLink
+                              ? firstLinkTitle || "Link pertama kamu"
+                              : "Belum ada link pertama"}
                           </p>
                           <p className="mt-1 truncate text-xs text-[#5f7ca8]">
-                            {normalizeSocialUrl(firstLinkUrl) || "https://..."}
+                            {wantsToAddFirstLink
+                              ? normalizeSocialUrl(firstLinkUrl) || "https://..."
+                              : "Kamu bisa menambahkannya nanti dari dashboard."}
                           </p>
                         </div>
                       </div>
@@ -744,22 +885,24 @@ export function OnboardingStepper({
                 <div className="sticky bottom-0 z-10 mt-6 border-t border-[#d5e3fb] bg-white/95 pt-3 backdrop-blur">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Button
-                        variant="secondary"
-                        onClick={handleBack}
-                        disabled={busy || step === 1}
-                        className="min-h-10 px-3"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        Back
-                      </Button>
+                      {step > 1 ? (
+                        <Button
+                          variant="secondary"
+                          onClick={handleBack}
+                          disabled={busy}
+                          className="min-h-10 px-3"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          Back
+                        </Button>
+                      ) : null}
                       <Button
                         variant="ghost"
                         onClick={() => void handleSkip()}
                         disabled={busy}
                         className="min-h-10 px-2 text-xs sm:text-sm"
                       >
-                        Saya mengisinya nanti
+                        {step === 2 ? "Lewati langkah link" : "Saya mengisinya nanti"}
                       </Button>
                     </div>
                     <Button

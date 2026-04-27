@@ -78,6 +78,7 @@ export const onboardingProgressSchema = z.object({
   profile: onboardingProfileSchema.optional(),
   firstLink: onboardingFirstLinkSchema.optional(),
   createFirstLink: z.boolean().optional().default(false),
+  wantsToAddFirstLink: z.boolean().optional(),
   progressPayload: z.record(z.string(), z.unknown()).optional(),
 });
 
