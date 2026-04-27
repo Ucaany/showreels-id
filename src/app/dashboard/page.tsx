@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { count, desc, eq, or } from "drizzle-orm";
+import { count, desc, eq, inArray, or, sql } from "drizzle-orm";
 import {
   BarChart3,
   CreditCard,
@@ -104,23 +104,29 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const normalizedLinks = normalizeCustomLinks(user.customLinks);
   const activeLinks = normalizedLinks.filter((link) => link.enabled !== false);
   const publicVideos = myVideos.filter(
-    (video) => video.visibility === "public" || video.visibility === "semi_private"
+    (video) => video.visibility === "public"
   );
   const profilePath = `/creator/${user.username || "creator"}`;
 
   const totalViews = isDatabaseConfigured
     ? await (async () => {
-        const conditions = [eq(visitorEvents.path, profilePath)];
-        for (const video of publicVideos) {
-          if (video.publicSlug) {
-            conditions.push(eq(visitorEvents.path, `/v/${video.publicSlug}`));
-          }
-        }
+        const publicVideoPaths = publicVideos
+          .map((video) => video.publicSlug?.trim())
+          .filter((value): value is string => Boolean(value))
+          .map((slug) => `/v/${slug}`);
+        const creatorPathPattern = `${profilePath}%`;
 
         const [row] = await db
           .select({ value: count() })
           .from(visitorEvents)
-          .where(or(...conditions));
+          .where(
+            publicVideoPaths.length > 0
+              ? or(
+                  sql`${visitorEvents.path} LIKE ${creatorPathPattern}`,
+                  inArray(visitorEvents.path, publicVideoPaths)
+                )
+              : sql`${visitorEvents.path} LIKE ${creatorPathPattern}`
+          );
         return Number(row?.value || 0);
       })()
     : 0;
@@ -145,9 +151,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       icon: UploadCloud,
     },
     {
-      label: "Total Click/View",
+      label: "Total Click",
       value: totalViews,
-      helper: "Kunjungan profil dan video",
+      helper: "Event analytics profil dan video",
       icon: MousePointerClick,
     },
   ] as const;
