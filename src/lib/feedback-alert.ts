@@ -14,6 +14,8 @@ type ConfirmationOptions = {
   confirmButtonText?: string;
   cancelButtonText?: string;
   icon?: SweetAlertIcon;
+  timer?: number;
+  timerProgressBar?: boolean;
 };
 
 function shouldUseCompactAlert() {
@@ -86,6 +88,8 @@ export async function confirmFeedbackAction({
   confirmButtonText = "Ya, lanjutkan",
   cancelButtonText = "Batal",
   icon = "warning",
+  timer,
+  timerProgressBar = Boolean(timer),
 }: ConfirmationOptions) {
   const Swal = (await import("sweetalert2")).default;
 
@@ -97,6 +101,8 @@ export async function confirmFeedbackAction({
     confirmButtonText,
     cancelButtonText,
     reverseButtons: true,
+    timer,
+    timerProgressBar,
     buttonsStyling: false,
     customClass: {
       popup: "rounded-2xl border border-slate-200 bg-white text-slate-950",

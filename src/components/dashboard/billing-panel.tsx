@@ -280,10 +280,6 @@ export function BillingPanel({
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6078a2]">Payment Method</p>
               <p className="mt-1 text-sm font-semibold capitalize text-[#142033]">{paymentMethod}</p>
             </div>
-            <div className="rounded-2xl border border-[#dbe7f8] bg-[#f8fbff] p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6078a2]">Mode Pembayaran</p>
-              <p className="mt-1 text-sm font-semibold capitalize text-[#142033]">{midtransConfig.mode}</p>
-            </div>
           </div>
         </Card>
 

@@ -277,9 +277,6 @@ export function PaymentPagePanel({
 
       <Card className="dashboard-clean-card border-border bg-surface p-4">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <p className="font-semibold text-[#201b18]">
-            Mode Midtrans: <span className="capitalize">{midtransConfig.mode}</span>
-          </p>
           <div className="flex flex-wrap gap-2">
             <span
               className={`rounded-full border px-2.5 py-1 font-semibold ${midtransConfig.serverKeySet ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}
@@ -407,17 +404,6 @@ export function PaymentPagePanel({
                     </Link>
                   ) : null}
                 </div>
-
-                {midtransConfig.mode === "sandbox" ? (
-                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                    <p className="font-semibold">Panduan Kartu Uji Sandbox</p>
-                    <p className="mt-1 font-mono text-xs sm:text-sm">4011 1111 1111 1112</p>
-                    <p className="mt-1 text-xs sm:text-sm">
-                      Expiry gunakan bulan apa saja (mis. 12) dengan tahun masa depan (mis. 2030).
-                    </p>
-                    <p className="text-xs sm:text-sm">CVV: 123, OTP/3DS: 112233</p>
-                  </div>
-                ) : null}
 
                 {payment.qrUrl ? (
                   <div className="mt-5 space-y-3 rounded-xl border border-[#e7ddd7] bg-[#fcf9f7] p-3">

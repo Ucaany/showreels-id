@@ -149,9 +149,6 @@ export function PricingSubscriptionPage({
   const [effectivePlan, setEffectivePlan] = useState<PlanName | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>("-");
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [countdown, setCountdown] = useState(5);
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const autoCheckoutRef = useRef(false);
 
   const plans = useMemo(
@@ -278,22 +275,11 @@ export function PricingSubscriptionPage({
     }
 
     setErrorMessage("");
+    // Refresh plan data after successful checkout
+    await fetchPlanSnapshot();
     window.location.assign(paymentUrl);
     return true;
   }, [canUseCreatorBilling, isLoggedIn, locale, loginHref, paymentReady]);
-
-  useEffect(() => {
-    if (isModalOpen && countdown > 0) {
-      countdownRef.current = setTimeout(() => setCountdown(countdown - 1), 1000);
-    } else if (countdown === 0 && isModalOpen) {
-      // Proceed with checkout
-      void createPaidTransaction(selectedPlan as "creator" | "business");
-      setIsModalOpen(false);
-    }
-    return () => {
-      if (countdownRef.current) clearTimeout(countdownRef.current);
-    };
-  }, [isModalOpen, countdown, selectedPlan, createPaidTransaction]);
 
   const handleContinueCheckout = async () => {
     if (
@@ -793,12 +779,27 @@ export function PricingSubscriptionPage({
                 <Button variant="secondary" onClick={() => setFlowStep("selection")}>
                   {locale === "en" ? "Back" : "Kembali"}
                 </Button>
-                <Button onClick={() => {
+                <Button onClick={async () => {
                   if (selectedPlan === "free") {
                     void handleContinueCheckout();
                   } else {
-                    setIsModalOpen(true);
-                    setCountdown(5);
+                    const Swal = (await import("sweetalert2")).default;
+                    const result = await Swal.fire({
+                      title: locale === "en" ? "Confirm Payment" : "Konfirmasi Pembayaran",
+                      text: locale === "en"
+                        ? `Proceed with ${selectedPlanInfo.name} plan for ${toIdr(selectedPlanInfo.price)}?`
+                        : `Lanjutkan dengan plan ${selectedPlanInfo.name} seharga ${toIdr(selectedPlanInfo.price)}?`,
+                      icon: "question",
+                      showCancelButton: true,
+                      confirmButtonText: locale === "en" ? "Continue (5s)" : "Lanjutkan (5s)",
+                      cancelButtonText: locale === "en" ? "Cancel" : "Batal",
+                      reverseButtons: true,
+                      timer: 5000,
+                      timerProgressBar: true,
+                    });
+                    if (result.isConfirmed) {
+                      void createPaidTransaction(selectedPlan as "creator" | "business");
+                    }
                   }
                 }} disabled={loadingAction}>
                   {loadingAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
@@ -863,30 +864,6 @@ export function PricingSubscriptionPage({
 
         </section>
       </div>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="text-xl font-semibold">
-              {locale === "en" ? "Confirm Payment" : "Konfirmasi Pembayaran"}
-            </h2>
-            <p className="mt-2 text-sm">
-              {locale === "en"
-                ? `Proceed with ${selectedPlanInfo.name} plan for ${toIdr(selectedPlanInfo.price)}?`
-                : `Lanjutkan dengan plan ${selectedPlanInfo.name} seharga ${toIdr(selectedPlanInfo.price)}?`}
-            </p>
-            <p className="mt-4 text-center text-2xl font-bold text-red-600">{countdown}</p>
-            <p className="mt-2 text-center text-sm">
-              {locale === "en" ? "Redirecting to Midtrans in..." : "Mengalihkan ke Midtrans dalam..."}
-            </p>
-            <div className="mt-4 flex justify-end">
-              <Button variant="secondary" onClick={() => { setIsModalOpen(false); setCountdown(5); }}>
-                {locale === "en" ? "Cancel" : "Batal"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
