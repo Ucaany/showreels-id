@@ -59,8 +59,17 @@ export async function GET(request: NextRequest) {
             userId: profile.id,
             customLinks: profile.customLinks,
             createdAt: profile.createdAt,
+            profile: {
+              fullName: profile.name,
+              username: profile.username,
+              role: profile.role,
+              bio: profile.bio,
+            },
           });
-          destination = onboarding.onboardingCompleted ? next : "/onboarding";
+          destination =
+            onboarding.onboardingCompleted || onboarding.onboardingSkipped
+              ? next
+              : "/dashboard";
         }
 
         return NextResponse.redirect(
@@ -76,7 +85,7 @@ export async function GET(request: NextRequest) {
         });
         const fallbackDestination = isAdminEmail(user.email)
           ? "/admin"
-          : "/onboarding";
+          : "/dashboard";
 
         return NextResponse.redirect(
           getAuthSuccessUrl(fallbackDestination, request.url)

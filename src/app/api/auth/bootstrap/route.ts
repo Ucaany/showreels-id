@@ -42,8 +42,17 @@ export async function POST(request: Request) {
         userId: profile.id,
         customLinks: profile.customLinks,
         createdAt: profile.createdAt,
+        profile: {
+          fullName: profile.name,
+          username: profile.username,
+          role: profile.role,
+          bio: profile.bio,
+        },
       });
-      const redirectTo = onboarding.onboardingCompleted ? next : "/onboarding";
+      const redirectTo =
+        onboarding.onboardingCompleted || onboarding.onboardingSkipped
+          ? next
+          : "/dashboard";
 
       return NextResponse.json({
         ok: true,
@@ -64,15 +73,15 @@ export async function POST(request: Request) {
       userId: user.id,
     });
     const fallbackOwner = isAdminEmail(user.email);
-    const fallbackRedirect = fallbackOwner ? "/admin" : "/onboarding";
+    const fallbackRedirect = fallbackOwner ? "/admin" : "/dashboard";
 
     return NextResponse.json({
       ok: true,
       redirectTo: fallbackRedirect,
       degradedSync: true,
       warning: mismatch
-        ? "Sinkronisasi schema akun belum lengkap, diarahkan ke onboarding aman."
-        : "Profil sedang disiapkan, diarahkan ke onboarding aman.",
+        ? "Sinkronisasi schema akun belum lengkap, diarahkan ke dashboard aman."
+        : "Profil sedang disiapkan, diarahkan ke dashboard aman.",
     });
   }
 }

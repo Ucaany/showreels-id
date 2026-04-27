@@ -18,6 +18,8 @@ export const onboardingProfileSchema = z
       }),
     role: z.string().trim().max(120).optional().default(""),
     bio: z.string().trim().max(240).optional().default(""),
+    image: z.string().trim().max(300).optional().default(""),
+    coverImageUrl: z.string().trim().max(300).optional().default(""),
   })
   .partial();
 
@@ -32,6 +34,7 @@ export const onboardingFirstLinkSchema = z.object({
       message: "URL tidak valid.",
     }),
   platform: z.string().trim().max(40).optional().default(""),
+  enabled: z.boolean().optional().default(true),
 });
 
 export const onboardingProgressSchema = z.object({
@@ -45,4 +48,8 @@ export const onboardingProgressSchema = z.object({
 export const onboardingCompleteSchema = z.object({
   firstVideoUploaded: z.boolean().optional().default(false),
   goTo: z.enum(["dashboard", "build-link"]).optional().default("dashboard"),
+});
+
+export const onboardingSkipSchema = z.object({
+  reason: z.string().trim().max(120).optional().default("fill_later"),
 });

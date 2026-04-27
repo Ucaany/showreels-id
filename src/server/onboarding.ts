@@ -19,13 +19,29 @@ function buildFallbackOnboarding(
   return {
     userId,
     onboardingCompleted,
+    onboardingSkipped: patch?.onboardingSkipped ?? false,
     firstLinkCreated: patch?.firstLinkCreated ?? false,
     firstVideoUploaded: patch?.firstVideoUploaded ?? false,
+    hasPublicProfile: patch?.hasPublicProfile ?? false,
     currentStep: patch?.currentStep ?? (onboardingCompleted ? 4 : 1),
     progressPayload: patch?.progressPayload ?? {},
     createdAt: now,
     updatedAt: now,
   };
+}
+
+function hasMinimalPublicProfile(input: {
+  fullName?: string | null;
+  username?: string | null;
+  role?: string | null;
+  bio?: string | null;
+}) {
+  const fullName = (input.fullName || "").trim();
+  const username = (input.username || "").trim();
+  const role = (input.role || "").trim();
+  const bio = (input.bio || "").trim();
+
+  return Boolean(fullName && username && (role || bio));
 }
 
 async function countUserVideos(userId: string) {
@@ -41,11 +57,25 @@ export async function getOrCreateUserOnboarding(input: {
   userId: string;
   customLinks: unknown;
   createdAt?: Date | null;
+  profile?: {
+    fullName?: string | null;
+    username?: string | null;
+    role?: string | null;
+    bio?: string | null;
+  };
 }) {
   const fallbackLinksCount = normalizeStoredLinks(input.customLinks).length;
+  const fallbackHasPublicProfile = hasMinimalPublicProfile({
+    fullName: input.profile?.fullName,
+    username: input.profile?.username,
+    role: input.profile?.role,
+    bio: input.profile?.bio,
+  });
   const fallbackPatch = {
     firstLinkCreated: fallbackLinksCount > 0,
     onboardingCompleted: false,
+    onboardingSkipped: false,
+    hasPublicProfile: fallbackHasPublicProfile,
   } satisfies Partial<DbUserOnboarding>;
 
   if (!isDatabaseConfigured) {
@@ -69,6 +99,12 @@ export async function getOrCreateUserOnboarding(input: {
 
     const firstLinkCreated = normalizeStoredLinks(input.customLinks).length > 0;
     const firstVideoUploaded = (await countUserVideos(input.userId)) > 0;
+    const hasPublicProfile = hasMinimalPublicProfile({
+      fullName: input.profile?.fullName,
+      username: input.profile?.username,
+      role: input.profile?.role,
+      bio: input.profile?.bio,
+    });
     const onboardingCompleted = firstLinkCreated || firstVideoUploaded;
 
     const [created] = await db
@@ -76,8 +112,10 @@ export async function getOrCreateUserOnboarding(input: {
       .values({
         userId: input.userId,
         onboardingCompleted,
+        onboardingSkipped: false,
         firstLinkCreated,
         firstVideoUploaded,
+        hasPublicProfile,
         currentStep: onboardingCompleted ? 4 : 1,
         progressPayload: {},
       })
@@ -96,16 +134,20 @@ export async function updateUserOnboardingProgress(input: {
   userId: string;
   currentStep?: number;
   onboardingCompleted?: boolean;
+  onboardingSkipped?: boolean;
   firstLinkCreated?: boolean;
   firstVideoUploaded?: boolean;
+  hasPublicProfile?: boolean;
   progressPayload?: DbOnboardingProgressPayload;
 }) {
   if (!isDatabaseConfigured) {
     return buildFallbackOnboarding(input.userId, {
       currentStep: input.currentStep,
       onboardingCompleted: input.onboardingCompleted,
+      onboardingSkipped: input.onboardingSkipped,
       firstLinkCreated: input.firstLinkCreated,
       firstVideoUploaded: input.firstVideoUploaded,
+      hasPublicProfile: input.hasPublicProfile,
       progressPayload: input.progressPayload,
     });
   }
@@ -117,8 +159,10 @@ export async function updateUserOnboardingProgress(input: {
     return buildFallbackOnboarding(input.userId, {
       currentStep: input.currentStep,
       onboardingCompleted: input.onboardingCompleted,
+      onboardingSkipped: input.onboardingSkipped,
       firstLinkCreated: input.firstLinkCreated,
       firstVideoUploaded: input.firstVideoUploaded,
+      hasPublicProfile: input.hasPublicProfile,
       progressPayload: input.progressPayload,
     });
   }
@@ -135,11 +179,17 @@ export async function updateUserOnboardingProgress(input: {
       ...(typeof input.onboardingCompleted === "boolean"
         ? { onboardingCompleted: input.onboardingCompleted }
         : {}),
+      ...(typeof input.onboardingSkipped === "boolean"
+        ? { onboardingSkipped: input.onboardingSkipped }
+        : {}),
       ...(typeof input.firstLinkCreated === "boolean"
         ? { firstLinkCreated: input.firstLinkCreated }
         : {}),
       ...(typeof input.firstVideoUploaded === "boolean"
         ? { firstVideoUploaded: input.firstVideoUploaded }
+        : {}),
+      ...(typeof input.hasPublicProfile === "boolean"
+        ? { hasPublicProfile: input.hasPublicProfile }
         : {}),
       ...(input.progressPayload ? { progressPayload: input.progressPayload } : {}),
       updatedAt: new Date(),
@@ -151,8 +201,10 @@ export async function updateUserOnboardingProgress(input: {
         .values({
           userId: input.userId,
           onboardingCompleted: input.onboardingCompleted ?? false,
+          onboardingSkipped: input.onboardingSkipped ?? false,
           firstLinkCreated: input.firstLinkCreated ?? false,
           firstVideoUploaded: input.firstVideoUploaded ?? false,
+          hasPublicProfile: input.hasPublicProfile ?? false,
           currentStep: Math.min(4, Math.max(1, input.currentStep ?? 1)),
           progressPayload: input.progressPayload ?? {},
           updatedAt: new Date(),
@@ -174,8 +226,10 @@ export async function updateUserOnboardingProgress(input: {
       return buildFallbackOnboarding(input.userId, {
         currentStep: input.currentStep,
         onboardingCompleted: input.onboardingCompleted,
+        onboardingSkipped: input.onboardingSkipped,
         firstLinkCreated: input.firstLinkCreated,
         firstVideoUploaded: input.firstVideoUploaded,
+        hasPublicProfile: input.hasPublicProfile,
         progressPayload: input.progressPayload,
       });
     }
@@ -201,7 +255,17 @@ export async function completeUserOnboarding(userId: string, progressPayload?: D
   return updateUserOnboardingProgress({
     userId,
     onboardingCompleted: true,
+    onboardingSkipped: false,
     currentStep: 4,
+    progressPayload,
+  });
+}
+
+export async function skipUserOnboarding(userId: string, progressPayload?: DbOnboardingProgressPayload) {
+  return updateUserOnboardingProgress({
+    userId,
+    onboardingCompleted: false,
+    onboardingSkipped: true,
     progressPayload,
   });
 }

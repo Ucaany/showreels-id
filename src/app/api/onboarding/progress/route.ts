@@ -9,6 +9,20 @@ import { getCurrentUser } from "@/server/current-user";
 import { getOrCreateUserOnboarding, updateUserOnboardingProgress } from "@/server/onboarding";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
+function hasMinimalPublicProfile(input: {
+  fullName?: string;
+  username?: string;
+  role?: string;
+  bio?: string;
+}) {
+  const fullName = (input.fullName || "").trim();
+  const username = (input.username || "").trim();
+  const role = (input.role || "").trim();
+  const bio = (input.bio || "").trim();
+
+  return Boolean(fullName && username && (role || bio));
+}
+
 export async function PATCH(request: Request) {
   const currentUser = await getCurrentUser();
   if (!currentUser?.id) {
@@ -34,6 +48,12 @@ export async function PATCH(request: Request) {
     userId: currentUser.id,
     customLinks: currentUser.customLinks,
     createdAt: currentUser.createdAt,
+    profile: {
+      fullName: currentUser.name,
+      username: currentUser.username,
+      role: currentUser.role,
+      bio: currentUser.bio,
+    },
   });
   const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
   const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
@@ -57,6 +77,12 @@ export async function PATCH(request: Request) {
     }
     if (typeof profile.bio === "string") {
       updatePayload.bio = profile.bio.trim();
+    }
+    if (typeof profile.image === "string") {
+      updatePayload.image = profile.image.trim();
+    }
+    if (typeof profile.coverImageUrl === "string") {
+      updatePayload.coverImageUrl = profile.coverImageUrl.trim();
     }
 
     if (typeof profile.username === "string" && profile.username !== currentUser.username) {
@@ -129,7 +155,7 @@ export async function PATCH(request: Request) {
         style: "",
         iconKey: "",
         iconUrl: "",
-        enabled: true,
+        enabled: firstLink.enabled !== false,
       },
       latestLinks
     );
@@ -168,7 +194,14 @@ export async function PATCH(request: Request) {
   const status = await updateUserOnboardingProgress({
     userId: currentUser.id,
     currentStep: parsed.data.currentStep ?? onboarding.currentStep,
+    onboardingSkipped: false,
     firstLinkCreated,
+    hasPublicProfile: hasMinimalPublicProfile({
+      fullName: profile?.fullName ?? (typeof currentUser.name === "string" ? currentUser.name : ""),
+      username: profile?.username ?? (typeof currentUser.username === "string" ? currentUser.username : ""),
+      role: profile?.role ?? (typeof currentUser.role === "string" ? currentUser.role : ""),
+      bio: profile?.bio ?? (typeof currentUser.bio === "string" ? currentUser.bio : ""),
+    }),
     progressPayload,
   });
 

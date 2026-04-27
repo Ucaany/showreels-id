@@ -31,12 +31,17 @@ export default async function PaymentPage({
       autoCheckoutIntent={params.intent === "checkout"}
       isLoggedIn={Boolean(user?.id)}
       isOwner={user?.role === "owner"}
+      account={{
+        name: user?.name || null,
+        email: user?.contactEmail || user?.email || null,
+        username: user?.username || null,
+      }}
       planPricing={{
         free: catalog.free.monthly,
         creator: catalog.creator.monthly,
         business: catalog.business.monthly,
       }}
-      midtransConfig={{
+      paymentConfig={{
         mode: runtime.mode,
         serverKeySet: runtime.serverKeySet,
       }}

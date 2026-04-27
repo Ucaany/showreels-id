@@ -13,13 +13,17 @@ import {
   Wand2,
 } from "lucide-react";
 import { CreatorTrafficPanel } from "@/components/dashboard/creator-traffic-panel";
+import { OnboardingReminderCard } from "@/components/dashboard/onboarding-reminder-card";
 import { ShareProfileActions } from "@/components/dashboard/share-profile-actions";
+import { OnboardingStepper } from "@/components/onboarding/onboarding-stepper";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { db, isDatabaseConfigured } from "@/db";
 import { videos, visitorEvents } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { requireCurrentUser } from "@/server/current-user";
+import { getOrCreateUserOnboarding } from "@/server/onboarding";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 type QuickAction = {
   href: string;
@@ -30,12 +34,58 @@ type QuickAction = {
   locked?: boolean;
 };
 
+type DashboardPageProps = {
+  searchParams?: Promise<{
+    onboarding?: string;
+  }>;
+};
+
 function formatNumber(value: number) {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const user = await requireCurrentUser();
+  const params = searchParams ? await searchParams : {};
+  const forceOnboarding = params.onboarding === "1";
+
+  const [entitlementState, onboarding] = await Promise.all([
+    getCreatorEntitlementsForUser(user.id),
+    getOrCreateUserOnboarding({
+      userId: user.id,
+      customLinks: user.customLinks,
+      createdAt: user.createdAt,
+      profile: {
+        fullName: user.name,
+        username: user.username,
+        role: user.role,
+        bio: user.bio,
+      },
+    }),
+  ]);
+
+  const shouldShowOnboarding =
+    !onboarding.onboardingCompleted && (!onboarding.onboardingSkipped || forceOnboarding);
+
+  if (shouldShowOnboarding) {
+    return (
+      <OnboardingStepper
+        initialStatus={onboarding}
+        initialUser={{
+          fullName: user.name || "",
+          username: user.username || "",
+          role: user.role || "",
+          bio: user.bio || "",
+          image: user.image || "",
+          coverImageUrl: user.coverImageUrl || "",
+        }}
+        linkBuilderMax={entitlementState.entitlements.linkBuilderMax}
+        planName={entitlementState.effectivePlan.planName}
+        embedded
+      />
+    );
+  }
+
   const canUseBuildLink = true;
 
   const myVideos = isDatabaseConfigured
@@ -138,6 +188,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-5">
+      {onboarding.onboardingSkipped && !onboarding.onboardingCompleted ? (
+        <OnboardingReminderCard userId={user.id} resumeHref="/dashboard?onboarding=1" />
+      ) : null}
+
       <Card className="dashboard-clean-card overflow-hidden border-[#cfddf5] bg-white p-0">
         <div className="grid gap-0 lg:grid-cols-[1.18fr_0.82fr]">
           <div className="p-5 sm:p-7">

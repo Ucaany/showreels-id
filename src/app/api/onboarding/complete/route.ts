@@ -11,6 +11,20 @@ import {
   updateUserOnboardingProgress,
 } from "@/server/onboarding";
 
+function hasMinimalPublicProfile(input: {
+  fullName?: string;
+  username?: string;
+  role?: string;
+  bio?: string;
+}) {
+  const fullName = (input.fullName || "").trim();
+  const username = (input.username || "").trim();
+  const role = (input.role || "").trim();
+  const bio = (input.bio || "").trim();
+
+  return Boolean(fullName && username && (role || bio));
+}
+
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser();
   if (!currentUser?.id) {
@@ -36,6 +50,12 @@ export async function POST(request: Request) {
     userId: currentUser.id,
     customLinks: currentUser.customLinks,
     createdAt: currentUser.createdAt,
+    profile: {
+      fullName: currentUser.name,
+      username: currentUser.username,
+      role: currentUser.role,
+      bio: currentUser.bio,
+    },
   });
 
   const linksCount = Array.isArray(currentUser.customLinks)
@@ -56,11 +76,18 @@ export async function POST(request: Request) {
 
   await updateUserOnboardingProgress({
     userId: currentUser.id,
+    onboardingSkipped: false,
     firstLinkCreated: linksCount > 0 || onboarding.firstLinkCreated,
     firstVideoUploaded:
       parsed.data.firstVideoUploaded ||
       onboarding.firstVideoUploaded ||
       videoCount > 0,
+    hasPublicProfile: hasMinimalPublicProfile({
+      fullName: currentUser.name || "",
+      username: currentUser.username || "",
+      role: currentUser.role || "",
+      bio: currentUser.bio || "",
+    }),
   });
 
   return NextResponse.json({

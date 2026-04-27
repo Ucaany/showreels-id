@@ -261,9 +261,9 @@ export function BillingPanel({
 
       {!midtransConfig.serverKeySet ? (
         <Card className="dashboard-clean-card border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm font-semibold text-amber-700">Midtrans belum lengkap</p>
+          <p className="text-sm font-semibold text-amber-700">Konfigurasi pembayaran belum lengkap</p>
           <p className="mt-1 text-sm text-amber-700">
-            Server key belum terdeteksi, pembayaran berbayar dapat gagal sampai environment production diperbarui.
+            Konfigurasi server pembayaran belum terdeteksi. Checkout berbayar dapat gagal sampai environment production diperbarui.
           </p>
         </Card>
       ) : null}
@@ -281,7 +281,7 @@ export function BillingPanel({
               <p className="mt-1 text-sm font-semibold capitalize text-[#142033]">{paymentMethod}</p>
             </div>
             <div className="rounded-2xl border border-[#dbe7f8] bg-[#f8fbff] p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6078a2]">Midtrans Mode</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6078a2]">Mode Pembayaran</p>
               <p className="mt-1 text-sm font-semibold capitalize text-[#142033]">{midtransConfig.mode}</p>
             </div>
           </div>

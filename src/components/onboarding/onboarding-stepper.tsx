@@ -2,19 +2,27 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
 import {
+  Camera,
   Check,
   ChevronLeft,
   ChevronRight,
+  Globe,
   Link2,
+  MessageCircle,
+  Music2,
+  PlayCircle,
   UserRound,
+  Video,
 } from "lucide-react";
 import type { DbUserOnboarding } from "@/db/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { showFeedbackAlert } from "@/lib/feedback-alert";
+import { cn } from "@/lib/cn";
+import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
 import { normalizeSocialUrl } from "@/lib/profile-utils";
 import { sanitizeUsername } from "@/lib/username-rules";
 
@@ -26,11 +34,26 @@ type UsernameAvailability = {
 };
 
 const STEP_ITEMS = [
-  { id: 1, title: "Informasi akun" },
-  { id: 2, title: "Buat link pertama" },
-  { id: 3, title: "Preview halaman" },
+  { id: 1, title: "Identitas Creator" },
+  { id: 2, title: "Buat Link Pertama" },
+  { id: 3, title: "Preview Halaman" },
   { id: 4, title: "Selesai" },
 ] as const;
+
+const PLATFORM_OPTIONS: Array<{
+  id: string;
+  title: string;
+  icon: LucideIcon;
+  defaultTitle: string;
+}> = [
+  { id: "Website", title: "Website", icon: Globe, defaultTitle: "Kunjungi Website" },
+  { id: "Instagram", title: "Instagram", icon: Camera, defaultTitle: "Follow Instagram" },
+  { id: "YouTube", title: "YouTube", icon: Video, defaultTitle: "Lihat YouTube" },
+  { id: "WhatsApp", title: "WhatsApp", icon: MessageCircle, defaultTitle: "Hubungi WhatsApp" },
+  { id: "TikTok", title: "TikTok", icon: Music2, defaultTitle: "Lihat TikTok" },
+  { id: "Custom Link", title: "Custom Link", icon: Link2, defaultTitle: "Buka Link" },
+  { id: "Portfolio Video", title: "Portfolio Video", icon: PlayCircle, defaultTitle: "Lihat Portfolio Video" },
+];
 
 function getProgressPayload(status: DbUserOnboarding) {
   if (!status.progressPayload || typeof status.progressPayload !== "object") {
@@ -44,6 +67,7 @@ export function OnboardingStepper({
   initialUser,
   linkBuilderMax,
   planName,
+  embedded = false,
 }: {
   initialStatus: DbUserOnboarding;
   initialUser: {
@@ -56,6 +80,7 @@ export function OnboardingStepper({
   };
   linkBuilderMax: number | null;
   planName: "free" | "creator" | "pro" | "business";
+  embedded?: boolean;
 }) {
   const router = useRouter();
   const payload = getProgressPayload(initialStatus);
@@ -66,6 +91,8 @@ export function OnboardingStepper({
           username?: string;
           role?: string;
           bio?: string;
+          image?: string;
+          coverImageUrl?: string;
         })
       : {};
   const payloadFirstLink =
@@ -74,6 +101,7 @@ export function OnboardingStepper({
           title?: string;
           url?: string;
           platform?: string;
+          enabled?: boolean;
         })
       : {};
 
@@ -82,9 +110,16 @@ export function OnboardingStepper({
   const [username, setUsername] = useState(payloadProfile.username || initialUser.username);
   const [role, setRole] = useState(payloadProfile.role || initialUser.role);
   const [bio, setBio] = useState(payloadProfile.bio || initialUser.bio);
+  const [image, setImage] = useState(payloadProfile.image || initialUser.image);
+  const [coverImageUrl, setCoverImageUrl] = useState(
+    payloadProfile.coverImageUrl || initialUser.coverImageUrl
+  );
   const [firstLinkTitle, setFirstLinkTitle] = useState(payloadFirstLink.title || "");
   const [firstLinkUrl, setFirstLinkUrl] = useState(payloadFirstLink.url || "");
   const [firstLinkPlatform, setFirstLinkPlatform] = useState(payloadFirstLink.platform || "");
+  const [firstLinkEnabled, setFirstLinkEnabled] = useState(
+    payloadFirstLink.enabled !== false
+  );
   const [busy, setBusy] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
   const [lastDraftLabel, setLastDraftLabel] = useState("Draft otomatis aktif.");
@@ -128,11 +163,14 @@ export function OnboardingStepper({
           username: normalizedUsername,
           role,
           bio,
+          image,
+          coverImageUrl,
         },
         firstLink: {
           title: firstLinkTitle,
           url: normalizeSocialUrl(firstLinkUrl),
           platform: firstLinkPlatform,
+          enabled: firstLinkEnabled,
         },
         progressPayload: {
           profile: {
@@ -140,11 +178,14 @@ export function OnboardingStepper({
             username: normalizedUsername,
             role,
             bio,
+            image,
+            coverImageUrl,
           },
           firstLink: {
             title: firstLinkTitle,
             url: firstLinkUrl,
             platform: firstLinkPlatform,
+            enabled: firstLinkEnabled,
           },
         },
       }),
@@ -244,6 +285,48 @@ export function OnboardingStepper({
     setStep((prev) => Math.max(1, prev - 1));
   };
 
+  const handleSkip = async () => {
+    if (busy || step >= 4) return;
+
+    const confirmed = await confirmFeedbackAction({
+      title: "Lanjutkan nanti?",
+      text: "Kamu bisa melengkapi halaman creator dari dashboard kapan saja.",
+      icon: "question",
+      confirmButtonText: "Ya, nanti saja",
+      cancelButtonText: "Kembali",
+    });
+    if (!confirmed) return;
+
+    setBusy(true);
+    const response = await fetch("/api/onboarding/skip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason: "fill_later" }),
+    });
+    const payloadResponse = (await response.json().catch(() => null)) as
+      | { error?: string; redirectTo?: string }
+      | null;
+    setBusy(false);
+
+    if (!response.ok) {
+      await showFeedbackAlert({
+        title: "Gagal melewati onboarding",
+        text: payloadResponse?.error || "Coba ulang beberapa saat lagi.",
+        icon: "error",
+      });
+      return;
+    }
+
+    await showFeedbackAlert({
+      title: "Onboarding dilewati.",
+      text: "Kamu bisa melanjutkan setup kapan saja dari dashboard.",
+      icon: "success",
+      timer: 1400,
+    });
+    router.replace(payloadResponse?.redirectTo || "/dashboard");
+    router.refresh();
+  };
+
   const handleComplete = async (goTo: "dashboard" | "build-link") => {
     setBusy(true);
     const response = await fetch("/api/onboarding/complete", {
@@ -338,35 +421,55 @@ export function OnboardingStepper({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, fullName, normalizedUsername, role, bio, firstLinkTitle, firstLinkUrl, firstLinkPlatform]);
+  }, [
+    step,
+    fullName,
+    normalizedUsername,
+    role,
+    bio,
+    image,
+    coverImageUrl,
+    firstLinkTitle,
+    firstLinkUrl,
+    firstLinkPlatform,
+    firstLinkEnabled,
+  ]);
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#edf3ff_0%,#f8fbff_50%,#f1f6ff_100%)] px-4 py-6 sm:px-6 sm:py-8">
-      <div className="mx-auto max-w-6xl">
+    <div
+      className={cn(
+        embedded
+          ? ""
+          : "min-h-screen bg-[linear-gradient(180deg,#edf3ff_0%,#f8fbff_50%,#f1f6ff_100%)] px-4 py-6 sm:px-6 sm:py-8"
+      )}
+    >
+      <div className={cn("mx-auto", embedded ? "max-w-none" : "max-w-6xl")}>
         <Card className="overflow-hidden border-[#cbddfd] bg-white/95 shadow-[0_24px_58px_rgba(33,78,149,0.12)]">
           <div className="grid gap-0 lg:grid-cols-[280px_1fr]">
             <aside className="border-b border-[#dce8fb] bg-[#f4f8ff] p-4 lg:border-b-0 lg:border-r lg:p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4f77b4]">
                 Onboarding
               </p>
-              <h1 className="mt-2 text-xl font-semibold text-[#17305b]">
-                Setup creator page
-              </h1>
+              <h1 className="mt-2 text-xl font-semibold text-[#17305b]">Setup creator page</h1>
               <p className="mt-1 text-sm text-[#5e78a5]">
-                Plan aktif: {planName.toUpperCase()} {typeof linkBuilderMax === "number" ? `· Maks ${linkBuilderMax} link` : "· Unlimited link"}
+                Plan aktif: {planName.toUpperCase()}{" "}
+                {typeof linkBuilderMax === "number"
+                  ? `- Maks ${linkBuilderMax} link`
+                  : "- Unlimited link"}
               </p>
 
               <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1 lg:hidden">
                 {STEP_ITEMS.map((item) => (
                   <div
                     key={item.id}
-                    className={`inline-flex min-w-[112px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                    className={cn(
+                      "inline-flex min-w-[120px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold",
                       step === item.id
                         ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
                         : step > item.id
                           ? "border-emerald-300 bg-emerald-50 text-emerald-700"
                           : "border-[#d2dff7] bg-white text-[#6b83ad]"
-                    }`}
+                    )}
                   >
                     <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white">
                       {step > item.id ? <Check className="h-3.5 w-3.5" /> : item.id}
@@ -380,22 +483,24 @@ export function OnboardingStepper({
                 {STEP_ITEMS.map((item) => (
                   <div
                     key={item.id}
-                    className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border px-3 py-2",
                       step === item.id
                         ? "border-[#2f73ff] bg-[#edf4ff]"
                         : step > item.id
                           ? "border-emerald-200 bg-emerald-50"
                           : "border-[#d2dff7] bg-white"
-                    }`}
+                    )}
                   >
                     <span
-                      className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
+                      className={cn(
+                        "inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold",
                         step === item.id
                           ? "bg-[#2f73ff] text-white"
                           : step > item.id
                             ? "bg-emerald-600 text-white"
                             : "bg-[#edf4ff] text-[#4d6f9f]"
-                      }`}
+                      )}
                     >
                       {step > item.id ? <Check className="h-4 w-4" /> : item.id}
                     </span>
@@ -405,8 +510,8 @@ export function OnboardingStepper({
               </div>
             </aside>
 
-            <section className="p-4 pb-24 sm:p-5 sm:pb-24 lg:pb-6">
-              <div className="flex items-start justify-between gap-3">
+            <section className="p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5b79ab]">
                     Langkah {step} dari 4
@@ -420,6 +525,9 @@ export function OnboardingStepper({
 
               {step === 1 ? (
                 <div className="mt-5 grid gap-3">
+                  <div className="rounded-xl border border-[#d8e5fb] bg-[#f6f9ff] px-3 py-2 text-sm text-[#50709f]">
+                    Data dari akun kamu sudah kami isi otomatis. Kamu bisa mengubahnya jika perlu.
+                  </div>
                   <div>
                     <label className="mb-1 block text-sm font-semibold text-[#35598e]">Nama / Display Name</label>
                     <Input value={fullName} onChange={(event) => setFullName(event.target.value)} />
@@ -454,40 +562,73 @@ export function OnboardingStepper({
                       placeholder="Ceritakan singkat tentang kamu."
                     />
                   </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-semibold text-[#35598e]">
+                        Foto profile (opsional)
+                      </label>
+                      <Input
+                        value={image}
+                        onChange={(event) => setImage(event.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-semibold text-[#35598e]">
+                        Cover image (opsional)
+                      </label>
+                      <Input
+                        value={coverImageUrl}
+                        onChange={(event) => setCoverImageUrl(event.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
                 </div>
               ) : null}
 
               {step === 2 ? (
                 <div className="mt-5 space-y-4">
                   <div>
-                    <p className="text-sm font-semibold text-[#35598e]">Pilih jenis link</p>
+                    <p className="text-sm font-semibold text-[#35598e]">
+                      Pilih satu link utama yang ingin kamu tampilkan.
+                    </p>
                     <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                      {[
-                        "Website",
-                        "Instagram",
-                        "YouTube",
-                        "WhatsApp",
-                        "Portfolio Video",
-                        "Custom Link",
-                      ].map((platform) => (
-                        <button
-                          key={platform}
-                          type="button"
-                          onClick={() => {
-                            setFirstLinkPlatform(platform);
-                            if (!firstLinkTitle) {
-                              setFirstLinkTitle(platform === "Portfolio Video" ? "Lihat Portfolio Video" : platform);
-                            }
-                          }}
-                          className={`rounded-xl border px-3 py-2 text-left text-sm font-semibold transition ${
-                            firstLinkPlatform === platform
-                              ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
-                              : "border-[#d4e3fb] bg-white text-[#3e6399] hover:border-[#a9c6f5]"
-                          }`}
-                        >
-                          {platform}
-                        </button>
-                      ))}
+                      {PLATFORM_OPTIONS.map((platform) => {
+                        const Icon = platform.icon;
+                        const active = firstLinkPlatform === platform.id;
+                        return (
+                          <button
+                            key={platform.id}
+                            type="button"
+                            onClick={() => {
+                              setFirstLinkPlatform(platform.id);
+                              if (!firstLinkTitle) {
+                                setFirstLinkTitle(platform.defaultTitle);
+                              }
+                            }}
+                            className={cn(
+                              "flex min-h-12 items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
+                              active
+                                ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
+                                : "border-[#d4e3fb] bg-white text-[#3e6399] hover:border-[#a9c6f5]"
+                            )}
+                          >
+                            <span className="inline-flex min-w-0 items-center gap-2">
+                              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#2f73ff]">
+                                <Icon className="h-4 w-4" />
+                              </span>
+                              <span className="truncate">{platform.title}</span>
+                            </span>
+                            <span
+                              className={cn(
+                                "inline-flex h-4 w-4 shrink-0 rounded-full border",
+                                active ? "border-[#2f73ff] bg-[#2f73ff]" : "border-[#b9ccec]"
+                              )}
+                            />
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className="grid gap-3">
@@ -503,6 +644,15 @@ export function OnboardingStepper({
                         placeholder="https://..."
                       />
                     </div>
+                    <label className="inline-flex items-center gap-2 text-sm font-medium text-[#3a5f98]">
+                      <input
+                        type="checkbox"
+                        checked={firstLinkEnabled}
+                        onChange={(event) => setFirstLinkEnabled(event.target.checked)}
+                        className="h-4 w-4 rounded border-[#b8caea] text-[#2f73ff] focus:ring-[#2f73ff]"
+                      />
+                      Aktifkan link ini
+                    </label>
                   </div>
                 </div>
               ) : null}
@@ -510,30 +660,45 @@ export function OnboardingStepper({
               {step === 3 ? (
                 <div className="mt-5 space-y-4">
                   <p className="text-sm text-[#5c79a8]">
-                    Ini preview ringkas halaman bio kamu sebelum selesai onboarding.
+                    Lihat tampilan awal halaman creator kamu sebelum masuk dashboard.
                   </p>
-                  <div className="mx-auto max-w-[340px] rounded-[28px] border-[8px] border-[#0f172a] bg-[#0f172a] p-3 shadow-[0_22px_44px_rgba(16,41,85,0.25)]">
-                    <div className="rounded-[22px] bg-[#f8fbff] px-4 pb-5 pt-8">
-                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#2f73ff] text-white">
-                        <UserRound className="h-6 w-6" />
+                  <div className="mx-auto max-w-[360px] rounded-[28px] border-[8px] border-[#0f172a] bg-[#0f172a] p-3 shadow-[0_22px_44px_rgba(16,41,85,0.25)]">
+                    <div className="overflow-hidden rounded-[22px] bg-[#f8fbff]">
+                      <div className="h-[104px] w-full bg-gradient-to-b from-[#dae8ff] to-[#a3c5ff]">
+                        {coverImageUrl ? (
+                          <img
+                            src={coverImageUrl}
+                            alt="Cover preview"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : null}
                       </div>
-                      <p className="mt-3 text-center text-lg font-semibold text-[#17305b]">
-                        {fullName || "Display Name"}
-                      </p>
-                      <p className="mt-1 text-center text-sm text-[#5f7ca8]">
-                        {role || "Role / profession"}
-                      </p>
-                      <p className="mt-3 rounded-xl border border-[#d5e3fb] bg-white px-3 py-2 text-sm font-medium text-[#23457b]">
-                        {bio || "Bio singkat akan muncul di sini."}
-                      </p>
-                      <div className="mt-3 rounded-xl border border-[#d5e3fb] bg-white px-3 py-2">
-                        <p className="flex items-center gap-2 text-sm font-semibold text-[#23457b]">
-                          <Link2 className="h-4 w-4 text-[#2f73ff]" />
-                          {firstLinkTitle || "Link pertama kamu"}
+                      <div className="px-4 pb-5">
+                        <div className="-mt-8 mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#2f73ff] text-white">
+                          {image ? (
+                            <img src={image} alt="Avatar preview" className="h-full w-full object-cover" />
+                          ) : (
+                            <UserRound className="h-6 w-6" />
+                          )}
+                        </div>
+                        <p className="mt-3 text-center text-lg font-semibold text-[#17305b]">
+                          {fullName || "Display Name"}
                         </p>
-                        <p className="mt-1 truncate text-xs text-[#5f7ca8]">
-                          {normalizeSocialUrl(firstLinkUrl) || "https://..."}
+                        <p className="mt-1 text-center text-sm text-[#5f7ca8]">
+                          {role || "Role / profession"}
                         </p>
+                        <p className="mt-3 rounded-xl border border-[#d5e3fb] bg-white px-3 py-2 text-sm font-medium text-[#23457b]">
+                          {bio || "Bio singkat akan muncul di sini."}
+                        </p>
+                        <div className="mt-3 rounded-xl border border-[#d5e3fb] bg-white px-3 py-2">
+                          <p className="flex items-center gap-2 text-sm font-semibold text-[#23457b]">
+                            <Link2 className="h-4 w-4 text-[#2f73ff]" />
+                            {firstLinkTitle || "Link pertama kamu"}
+                          </p>
+                          <p className="mt-1 truncate text-xs text-[#5f7ca8]">
+                            {normalizeSocialUrl(firstLinkUrl) || "https://..."}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -543,9 +708,9 @@ export function OnboardingStepper({
               {step === 4 ? (
                 <div className="mt-5 space-y-4">
                   <div className="rounded-2xl border border-[#d6e5fb] bg-[#f5f9ff] p-4">
-                    <p className="text-sm font-semibold text-[#1f58e3]">Halaman creator kamu siap.</p>
+                    <p className="text-sm font-semibold text-[#1f58e3]">Halaman creator kamu siap</p>
                     <p className="mt-1 text-sm text-[#5e79a6]">
-                      Kamu bisa langsung masuk dashboard atau lanjut edit halaman Build Link.
+                      Kamu bisa lanjut mengatur link, upload video, atau melihat dashboard.
                     </p>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2">
@@ -562,45 +727,44 @@ export function OnboardingStepper({
                   </div>
                 </div>
               ) : null}
+
+              {step < 4 ? (
+                <div className="sticky bottom-0 z-10 mt-6 border-t border-[#d5e3fb] bg-white/95 pt-3 backdrop-blur">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="secondary"
+                        onClick={handleBack}
+                        disabled={busy || step === 1}
+                        className="min-h-11"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Back
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => void handleSkip()}
+                        disabled={busy}
+                        className="min-h-11"
+                      >
+                        Saya mengisinya nanti
+                      </Button>
+                    </div>
+                    <Button
+                      onClick={() => void handleNext()}
+                      disabled={busy || draftSaving}
+                      className="min-h-11"
+                    >
+                      {busy ? "Menyimpan..." : "Next"}
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </section>
           </div>
         </Card>
       </div>
-
-      {step < 4 ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#d5e3fb] bg-white/95 p-3 backdrop-blur lg:hidden">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-2">
-            <Button
-              variant="secondary"
-              onClick={handleBack}
-              disabled={busy || step === 1}
-              className="min-h-11 flex-1"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Back
-            </Button>
-            <Button onClick={() => void handleNext()} disabled={busy || draftSaving} className="min-h-11 flex-1">
-              {busy ? "Menyimpan..." : "Next"}
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      ) : null}
-
-      {step < 4 ? (
-        <div className="hidden lg:fixed lg:inset-x-0 lg:bottom-0 lg:block lg:border-t lg:border-[#d5e3fb] lg:bg-white/95 lg:p-3 lg:backdrop-blur">
-          <div className="mx-auto flex max-w-6xl items-center justify-end gap-2">
-            <Button variant="secondary" onClick={handleBack} disabled={busy || step === 1}>
-              <ChevronLeft className="h-4 w-4" />
-              Back
-            </Button>
-            <Button onClick={() => void handleNext()} disabled={busy || draftSaving}>
-              {busy ? "Menyimpan..." : "Next"}
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

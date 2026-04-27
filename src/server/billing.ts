@@ -527,7 +527,7 @@ export async function createUpgradeTransaction(input: {
         ok: false as const,
         code: "midtrans_not_configured",
         message:
-          "Midtrans belum dikonfigurasi. Isi MIDTRANS_SERVER_KEY di environment.",
+          "Layanan pembayaran belum dikonfigurasi. Hubungi admin untuk aktivasi pembayaran.",
       };
     }
 
@@ -583,7 +583,7 @@ export async function createUpgradeTransaction(input: {
         message:
           payload?.error_messages?.[0] ||
           payload?.status_message ||
-          "Gagal membuat transaksi Midtrans. Coba ulang beberapa saat lagi.",
+          "Gagal membuat transaksi pembayaran. Coba ulang beberapa saat lagi.",
       };
     }
 
@@ -714,7 +714,7 @@ export async function handleMidtransWebhook(payload: {
     if (Math.round(grossAmount) !== Math.round(transaction.amount)) {
       return {
         ok: false as const,
-        message: "Nominal Midtrans tidak sesuai dengan invoice backend.",
+        message: "Nominal pembayaran tidak sesuai dengan invoice backend.",
       };
     }
 

@@ -35,11 +35,14 @@ export interface DbOnboardingProgressPayload {
     username?: string;
     role?: string;
     bio?: string;
+    image?: string;
+    coverImageUrl?: string;
   };
   firstLink?: {
     title?: string;
     url?: string;
     platform?: string;
+    enabled?: boolean;
   };
   [key: string]: unknown;
 }
@@ -169,8 +172,10 @@ export const userOnboarding = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
+    onboardingSkipped: boolean("onboarding_skipped").notNull().default(false),
     firstLinkCreated: boolean("first_link_created").notNull().default(false),
     firstVideoUploaded: boolean("first_video_uploaded").notNull().default(false),
+    hasPublicProfile: boolean("has_public_profile").notNull().default(false),
     currentStep: integer("current_step").notNull().default(1),
     progressPayload: jsonb("progress_payload")
       .$type<DbOnboardingProgressPayload>()

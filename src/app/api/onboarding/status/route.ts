@@ -15,6 +15,12 @@ export async function GET() {
       userId: currentUser.id,
       customLinks: currentUser.customLinks,
       createdAt: currentUser.createdAt,
+      profile: {
+        fullName: currentUser.name,
+        username: currentUser.username,
+        role: currentUser.role,
+        bio: currentUser.bio,
+      },
     }),
     getCreatorEntitlementsForUser(currentUser.id),
   ]);
@@ -28,7 +34,18 @@ export async function GET() {
       : normalizeStoredLinks(currentUser.customLinks);
 
   return NextResponse.json({
+    success: true,
+    onboarding_completed: onboarding.onboardingCompleted,
+    onboarding_skipped: onboarding.onboardingSkipped,
+    current_step: onboarding.currentStep,
     status: onboarding,
+    prefill: {
+      display_name: currentUser.name || "",
+      email: currentUser.contactEmail || currentUser.email || "",
+      username: currentUser.username || "",
+      role: currentUser.role || "",
+      bio: currentUser.bio || "",
+    },
     user: {
       id: currentUser.id,
       fullName: currentUser.name || "",
