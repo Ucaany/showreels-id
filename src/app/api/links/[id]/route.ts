@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  countActiveLinks,
   linkCreateSchema,
   normalizeOrder,
 } from "@/lib/link-builder";
@@ -11,6 +12,7 @@ import {
   saveLinkBuilderDraft,
   validateLinkLimit,
 } from "@/server/link-builder-storage";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -53,6 +55,27 @@ export async function PUT(
   const targetIndex = currentLinks.findIndex((link) => link.id === id);
   if (targetIndex < 0) {
     return NextResponse.json({ error: "Link tidak ditemukan." }, { status: 404 });
+  }
+
+  const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
+  const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
+  const currentItem = currentLinks[targetIndex];
+  const nextEnabled = parsed.data.enabled !== false;
+
+  if (typeof linkBuilderMax === "number" && nextEnabled && currentItem.enabled === false) {
+    const activeLinks = countActiveLinks(currentLinks);
+    if (activeLinks >= linkBuilderMax) {
+      return NextResponse.json(
+        {
+          error:
+            linkBuilderMax === 5
+              ? "Batas 5 link tercapai. Upgrade ke Creator untuk menambah link."
+              : `Batas ${linkBuilderMax} link aktif tercapai.`,
+          code: "link_limit_exceeded",
+        },
+        { status: 403 }
+      );
+    }
   }
 
   const nextLinks = normalizeOrder(

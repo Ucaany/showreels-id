@@ -13,6 +13,7 @@ import {
   saveLinkBuilderDraft,
   validateLinkLimit,
 } from "@/server/link-builder-storage";
+import { markFirstLinkCreated } from "@/server/onboarding";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -87,6 +88,8 @@ export async function POST(request: Request) {
   }
 
   const savedLinks = await saveLinkBuilderDraft(currentUser.id, nextLinks);
+
+  await markFirstLinkCreated(currentUser.id).catch(() => null);
 
   return NextResponse.json({
     links: savedLinks,

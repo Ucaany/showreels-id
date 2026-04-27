@@ -4,10 +4,12 @@ import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 import { buildLinkLockedJsonResponse, requireBuildLinkAccess } from "@/server/link-builder-access";
 import {
+  countActiveLinks,
   getEditableLinks,
   saveLinkBuilderDraft,
   validateLinkLimit,
 } from "@/server/link-builder-storage";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -47,9 +49,30 @@ export async function PATCH(
   }
 
   const currentLinks = getEditableLinks(currentUser);
-  const targetExists = currentLinks.some((link) => link.id === id);
+  const target = currentLinks.find((link) => link.id === id);
+  const targetExists = Boolean(target);
   if (!targetExists) {
     return NextResponse.json({ error: "Link tidak ditemukan." }, { status: 404 });
+  }
+
+  if (parsed.data.enabled && target?.enabled === false) {
+    const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
+    const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
+    if (typeof linkBuilderMax === "number") {
+      const activeLinks = countActiveLinks(currentLinks);
+      if (activeLinks >= linkBuilderMax) {
+        return NextResponse.json(
+          {
+            error:
+              linkBuilderMax === 5
+                ? "Batas 5 link tercapai. Upgrade ke Creator untuk menambah link."
+                : `Batas ${linkBuilderMax} link aktif tercapai.`,
+            code: "link_limit_exceeded",
+          },
+          { status: 403 }
+        );
+      }
+    }
   }
 
   const nextLinks = normalizeOrder(

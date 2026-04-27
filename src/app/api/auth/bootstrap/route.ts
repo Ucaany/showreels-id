@@ -7,6 +7,7 @@ import {
 import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
 import { syncUserProfile } from "@/server/auth-profile";
+import { getOrCreateUserOnboarding } from "@/server/onboarding";
 
 export async function POST(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -33,6 +34,20 @@ export async function POST(request: Request) {
         },
         { status: 403 }
       );
+    }
+
+    if (profile.role !== "owner") {
+      const onboarding = await getOrCreateUserOnboarding({
+        userId: profile.id,
+        customLinks: profile.customLinks,
+        createdAt: profile.createdAt,
+      });
+      const redirectTo = onboarding.onboardingCompleted ? next : "/onboarding";
+
+      return NextResponse.json({
+        ok: true,
+        redirectTo,
+      });
     }
 
     return NextResponse.json({

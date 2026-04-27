@@ -7,6 +7,7 @@ import {
 import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
 import { syncUserProfile } from "@/server/auth-profile";
+import { getOrCreateUserOnboarding } from "@/server/onboarding";
 
 function getAuthSuccessUrl(destination: string, requestUrl: string) {
   const url = new URL(destination, requestUrl);
@@ -50,7 +51,16 @@ export async function GET(request: NextRequest) {
 
       try {
         const profile = await syncUserProfile(user);
-        const destination = profile.role === "owner" ? "/admin" : next;
+        let destination = profile.role === "owner" ? "/admin" : next;
+
+        if (profile.role !== "owner") {
+          const onboarding = await getOrCreateUserOnboarding({
+            userId: profile.id,
+            customLinks: profile.customLinks,
+            createdAt: profile.createdAt,
+          });
+          destination = onboarding.onboardingCompleted ? next : "/onboarding";
+        }
 
         return NextResponse.redirect(
           getAuthSuccessUrl(destination, request.url)

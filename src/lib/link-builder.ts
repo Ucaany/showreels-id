@@ -126,3 +126,7 @@ export function normalizeOrder(links: LinkItem[]): LinkItem[] {
     order: index,
   }));
 }
+
+export function countActiveLinks(links: LinkItem[]): number {
+  return links.reduce((total, link) => (link.enabled === false ? total : total + 1), 0);
+}

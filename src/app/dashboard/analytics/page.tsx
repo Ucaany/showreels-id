@@ -64,13 +64,13 @@ export default async function DashboardAnalyticsPage() {
           <Link href="/dashboard/link-builder">
             <Button variant="secondary">
               <Link2 className="h-4 w-4" />
-              Buka Link Builder
+              Buka Build Link
             </Button>
           </Link>
           <Link href="/dashboard/videos">
             <Button variant="secondary">
               <Copy className="h-4 w-4" />
-              Kelola Video
+              Upload Video
             </Button>
           </Link>
         </div>
