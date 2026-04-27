@@ -14,37 +14,14 @@ import {
 
 export interface DbCustomLink {
   id: string;
-  type?: string;
   title: string;
   url: string;
-  value?: string;
   description?: string;
   platform?: string;
   badge?: string;
   thumbnailUrl?: string;
-  style?: string;
-  iconKey?: string;
-  iconUrl?: string;
   enabled: boolean;
   order: number;
-}
-
-export interface DbOnboardingProgressPayload {
-  profile?: {
-    fullName?: string;
-    username?: string;
-    role?: string;
-    bio?: string;
-    image?: string;
-    coverImageUrl?: string;
-  };
-  firstLink?: {
-    title?: string;
-    url?: string;
-    platform?: string;
-    enabled?: boolean;
-  };
-  [key: string]: unknown;
 }
 
 export const users = pgTable(
@@ -82,11 +59,6 @@ export const users = pgTable(
       .$type<DbCustomLink[]>()
       .notNull()
       .default(sql`'[]'::jsonb`),
-    linkBuilderDraft: jsonb("link_builder_draft")
-      .$type<DbCustomLink[]>()
-      .notNull()
-      .default(sql`'[]'::jsonb`),
-    linkBuilderPublishedAt: timestamp("link_builder_published_at", { mode: "date" }),
     profileVisibility: text("profile_visibility")
       .$type<"private" | "semi_private" | "public">()
       .notNull()
@@ -161,31 +133,6 @@ export const videos = pgTable(
       table.source,
       table.visibility
     ),
-  })
-);
-
-export const userOnboarding = pgTable(
-  "user_onboarding",
-  {
-    userId: uuid("user_id")
-      .primaryKey()
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
-    onboardingSkipped: boolean("onboarding_skipped").notNull().default(false),
-    firstLinkCreated: boolean("first_link_created").notNull().default(false),
-    firstVideoUploaded: boolean("first_video_uploaded").notNull().default(false),
-    hasPublicProfile: boolean("has_public_profile").notNull().default(false),
-    currentStep: integer("current_step").notNull().default(1),
-    progressPayload: jsonb("progress_payload")
-      .$type<DbOnboardingProgressPayload>()
-      .notNull()
-      .default(sql`'{}'::jsonb`),
-    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
-  },
-  (table) => ({
-    stepIdx: index("user_onboarding_current_step_idx").on(table.currentStep),
   })
 );
 
@@ -343,10 +290,9 @@ export const billingTransactions = pgTable(
   })
 );
 
-export const usersRelations = relations(users, ({ many, one }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
   videos: many(videos),
   billingTransactions: many(billingTransactions),
-  onboarding: one(userOnboarding),
 }));
 
 export const videosRelations = relations(videos, ({ one }) => ({
@@ -385,13 +331,6 @@ export const billingTransactionsRelations = relations(billingTransactions, ({ on
   }),
 }));
 
-export const userOnboardingRelations = relations(userOnboarding, ({ one }) => ({
-  user: one(users, {
-    fields: [userOnboarding.userId],
-    references: [users.id],
-  }),
-}));
-
 export type DbUser = typeof users.$inferSelect;
 export type NewDbUser = typeof users.$inferInsert;
 export type DbVideo = typeof videos.$inferSelect;
@@ -408,5 +347,3 @@ export type DbBillingSubscription = typeof billingSubscriptions.$inferSelect;
 export type NewDbBillingSubscription = typeof billingSubscriptions.$inferInsert;
 export type DbBillingTransaction = typeof billingTransactions.$inferSelect;
 export type NewDbBillingTransaction = typeof billingTransactions.$inferInsert;
-export type DbUserOnboarding = typeof userOnboarding.$inferSelect;
-export type NewDbUserOnboarding = typeof userOnboarding.$inferInsert;

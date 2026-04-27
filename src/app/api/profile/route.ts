@@ -6,12 +6,10 @@ import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { profileSchema } from "@/lib/auth-schemas";
 import { isCustomLinksSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { normalizeImageCrop } from "@/lib/image-crop";
-import { countActiveLinks, normalizeStoredLinks } from "@/lib/link-builder";
 import { isReservedUsername, sanitizeUsername } from "@/lib/username-rules";
 import { isAdminEmail } from "@/server/admin-access";
 import { deleteUserAccount } from "@/server/auth-profile";
 import { getCurrentUser } from "@/server/current-user";
-import { markFirstLinkCreated } from "@/server/onboarding";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 const USERNAME_CHANGE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
@@ -30,8 +28,6 @@ export async function PATCH(request: Request) {
 
   const body = await request.json().catch(() => null);
   const parsed = profileSchema.safeParse(body);
-  const hasCustomLinksPayload =
-    Boolean(body) && typeof body === "object" && "customLinks" in body;
 
   if (!parsed.success) {
     return NextResponse.json(
@@ -51,17 +47,14 @@ export async function PATCH(request: Request) {
   const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
   const usernameChangeLimit = entitlementState.entitlements.usernameChangesPer30Days;
   const linkBuilderMax = entitlementState.entitlements.linkBuilderMax;
-  const customLinksForValidation = hasCustomLinksPayload
-    ? normalizeStoredLinks(parsed.data.customLinks)
-    : normalizeStoredLinks(currentUser.customLinks);
-  const activeLinks = countActiveLinks(customLinksForValidation);
-  if (typeof linkBuilderMax === "number" && activeLinks > linkBuilderMax) {
+
+  if (
+    typeof linkBuilderMax === "number" &&
+    parsed.data.customLinks.length > linkBuilderMax
+  ) {
     return NextResponse.json(
       {
-        error:
-          linkBuilderMax === 5
-            ? "Batas 5 link tercapai. Upgrade ke Creator untuk menambah link."
-            : `Paket ${entitlementState.effectivePlan.planName.toUpperCase()} mendukung maksimal ${linkBuilderMax} link aktif.`,
+        error: `Paket ${entitlementState.effectivePlan.planName.toUpperCase()} mendukung maksimal ${linkBuilderMax} link builder.`,
         code: "link_limit_exceeded",
       },
       { status: 403 }
@@ -159,23 +152,16 @@ export async function PATCH(request: Request) {
     usernameChangeWindowStart,
     updatedAt: new Date(),
   };
+
   try {
     const [updated] = await db
       .update(users)
-      .set(
-        hasCustomLinksPayload
-          ? {
-              ...updatePayload,
-              customLinks: parsed.data.customLinks || [],
-            }
-          : updatePayload
-      )
+      .set({
+        ...updatePayload,
+        customLinks: parsed.data.customLinks,
+      })
       .where(eq(users.id, currentUser.id))
       .returning();
-
-    if (activeLinks > 0) {
-      await markFirstLinkCreated(currentUser.id).catch(() => null);
-    }
 
     return NextResponse.json({ user: updated });
   } catch (updateError) {

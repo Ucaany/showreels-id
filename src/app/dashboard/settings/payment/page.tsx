@@ -110,7 +110,7 @@ export default function SettingsPaymentPage() {
                   setState((prev) => ({ ...prev, paymentMethod: event.target.value }))
                 }
               >
-                <option value="midtrans">Gateway Pembayaran</option>
+                <option value="midtrans">Midtrans</option>
                 <option value="bank_transfer">Bank Transfer</option>
                 <option value="manual">Manual</option>
               </Select>

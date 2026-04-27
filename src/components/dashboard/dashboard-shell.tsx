@@ -73,17 +73,17 @@ export function DashboardShell({
     mode === "admin"
       ? [{ href: "/admin", label: "Owner Panel", icon: Home }]
       : [
-          { href: "/dashboard", label: "Dashboard", icon: Home },
-          { href: "/dashboard/link-builder", label: "Build Link", icon: Link2 },
+          { href: "/dashboard", label: dictionary.dashboard, icon: Home },
+          { href: "/dashboard/link-builder", label: "Link Builder", icon: Link2 },
+          { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+          { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+          { href: "/dashboard/profile", label: dictionary.profile, icon: UserRound },
           {
             href: "/dashboard/videos",
-            label: "Upload Video",
+            label: "Kelola Video",
             icon: Film,
             matchPrefix: "/dashboard/videos",
           },
-          { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
-          { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-          { href: "/dashboard/profile", label: "Profile", icon: UserRound },
         ];
 
   const secondaryNavItems: NavItem[] =
@@ -150,7 +150,7 @@ export function DashboardShell({
 
   return (
     <div className="dashboard-surface min-h-screen text-[#1d2333]">
-      <header className="sticky top-0 z-30 border-b border-[#dbe4f6]/80 bg-white/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-[#dbe4f6] bg-white/86 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-[1420px] items-center justify-between gap-3 px-3 py-3 sm:px-6">
           <div className="flex items-center gap-2">
             <button
@@ -168,7 +168,7 @@ export function DashboardShell({
             <Link
               href={authProfileHref}
               target="_blank"
-              className="rounded-full border border-[#d5e0f5] bg-[#f8fbff] px-3 py-2 text-xs font-semibold text-[#2f73ff] shadow-sm transition hover:border-[#a8c2f3] hover:bg-white"
+              className="rounded-full border border-[#d5e0f5] bg-white px-3 py-2 text-xs font-semibold text-[#47679b] shadow-sm transition hover:border-[#a8c2f3] hover:text-[#1f58e3]"
             >
               {displayUsername}
             </Link>
@@ -285,12 +285,12 @@ export function DashboardShell({
             sidebarWidthClass
           )}
         >
-          <div className={cn("mb-4 rounded-[1.15rem] border border-[#d5e0f5] bg-gradient-to-br from-[#edf4ff] to-white p-3", collapsed ? "text-center" : "")}>
+          <div className={cn("mb-4 rounded-xl border border-[#d5e0f5] bg-[#edf4ff] p-3", collapsed ? "text-center" : "")}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#57709b]">
               Plan
             </p>
             <p className="mt-1 text-sm font-semibold text-[#1f3f6f]">
-              {collapsed ? planLabel : `${planLabel} Plan`}
+              {collapsed ? planLabel : `${planLabel} Creator`}
             </p>
           </div>
           <nav className="flex min-h-0 flex-1 flex-col">

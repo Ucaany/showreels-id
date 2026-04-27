@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
@@ -409,7 +409,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
     moveCustomLink(index, targetIndex);
   };
 
-  const buildProfilePayload = useCallback((values: FormValues) => {
+  const buildProfilePayload = (values: FormValues) => {
     const avatarCropValues = normalizeImageCrop({
       x: values.avatarCropX,
       y: values.avatarCropY,
@@ -450,12 +450,12 @@ export function ProfileForm({ user }: { user: DbUser }) {
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean),
-      customLinks: normalizeCustomLinks(user.customLinks || []).map((link, index) => ({
+      customLinks: normalizeCustomLinks(values.customLinks || []).map((link, index) => ({
         ...link,
         order: index,
       })),
     };
-  }, [user.customLinks]);
+  };
 
   const onSubmit = form.handleSubmit(async (values) => {
     setMessage("");
@@ -544,7 +544,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
     form,
     form.formState.isDirty,
     form.formState.isSubmitting,
-    buildProfilePayload,
     router,
     user.username,
     watchedAddress,
@@ -859,7 +858,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
                 </div>
               </div>
 
-
               <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="mb-4 flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-brand-600" />
@@ -1034,31 +1032,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                 </div>
               </div>
 
-              <div className="profile-panel rounded-2xl border border-[#d6e2f7] bg-[#f8fbff] p-4 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#2f73ff] ring-1 ring-[#d6e2f7]">
-                      <Link2 className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <h2 className="text-base font-semibold text-[#1b2e4f]">
-                        Link dan block dipindahkan ke Build Link
-                      </h2>
-                      <p className="mt-1 text-sm leading-6 text-[#5b7198]">
-                        Profile sekarang khusus identitas creator. Kelola tombol, block,
-                        publish, dan preview publik dari halaman Build Link.
-                      </p>
-                    </div>
-                  </div>
-                  <Link href="/dashboard/link-builder">
-                    <Button type="button" variant="secondary" size="sm">
-                      Buka Build Link
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-
-              <div className="hidden">
+              <div className="profile-panel rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Link2 className="h-4 w-4 text-brand-600" />
@@ -1301,7 +1275,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                   "Belum diisi"}
               </p>
             </div>
-            <div className="hidden">
+            <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                 {dictionary.publicPrimaryLinksTitle}
               </p>
@@ -1382,3 +1356,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
     </>
   );
 }
+
+
+

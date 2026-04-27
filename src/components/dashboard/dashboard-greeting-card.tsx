@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Locale } from "@/lib/i18n";
 
@@ -38,10 +41,12 @@ export function DashboardGreetingCard({
   locale,
   welcomeLabel,
   userName,
+  publicProfileHref,
 }: {
   locale: Locale;
   welcomeLabel: string;
   userName: string;
+  publicProfileHref: string;
 }) {
   const [minuteOfDay, setMinuteOfDay] = useState<number | null>(null);
 
@@ -68,11 +73,25 @@ export function DashboardGreetingCard({
   }, [minuteOfDay, locale]);
 
   return (
-    <Card className="dashboard-clean-card overflow-hidden border-[#ddd3cd] bg-[radial-gradient(circle_at_top_left,_rgba(239,79,63,0.18),_transparent_38%),radial-gradient(circle_at_84%_8%,rgba(37,99,235,0.13),_transparent_30%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(247,243,239,0.96))] p-4 sm:p-5">
+    <Card className="dashboard-panel overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(47,115,255,0.2),_transparent_38%),radial-gradient(circle_at_84%_8%,rgba(148,189,255,0.2),_transparent_30%),linear-gradient(140deg,_rgba(255,255,255,0.98),_rgba(244,248,255,0.96))] p-4 sm:p-5">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-[#655952]">{welcomeLabel}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-medium text-[#5e6f90]">{welcomeLabel}</p>
+          <Link href={publicProfileHref} target="_blank">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              className="h-9 rounded-full border-[#d4e0f6] bg-white px-3 text-xs font-semibold text-[#2a4f88] sm:text-sm"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Buka publik link
+            </Button>
+          </Link>
+        </div>
         <h1 className="mt-2 font-display text-2xl font-semibold leading-tight text-[#1d1815] sm:text-3xl lg:text-4xl">
-          {greeting.text}, {userName} <span aria-hidden="true">{greeting.emoji}</span>
+          {greeting.text}, <span className="italic">{userName}</span>{" "}
+          <span aria-hidden="true">{greeting.emoji}</span>
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#564b45] sm:text-base">
           {locale === "en"

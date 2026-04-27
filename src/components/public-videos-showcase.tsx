@@ -52,8 +52,19 @@ function seededShuffle<T extends { id: string }>(items: T[], seed: string): T[] 
 export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
   const { locale } = usePreferences();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [isDesktop, setIsDesktop] = useState(false);
   const [deviceSeed, setDeviceSeed] = useState("videos-seed-default");
   const [timeBucket, setTimeBucket] = useState(0);
+
+  useEffect(() => {
+    const syncViewport = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+
+    syncViewport();
+    window.addEventListener("resize", syncViewport);
+    return () => window.removeEventListener("resize", syncViewport);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -99,6 +110,7 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
     const seedBase = `${deviceSeed}-${timeBucket}`;
     return seededShuffle(videos, seedBase).slice(0, 6);
   }, [videos, deviceSeed, timeBucket]);
+  const effectiveViewMode: "grid" | "list" = isDesktop ? viewMode : "grid";
 
   return (
     <main className="min-h-screen bg-canvas pb-14 pt-8">
@@ -119,14 +131,14 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
           </p>
         </div>
 
-        <div className="mt-4 flex justify-center">
+        <div className="mt-4 hidden justify-center lg:flex">
           <div className="inline-flex items-center gap-1 rounded-full border border-[#ddd3cd] bg-white/95 p-1">
             <button
               type="button"
               onClick={() => setViewMode("grid")}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition",
-                viewMode === "grid"
+                effectiveViewMode === "grid"
                   ? "bg-[#1a1412] text-white shadow-sm"
                   : "text-[#5f524b] hover:bg-[#f3ece7]"
               )}
@@ -140,7 +152,7 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
               onClick={() => setViewMode("list")}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition",
-                viewMode === "list"
+                effectiveViewMode === "list"
                   ? "bg-[#1a1412] text-white shadow-sm"
                   : "text-[#5f524b] hover:bg-[#f3ece7]"
               )}
@@ -155,7 +167,7 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
         <div
           className={cn(
             "mt-5",
-            viewMode === "grid"
+            effectiveViewMode === "grid"
               ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3"
               : "mx-auto max-w-3xl space-y-2.5"
           )}
@@ -178,7 +190,7 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
                 }
               ).format(new Date(video.createdAt));
 
-              if (viewMode === "list") {
+              if (effectiveViewMode === "list") {
                 return (
                   <Link
                     key={video.id}
@@ -250,7 +262,7 @@ export function PublicVideosShowcase({ videos }: { videos: ShowcaseVideo[] }) {
                   aria-label={`${locale === "en" ? "View video" : "Lihat video"} ${video.title}`}
                   className={cn(
                     "group flex min-w-0 flex-col gap-3.5 rounded-[1.2rem] border border-[#ddd3cd] bg-white p-4 shadow-sm transition hover:border-[#e7c6bc] hover:shadow-[0_16px_30px_rgba(29,23,20,0.1)] sm:p-5",
-                    viewMode === "grid"
+                    effectiveViewMode === "grid"
                       ? "h-full min-h-[398px]"
                       : ""
                   )}
