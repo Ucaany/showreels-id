@@ -786,16 +786,18 @@ export function PricingSubscriptionPage({
                     const Swal = (await import("sweetalert2")).default;
                     const result = await Swal.fire({
                       title: locale === "en" ? "Confirm Payment" : "Konfirmasi Pembayaran",
-                      text: locale === "en"
-                        ? `Proceed with ${selectedPlanInfo.name} plan for ${toIdr(selectedPlanInfo.price)}?`
-                        : `Lanjutkan dengan plan ${selectedPlanInfo.name} seharga ${toIdr(selectedPlanInfo.price)}?`,
+                      html: locale === "en"
+                        ? `Proceed with <strong>${selectedPlanInfo.name}</strong> plan for <strong>${toIdr(selectedPlanInfo.price)}</strong>?<br><br><small>Redirecting to Midtrans in...</small>`
+                        : `Lanjutkan dengan plan <strong>${selectedPlanInfo.name}</strong> seharga <strong>${toIdr(selectedPlanInfo.price)}</strong>?<br><br><small>Mengalihkan ke Midtrans dalam...</small>`,
                       icon: "question",
                       showCancelButton: true,
-                      confirmButtonText: locale === "en" ? "Continue (5s)" : "Lanjutkan (5s)",
+                      confirmButtonText: locale === "en" ? "Continue" : "Lanjutkan",
                       cancelButtonText: locale === "en" ? "Cancel" : "Batal",
                       reverseButtons: true,
                       timer: 5000,
                       timerProgressBar: true,
+                      allowOutsideClick: false,
+                      allowEscapeKey: false,
                     });
                     if (result.isConfirmed) {
                       void createPaidTransaction(selectedPlan as "creator" | "business");
