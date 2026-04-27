@@ -31,6 +31,7 @@ type UsernameAvailability = {
   available: boolean;
   reason: string;
   suggestion: string;
+  ownedByCurrentUser?: boolean;
 };
 
 const STEP_ITEMS = [
@@ -372,10 +373,15 @@ export function OnboardingStepper({
       }));
 
       const response = await fetch(
-        `/api/public/username-availability?username=${encodeURIComponent(normalizedUsername)}`
+        `/api/settings/check-slug?slug=${encodeURIComponent(normalizedUsername)}`
       );
       const payloadResponse = (await response.json().catch(() => null)) as
-        | { available?: boolean; reason?: string; suggestion?: string }
+        | {
+            available?: boolean;
+            reason?: string;
+            suggestion?: string;
+            ownedByCurrentUser?: boolean;
+          }
         | null;
 
       setUsernameState({
@@ -383,6 +389,7 @@ export function OnboardingStepper({
         available: Boolean(payloadResponse?.available),
         reason: payloadResponse?.reason || "unknown",
         suggestion: payloadResponse?.suggestion || "",
+        ownedByCurrentUser: payloadResponse?.ownedByCurrentUser,
       });
     }, 320);
 
@@ -458,12 +465,12 @@ export function OnboardingStepper({
                   : "- Unlimited link"}
               </p>
 
-              <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1 lg:hidden">
+              <div className="mt-4 grid grid-cols-4 gap-1.5 lg:hidden">
                 {STEP_ITEMS.map((item) => (
                   <div
                     key={item.id}
                     className={cn(
-                      "inline-flex min-w-[120px] items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold",
+                      "inline-flex min-w-0 items-center justify-center gap-1 rounded-full border px-2 py-1.5 text-[11px] font-semibold",
                       step === item.id
                         ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
                         : step > item.id
@@ -474,10 +481,13 @@ export function OnboardingStepper({
                     <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white">
                       {step > item.id ? <Check className="h-3.5 w-3.5" /> : item.id}
                     </span>
-                    {item.title}
+                    <span className="hidden min-[360px]:inline">{item.title}</span>
                   </div>
                 ))}
               </div>
+              <p className="mt-2 text-xs font-semibold text-[#4f77b4] lg:hidden">
+                {STEP_ITEMS[stepIndex]?.title}
+              </p>
 
               <div className="mt-5 hidden space-y-2 lg:block">
                 {STEP_ITEMS.map((item) => (
@@ -542,7 +552,9 @@ export function OnboardingStepper({
                     <p className="mt-1 text-xs text-[#5f7da9]">
                       {resolvedUsernameState.checking
                         ? "Mengecek username..."
-                        : resolvedUsernameState.available
+                        : resolvedUsernameState.reason === "owned_by_current_user"
+                          ? "Username ini sudah terhubung ke akun kamu."
+                          : resolvedUsernameState.available
                           ? "Username tersedia."
                           : resolvedUsernameState.reason === "taken"
                             ? `Username dipakai. ${resolvedUsernameState.suggestion ? `Saran: ${resolvedUsernameState.suggestion}` : ""}`
@@ -736,7 +748,7 @@ export function OnboardingStepper({
                         variant="secondary"
                         onClick={handleBack}
                         disabled={busy || step === 1}
-                        className="min-h-11"
+                        className="min-h-10 px-3"
                       >
                         <ChevronLeft className="h-4 w-4" />
                         Back
@@ -745,7 +757,7 @@ export function OnboardingStepper({
                         variant="ghost"
                         onClick={() => void handleSkip()}
                         disabled={busy}
-                        className="min-h-11"
+                        className="min-h-10 px-2 text-xs sm:text-sm"
                       >
                         Saya mengisinya nanti
                       </Button>
@@ -753,7 +765,7 @@ export function OnboardingStepper({
                     <Button
                       onClick={() => void handleNext()}
                       disabled={busy || draftSaving}
-                      className="min-h-11"
+                      className="min-h-11 w-full sm:w-auto"
                     >
                       {busy ? "Menyimpan..." : "Next"}
                       <ChevronRight className="h-4 w-4" />

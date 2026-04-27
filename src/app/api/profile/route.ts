@@ -16,6 +16,31 @@ import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 const USERNAME_CHANGE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
+function mapProfileValidationMessage(input?: {
+  message?: string;
+  path?: PropertyKey[];
+}) {
+  const rawField = input?.path?.[0];
+  const field =
+    typeof rawField === "string" || typeof rawField === "number" ? rawField : undefined;
+  if (field === "fullName") {
+    return "Nama wajib diisi.";
+  }
+  if (field === "username") {
+    return "Username wajib diisi dan minimal 3 karakter.";
+  }
+  if (field === "customLinks") {
+    return "Judul dan URL link wajib diisi untuk block yang aktif.";
+  }
+
+  const message = (input?.message || "").toLowerCase();
+  if (message.includes("too small") || message.includes("expected string")) {
+    return "Data belum lengkap. Pastikan nama dan username sudah benar.";
+  }
+
+  return input?.message || "Data belum lengkap. Pastikan nama dan username sudah benar.";
+}
+
 export async function PATCH(request: Request) {
   const currentUser = await getCurrentUser();
   if (!currentUser?.id) {
@@ -34,8 +59,14 @@ export async function PATCH(request: Request) {
     Boolean(body) && typeof body === "object" && "customLinks" in body;
 
   if (!parsed.success) {
+    const issue = parsed.error.issues[0];
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Data tidak valid." },
+      {
+        error: mapProfileValidationMessage({
+          message: issue?.message,
+          path: issue?.path,
+        }),
+      },
       { status: 400 }
     );
   }

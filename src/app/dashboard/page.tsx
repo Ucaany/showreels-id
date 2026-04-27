@@ -248,7 +248,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         </div>
       </Card>
 
-      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 xl:grid-cols-4">
         {metricCards.map((item) => {
           const Icon = item.icon;
           return (
@@ -271,7 +271,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         })}
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
         <CreatorTrafficPanel compact periodMode="dashboard" />
 
         <Card className="dashboard-clean-card border-[#cfddf5] bg-white p-4 sm:p-5">
@@ -283,7 +283,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <h2 className="mt-1 text-xl font-semibold text-[#142033]">Aksi utama creator</h2>
             </div>
           </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="mt-4 grid gap-2 min-[390px]:grid-cols-2 xl:grid-cols-1">
             {quickActions.map((item) => {
               const Icon = item.icon;
               return (

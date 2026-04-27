@@ -154,9 +154,10 @@ const cropZoomSchema = z.coerce
   .default(100);
 
 export const profileSchema = z.object({
-  fullName: z.string().min(2, "Nama minimal 2 karakter."),
+  fullName: z.string().trim().min(1, "Nama wajib diisi.").max(120, "Nama maksimal 120 karakter."),
   username: z
     .string()
+    .trim()
     .min(3, "Username minimal 3 karakter.")
     .max(30, "Username maksimal 30 karakter.")
     .regex(USERNAME_REGEX, "Gunakan huruf kecil, angka, underscore, atau dash.")
@@ -166,8 +167,8 @@ export const profileSchema = z.object({
   role: z.string().trim().max(120, "Role terlalu panjang.").default(""),
   avatarUrl: avatarUrlSchema.default(""),
   coverImageUrl: avatarUrlSchema.default(""),
-  bio: z.string().max(240, "Bio maksimal 240 karakter."),
-  experience: z.string().max(700, "Pengalaman maksimal 700 karakter."),
+  bio: z.string().trim().max(240, "Bio maksimal 240 karakter.").default(""),
+  experience: z.string().trim().max(700, "Pengalaman maksimal 700 karakter.").default(""),
   birthDate: birthDateSchema.default(""),
   city: z.string().trim().max(120, "Kota terlalu panjang.").default(""),
   address: z.string().trim().max(240, "Alamat terlalu panjang.").default(""),

@@ -145,7 +145,7 @@ export function CreatorTrafficPanel({
             Pantau kunjungan profil dan video publik secara interaktif.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <span className="rounded-full border border-[#d5e1f4] bg-[#f6faff] px-2.5 py-1 text-xs font-semibold text-[#56709d]">
             Limit plan: {analyticsMaxDays} hari
           </span>
@@ -153,7 +153,7 @@ export function CreatorTrafficPanel({
             aria-label="Filter periode analytics"
             value={effectivePeriod}
             onChange={(event) => setPeriod(event.target.value as PeriodValue)}
-            className="min-w-[160px]"
+            className="w-full min-[430px]:w-auto min-[430px]:min-w-[160px]"
           >
             <option value="7d">7 hari terakhir</option>
             <option value="30d">

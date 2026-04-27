@@ -9,6 +9,31 @@ import { getCurrentUser } from "@/server/current-user";
 import { getOrCreateUserOnboarding, updateUserOnboardingProgress } from "@/server/onboarding";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
+function mapOnboardingValidationMessage(input?: {
+  message?: string;
+  path?: PropertyKey[];
+}) {
+  const rawField = input?.path?.[0];
+  const field =
+    typeof rawField === "string" || typeof rawField === "number" ? rawField : undefined;
+  if (field === "fullName" || field === "profile") {
+    return "Data belum lengkap. Pastikan nama dan username sudah benar.";
+  }
+  if (field === "username") {
+    return "Username wajib diisi dan minimal 3 karakter.";
+  }
+  if (field === "firstLink") {
+    return "Isi judul dan URL jika ingin menambahkan link pertama.";
+  }
+
+  const message = (input?.message || "").toLowerCase();
+  if (message.includes("too small") || message.includes("expected string")) {
+    return "Data belum lengkap. Pastikan nama dan username sudah benar.";
+  }
+
+  return input?.message || "Payload onboarding tidak valid.";
+}
+
 function hasMinimalPublicProfile(input: {
   fullName?: string;
   username?: string;
@@ -38,8 +63,14 @@ export async function PATCH(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = onboardingProgressSchema.safeParse(body);
   if (!parsed.success) {
+    const issue = parsed.error.issues[0];
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message || "Payload onboarding tidak valid." },
+      {
+        error: mapOnboardingValidationMessage({
+          message: issue?.message,
+          path: issue?.path,
+        }),
+      },
       { status: 400 }
     );
   }

@@ -6,34 +6,70 @@ import {
 } from "@/lib/username-rules";
 import { normalizeSocialUrl } from "@/lib/profile-utils";
 
+function normalizeOptionalText(input: unknown) {
+  if (typeof input !== "string") {
+    return "";
+  }
+  return input.trim();
+}
+
+const roleSchema = z.preprocess(
+  normalizeOptionalText,
+  z.string().max(120, "Role terlalu panjang.").default("")
+);
+
+const bioSchema = z.preprocess(
+  normalizeOptionalText,
+  z.string().max(240, "Bio terlalu panjang.").default("")
+);
+
+const imageUrlSchema = z.preprocess(
+  normalizeOptionalText,
+  z.string().max(300, "URL gambar terlalu panjang.").default("")
+);
+
 export const onboardingProfileSchema = z
   .object({
-    fullName: z.string().trim().min(2).max(120),
+    fullName: z
+      .string()
+      .trim()
+      .min(1, "Nama wajib diisi.")
+      .max(120, "Nama maksimal 120 karakter."),
     username: z
       .string()
       .trim()
       .transform((value) => sanitizeUsername(value))
+      .refine((value) => value.length >= 3, {
+        message: "Username minimal 3 karakter.",
+      })
       .refine((value) => isUsernameFormatValid(value) && !isReservedUsername(value), {
         message: "Username tidak valid.",
       }),
-    role: z.string().trim().max(120).optional().default(""),
-    bio: z.string().trim().max(240).optional().default(""),
-    image: z.string().trim().max(300).optional().default(""),
-    coverImageUrl: z.string().trim().max(300).optional().default(""),
+    role: roleSchema,
+    bio: bioSchema,
+    image: imageUrlSchema,
+    coverImageUrl: imageUrlSchema,
   })
   .partial();
 
 export const onboardingFirstLinkSchema = z.object({
-  title: z.string().trim().min(1).max(60),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Judul link wajib diisi.")
+    .max(60, "Judul link maksimal 60 karakter."),
   url: z
     .string()
     .trim()
-    .max(300)
+    .max(300, "URL terlalu panjang.")
     .transform((value) => normalizeSocialUrl(value))
     .refine((value) => value.startsWith("http"), {
-      message: "URL tidak valid.",
+      message: "URL wajib diisi untuk link ini.",
     }),
-  platform: z.string().trim().max(40).optional().default(""),
+  platform: z.preprocess(
+    normalizeOptionalText,
+    z.string().max(40, "Platform terlalu panjang.").default("")
+  ),
   enabled: z.boolean().optional().default(true),
 });
 

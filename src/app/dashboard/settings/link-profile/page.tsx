@@ -14,15 +14,71 @@ type LinkProfilePayload = {
   usernameChangeLimit?: number;
 };
 
+type SlugAvailabilityPayload = {
+  available: boolean;
+  reason: string;
+  ownedByCurrentUser?: boolean;
+};
+
+type SlugAvailabilityState = SlugAvailabilityPayload & {
+  checking: boolean;
+};
+
+function getSlugStatusCopy(state: SlugAvailabilityState) {
+  if (state.checking) {
+    return {
+      text: "Mengecek ketersediaan slug...",
+      tone: "text-[#5b7198]",
+    };
+  }
+
+  if (state.reason === "owned_by_current_user") {
+    return {
+      text: "Slug ini sudah terhubung ke akun kamu.",
+      tone: "text-emerald-700",
+    };
+  }
+
+  if (state.reason === "available") {
+    return {
+      text: "Slug tersedia.",
+      tone: "text-emerald-700",
+    };
+  }
+
+  if (state.reason === "taken") {
+    return {
+      text: "Slug sudah dipakai creator lain.",
+      tone: "text-rose-700",
+    };
+  }
+
+  if (state.reason === "reserved") {
+    return {
+      text: "Slug ini tidak dapat digunakan.",
+      tone: "text-rose-700",
+    };
+  }
+
+  if (state.reason === "invalid") {
+    return {
+      text: "Format slug belum valid.",
+      tone: "text-rose-700",
+    };
+  }
+
+  return {
+    text: "Slug belum bisa dipakai saat ini.",
+    tone: "text-[#5b7198]",
+  };
+}
+
 export default function SettingsLinkProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [slug, setSlug] = useState("");
   const [initialSlug, setInitialSlug] = useState("");
-  const [availability, setAvailability] = useState<{
-    available: boolean;
-    reason: string;
-  } | null>(null);
+  const [availability, setAvailability] = useState<SlugAvailabilityState | null>(null);
   const [usernameChangeCount, setUsernameChangeCount] = useState(0);
   const [usernameChangeLimit, setUsernameChangeLimit] = useState(0);
 
@@ -50,23 +106,65 @@ export default function SettingsLinkProfilePage() {
 
   const normalizedSlug = useMemo(() => slug.trim().toLowerCase(), [slug]);
   const publicUrl = `/creator/${normalizedSlug || "creator"}`;
+  const effectiveAvailability = useMemo<SlugAvailabilityState | null>(() => {
+    if (!normalizedSlug) {
+      return null;
+    }
+
+    if (normalizedSlug === initialSlug) {
+      return {
+        available: true,
+        reason: "owned_by_current_user",
+        ownedByCurrentUser: true,
+        checking: false,
+      };
+    }
+
+    return availability;
+  }, [availability, initialSlug, normalizedSlug]);
+  const canSaveSlug =
+    Boolean(normalizedSlug) &&
+    normalizedSlug !== initialSlug &&
+    Boolean(
+      effectiveAvailability &&
+        !effectiveAvailability.checking &&
+        effectiveAvailability.available
+    );
 
   useEffect(() => {
     if (!normalizedSlug || normalizedSlug === initialSlug) {
       return;
     }
+
     let cancelled = false;
     const timer = setTimeout(async () => {
+      setAvailability((prev) => ({
+        available: prev?.available ?? false,
+        reason: prev?.reason ?? "checking",
+        ownedByCurrentUser: prev?.ownedByCurrentUser,
+        checking: true,
+      }));
       const response = await fetch(
         `/api/settings/check-slug?slug=${encodeURIComponent(normalizedSlug)}`
       );
-      if (!response.ok) return;
-      const payload = (await response.json()) as {
-        available: boolean;
-        reason: string;
-      };
+      const payload = (await response.json().catch(() => null)) as SlugAvailabilityPayload | null;
       if (cancelled) return;
-      setAvailability(payload);
+
+      if (!response.ok || !payload) {
+        setAvailability({
+          available: false,
+          reason: "idle",
+          checking: false,
+        });
+        return;
+      }
+
+      setAvailability({
+        available: payload.available,
+        reason: payload.reason,
+        ownedByCurrentUser: payload.ownedByCurrentUser,
+        checking: false,
+      });
     }, 350);
 
     return () => {
@@ -157,15 +255,9 @@ export default function SettingsLinkProfilePage() {
                   Limit ubah username: {usernameChangeCount}/{usernameChangeLimit} per 30 hari.
                 </p>
               ) : null}
-              {normalizedSlug !== initialSlug && availability ? (
-                <p
-                  className={`mt-1 text-xs ${
-                    availability.available ? "text-emerald-700" : "text-rose-700"
-                  }`}
-                >
-                  {availability.available
-                    ? "Slug tersedia."
-                    : `Slug tidak tersedia (${availability.reason}).`}
+              {effectiveAvailability ? (
+                <p className={`mt-1 text-xs ${getSlugStatusCopy(effectiveAvailability).tone}`}>
+                  {getSlugStatusCopy(effectiveAvailability).text}
                 </p>
               ) : null}
             </div>
@@ -178,7 +270,7 @@ export default function SettingsLinkProfilePage() {
             <div className="flex flex-wrap gap-2">
               <Button
                 onClick={handleSave}
-                disabled={saving || normalizedSlug === initialSlug}
+                disabled={saving || !canSaveSlug}
                 className="w-full sm:w-auto"
               >
                 {saving ? "Menyimpan..." : "Simpan Slug"}

@@ -391,13 +391,17 @@ export function PaymentPagePanel({
                   metode pembayaran (kartu kredit, QRIS, dan metode lain yang aktif).
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button size="sm" onClick={() => void openMidtransCheckout()}>
+                  <Button
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={() => void openMidtransCheckout()}
+                  >
                     <CreditCard className="h-4 w-4" />
                     {canUseSnapPopup ? "Buka Popup Midtrans" : "Buka Redirect Midtrans"}
                   </Button>
                   {payment.redirectUrl ? (
-                    <Link href={payment.redirectUrl} target="_blank">
-                      <Button variant="secondary" size="sm">
+                    <Link href={payment.redirectUrl} target="_blank" className="w-full sm:w-auto">
+                      <Button variant="secondary" size="sm" className="w-full sm:w-auto">
                         Buka Hosted Checkout
                       </Button>
                     </Link>
@@ -426,7 +430,7 @@ export function PaymentPagePanel({
                       width={280}
                       height={280}
                       unoptimized
-                      className="h-[280px] w-[280px] rounded-xl border border-[#e7ddd7] bg-white object-contain p-3"
+                      className="mx-auto h-auto w-full max-w-[280px] rounded-xl border border-[#e7ddd7] bg-white object-contain p-3"
                     />
                     <Link href={payment.qrUrl} target="_blank">
                       <Button variant="secondary" size="sm">

@@ -10,6 +10,7 @@ import {
   CreditCard,
   Film,
   Home,
+  LifeBuoy,
   Link2,
   LogOut,
   Menu,
@@ -95,11 +96,16 @@ export function DashboardShell({
             label: "Settings",
             icon: Settings2,
           },
+          {
+            href: "/customer-service",
+            label: "Help",
+            icon: LifeBuoy,
+          },
         ];
 
   const sidebarWidthClass = collapsed
-    ? "lg:w-[var(--dashboard-sidebar-collapsed-width)]"
-    : "lg:w-[var(--dashboard-sidebar-width)]";
+    ? "lg:w-[var(--dashboard-sidebar-collapsed-width)] lg:min-w-[var(--dashboard-sidebar-collapsed-width)] lg:max-w-[var(--dashboard-sidebar-collapsed-width)]"
+    : "lg:w-[var(--dashboard-sidebar-width)] lg:min-w-[var(--dashboard-sidebar-width)] lg:max-w-[var(--dashboard-sidebar-width)]";
 
   const isNavItemActive = (item: NavItem) => {
     if (item.matchPrefix) {
@@ -151,7 +157,7 @@ export function DashboardShell({
   return (
     <div className="dashboard-surface min-h-screen text-[#1d2333]">
       <header className="sticky top-0 z-30 border-b border-[#dbe4f6]/80 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-[1420px] items-center justify-between gap-3 px-3 py-3 sm:px-6">
+        <div className="flex w-full items-center justify-between gap-3 px-3 py-3 sm:px-4 lg:px-5">
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -208,7 +214,7 @@ export function DashboardShell({
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu backdrop"
           />
-          <div className="absolute left-0 top-0 flex h-full w-[88%] max-w-[340px] flex-col border-r border-[#cfdbf2] bg-[#f4f8ff] p-4 shadow-2xl">
+          <div className="absolute left-0 top-0 flex h-full w-[84vw] max-w-[360px] flex-col border-r border-[#cfdbf2] bg-[#f4f8ff] p-4 shadow-2xl">
             <div className="mb-5 flex items-center justify-between">
               <AppLogo />
               <button
@@ -278,10 +284,10 @@ export function DashboardShell({
         </div>
       ) : null}
 
-      <div className="dashboard-shell-container flex gap-4 lg:items-start">
+      <div className="dashboard-shell-layout flex gap-3 lg:items-start lg:gap-4">
         <aside
           className={cn(
-            "dashboard-panel hidden shrink-0 overflow-hidden p-3 transition-all duration-200 lg:sticky lg:top-[90px] lg:block lg:h-[calc(100vh-108px)]",
+            "dashboard-panel hidden shrink-0 overflow-hidden p-3 transition-all duration-200 lg:sticky lg:top-[calc(var(--dashboard-topbar-height)+0.55rem)] lg:block lg:h-[calc(100vh-var(--dashboard-topbar-height)-1.25rem)]",
             sidebarWidthClass
           )}
         >
@@ -384,7 +390,9 @@ export function DashboardShell({
           </nav>
         </aside>
 
-        <main className="dashboard-stack dashboard-compact-mobile min-w-0 flex-1">{children}</main>
+        <main className="dashboard-main dashboard-stack dashboard-compact-mobile flex-1">
+          {children}
+        </main>
       </div>
     </div>
   );

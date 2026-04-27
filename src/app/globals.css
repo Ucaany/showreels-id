@@ -20,6 +20,9 @@
   --dashboard-shell-pad-x: 1rem;
   --dashboard-shell-pad-y: 1.1rem;
   --dashboard-gap: 1rem;
+  --dashboard-sidebar-width: 248px;
+  --dashboard-sidebar-collapsed-width: 80px;
+  --dashboard-topbar-height: 72px;
 }
 
 @theme inline {
@@ -58,10 +61,14 @@
 
 html {
   color-scheme: light;
+  width: 100%;
+  max-width: 100%;
   overflow-x: hidden;
 }
 
 body {
+  width: 100%;
+  max-width: 100%;
   margin: 0;
   overflow-x: hidden;
   background: var(--background);
@@ -194,11 +201,21 @@ select:-webkit-autofill:focus {
     padding-block: var(--dashboard-shell-pad-y);
   }
 
+  .dashboard-shell-layout {
+    width: 100%;
+    max-width: none;
+    min-height: calc(100vh - var(--dashboard-topbar-height));
+    padding-inline: clamp(0.65rem, 1.2vw, 1rem);
+    padding-top: 0.7rem;
+    padding-bottom: 1rem;
+  }
+
   .dashboard-clean-card {
     border: 1px solid rgba(207, 220, 242, 0.95);
     border-radius: 1.35rem;
     background: rgba(255, 255, 255, 0.94);
     box-shadow: 0 18px 45px rgba(31, 88, 227, 0.08);
+    max-width: 100%;
   }
 
   .dashboard-panel {
@@ -207,6 +224,7 @@ select:-webkit-autofill:focus {
     background: rgba(255, 255, 255, 0.9);
     box-shadow: 0 20px 48px rgba(31, 88, 227, 0.08);
     backdrop-filter: blur(18px);
+    max-width: 100%;
   }
 
   .dashboard-kpi-card {
@@ -219,6 +237,19 @@ select:-webkit-autofill:focus {
   .dashboard-stack {
     display: grid;
     gap: var(--dashboard-gap);
+  }
+
+  .dashboard-stack > * {
+    min-width: 0;
+  }
+
+  .dashboard-main {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .dashboard-main > * {
+    min-width: 0;
   }
 
   .dashboard-tap-target {
@@ -328,6 +359,12 @@ select:-webkit-autofill:focus {
 }
 
 @media (max-width: 640px) {
+  .dashboard-shell-layout {
+    padding-inline: 0.65rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.9rem;
+  }
+
   .dashboard-profile-mobile {
     gap: 1rem;
   }

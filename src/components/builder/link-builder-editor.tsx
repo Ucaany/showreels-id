@@ -172,6 +172,7 @@ function SortableLinkItem({
             onClick={() => onMove(index, -1)}
             aria-label="Move up"
             disabled={index === 0}
+            className="h-9 w-9 p-0"
           >
             <ArrowUp className="h-3.5 w-3.5" />
           </Button>
@@ -181,20 +182,26 @@ function SortableLinkItem({
             onClick={() => onMove(index, 1)}
             aria-label="Move down"
             disabled={index >= total - 1}
+            className="h-9 w-9 p-0"
           >
             <ArrowDown className="h-3.5 w-3.5" />
           </Button>
-          <Button size="sm" variant="secondary" onClick={() => onSave(link.id)}>
+          <Button size="sm" variant="secondary" onClick={() => onSave(link.id)} className="h-9 px-2">
             <Save className="h-3.5 w-3.5" />
-            Simpan
+            <span className="hidden min-[430px]:inline">Simpan</span>
           </Button>
-          <Button size="sm" variant="secondary" onClick={() => onDuplicate(link.id)}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => onDuplicate(link.id)}
+            className="h-9 px-2"
+          >
             <Copy className="h-3.5 w-3.5" />
-            Duplicate
+            <span className="hidden min-[430px]:inline">Duplicate</span>
           </Button>
-          <Button size="sm" variant="danger" onClick={() => onDelete(link.id)}>
+          <Button size="sm" variant="danger" onClick={() => onDelete(link.id)} className="h-9 px-2">
             <Trash2 className="h-3.5 w-3.5" />
-            Hapus
+            <span className="hidden min-[430px]:inline">Hapus</span>
           </Button>
         </div>
       </div>
@@ -1612,14 +1619,14 @@ export function LinkBuilderEditor({
       ) : null}
 
       {isAddBlockOpen ? (
-        <div className="fixed inset-0 z-[95] flex items-end justify-center bg-[#0f2347]/55 p-2 sm:items-center sm:p-4">
+        <div className="fixed inset-0 z-[95] flex items-end justify-center bg-[#0f2347]/55 p-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] sm:items-center sm:p-4">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
             aria-label="Close add block modal backdrop"
             onClick={() => setIsAddBlockOpen(false)}
           />
-          <div className="relative z-[96] max-h-[88vh] w-full max-w-[860px] overflow-hidden rounded-t-[1.4rem] border border-[#c8d9f4] bg-white shadow-xl sm:rounded-[1.4rem]">
+          <div className="relative z-[96] max-h-[92vh] w-full max-w-[860px] overflow-hidden rounded-t-[1.4rem] border border-[#c8d9f4] bg-white shadow-xl sm:rounded-[1.4rem]">
             <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[#d6e2f7] bg-white p-4 sm:p-5">
               <h3 className="text-2xl font-semibold text-[#1a2b48]">Add a block</h3>
               <button
@@ -1632,7 +1639,7 @@ export function LinkBuilderEditor({
               </button>
             </div>
 
-            <div className="max-h-[calc(88vh-76px)] overflow-y-auto p-4 sm:p-5">
+            <div className="max-h-[calc(92vh-76px)] overflow-y-auto p-4 sm:p-5">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa2c8]" />
               <Input
@@ -1752,18 +1759,18 @@ export function LinkBuilderEditor({
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+              <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={() => setIsAddBlockOpen(false)}
-                  className="h-9 px-3 text-xs font-semibold"
+                  className="h-10 w-full px-3 text-xs font-semibold sm:h-9 sm:w-auto"
                 >
                   Batal
                 </Button>
                 <Button
                   type="button"
-                  className="h-9 bg-[#2f73ff] px-3 text-xs font-semibold hover:bg-[#225fe0]"
+                  className="h-10 w-full bg-[#2f73ff] px-3 text-xs font-semibold hover:bg-[#225fe0] sm:h-9 sm:w-auto"
                   onClick={handleAddLink}
                 >
                   <Plus className="h-4 w-4" />

@@ -7,8 +7,21 @@ import {
   isUsernameFormatValid,
   sanitizeUsername,
 } from "@/lib/username-rules";
+import { isAdminEmail } from "@/server/admin-access";
+import { getCurrentUser } from "@/server/current-user";
 
 export async function GET(request: Request) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (isAdminEmail(currentUser.email)) {
+    return NextResponse.json(
+      { error: "Akun owner tidak menggunakan settings creator." },
+      { status: 403 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const input = searchParams.get("slug") ?? "";
   const sanitized = sanitizeUsername(input);
@@ -44,11 +57,14 @@ export async function GET(request: Request) {
     where: eq(users.username, sanitized),
     columns: { id: true },
   });
+  const ownedByCurrentUser = Boolean(existing?.id && existing.id === currentUser.id);
 
   return NextResponse.json({
     slug: input,
     sanitized,
-    available: !existing,
-    reason: existing ? "taken" : "available",
+    available: !existing || ownedByCurrentUser,
+    reason: !existing ? "available" : ownedByCurrentUser ? "owned_by_current_user" : "taken",
+    ownedByCurrentUser,
+    owned_by_current_user: ownedByCurrentUser,
   });
 }
