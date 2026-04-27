@@ -262,36 +262,33 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                   "rounded-xl border border-border bg-white/85 p-3 transition hover:border-brand-200 hover:shadow-soft",
                   viewMode === "grid" ? "flex h-full min-h-[292px] flex-col" : ""
                 )}
-              >
-                <div
-                  className={cn(
-                    viewMode === "list"
-                      ? "flex flex-col gap-3 sm:flex-row sm:items-start"
-                      : "flex h-full flex-col gap-3"
-                  )}
                 >
                   <div
                     className={cn(
-                      "overflow-hidden rounded-lg border border-slate-200 bg-slate-100",
-                      viewMode === "list" ? "sm:w-[180px] sm:flex-none" : ""
+                      viewMode === "list"
+                        ? "flex flex-col gap-3 sm:flex-row sm:items-start"
+                      : "flex h-full flex-col gap-3"
                     )}
                   >
-                    {thumbnail ? (
-                      <Image
-                        src={thumbnail}
-                        alt={`Thumbnail ${video.title}`}
-                        width={320}
-                        height={180}
-                        className="aspect-video h-full w-full object-cover"
-                        unoptimized
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="flex aspect-video w-full items-center justify-center text-xs text-slate-500">
-                        No thumbnail
-                      </div>
-                    )}
-                  </div>
+                  {viewMode === "grid" ? (
+                    <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                      {thumbnail ? (
+                        <Image
+                          src={thumbnail}
+                          alt={`Thumbnail ${video.title}`}
+                          width={320}
+                          height={180}
+                          className="aspect-video h-full w-full object-cover"
+                          unoptimized
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex aspect-video w-full items-center justify-center text-xs text-slate-500">
+                          No thumbnail
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
 
                   <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex flex-wrap items-center gap-2">
@@ -318,7 +315,18 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                       {formatDateLabel(video.createdAt)}
                     </p>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2 sm:justify-end">
+                    {viewMode === "list" ? (
+                      <p className="mt-1 text-xs text-slate-500">
+                        {getSourceLabel(video.source as never)} · {getVisibilityLabel(video.visibility)}
+                      </p>
+                    ) : null}
+
+                    <div
+                      className={cn(
+                        "mt-3 flex flex-wrap items-center gap-2",
+                        viewMode === "grid" ? "justify-center" : "sm:justify-end"
+                      )}
+                    >
                       {video.visibility === "public" ||
                       video.visibility === "semi_private" ? (
                         <Link href={`/v/${video.publicSlug}`}>

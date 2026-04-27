@@ -72,7 +72,7 @@ import {
 } from "@/lib/experience-items";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
-type MobileTab = "edit" | "preview";
+type BuilderSection = "edit" | "links" | "design" | "preview";
 type DeviceMode = "mobile" | "desktop";
 
 type LinkBuilderUser = {
@@ -281,7 +281,7 @@ export function LinkBuilderEditor({
   linkBuilderMax: number | null;
   planName: "free" | "creator" | "business";
 }) {
-  const [mobileTab, setMobileTab] = useState<MobileTab>("edit");
+  const [activeSection, setActiveSection] = useState<BuilderSection>("edit");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("mobile");
   const [isAddBlockOpen, setIsAddBlockOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -1022,48 +1022,70 @@ export function LinkBuilderEditor({
               <Share2 className="h-4 w-4" />
               Share
             </Button>
-            <div className="rounded-full border border-[#d8ccc4] bg-white px-3 py-2 text-xs font-semibold text-[#5d5049]">
-              {saveStatus === "saving"
-                ? "Menyimpan..."
-                : saveStatus === "saved"
-                  ? "Tersimpan"
-                  : saveStatus === "error"
-                    ? "Gagal menyimpan"
-                    : "Saved"}
-            </div>
+            {saveStatus === "saving" || saveStatus === "error" ? (
+              <p className="text-xs font-semibold text-[#5d5049]">
+                {saveStatus === "saving" ? "Menyimpan..." : "Gagal menyimpan"}
+              </p>
+            ) : null}
           </div>
         </div>
       </Card>
 
-      <div className="md:hidden">
-        <div className="inline-flex rounded-full border border-[#d7cec7] bg-white p-1">
+      <div className="overflow-x-auto">
+        <div className="inline-flex min-w-max rounded-full border border-[#d6e2f7] bg-white p-1">
           <button
             type="button"
             className={`h-9 rounded-full px-4 text-xs font-semibold transition ${
-              mobileTab === "edit"
+              activeSection === "edit"
                 ? "bg-[#2f73ff] text-white"
                 : "text-[#5e514b] hover:bg-[#edf4ff]"
             }`}
-            onClick={() => setMobileTab("edit")}
+            onClick={() => setActiveSection("edit")}
           >
+            <PencilLine className="mr-1 inline-block h-3.5 w-3.5" />
             Edit
           </button>
           <button
             type="button"
             className={`h-9 rounded-full px-4 text-xs font-semibold transition ${
-              mobileTab === "preview"
+              activeSection === "links"
                 ? "bg-[#2f73ff] text-white"
                 : "text-[#5e514b] hover:bg-[#edf4ff]"
             }`}
-            onClick={() => setMobileTab("preview")}
+            onClick={() => setActiveSection("links")}
           >
+            <Plus className="mr-1 inline-block h-3.5 w-3.5" />
+            Tambah Link
+          </button>
+          <button
+            type="button"
+            className={`h-9 rounded-full px-4 text-xs font-semibold transition ${
+              activeSection === "design"
+                ? "bg-[#2f73ff] text-white"
+                : "text-[#5e514b] hover:bg-[#edf4ff]"
+            }`}
+            onClick={() => setActiveSection("design")}
+          >
+            <Sparkles className="mr-1 inline-block h-3.5 w-3.5" />
+            Design
+          </button>
+          <button
+            type="button"
+            className={`h-9 rounded-full px-4 text-xs font-semibold transition ${
+              activeSection === "preview"
+                ? "bg-[#2f73ff] text-white"
+                : "text-[#5e514b] hover:bg-[#edf4ff]"
+            }`}
+            onClick={() => setActiveSection("preview")}
+          >
+            <Eye className="mr-1 inline-block h-3.5 w-3.5" />
             Preview
           </button>
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
-        <div className={`${mobileTab === "edit" ? "block" : "hidden"} space-y-4 md:block`}>
+      {activeSection === "edit" ? (
+        <div className="space-y-4">
           <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
@@ -1364,7 +1386,11 @@ export function LinkBuilderEditor({
               </div>
             </details>
           </Card>
+        </div>
+      ) : null}
 
+      {activeSection === "links" ? (
+        <div className="space-y-4">
           <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div>
@@ -1372,7 +1398,7 @@ export function LinkBuilderEditor({
                   Custom Link
                 </p>
                 <h2 className="text-lg font-semibold text-[#201b18]">
-                  Tambah Block (maks {maxLinksLabel})
+                  Tambah Link (maks {maxLinksLabel})
                 </h2>
               </div>
               <Button
@@ -1381,7 +1407,7 @@ export function LinkBuilderEditor({
                 onClick={() => (isLinkLimitReached ? void showFreeLimitModal() : openAddBlockModal())}
               >
                 <Plus className="h-4 w-4" />
-                Tambah Block
+                Tambah Link
               </Button>
             </div>
 
@@ -1459,8 +1485,25 @@ export function LinkBuilderEditor({
             </div>
           </Card>
         </div>
+      ) : null}
 
-        <div className={`${mobileTab === "preview" ? "block" : "hidden"} space-y-4 md:block`}>
+      {activeSection === "design" ? (
+        <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-[#2f73ff]" />
+            <h2 className="text-lg font-semibold text-[#201b18]">Design</h2>
+          </div>
+          <div className="rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] p-4">
+            <p className="text-sm font-semibold text-[#244064]">Theme selector akan ditingkatkan.</p>
+            <p className="mt-1 text-sm text-[#5b7198]">
+              Untuk saat ini, style publik mengikuti tema clean default showreels. Kontrol design lanjutan segera hadir.
+            </p>
+          </div>
+        </Card>
+      ) : null}
+
+      {activeSection === "preview" ? (
+        <div className="space-y-4">
           <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-[#201b18]">Live Preview</h2>
@@ -1566,7 +1609,7 @@ export function LinkBuilderEditor({
             </div>
           </Card>
         </div>
-      </div>
+      ) : null}
 
       {isAddBlockOpen ? (
         <div className="fixed inset-0 z-[95] flex items-end justify-center bg-[#0f2347]/55 p-2 sm:items-center sm:p-4">
@@ -1843,7 +1886,7 @@ export function LinkBuilderEditor({
             type="button"
             className="inline-flex h-11 items-center justify-center rounded-xl bg-[#edf4ff] text-[#2f73ff]"
             aria-label="Preview"
-            onClick={() => setMobileTab("preview")}
+            onClick={() => setActiveSection("preview")}
           >
             <Eye className="h-5 w-5" />
           </button>

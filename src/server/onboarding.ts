@@ -8,18 +8,21 @@ import {
 } from "@/db/schema";
 import { normalizeStoredLinks } from "@/lib/link-builder";
 import { isRelationMissingError } from "@/server/database-errors";
+import { ensureOnboardingSchema } from "@/server/onboarding-schema-bootstrap";
 
-const LEGACY_AUTO_COMPLETE_AGE_MS = 12 * 60 * 60 * 1000;
-
-function buildFallbackOnboarding(userId: string): DbUserOnboarding {
+function buildFallbackOnboarding(
+  userId: string,
+  patch?: Partial<DbUserOnboarding>
+): DbUserOnboarding {
   const now = new Date();
+  const onboardingCompleted = patch?.onboardingCompleted ?? false;
   return {
     userId,
-    onboardingCompleted: true,
-    firstLinkCreated: true,
-    firstVideoUploaded: true,
-    currentStep: 4,
-    progressPayload: {},
+    onboardingCompleted,
+    firstLinkCreated: patch?.firstLinkCreated ?? false,
+    firstVideoUploaded: patch?.firstVideoUploaded ?? false,
+    currentStep: patch?.currentStep ?? (onboardingCompleted ? 4 : 1),
+    progressPayload: patch?.progressPayload ?? {},
     createdAt: now,
     updatedAt: now,
   };
@@ -39,8 +42,21 @@ export async function getOrCreateUserOnboarding(input: {
   customLinks: unknown;
   createdAt?: Date | null;
 }) {
+  const fallbackLinksCount = normalizeStoredLinks(input.customLinks).length;
+  const fallbackPatch = {
+    firstLinkCreated: fallbackLinksCount > 0,
+    onboardingCompleted: false,
+  } satisfies Partial<DbUserOnboarding>;
+
   if (!isDatabaseConfigured) {
-    return buildFallbackOnboarding(input.userId);
+    return buildFallbackOnboarding(input.userId, fallbackPatch);
+  }
+
+  try {
+    await ensureOnboardingSchema();
+  } catch (error) {
+    console.error("onboarding_schema_bootstrap_failed", error);
+    return buildFallbackOnboarding(input.userId, fallbackPatch);
   }
 
   try {
@@ -53,11 +69,7 @@ export async function getOrCreateUserOnboarding(input: {
 
     const firstLinkCreated = normalizeStoredLinks(input.customLinks).length > 0;
     const firstVideoUploaded = (await countUserVideos(input.userId)) > 0;
-    const userAgeMs = input.createdAt ? Date.now() - input.createdAt.getTime() : 0;
-    const onboardingCompleted =
-      firstLinkCreated ||
-      firstVideoUploaded ||
-      userAgeMs >= LEGACY_AUTO_COMPLETE_AGE_MS;
+    const onboardingCompleted = firstLinkCreated || firstVideoUploaded;
 
     const [created] = await db
       .insert(userOnboarding)
@@ -74,7 +86,7 @@ export async function getOrCreateUserOnboarding(input: {
     return created;
   } catch (error) {
     if (isRelationMissingError(error, "user_onboarding")) {
-      return buildFallbackOnboarding(input.userId);
+      return buildFallbackOnboarding(input.userId, fallbackPatch);
     }
     throw error;
   }
@@ -89,7 +101,26 @@ export async function updateUserOnboardingProgress(input: {
   progressPayload?: DbOnboardingProgressPayload;
 }) {
   if (!isDatabaseConfigured) {
-    return buildFallbackOnboarding(input.userId);
+    return buildFallbackOnboarding(input.userId, {
+      currentStep: input.currentStep,
+      onboardingCompleted: input.onboardingCompleted,
+      firstLinkCreated: input.firstLinkCreated,
+      firstVideoUploaded: input.firstVideoUploaded,
+      progressPayload: input.progressPayload,
+    });
+  }
+
+  try {
+    await ensureOnboardingSchema();
+  } catch (error) {
+    console.error("onboarding_schema_bootstrap_failed", error);
+    return buildFallbackOnboarding(input.userId, {
+      currentStep: input.currentStep,
+      onboardingCompleted: input.onboardingCompleted,
+      firstLinkCreated: input.firstLinkCreated,
+      firstVideoUploaded: input.firstVideoUploaded,
+      progressPayload: input.progressPayload,
+    });
   }
 
   try {
@@ -140,7 +171,13 @@ export async function updateUserOnboardingProgress(input: {
     return updated || existing;
   } catch (error) {
     if (isRelationMissingError(error, "user_onboarding")) {
-      return buildFallbackOnboarding(input.userId);
+      return buildFallbackOnboarding(input.userId, {
+        currentStep: input.currentStep,
+        onboardingCompleted: input.onboardingCompleted,
+        firstLinkCreated: input.firstLinkCreated,
+        firstVideoUploaded: input.firstVideoUploaded,
+        progressPayload: input.progressPayload,
+      });
     }
     throw error;
   }

@@ -6,6 +6,7 @@ import {
 } from "@/lib/db-schema-mismatch";
 import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/server/admin-access";
 import { syncUserProfile } from "@/server/auth-profile";
 import { getOrCreateUserOnboarding } from "@/server/onboarding";
 
@@ -73,15 +74,12 @@ export async function GET(request: NextRequest) {
           ...summarizeError(syncError),
           userId: user.id,
         });
-
-        if (mismatch) {
-          return NextResponse.redirect(
-            getAuthSuccessUrl(next, request.url)
-          );
-        }
+        const fallbackDestination = isAdminEmail(user.email)
+          ? "/admin"
+          : "/onboarding";
 
         return NextResponse.redirect(
-          getAuthSuccessUrl(next, request.url)
+          getAuthSuccessUrl(fallbackDestination, request.url)
         );
       }
     }

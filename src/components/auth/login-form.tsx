@@ -82,9 +82,10 @@ async function finalizeSignedInSession(nextPath: string) {
     }
 
     return {
-      ok: true as const,
-      redirectTo: nextPath,
-      degradedSync: true,
+      ok: false as const,
+      message: payload?.error || "Sinkronisasi akun belum berhasil. Coba lagi.",
+      redirectTo:
+        typeof payload?.redirectTo === "string" ? payload.redirectTo : undefined,
     };
   }
 

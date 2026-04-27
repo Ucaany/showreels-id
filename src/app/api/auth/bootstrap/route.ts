@@ -6,6 +6,7 @@ import {
 } from "@/lib/db-schema-mismatch";
 import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/server/admin-access";
 import { syncUserProfile } from "@/server/auth-profile";
 import { getOrCreateUserOnboarding } from "@/server/onboarding";
 
@@ -62,19 +63,16 @@ export async function POST(request: Request) {
       ...summarizeError(syncError),
       userId: user.id,
     });
-
-    if (mismatch) {
-      return NextResponse.json({
-        ok: true,
-        redirectTo: next,
-        degradedSync: true,
-      });
-    }
+    const fallbackOwner = isAdminEmail(user.email);
+    const fallbackRedirect = fallbackOwner ? "/admin" : "/onboarding";
 
     return NextResponse.json({
       ok: true,
-      redirectTo: next,
+      redirectTo: fallbackRedirect,
       degradedSync: true,
+      warning: mismatch
+        ? "Sinkronisasi schema akun belum lengkap, diarahkan ke onboarding aman."
+        : "Profil sedang disiapkan, diarahkan ke onboarding aman.",
     });
   }
 }
