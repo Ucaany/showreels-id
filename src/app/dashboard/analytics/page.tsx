@@ -10,8 +10,8 @@ export default async function DashboardAnalyticsPage() {
   const user = await requireCurrentUser();
 
   return (
-    <div className="dashboard-stack">
-      <Card className="dashboard-panel p-4 sm:p-5">
+    <div className="space-y-5">
+      <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#e24f3b]">
@@ -38,7 +38,7 @@ export default async function DashboardAnalyticsPage() {
 
       <CreatorTrafficPanel />
 
-      <Card className="dashboard-panel p-4 sm:p-5">
+      <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
         <h2 className="text-lg font-semibold text-[#201b18]">Tips tingkatkan trafik</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           <div className="rounded-2xl border border-[#e3d9d3] bg-white p-3">
@@ -64,13 +64,13 @@ export default async function DashboardAnalyticsPage() {
           <Link href="/dashboard/link-builder">
             <Button variant="secondary">
               <Link2 className="h-4 w-4" />
-              Buka Link Builder
+              Buka Build Link
             </Button>
           </Link>
           <Link href="/dashboard/videos">
             <Button variant="secondary">
               <Copy className="h-4 w-4" />
-              Kelola Video
+              Upload Video
             </Button>
           </Link>
         </div>

@@ -4,23 +4,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import {
+  Copy,
   Download,
-  Link2,
+  ExternalLink,
   MessageCircle,
   QrCode,
   Send,
   Share2,
-  Video,
   X,
 } from "lucide-react";
-import { SiInstagram } from "react-icons/si";
+import { SiFacebook, SiInstagram } from "react-icons/si";
+import { FaLinkedinIn } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/cn";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 
 type ShareProfileActionsProps = {
   username: string;
-  includeSetupActions?: boolean;
   iconOnlyOnMobile?: boolean;
 };
 
@@ -42,6 +41,18 @@ function getShareChannels(publicLink: string) {
       icon: Send,
     },
     {
+      id: "facebook",
+      label: "Facebook",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`,
+      icon: SiFacebook,
+    },
+    {
+      id: "linkedin",
+      label: "LinkedIn",
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedLink}`,
+      icon: FaLinkedinIn,
+    },
+    {
       id: "x",
       label: "X / Twitter",
       href: `https://x.com/intent/tweet?url=${encodedLink}&text=${encodedText}`,
@@ -50,11 +61,7 @@ function getShareChannels(publicLink: string) {
   ] as const;
 }
 
-export function ShareProfileActions({
-  username,
-  includeSetupActions = false,
-  iconOnlyOnMobile = false,
-}: ShareProfileActionsProps) {
+export function ShareProfileActions({ username, iconOnlyOnMobile = false }: ShareProfileActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -136,45 +143,23 @@ export function ShareProfileActions({
     }
   };
 
-  const compactLabelClass = cn(
-    "min-w-0 truncate whitespace-nowrap",
-    iconOnlyOnMobile ? "sr-only sm:not-sr-only" : ""
-  );
-  const actionButtonClass = cn(
-    "h-11 w-full min-w-0 gap-1.5 overflow-hidden rounded-xl border border-[#d5e1f6] bg-white px-2 text-xs font-semibold text-[#2d4f85] shadow-sm sm:px-3 sm:text-sm",
-    iconOnlyOnMobile ? "justify-center sm:justify-start" : "justify-start"
-  );
-
   return (
     <>
-      <div className="grid grid-cols-3 gap-2">
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          className={actionButtonClass}
-          onClick={() => setIsOpen(true)}
-          aria-label="Share Link"
-        >
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" size="sm" onClick={() => setIsOpen(true)}>
           <Share2 className="h-4 w-4" />
-          <span className={compactLabelClass}>Share Link</span>
+          <span className={iconOnlyOnMobile ? "sr-only sm:not-sr-only" : ""}>Share Link</span>
         </Button>
-        {includeSetupActions ? (
-          <>
-            <Link href="/dashboard/link-builder" className="block">
-              <Button type="button" variant="secondary" size="sm" className={actionButtonClass}>
-                <Link2 className="h-4 w-4" />
-                <span className={compactLabelClass}>Mulai Build Link</span>
-              </Button>
-            </Link>
-            <Link href="/dashboard/videos/new" className="block">
-              <Button type="button" variant="secondary" size="sm" className={actionButtonClass}>
-                <Video className="h-4 w-4" />
-                <span className={compactLabelClass}>Tambah Video Pertama</span>
-              </Button>
-            </Link>
-          </>
-        ) : null}
+        <Button type="button" variant="secondary" size="sm" onClick={handleCopy}>
+          <Copy className="h-4 w-4" />
+          <span className={iconOnlyOnMobile ? "sr-only sm:not-sr-only" : ""}>Copy Link</span>
+        </Button>
+        <Link href={publicPath} target="_blank">
+          <Button type="button" variant="secondary" size="sm">
+            <ExternalLink className="h-4 w-4" />
+            <span className={iconOnlyOnMobile ? "sr-only sm:not-sr-only" : ""}>Buka Public Link</span>
+          </Button>
+        </Link>
       </div>
 
       {isOpen ? (
@@ -212,7 +197,7 @@ export function ShareProfileActions({
               <p className="truncate text-sm font-medium text-[#2c4c80]">{publicLink}</p>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {shareChannels.map((channel) => {
                 const Icon = channel.icon;
                 return (

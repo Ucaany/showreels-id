@@ -6,7 +6,9 @@ import {
 } from "@/lib/db-schema-mismatch";
 import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/server/admin-access";
 import { syncUserProfile } from "@/server/auth-profile";
+import { getOrCreateUserOnboarding } from "@/server/onboarding";
 
 export async function POST(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -35,6 +37,29 @@ export async function POST(request: Request) {
       );
     }
 
+    if (profile.role !== "owner") {
+      const onboarding = await getOrCreateUserOnboarding({
+        userId: profile.id,
+        customLinks: profile.customLinks,
+        createdAt: profile.createdAt,
+        profile: {
+          fullName: profile.name,
+          username: profile.username,
+          role: profile.role,
+          bio: profile.bio,
+        },
+      });
+      const redirectTo =
+        onboarding.onboardingCompleted || onboarding.onboardingSkipped
+          ? next
+          : "/dashboard";
+
+      return NextResponse.json({
+        ok: true,
+        redirectTo,
+      });
+    }
+
     return NextResponse.json({
       ok: true,
       redirectTo: profile.role === "owner" ? "/admin" : next,
@@ -47,19 +72,16 @@ export async function POST(request: Request) {
       ...summarizeError(syncError),
       userId: user.id,
     });
-
-    if (mismatch) {
-      return NextResponse.json({
-        ok: true,
-        redirectTo: next,
-        degradedSync: true,
-      });
-    }
+    const fallbackOwner = isAdminEmail(user.email);
+    const fallbackRedirect = fallbackOwner ? "/admin" : "/dashboard";
 
     return NextResponse.json({
       ok: true,
-      redirectTo: next,
+      redirectTo: fallbackRedirect,
       degradedSync: true,
+      warning: mismatch
+        ? "Sinkronisasi schema akun belum lengkap, diarahkan ke dashboard aman."
+        : "Profil sedang disiapkan, diarahkan ke dashboard aman.",
     });
   }
 }

@@ -1295,8 +1295,8 @@ export function LandingPage({
                   </h3>
                   <p className="mt-2 text-sm text-[#5a6e91] sm:text-base">
                     {locale === "en"
-                      ? "Pick once, then continue to secure Midtrans checkout."
-                      : "Pilih paket yang cocok, lalu lanjutkan ke checkout Midtrans yang aman."}
+                      ? "Pick once, then continue to secure checkout."
+                      : "Pilih paket yang cocok, lalu lanjutkan ke checkout pembayaran yang aman."}
                   </p>
                 </div>
 

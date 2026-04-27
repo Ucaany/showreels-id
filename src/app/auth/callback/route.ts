@@ -6,7 +6,9 @@ import {
 } from "@/lib/db-schema-mismatch";
 import { getSafeNextPath } from "@/lib/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/server/admin-access";
 import { syncUserProfile } from "@/server/auth-profile";
+import { getOrCreateUserOnboarding } from "@/server/onboarding";
 
 function getAuthSuccessUrl(destination: string, requestUrl: string) {
   const url = new URL(destination, requestUrl);
@@ -50,7 +52,25 @@ export async function GET(request: NextRequest) {
 
       try {
         const profile = await syncUserProfile(user);
-        const destination = profile.role === "owner" ? "/admin" : next;
+        let destination = profile.role === "owner" ? "/admin" : next;
+
+        if (profile.role !== "owner") {
+          const onboarding = await getOrCreateUserOnboarding({
+            userId: profile.id,
+            customLinks: profile.customLinks,
+            createdAt: profile.createdAt,
+            profile: {
+              fullName: profile.name,
+              username: profile.username,
+              role: profile.role,
+              bio: profile.bio,
+            },
+          });
+          destination =
+            onboarding.onboardingCompleted || onboarding.onboardingSkipped
+              ? next
+              : "/dashboard";
+        }
 
         return NextResponse.redirect(
           getAuthSuccessUrl(destination, request.url)
@@ -63,15 +83,12 @@ export async function GET(request: NextRequest) {
           ...summarizeError(syncError),
           userId: user.id,
         });
-
-        if (mismatch) {
-          return NextResponse.redirect(
-            getAuthSuccessUrl(next, request.url)
-          );
-        }
+        const fallbackDestination = isAdminEmail(user.email)
+          ? "/admin"
+          : "/dashboard";
 
         return NextResponse.redirect(
-          getAuthSuccessUrl(next, request.url)
+          getAuthSuccessUrl(fallbackDestination, request.url)
         );
       }
     }

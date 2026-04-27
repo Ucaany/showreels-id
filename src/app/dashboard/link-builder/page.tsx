@@ -5,6 +5,7 @@ import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 export default async function LinkBuilderPage() {
   const user = await requireCurrentUser();
   const entitlementState = await getCreatorEntitlementsForUser(user.id);
+
   return (
     <LinkBuilderEditor
       user={user}

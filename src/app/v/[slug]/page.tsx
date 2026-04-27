@@ -163,7 +163,10 @@ export default async function PublicVideoPage({
                 facebookUrl={video.author.facebookUrl}
                 threadsUrl={video.author.threadsUrl}
                 linkedinUrl={
-                  "linkedinUrl" in video.author ? video.author.linkedinUrl : ""
+                  "linkedinUrl" in video.author &&
+                  typeof video.author.linkedinUrl === "string"
+                    ? video.author.linkedinUrl
+                    : ""
                 }
               />
               {video.author.username ? (

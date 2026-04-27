@@ -5,12 +5,8 @@ import { createUpgradeTransaction } from "@/server/billing";
 import { getCurrentUser } from "@/server/current-user";
 
 const upgradeSchema = z.object({
-  planName: z.enum(["creator", "business", "pro"]).transform((value) => {
-    if (value === "pro") {
-      return "creator";
-    }
-    return value;
-  }),
+  planName: z.enum(["creator", "business", "pro"]).optional(),
+  plan_id: z.enum(["creator", "business", "pro"]).optional(),
 }).strict();
 
 export async function POST(request: Request) {
@@ -33,12 +29,21 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  const targetPlanRaw = parsed.data.plan_id || parsed.data.planName || null;
+  if (!targetPlanRaw) {
+    return NextResponse.json(
+      { error: "Paket tidak valid." },
+      { status: 400 }
+    );
+  }
+
+  const targetPlan = targetPlanRaw === "pro" ? "creator" : targetPlanRaw;
 
   const result = await createUpgradeTransaction({
     userId: currentUser.id,
     fullName: currentUser.name || "Creator",
     email: currentUser.contactEmail || currentUser.email,
-    targetPlan: parsed.data.planName,
+    targetPlan,
     billingCycle: "monthly",
   });
 
@@ -46,6 +51,8 @@ export async function POST(request: Request) {
     const status =
       result.code === "midtrans_not_configured"
         ? 412
+        : result.code === "same_plan_active"
+          ? 409
         : result.code === "invalid_billing_cycle"
           ? 400
         : result.code === "db_not_ready" || result.code === "billing_schema_missing"

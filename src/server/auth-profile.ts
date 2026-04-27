@@ -53,6 +53,7 @@ function withDefaultCustomLinks<T extends Record<string, unknown>>(row: T): DbUs
     facebookUrl: "",
     threadsUrl: "",
     linkedinUrl: "",
+    linkBuilderPublishedAt: null,
     profileVisibility: "public",
     skills: [],
     isBlocked: false,
@@ -65,7 +66,8 @@ function withDefaultCustomLinks<T extends Record<string, unknown>>(row: T): DbUs
     createdAt: new Date(),
     updatedAt: new Date(),
     ...row,
-    customLinks: [],
+    customLinks: Array.isArray(row.customLinks) ? row.customLinks : [],
+    linkBuilderDraft: Array.isArray(row.linkBuilderDraft) ? row.linkBuilderDraft : [],
   } as unknown as DbUser;
 }
 

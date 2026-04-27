@@ -5,6 +5,7 @@ import { videos } from "@/db/schema";
 import { videoSchema } from "@/lib/auth-schemas";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
+import { markFirstVideoUploaded } from "@/server/onboarding";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 import {
   buildAiDescription,
@@ -132,6 +133,8 @@ export async function POST(request: Request) {
       publicSlug,
     })
     .returning();
+
+  await markFirstVideoUploaded(currentUser.id).catch(() => null);
 
   return NextResponse.json({ video });
 }

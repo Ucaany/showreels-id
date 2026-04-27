@@ -87,7 +87,7 @@ export async function PATCH(
   if (!entitlementState.entitlements.customThumbnailEnabled && normalizedThumbnailUrl) {
     return NextResponse.json(
       {
-        error: "Custom thumbnail hanya tersedia untuk plan Creator/Business.",
+        error: "Custom thumbnail hanya tersedia untuk plan Pro/Business.",
         code: "feature_not_available_for_plan",
       },
       { status: 403 }
