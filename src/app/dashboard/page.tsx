@@ -81,6 +81,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         }}
         linkBuilderMax={entitlementState.entitlements.linkBuilderMax}
         planName={entitlementState.effectivePlan.planName}
+        subscriptionStatus={entitlementState.effectivePlan.status as "active" | "trial" | "expired" | "failed" | "pending"}
         embedded
       />
     );

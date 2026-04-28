@@ -217,10 +217,10 @@ export function SignupForm({
 
       authLock.clearFailures();
       await showFeedbackAlert({
-        title: "Berhasil Daftar",
-        text: "Kamu akan diarahkan ke halaman terkait.",
+        title: "🎉 Berhasil Daftar",
+        text: "Akun Anda berhasil di-upgrade ke plan Creator gratis selama 1 bulan!",
         icon: "success",
-        confirmButtonText: "Lanjut",
+        confirmButtonText: "Lanjut ke Dashboard",
       });
       window.location.replace(bootstrapResult.redirectTo);
     } catch {

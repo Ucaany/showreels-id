@@ -348,16 +348,21 @@ export async function getOrCreateSubscription(userId: string) {
       };
     }
 
+    // NEW USER: Create trial subscription for Creator plan (1 month)
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 30); // +30 days
+
     const [created] = await db
       .insert(billingSubscriptions)
       .values({
         userId,
-        planName: "free",
+        planName: "creator",        // Trial starts with Creator plan
         billingCycle: "monthly",
-        status: "active",
+        status: "trial",            // Mark as trial status
         price: 0,
         currency: "IDR",
-        nextPlanName: "free",
+        renewalDate: trialEndDate,  // Trial expires after 30 days
+        nextPlanName: "free",       // After trial, downgrade to free
       })
       .returning();
 

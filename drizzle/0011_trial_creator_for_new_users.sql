@@ -1,0 +1,38 @@
+-- Migration: Trial 1 Bulan Creator untuk Pengguna Baru
+-- File: 0011_trial_creator_for_new_users.sql
+-- 
+-- Tidak perlu menambah kolom baru karena schema sudah mendukung:
+-- - billing_subscriptions.status sudah support "trial"
+-- - billing_subscriptions.renewal_date sudah ada
+-- - billing_subscriptions.next_plan_name sudah ada
+--
+-- Perubahan utama ada di aplikasi logic (src/server/billing.ts)
+-- yang akan otomatis membuat subscription trial untuk user baru
+
+-- Optional: Update existing free users yang baru (< 7 hari) ke trial
+-- Uncomment jika ingin memberikan trial retroaktif ke user baru
+-- 
+-- UPDATE billing_subscriptions
+-- SET 
+--   plan_name = 'creator',
+--   status = 'trial',
+--   renewal_date = created_at + INTERVAL '30 days',
+--   next_plan_name = 'free',
+--   updated_at = NOW()
+-- WHERE 
+--   plan_name = 'free' 
+--   AND status = 'active'
+--   AND created_at > NOW() - INTERVAL '7 days';
+
+-- Verifikasi: Query untuk melihat trial users
+-- SELECT 
+--   id,
+--   user_id,
+--   plan_name,
+--   status,
+--   renewal_date,
+--   next_plan_name,
+--   created_at
+-- FROM billing_subscriptions
+-- WHERE status = 'trial'
+-- ORDER BY created_at DESC;

@@ -69,6 +69,7 @@ export function OnboardingStepper({
   initialUser,
   linkBuilderMax,
   planName,
+  subscriptionStatus,
   embedded = false,
 }: {
   initialStatus: DbUserOnboarding;
@@ -82,6 +83,7 @@ export function OnboardingStepper({
   };
   linkBuilderMax: number | null;
   planName: "free" | "creator" | "pro" | "business";
+  subscriptionStatus?: "active" | "trial" | "expired" | "failed" | "pending";
   embedded?: boolean;
 }) {
   const router = useRouter();
@@ -542,6 +544,11 @@ export function OnboardingStepper({
               <h1 className="mt-2 text-xl font-semibold text-[#17305b]">Setup creator page</h1>
               <p className="mt-1 text-sm text-[#5e78a5]">
                 Plan aktif: {planName.toUpperCase()}{" "}
+                {planName === "creator" && subscriptionStatus === "trial" && (
+                  <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                    TRIAL 1 BULAN
+                  </span>
+                )}{" "}
                 {typeof linkBuilderMax === "number"
                   ? `- Maks ${linkBuilderMax} link`
                   : "- Unlimited link"}

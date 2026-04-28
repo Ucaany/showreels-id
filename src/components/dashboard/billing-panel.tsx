@@ -259,6 +259,35 @@ export function BillingPanel({
         </div>
       </Card>
 
+      {activePlan.status === "trial" && activePlan.renewalDate && (
+        <Card className="dashboard-clean-card overflow-hidden border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-5">
+          <div className="flex items-start gap-4">
+            <span className="text-4xl">🎁</span>
+            <div className="flex-1">
+              <p className="text-lg font-semibold text-blue-900">
+                Trial Plan Creator Aktif
+              </p>
+              <p className="mt-1 text-sm text-blue-700">
+                Berakhir pada: {new Date(activePlan.renewalDate).toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric"
+                })} ({remainingDays} hari lagi)
+              </p>
+              <p className="mt-2 text-xs text-blue-600">
+                Setelah trial berakhir, akun akan otomatis turun ke plan Free. Upgrade sekarang untuk terus menggunakan fitur Creator!
+              </p>
+              <Link href="/payment?plan=creator&intent=checkout" className="mt-3 inline-block">
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Sparkles className="h-4 w-4" />
+                  Upgrade ke Creator
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {!midtransConfig.serverKeySet ? (
         <Card className="dashboard-clean-card border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-700">Konfigurasi pembayaran belum lengkap</p>
