@@ -8,7 +8,7 @@ const LEGACY_HOSTS = new Set([
   "videoport-id.vercel.app",
 ]);
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const hasOauthCode = url.searchParams.has("code");
   const forwardedHeaders = new Headers(request.headers);
