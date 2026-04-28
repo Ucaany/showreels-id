@@ -987,114 +987,88 @@ export function LinkBuilderEditor({
   return (
     <div className="space-y-4">
       <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
+        <div className="flex flex-col items-center justify-center gap-3">
+          {/* Creator Info Section */}
+          <div className="flex flex-col items-center justify-center gap-2 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2f73ff]">
               showreels.id
             </p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <h1 className="font-display text-2xl font-semibold text-[#201b18]">
                 {profileFields.fullName || "Creator"}
               </h1>
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                 LIVE
               </span>
-              <span className="inline-flex max-w-full items-center rounded-full border border-[#d4e3fb] bg-[#edf4ff] px-3 py-1 text-xs font-semibold text-[#2f73ff]">
-                {publicPath}
-              </span>
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href={publicPath} target="_blank">
-              <Button size="sm" variant="secondary" className="h-9 px-3 text-xs font-semibold">
-                <Eye className="h-4 w-4" />
-                Preview
-              </Button>
-            </Link>
-            <Button
-              size="sm"
-              className="h-9 bg-[#2f73ff] px-3 text-xs font-semibold hover:bg-[#225fe0]"
-              onClick={handlePublish}
-              disabled={isSavingNow}
-            >
-              <Rocket className="h-4 w-4" />
-              Publish
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              className="h-9 px-3 text-xs font-semibold"
-              onClick={() => setIsShareOpen(true)}
-            >
-              <Share2 className="h-4 w-4" />
-              Share
-            </Button>
+            <span className="inline-flex items-center rounded-full border border-[#d4e3fb] bg-[#edf4ff] px-3 py-1 text-xs font-semibold text-[#2f73ff]">
+              {publicPath}
+            </span>
             {saveStatus === "saving" || saveStatus === "error" ? (
               <p className="text-xs font-semibold text-[#5d5049]">
                 {saveStatus === "saving" ? "Menyimpan..." : "Gagal menyimpan"}
               </p>
             ) : null}
           </div>
+
+          {/* Action Buttons - Responsive Grid */}
+          <div className="grid w-full max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
+            <button
+              type="button"
+              className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
+                activeSection === "edit"
+                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
+                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
+              }`}
+              onClick={() => setActiveSection("edit")}
+            >
+              <PencilLine className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Edit</span>
+            </button>
+            <button
+              type="button"
+              className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
+                activeSection === "links"
+                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
+                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
+              }`}
+              onClick={() => setActiveSection("links")}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Tambah Link</span>
+            </button>
+            <button
+              type="button"
+              className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
+                activeSection === "design"
+                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
+                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
+              }`}
+              onClick={() => setActiveSection("design")}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Design</span>
+            </button>
+            <button
+              type="button"
+              className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
+                activeSection === "preview"
+                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
+                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
+              }`}
+              onClick={() => setActiveSection("preview")}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Preview</span>
+            </button>
+          </div>
         </div>
       </Card>
-
-      <div className="overflow-x-auto">
-        <div className="inline-flex min-w-max rounded-full border border-[#d6e2f7] bg-white p-1">
-          <button
-            type="button"
-            className={`h-9 rounded-full px-4 text-xs font-semibold transition ${
-              activeSection === "edit"
-                ? "bg-[#2f73ff] text-white"
-                : "text-[#5e514b] hover:bg-[#edf4ff]"
-            }`}
-            onClick={() => setActiveSection("edit")}
-          >
-            <PencilLine className="mr-1 inline-block h-3.5 w-3.5" />
-            Edit
-          </button>
-          <button
-            type="button"
-            className={`h-9 rounded-full px-4 text-xs font-semibold transition ${
-              activeSection === "links"
-                ? "bg-[#2f73ff] text-white"
-                : "text-[#5e514b] hover:bg-[#edf4ff]"
-            }`}
-            onClick={() => setActiveSection("links")}
-          >
-            <Plus className="mr-1 inline-block h-3.5 w-3.5" />
-            Tambah Link
-          </button>
-          <button
-            type="button"
-            className={`h-9 rounded-full px-4 text-xs font-semibold transition ${
-              activeSection === "design"
-                ? "bg-[#2f73ff] text-white"
-                : "text-[#5e514b] hover:bg-[#edf4ff]"
-            }`}
-            onClick={() => setActiveSection("design")}
-          >
-            <Sparkles className="mr-1 inline-block h-3.5 w-3.5" />
-            Design
-          </button>
-          <button
-            type="button"
-            className={`h-9 rounded-full px-4 text-xs font-semibold transition ${
-              activeSection === "preview"
-                ? "bg-[#2f73ff] text-white"
-                : "text-[#5e514b] hover:bg-[#edf4ff]"
-            }`}
-            onClick={() => setActiveSection("preview")}
-          >
-            <Eye className="mr-1 inline-block h-3.5 w-3.5" />
-            Preview
-          </button>
-        </div>
-      </div>
 
       {activeSection === "edit" ? (
         <div className="space-y-4">
           <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <PencilLine className="h-4 w-4 text-[#2f73ff]" />
                 <h2 className="text-lg font-semibold text-[#201b18]">Bio & Experience</h2>
@@ -1105,9 +1079,10 @@ export function LinkBuilderEditor({
                 variant="secondary"
                 onClick={handleGenerateBio}
                 disabled={aiLoading}
+                className="w-full sm:w-auto"
               >
                 <Sparkles className="h-4 w-4" />
-                {aiLoading ? "Membuat bio..." : "Generate with AI"}
+                <span className="truncate">{aiLoading ? "Membuat bio..." : "Generate with AI"}</span>
               </Button>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -1889,17 +1864,17 @@ export function LinkBuilderEditor({
 
       <div className="fixed inset-x-0 bottom-3 z-20 px-3 md:hidden">
         <div className="mx-auto grid max-w-sm grid-cols-3 gap-2 rounded-[1.25rem] border border-[#cfe0ff] bg-white/95 p-2 shadow-[0_18px_42px_rgba(24,58,115,0.22)] backdrop-blur">
-          <button
-            type="button"
+          <Link
+            href={publicPath}
+            target="_blank"
             className="inline-flex h-11 items-center justify-center rounded-xl bg-[#edf4ff] text-[#2f73ff]"
             aria-label="Preview"
-            onClick={() => setActiveSection("preview")}
           >
             <Eye className="h-5 w-5" />
-          </button>
+          </Link>
           <button
             type="button"
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#2f73ff] text-white"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#2f73ff] text-white disabled:opacity-50"
             aria-label="Publish"
             onClick={handlePublish}
             disabled={isSavingNow}
