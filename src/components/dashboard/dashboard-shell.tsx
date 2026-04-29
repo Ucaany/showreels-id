@@ -177,6 +177,34 @@ export function DashboardShell({
 
   const renderSidebarContent = (expanded = sidebarOpen, mobile = false) => (
     <div className="flex h-full flex-col bg-white px-4 py-5">
+      {/* Logo Showreels.id */}
+      <div className={cn(
+        "flex items-center gap-3",
+        !expanded && !mobile && "justify-center"
+      )}>
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-900">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="Showreels.id"
+            className="h-6 w-6 object-contain"
+            onError={(event) => {
+              const target = event.currentTarget;
+              target.style.display = "none";
+              const fallback = target.nextElementSibling as HTMLElement | null;
+              fallback?.classList.remove("hidden");
+            }}
+          />
+          <Link2 className="hidden h-5 w-5 text-white" />
+        </div>
+        {(expanded || mobile) && (
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-base font-bold text-slate-900">showreels.id</p>
+            <p className="text-xs text-slate-500">Creator Dashboard</p>
+          </div>
+        )}
+      </div>
+
       {!mobile && (
         <button
           type="button"
