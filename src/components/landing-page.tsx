@@ -9,10 +9,15 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
+  Eye,
+  EyeOff,
   Globe,
+  HardDrive,
+  Link as LinkIcon,
   Lock,
   LogOut,
   Menu,
+  Play,
   PlayCircle,
   Plus,
   Star,
@@ -1125,66 +1130,182 @@ export function LandingPage({
           </section>
 
           <section
-            className="relative bg-gradient-to-b from-white to-[#fafbfc] py-12 sm:py-16 lg:py-20"
+            className="relative bg-slate-50 py-12 sm:py-16 lg:py-20"
             id="features"
           >
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
-              <div className="text-center">
+              <div className="text-center mb-10">
                 <Badge className="rounded-full border-0 bg-[#eef5ff] px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider text-[#2f73ff] shadow-none">
                   {dictionary.landingFeaturesBadge}
                 </Badge>
-                <h2 className="mt-4 font-display text-[1.75rem] sm:text-[2rem] lg:text-[2.25rem] font-extrabold leading-[1.12] tracking-tight text-[#0f1419]">
+                <h2 className="mt-4 font-display text-[1.75rem] sm:text-[2rem] lg:text-[2.25rem] font-extrabold leading-[1.12] tracking-tight text-slate-800">
                   {dictionary.landingFeaturesTitleLead}{" "}
-                  <span className="bg-gradient-to-r from-[#2f73ff] to-[#1e5dd9] bg-clip-text font-accent italic text-transparent">
+                  <span className="bg-gradient-to-r from-[#2563eb] to-[#4f46e5] bg-clip-text font-accent italic text-transparent">
                     {dictionary.landingFeaturesTitleAccent}
                   </span>
                 </h2>
-                <p className="mx-auto mt-3 max-w-[620px] text-[0.8125rem] text-[#5a6e91] sm:text-sm">
+                <p className="mx-auto mt-3 max-w-[620px] text-[0.8125rem] text-slate-500 sm:text-sm">
                   {dictionary.landingFeaturesDescription}
                 </p>
               </div>
 
-              <div className="mt-8 space-y-3 sm:mt-10 sm:space-y-4">
-                {marketingFeatures.map((item, index) => {
-                  const icons = [
-                    { Icon: UserRound, gradient: "from-[#dbeafe] to-[#bfdbfe]", color: "#2563eb", bg: "#eff6ff" },
-                    { Icon: Video, gradient: "from-[#e0e7ff] to-[#c7d2fe]", color: "#4f46e5", bg: "#eef2ff" },
-                    { Icon: Globe, gradient: "from-[#ddd6fe] to-[#c4b5fd]", color: "#7c3aed", bg: "#f5f3ff" },
-                    { Icon: Lock, gradient: "from-[#e0f2fe] to-[#bae6fd]", color: "#0284c7", bg: "#f0f9ff" },
-                  ];
-                  const { Icon, gradient, color, bg } = icons[index] || icons[0];
+              {/* Bento Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+                {/* Card 1: Profil Creator Publik (Hero) */}
+                <m.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.4, delay: 0 }}
+                  className="sm:col-span-2 lg:col-span-2 lg:row-span-2 bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                >
+                  {/* Cover */}
+                  <div className="h-32 sm:h-40 bg-gradient-to-br from-blue-500 to-indigo-600" />
+                  
+                  {/* Content */}
+                  <div className="p-6 sm:p-8 relative">
+                    {/* Avatar */}
+                    <div className="absolute -top-10 sm:-top-12 left-6 sm:left-8">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-white bg-slate-200 flex items-center justify-center overflow-hidden">
+                        <UserRound className="w-10 h-10 sm:w-12 sm:h-12 text-slate-400" />
+                      </div>
+                    </div>
+                    
+                    {/* Name & Bio */}
+                    <div className="mt-12 sm:mt-14">
+                      <h3 className="text-xl sm:text-2xl font-bold text-slate-800">Alex Johnson</h3>
+                      <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+                        Professional video editor specializing in documentaries and commercials with 5+ years experience
+                      </p>
+                    </div>
+                    
+                    {/* Skills */}
+                    <div className="flex flex-wrap gap-2 mt-4 sm:mt-6">
+                      {['Premiere Pro', 'Color Grading', 'Motion Graphics', 'Sound Design'].map((skill) => (
+                        <span key={skill} className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full text-xs font-medium">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                    
+                    {/* Button */}
+                    <button className="mt-6 sm:mt-8 w-full sm:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                      Contact Me
+                    </button>
+                  </div>
+                </m.div>
 
-                  return (
-                    <m.article
-                      key={item.title}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true, amount: 0.3 }}
-                      transition={{
-                        duration: 0.4,
-                        delay: index * 0.06,
-                        ease: "easeOut"
-                      }}
-                      className="group flex items-start gap-4 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-all duration-300 hover:border-[#2f73ff]/30 hover:shadow-md sm:gap-5 sm:p-5"
-                    >
+                {/* Card 2: Sumber Video Multi-platform */}
+                <m.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow"
+                >
+                  {/* Header */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <LinkIcon className="w-5 h-5 text-blue-600" />
+                    <h3 className="text-lg font-bold text-slate-800">Import dari Mana Saja</h3>
+                  </div>
+                  
+                  {/* Platform Icons */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { Icon: SiYoutube, color: '#FF0000', bg: '#FFE5E5', name: 'YouTube' },
+                      { Icon: SiGoogledrive, color: '#4285F4', bg: '#E3F2FD', name: 'Drive' },
+                      { Icon: SiInstagram, color: '#E4405F', bg: '#FCE4EC', name: 'Instagram' },
+                      { Icon: SiFacebook, color: '#1877F2', bg: '#E3F2FD', name: 'Facebook' },
+                      { Icon: SiVimeo, color: '#1AB7EA', bg: '#E1F5FE', name: 'Vimeo' },
+                      { Icon: HardDrive, color: '#64748b', bg: '#f1f5f9', name: 'Others' },
+                    ].map((platform) => (
                       <div
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md sm:h-12 sm:w-12"
-                        style={{ backgroundColor: bg }}
+                        key={platform.name}
+                        className="flex items-center justify-center aspect-square rounded-xl hover:scale-110 transition-transform cursor-pointer"
+                        style={{ backgroundColor: platform.bg }}
                       >
-                        <Icon className="h-5 w-5 sm:h-5.5 sm:w-5.5" style={{ color }} strokeWidth={2.5} />
+                        <platform.Icon style={{ color: platform.color }} className="w-6 h-6" />
                       </div>
-                      
-                      <div className="flex-1 pt-0.5">
-                        <h3 className="text-[0.9375rem] font-bold leading-tight tracking-tight text-[#0f1419] transition-colors group-hover:text-[#2f73ff] sm:text-base">
-                          {item.title}
-                        </h3>
-                        <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-[#6b7280] sm:text-sm">
-                          {item.description}
-                        </p>
+                    ))}
+                  </div>
+                </m.div>
+
+                {/* Card 3: Kontrol Visibilitas */}
+                <m.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                  className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow"
+                >
+                  {/* Header */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <Eye className="w-5 h-5 text-blue-600" />
+                    <h3 className="text-lg font-bold text-slate-800">Kontrol Visibilitas</h3>
+                  </div>
+                  
+                  {/* Status Options */}
+                  <div className="space-y-3">
+                    {[
+                      { label: 'Draft', color: 'bg-slate-100 text-slate-600', icon: null, active: false },
+                      { label: 'Private', color: 'bg-red-50 text-red-600', icon: Lock, active: false },
+                      { label: 'Semi-Private', color: 'bg-yellow-50 text-yellow-600', icon: EyeOff, active: false },
+                      { label: 'Public', color: 'bg-blue-50 text-blue-600', icon: Globe, active: true },
+                    ].map((status) => (
+                      <div
+                        key={status.label}
+                        className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                          status.active ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full ${status.color.split(' ')[0]}`} />
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm text-slate-800">{status.label}</p>
+                        </div>
+                        {status.icon && <status.icon className="w-4 h-4 text-slate-400" />}
                       </div>
-                    </m.article>
-                  );
-                })}
+                    ))}
+                  </div>
+                </m.div>
+
+                {/* Card 4: Halaman Video Publik */}
+                <m.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="sm:col-span-2 lg:col-span-2 bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow"
+                >
+                  {/* Header */}
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold text-slate-800">Halaman Publik per Slug</h3>
+                    <p className="text-sm text-slate-500 mt-1">Sajikan karyamu dengan profesional untuk dinilai klien.</p>
+                  </div>
+                  
+                  {/* Browser Mockup */}
+                  <div className="border border-slate-200 rounded-lg overflow-hidden">
+                    {/* Browser Bar */}
+                    <div className="bg-slate-100 p-2 flex items-center gap-2">
+                      <div className="flex gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                      </div>
+                      <div className="flex-1 bg-white rounded px-3 py-1.5 text-xs text-slate-600 truncate">
+                        showreels.id/v/documentary-film
+                      </div>
+                    </div>
+                    
+                    {/* Video Thumbnail */}
+                    <div className="relative aspect-video bg-gradient-to-br from-slate-200 to-slate-300">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer group">
+                          <Play className="w-8 h-8 text-white ml-1 group-hover:scale-110 transition-transform" fill="white" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </m.div>
               </div>
             </div>
           </section>
