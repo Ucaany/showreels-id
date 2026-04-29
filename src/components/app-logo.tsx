@@ -25,7 +25,7 @@ export function AppLogo({
       <span
         className={cn(
           "text-[1rem] font-semibold tracking-[-0.02em] sm:text-[1.04rem]",
-          darkTone ? "text-[#1f1a17]" : "text-[#f6f3f0]"
+          darkTone ? "text-slate-950" : "text-white"
         )}
       >
         showreels.id
