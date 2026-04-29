@@ -1125,241 +1125,156 @@ export function LandingPage({
           </section>
 
           <section
-            className="relative bg-gradient-to-b from-white to-[#fafbfc] py-12 sm:py-16 lg:py-20"
+            className="py-10 sm:py-14 lg:py-16"
             id="features"
           >
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
-              <div className="text-center">
-                <Badge className={sectionBadgeClass}>
+              <div className="mx-auto max-w-[680px]">
+                <Badge className="rounded-full border-0 bg-[#eef5ff] px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider text-[#2f73ff] shadow-none">
                   {dictionary.landingFeaturesBadge}
                 </Badge>
-                <h2 className="mt-4 font-display text-[2.25rem] sm:text-[2.75rem] lg:text-[3.25rem] font-extrabold leading-[1.12] tracking-tight text-[#0f1419]">
+                <h2 className="mt-2 text-[1.75rem] font-extrabold leading-[1.15] text-[#0f1419] sm:text-[2rem] lg:text-[2.25rem]">
                   {dictionary.landingFeaturesTitleLead}{" "}
-                  <span className="bg-gradient-to-r from-[#2f73ff] to-[#1e5dd9] bg-clip-text font-accent italic text-transparent">
+                  <span className="italic text-[#2f73ff]">
                     {dictionary.landingFeaturesTitleAccent}
                   </span>
                 </h2>
-                <p className="mx-auto mt-3 max-w-[620px] text-sm text-[#5a6e91] sm:text-base">
+                <p className="mt-2 text-[0.8125rem] leading-relaxed text-[#6b7280] sm:text-sm">
                   {dictionary.landingFeaturesDescription}
                 </p>
-              </div>
 
-              <div className="mt-8 space-y-3 sm:mt-10 sm:space-y-4">
-                {marketingFeatures.map((item, index) => {
-                  const icons = [
-                    { Icon: UserRound, gradient: "from-[#dbeafe] to-[#bfdbfe]", color: "#2563eb", bg: "#eff6ff" },
-                    { Icon: Video, gradient: "from-[#e0e7ff] to-[#c7d2fe]", color: "#4f46e5", bg: "#eef2ff" },
-                    { Icon: Globe, gradient: "from-[#ddd6fe] to-[#c4b5fd]", color: "#7c3aed", bg: "#f5f3ff" },
-                    { Icon: Lock, gradient: "from-[#e0f2fe] to-[#bae6fd]", color: "#0284c7", bg: "#f0f9ff" },
-                  ];
-                  const { Icon, gradient, color, bg } = icons[index] || icons[0];
-
-                  return (
-                    <m.article
+                <div className="mt-6 space-y-4 sm:mt-8 sm:space-y-5">
+                  {marketingFeatures.map((item, index) => (
+                    <m.div
                       key={item.title}
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -15 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
                       transition={{
-                        duration: 0.4,
-                        delay: index * 0.06,
+                        duration: 0.35,
+                        delay: index * 0.08,
                         ease: "easeOut"
                       }}
-                      className="group flex items-start gap-4 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-all duration-300 hover:border-[#2f73ff]/30 hover:shadow-md sm:gap-5 sm:p-5"
+                      className="flex gap-3.5"
                     >
-                      <div
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md sm:h-12 sm:w-12"
-                        style={{ backgroundColor: bg }}
-                      >
-                        <Icon className="h-5 w-5 sm:h-5.5 sm:w-5.5" style={{ color }} strokeWidth={2.5} />
+                      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#dbeafe]">
+                        <Check className="h-3 w-3 text-[#2563eb]" strokeWidth={3} />
                       </div>
                       
-                      <div className="flex-1 pt-0.5">
-                        <h3 className="text-[0.95rem] font-bold leading-tight tracking-tight text-[#0f1419] transition-colors group-hover:text-[#2f73ff] sm:text-[1.05rem]">
+                      <div className="flex-1">
+                        <h3 className="text-[0.9375rem] font-bold leading-tight text-[#0f1419] sm:text-base">
                           {item.title}
                         </h3>
                         <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-[#6b7280] sm:text-sm">
                           {item.description}
                         </p>
                       </div>
-                    </m.article>
-                  );
-                })}
+                    </m.div>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
 
-          <section className="border-y border-[#e0e7ef] bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] py-16 sm:py-20 lg:py-24">
+          <section className="border-y border-[#e5e7eb] bg-gradient-to-b from-[#fafbfc] to-white py-10 sm:py-14 lg:py-16">
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
-              <div className="text-center">
-                <Badge className={sectionBadgeClass}>
+              <div className="mx-auto max-w-[680px] text-center">
+                <Badge className="rounded-full border-0 bg-[#eef5ff] px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider text-[#2f73ff] shadow-none">
                   {dictionary.landingPlatformBadge}
                 </Badge>
-                <h2 className="mt-4 font-display text-[2.25rem] sm:text-[2.75rem] lg:text-[3.25rem] font-extrabold leading-[1.12] tracking-tight text-[#0f1419]">
+                <h2 className="mt-2 text-[1.75rem] font-extrabold leading-[1.15] text-[#0f1419] sm:text-[2rem] lg:text-[2.25rem]">
                   {dictionary.landingPlatformTitleLead}{" "}
-                  <span className="font-accent italic text-[#2f73ff]">{dictionary.landingPlatformTitleAccent}</span>
+                  <span className="italic text-[#2f73ff]">{dictionary.landingPlatformTitleAccent}</span>
                 </h2>
-                <p className="mx-auto mt-5 max-w-[680px] text-[1.05rem] leading-relaxed text-[#4a5568]">
+                <p className="mt-2 text-[0.8125rem] leading-relaxed text-[#6b7280] sm:text-sm">
                   {dictionary.landingPlatformDescription}
                 </p>
-              </div>
 
-              <div className="mx-auto mt-12 grid max-w-[960px] grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
-                {PLATFORM_SOURCES.map((platform, index) => {
-                  const PlatformIcon = platform.icon;
-                  
-                  return (
-                    <m.article
-                      key={platform.name}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true, amount: 0.3 }}
-                      transition={{ duration: 0.3, delay: index * 0.08 }}
-                      className="group relative overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white p-5 text-center shadow-sm transition-all hover:border-[#2f73ff]/40 hover:shadow-lg hover:-translate-y-2"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#f8faff] via-transparent to-[#eff6ff] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                      
-                      <div className="relative z-10 mx-auto flex h-16 w-16 items-center justify-center rounded-xl shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md" style={{ backgroundColor: platform.lightBg }}>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:mt-8 sm:gap-4">
+                  {PLATFORM_SOURCES.map((platform, index) => {
+                    const PlatformIcon = platform.icon;
+                    
+                    return (
+                      <m.div
+                        key={platform.name}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true, amount: 0.3 }}
+                        transition={{ duration: 0.3, delay: index * 0.06 }}
+                        className="flex h-12 w-12 items-center justify-center rounded-xl shadow-sm transition-transform hover:scale-105 sm:h-14 sm:w-14"
+                        style={{ backgroundColor: platform.lightBg }}
+                      >
                         <PlatformIcon
-                          className="h-8 w-8 transition-transform group-hover:scale-110"
+                          className="h-6 w-6 sm:h-7 sm:w-7"
                           style={{ color: platform.brandColor }}
                           aria-label={platform.name}
                         />
-                      </div>
-                      
-                      <p className="relative z-10 mt-4 text-[0.95rem] font-bold tracking-tight text-[#1e293b]">
-                        {platform.name}
-                      </p>
-                      <p className="relative z-10 mt-1 text-[0.82rem] font-medium text-[#64748b]">
-                        {locale === "en" ? "Supported" : "Didukung"}
-                      </p>
-                    </m.article>
-                  );
-                })}
+                      </m.div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
 
-          <section className="relative overflow-hidden bg-gradient-to-b from-[#fafbfc] to-white py-16 sm:py-20 lg:py-24">
-            <div className="absolute left-0 top-0 h-64 w-64 rounded-full bg-[#eef5ff] opacity-30 blur-3xl" />
-            <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-[#f0f5ff] opacity-30 blur-3xl" />
-            
-            <div className="relative z-10 mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
-              <div className="text-center">
-                <Badge className={sectionBadgeClass}>
+          <section className="bg-gradient-to-b from-white to-[#fafbfc] py-10 sm:py-14 lg:py-16">
+            <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
+              <div className="mx-auto max-w-[680px]">
+                <Badge className="rounded-full border-0 bg-[#eef5ff] px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider text-[#2f73ff] shadow-none">
                   {dictionary.landingHowItWorksBadge}
                 </Badge>
-                <h2 className="mt-4 font-display text-[2.25rem] sm:text-[2.75rem] lg:text-[3.25rem] font-extrabold leading-[1.12] tracking-tight text-[#0f1419]">
+                <h2 className="mt-2 text-[1.75rem] font-extrabold leading-[1.15] text-[#0f1419] sm:text-[2rem] lg:text-[2.25rem]">
                   {dictionary.landingHowItWorksTitleLead}{" "}
-                  <span className="font-accent italic text-[#2f73ff]">
+                  <span className="italic text-[#2f73ff]">
                     {dictionary.landingHowItWorksTitleAccent}
                   </span>
                 </h2>
-                <p className="mx-auto mt-5 max-w-[680px] text-[1.05rem] leading-relaxed text-[#4a5568]">
+                <p className="mt-2 text-[0.8125rem] leading-relaxed text-[#6b7280] sm:text-sm">
                   {dictionary.landingHowItWorksDescription}
                 </p>
-              </div>
 
-              <div className="relative mt-12 grid gap-8 lg:grid-cols-3 lg:gap-10 lg:gap-x-16">
-              {[
-                  {
-                    label: dictionary.landingHowItWorksStep1Label,
-                    title: dictionary.landingHowItWorksStep1Title,
-                    description: dictionary.landingHowItWorksStep1Description,
-                    icon: UserRound,
-                  },
-                  {
-                    label: dictionary.landingHowItWorksStep2Label,
-                    title: dictionary.landingHowItWorksStep2Title,
-                    description: dictionary.landingHowItWorksStep2Description,
-                    icon: PlayCircle,
-                  },
-                  {
-                    label: dictionary.landingHowItWorksStep3Label,
-                    title: dictionary.landingHowItWorksStep3Title,
-                    description: dictionary.landingHowItWorksStep3Description,
-                    icon: Check,
-                  },
-                ].map((step, index) => {
-                  const StepIcon = step.icon;
-
-                  return (
-                    <m.article
-                      key={step.label}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
+                <div className="mt-6 space-y-4 sm:mt-8 sm:space-y-5">
+                  {[
+                    {
+                      title: dictionary.landingHowItWorksStep1Title,
+                      description: dictionary.landingHowItWorksStep1Description,
+                    },
+                    {
+                      title: dictionary.landingHowItWorksStep2Title,
+                      description: dictionary.landingHowItWorksStep2Description,
+                    },
+                    {
+                      title: dictionary.landingHowItWorksStep3Title,
+                      description: dictionary.landingHowItWorksStep3Description,
+                    },
+                  ].map((step, index) => (
+                    <m.div
+                      key={step.title}
+                      initial={{ opacity: 0, x: -15 }}
+                      whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
-                      transition={{ duration: 0.4, delay: index * 0.15 }}
-                      className="relative rounded-2xl border border-[#e8edf5] bg-white p-5 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.1)] sm:p-6 lg:p-8"
+                      transition={{
+                        duration: 0.35,
+                        delay: index * 0.08,
+                        ease: "easeOut"
+                      }}
+                      className="flex gap-3.5"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="inline-flex items-center gap-2 rounded-lg bg-[#2f73ff] px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-white shadow-sm sm:px-4 sm:py-2 sm:text-xs">
-                          {step.label}
-                        </span>
-
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#e8f0ff] to-[#d5e5ff] sm:h-16 sm:w-16 lg:h-20 lg:w-20">
-                          <StepIcon className="h-7 w-7 text-[#2f66e4] sm:h-8 sm:w-8 lg:h-10 lg:w-10" strokeWidth={2} />
-                        </div>
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef5ff] text-[1.25rem] font-extrabold text-[#2f73ff]">
+                        {index + 1}
                       </div>
-
-                      <div className="mx-auto my-6 flex h-28 w-full items-center justify-center sm:my-7 sm:h-32 lg:my-8">
-                        {index === 0 && (
-                          <div className="flex flex-col items-center gap-3">
-                            <div className="flex gap-2">
-                              <div className="h-8 w-20 rounded-lg border border-[#c5d9ff] bg-gradient-to-r from-[#e8f0ff] to-[#d5e5ff]" />
-                              <div className="h-8 w-20 rounded-lg border border-[#1e5fd9] bg-gradient-to-r from-[#2f73ff] to-[#1e5fd9]" />
-                              <div className="h-8 w-20 rounded-lg border border-[#c5d9ff] bg-gradient-to-r from-[#e8f0ff] to-[#d5e5ff]" />
-                            </div>
-                            <div className="flex items-center gap-2 rounded-full bg-[#1e1e1e] px-4 py-2 text-xs font-semibold text-white">
-                              <Check className="h-3 w-3" />
-                              Subscribe
-                            </div>
-                          </div>
-                        )}
-                        {index === 1 && (
-                          <div className="relative">
-                            <div className="flex h-24 w-32 items-center justify-center rounded-xl border-2 border-dashed border-[#2f73ff] bg-gradient-to-br from-[#f0f5ff] to-[#e0ebff]">
-                              <PlayCircle className="h-12 w-12 text-[#2f73ff] opacity-40" />
-                            </div>
-                            <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#2f73ff] shadow-lg">
-                              <Plus className="h-5 w-5 text-white" strokeWidth={3} />
-                            </div>
-                          </div>
-                        )}
-                        {index === 2 && (
-                          <div className="relative">
-                            <div className="h-28 w-36 rounded-xl border-2 border-[#e5eaf2] bg-white p-3 shadow-md">
-                              <div className="mb-2 h-2 w-full rounded bg-[#e8edf5]" />
-                              <div className="mb-2 h-2 w-3/4 rounded bg-[#e8edf5]" />
-                              <div className="mb-3 h-2 w-5/6 rounded bg-[#e8edf5]" />
-                              <div className="mb-1 h-1.5 w-full rounded bg-[#e8edf5]" />
-                              <div className="h-1.5 w-2/3 rounded bg-[#e8edf5]" />
-                            </div>
-                            <div className="absolute -bottom-3 -right-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#10b981] to-[#059669] shadow-lg">
-                              <Check className="h-7 w-7 text-white" strokeWidth={3} />
-                            </div>
-                          </div>
-                        )}
+                      
+                      <div className="flex-1 pt-0.5">
+                        <h3 className="text-[0.9375rem] font-bold leading-tight text-[#0f1419] sm:text-base">
+                          {step.title}
+                        </h3>
+                        <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-[#6b7280] sm:text-sm">
+                          {step.description}
+                        </p>
                       </div>
-
-                      <h3 className="mt-3 text-center text-lg font-bold tracking-tight text-[#1d1714] sm:mt-4 sm:text-xl lg:text-2xl">
-                        {step.title}
-                      </h3>
-
-                      <p className="mt-2 text-center text-[0.875rem] leading-relaxed text-[#5c514b] sm:mt-3 sm:text-[0.95rem]">
-                        {step.description}
-                      </p>
-
-                      {index < 2 && (
-                        <div className="absolute -right-8 top-1/2 z-10 hidden -translate-y-1/2 lg:block xl:-right-10">
-                          <svg className="h-8 w-8 text-[#d1d5db] xl:h-10 xl:w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                      )}
-                    </m.article>
-                  );
-                })}
+                    </m.div>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
