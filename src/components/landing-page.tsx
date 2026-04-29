@@ -1281,9 +1281,9 @@ export function LandingPage({
                 <Badge className="rounded-full border border-[#bcd3ff] bg-[#eaf2ff] px-2.5 py-1 text-eyebrow font-semibold uppercase text-[#2f73ff] shadow-none">
                   {dictionary.landingPricingBadge}
                 </Badge>
-                <h2 className="mt-3 font-display text-section-display font-extrabold text-[#2f73ff]">
+                <h2 className="mt-3 font-display text-section-display font-extrabold text-[#140f0d]">
                   <span>{dictionary.landingPricingTitleLead}</span>{" "}
-                  <span className="font-accent text-[#140f0d]">
+                  <span className="font-accent text-[#2f73ff]">
                     {dictionary.landingPricingTitleAccent}
                   </span>
                 </h2>
