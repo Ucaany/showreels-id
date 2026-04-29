@@ -12,14 +12,13 @@ import {
   Video,
   Wand2,
 } from "lucide-react";
-import { CreatorTrafficPanel } from "@/components/dashboard/creator-traffic-panel";
 import { OnboardingReminderCard } from "@/components/dashboard/onboarding-reminder-card";
 import { ShareProfileActions } from "@/components/dashboard/share-profile-actions";
 import { OnboardingStepper } from "@/components/onboarding/onboarding-stepper";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { db, isDatabaseConfigured } from "@/db";
 import { videos, visitorEvents } from "@/db/schema";
+import { cn } from "@/lib/cn";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { requireCurrentUser } from "@/server/current-user";
 import { getOrCreateUserOnboarding } from "@/server/onboarding";
@@ -34,6 +33,13 @@ type QuickAction = {
   locked?: boolean;
 };
 
+type MetricCard = {
+  label: string;
+  value: number;
+  helper: string;
+  icon: typeof Wand2;
+};
+
 type DashboardPageProps = {
   searchParams?: Promise<{
     onboarding?: string;
@@ -42,6 +48,225 @@ type DashboardPageProps = {
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("id-ID").format(value);
+}
+
+function BentoCard({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={cn(
+        "rounded-2xl border border-slate-200 bg-white p-5 text-slate-800 shadow-sm md:p-6",
+        className
+      )}
+    >
+      {children}
+    </section>
+  );
+}
+
+function HeroCard({
+  userName,
+  canUseBuildLink,
+}: {
+  userName: string | null;
+  canUseBuildLink: boolean;
+}) {
+  return (
+    <BentoCard className="overflow-hidden lg:col-span-2">
+      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-blue-50/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+            <Sparkles className="h-3.5 w-3.5" />
+            Dashboard Creator
+          </div>
+          <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-slate-800 md:text-4xl">
+            Selamat datang, {userName || "Kreator"}
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
+            Kelola link publik, video portfolio, analytics, dan billing dari satu workspace Bento Grid yang bersih dan ramah mata.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          <Link href={canUseBuildLink ? "/dashboard/link-builder" : "/dashboard/billing"}>
+            <Button className="rounded-full bg-blue-600 px-6 py-2 text-white hover:bg-blue-700">
+              {canUseBuildLink ? <Wand2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+              {canUseBuildLink ? "Mulai Build Link" : "Unlock Build Link"}
+            </Button>
+          </Link>
+          <Link href="/dashboard/videos/new">
+            <Button
+              variant="secondary"
+              className="rounded-full border border-slate-200 bg-white px-6 py-2 text-slate-800 hover:bg-blue-50/50 hover:text-blue-600"
+            >
+              <Plus className="h-4 w-4" />
+              Upload Video
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </BentoCard>
+  );
+}
+
+function PublicLinkCard({
+  profilePath,
+  username,
+}: {
+  profilePath: string;
+  username: string;
+}) {
+  return (
+    <BentoCard className="bg-gradient-to-br from-blue-50 to-white lg:col-span-1">
+      <div className="flex h-full flex-col justify-between gap-6">
+        <div>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Public Link
+            </p>
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+              <Share2 className="h-4 w-4" />
+            </span>
+          </div>
+          <h3 className="mt-5 truncate text-xl font-semibold text-slate-800">{profilePath}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Bagikan profil creator, link penting, bio, dan portfolio video ke client.
+          </p>
+        </div>
+        <ShareProfileActions username={username} iconOnlyOnMobile />
+      </div>
+    </BentoCard>
+  );
+}
+
+function StatCard({ item }: { item: MetricCard }) {
+  const Icon = item.icon;
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50/50 text-blue-600">
+        <Icon className="h-5 w-5" />
+      </span>
+      <p className="mt-4 text-sm font-medium text-slate-500">{item.label}</p>
+      <p className="mt-1 text-3xl font-semibold tracking-[-0.03em] text-slate-800">
+        {formatNumber(item.value)}
+      </p>
+      <p className="mt-1 text-xs leading-5 text-slate-500">{item.helper}</p>
+    </div>
+  );
+}
+
+function StatsGrid({ metricCards }: { metricCards: MetricCard[] }) {
+  return (
+    <section className="lg:col-span-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {metricCards.map((item) => (
+          <StatCard key={item.label} item={item} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AnalyticsChartCard() {
+  return (
+    <BentoCard className="lg:col-span-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+            Analytics Trafik
+          </p>
+          <h3 className="mt-1 text-xl font-semibold text-slate-800">Performa kunjungan publik</h3>
+        </div>
+        <span className="rounded-full border border-slate-200 bg-blue-50/50 px-3 py-1 text-xs font-semibold text-blue-600">
+          7 hari terakhir
+        </span>
+      </div>
+
+      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="relative h-64">
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white via-blue-50/50 to-transparent" />
+          <div className="absolute inset-0 grid grid-rows-4">
+            <span className="border-b border-slate-200" />
+            <span className="border-b border-slate-200" />
+            <span className="border-b border-slate-200" />
+            <span className="border-b border-slate-200" />
+          </div>
+          <svg
+            viewBox="0 0 640 220"
+            className="absolute inset-0 h-full w-full"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="trafficArea" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="rgb(37 99 235)" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="rgb(255 255 255)" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M0 178 C70 138 105 150 150 118 C205 78 242 102 295 74 C355 42 398 68 440 100 C488 136 530 118 640 56 L640 220 L0 220 Z"
+              fill="url(#trafficArea)"
+            />
+            <path
+              d="M0 178 C70 138 105 150 150 118 C205 78 242 102 295 74 C355 42 398 68 440 100 C488 136 530 118 640 56"
+              fill="none"
+              stroke="rgb(37 99 235)"
+              strokeLinecap="round"
+              strokeWidth="5"
+            />
+          </svg>
+        </div>
+      </div>
+    </BentoCard>
+  );
+}
+
+function QuickActionCard({ actions }: { actions: QuickAction[] }) {
+  return (
+    <BentoCard className="lg:col-span-1">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+        Quick Action
+      </p>
+      <h3 className="mt-1 text-xl font-semibold text-slate-800">Aksi utama creator</h3>
+      <div className="mt-5 space-y-3">
+        {actions.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link key={item.title} href={item.href} className="group block">
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 transition-colors hover:bg-blue-50/50">
+                <span
+                  className={cn(
+                    "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
+                    item.locked ? "bg-slate-100 text-slate-500" : "bg-blue-50/50 text-blue-600"
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-semibold text-slate-800">{item.title}</p>
+                    {item.locked ? (
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                        Locked
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
+                    {item.description}
+                  </p>
+                  <p className="mt-2 text-xs font-semibold text-blue-600">{item.cta}</p>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </BentoCard>
+  );
 }
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
@@ -104,9 +329,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const normalizedLinks = normalizeCustomLinks(user.customLinks);
   const activeLinks = normalizedLinks.filter((link) => link.enabled !== false);
-  const publicVideos = myVideos.filter(
-    (video) => video.visibility === "public"
-  );
+  const publicVideos = myVideos.filter((video) => video.visibility === "public");
   const profilePath = `/creator/${user.username || "creator"}`;
 
   const totalViews = isDatabaseConfigured
@@ -132,7 +355,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       })()
     : 0;
 
-  const metricCards = [
+  const metricCards: MetricCard[] = [
     {
       label: "Total Link",
       value: activeLinks.length,
@@ -157,7 +380,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       helper: "Event analytics profil dan video",
       icon: MousePointerClick,
     },
-  ] as const;
+  ];
 
   const quickActions: QuickAction[] = [
     {
@@ -194,126 +417,18 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {onboarding.onboardingSkipped && !onboarding.onboardingCompleted ? (
         <OnboardingReminderCard userId={user.id} resumeHref="/dashboard?onboarding=1" />
       ) : null}
 
-      <Card className="dashboard-clean-card overflow-hidden border-[#cfddf5] bg-white p-0">
-        <div className="grid gap-0 lg:grid-cols-[1.18fr_0.82fr]">
-          <div className="p-5 sm:p-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#cfe0ff] bg-[#edf4ff] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#2f73ff]">
-              <Sparkles className="h-3.5 w-3.5" />
-              Dashboard Creator
-            </div>
-            <h1 className="mt-4 max-w-3xl font-display text-3xl font-semibold tracking-[-0.04em] text-[#142033] sm:text-4xl">
-              Selamat datang, {user.name || "Creator"}
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#55709d] sm:text-base">
-              Kelola link publik, video portfolio, analytics, dan billing dalam satu workspace yang rapi.
-            </p>
-            <div className="mt-5 flex flex-wrap items-center gap-2">
-              <Link href={canUseBuildLink ? "/dashboard/link-builder" : "/dashboard/billing"}>
-                <Button>
-                  {canUseBuildLink ? <Wand2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                  {canUseBuildLink ? "Mulai Build Link" : "Unlock Build Link"}
-                </Button>
-              </Link>
-              <Link href="/dashboard/videos/new">
-                <Button variant="secondary">
-                  <Plus className="h-4 w-4" />
-                  Upload Video
-                </Button>
-              </Link>
-            </div>
-          </div>
-          <div className="border-t border-[#dbe7f8] bg-[radial-gradient(circle_at_top_right,#dceaff,transparent_36%),linear-gradient(180deg,#f8fbff,#edf4ff)] p-5 sm:p-7 lg:border-l lg:border-t-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#55709d]">
-              Public Creator Page
-            </p>
-            <div className="mt-3 rounded-[1.35rem] border border-[#cfe0ff] bg-white/88 p-4 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#142033]">{profilePath}</p>
-                  <p className="mt-1 text-xs text-[#6078a2]">Share profil ke client, bio, dan social media.</p>
-                </div>
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2f73ff] text-white">
-                  <Share2 className="h-4 w-4" />
-                </span>
-              </div>
-              <div className="mt-4">
-                <ShareProfileActions username={user.username || "creator"} iconOnlyOnMobile />
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <section className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 xl:grid-cols-4">
-        {metricCards.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Card key={item.label} className="dashboard-kpi-card p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf4ff] text-[#2f73ff]">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="rounded-full border border-[#d6e4fb] bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6078a2]">
-                  Insight
-                </span>
-              </div>
-              <p className="mt-4 text-sm font-semibold text-[#55709d]">{item.label}</p>
-              <p className="mt-1 font-display text-3xl font-semibold tracking-[-0.04em] text-[#142033]">
-                {formatNumber(item.value)}
-              </p>
-              <p className="mt-1 hidden text-xs leading-5 text-[#6078a2] sm:block">{item.helper}</p>
-            </Card>
-          );
-        })}
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-        <CreatorTrafficPanel compact periodMode="dashboard" />
-
-        <Card className="dashboard-clean-card border-[#cfddf5] bg-white p-4 sm:p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#2f73ff]">
-                Quick Action
-              </p>
-              <h2 className="mt-1 text-xl font-semibold text-[#142033]">Aksi utama creator</h2>
-            </div>
-          </div>
-          <div className="mt-4 grid gap-2 min-[390px]:grid-cols-2 xl:grid-cols-1">
-            {quickActions.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.title} href={item.href} className="group block">
-                  <div className="flex h-full items-center gap-3 rounded-2xl border border-[#dbe7f8] bg-[#f8fbff] p-3 transition group-hover:-translate-y-0.5 group-hover:border-[#a8c8ff] group-hover:bg-white group-hover:shadow-sm">
-                    <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${item.locked ? "bg-amber-50 text-amber-600" : "bg-[#edf4ff] text-[#2f73ff]"}`}>
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate text-sm font-semibold text-[#142033]">{item.title}</p>
-                        {item.locked ? (
-                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                            Locked
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#6078a2]">{item.description}</p>
-                    </div>
-                    <span className="hidden rounded-full border border-[#d6e4fb] bg-white px-3 py-1.5 text-xs font-semibold text-[#2f73ff] sm:inline-flex">
-                      {item.cta}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </Card>
-      </section>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <HeroCard userName={user.name} canUseBuildLink={canUseBuildLink} />
+        <PublicLinkCard profilePath={profilePath} username={user.username || "creator"} />
+        <StatsGrid metricCards={metricCards} />
+        <AnalyticsChartCard />
+        <QuickActionCard actions={quickActions} />
+      </div>
     </div>
   );
 }

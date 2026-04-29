@@ -5,8 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart3,
-  ChevronLeft,
-  ChevronRight,
   CreditCard,
   Film,
   Home,
@@ -34,7 +32,15 @@ type NavItem = {
   matchPrefix?: string;
 };
 
-const SIDEBAR_STORAGE_KEY = "showreels.sidebar.collapsed";
+const routeLabels: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/dashboard/link-builder": "Build Link",
+  "/dashboard/videos": "Upload Video",
+  "/dashboard/analytics": "Analytics",
+  "/dashboard/billing": "Billing",
+  "/dashboard/profile": "Profile",
+  "/dashboard/settings": "Settings",
+};
 
 export function DashboardShell({
   children,
@@ -58,17 +64,6 @@ export function DashboardShell({
   const planLabel =
     planName === "business" ? "Business" : planName === "creator" ? "Creator" : "Free";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-
-    try {
-      return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
 
   const primaryNavItems: NavItem[] =
     mode === "admin"
@@ -104,29 +99,11 @@ export function DashboardShell({
     icon: LifeBuoy,
   };
 
-  const sidebarWidthClass = collapsed
-    ? "lg:w-[var(--dashboard-sidebar-collapsed-width)] lg:min-w-[var(--dashboard-sidebar-collapsed-width)] lg:max-w-[var(--dashboard-sidebar-collapsed-width)]"
-    : "lg:w-[var(--dashboard-sidebar-width)] lg:min-w-[var(--dashboard-sidebar-width)] lg:max-w-[var(--dashboard-sidebar-width)]";
-
   const isNavItemActive = (item: NavItem) => {
-    if (item.matchPrefix) {
-      return pathname.startsWith(item.matchPrefix);
-    }
-
-    if (item.href === "/dashboard" || item.href === "/admin") {
-      return pathname === item.href;
-    }
-
+    if (item.matchPrefix) return pathname.startsWith(item.matchPrefix);
+    if (item.href === "/dashboard" || item.href === "/admin") return pathname === item.href;
     return pathname === item.href || pathname.startsWith(`${item.href}/`);
   };
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? "1" : "0");
-    } catch {
-      // Ignore storage write errors.
-    }
-  }, [collapsed]);
 
   useEffect(() => {
     if (authStatus !== "login") return;
@@ -149,15 +126,11 @@ export function DashboardShell({
     if (!mobileMenuOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMobileMenuOpen(false);
-      }
+      if (event.key === "Escape") setMobileMenuOpen(false);
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [mobileMenuOpen]);
 
   const authProfileHref = useMemo(
@@ -165,279 +138,168 @@ export function DashboardShell({
     [user.username]
   );
 
+  const breadcrumbLabel =
+    routeLabels[pathname] ||
+    routeLabels[Object.keys(routeLabels).find((route) => pathname.startsWith(`${route}/`)) || ""] ||
+    "Dashboard";
+
   const handleSignOut = async () => {
     await supabase?.auth.signOut();
     window.location.replace("/");
   };
 
-  const renderDesktopNavItem = (item: NavItem) => {
+  const renderNavItem = (item: NavItem, mobile = false) => {
     const Icon = item.icon;
     const active = isNavItemActive(item);
 
     return (
       <Link
-        key={item.href}
+        key={`${mobile ? "mobile" : "desktop"}-${item.href}`}
         href={item.href}
-        title={collapsed ? item.label : undefined}
-        aria-label={item.label}
+        onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
         className={cn(
-          "group relative flex items-center rounded-xl transition-colors",
-          collapsed ? "h-10 justify-center" : "h-10 gap-2.5 px-3",
+          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
           active
-            ? "bg-[#2f73ff] text-white shadow-[0_12px_24px_rgba(47,115,255,0.28)]"
-            : "text-[#4f658f] hover:bg-[#eef4ff] hover:text-[#1f3f6f]"
+            ? "bg-blue-50/80 text-blue-600"
+            : "text-slate-500 hover:bg-blue-50/50 hover:text-blue-600"
         )}
       >
-        <Icon className={cn("h-4 w-4", active ? "text-white" : "text-[#4f73a8]")} />
-        {!collapsed ? <span className="truncate text-sm font-medium">{item.label}</span> : null}
-        {collapsed ? (
-          <span className="pointer-events-none absolute left-[calc(100%+10px)] top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-lg border border-[#d8e4f8] bg-white px-2.5 py-1 text-xs font-medium text-[#2a3f64] shadow-md group-hover:block">
-            {item.label}
-          </span>
-        ) : null}
+        <Icon className={cn("h-4 w-4", active ? "text-blue-600" : "text-slate-400")} />
+        <span>{item.label}</span>
       </Link>
     );
   };
 
-  const renderMobileNavItem = (item: NavItem) => {
-    const Icon = item.icon;
-    const active = isNavItemActive(item);
-
-    return (
-      <Link
-        key={`mobile-${item.href}`}
-        href={item.href}
-        onClick={() => setMobileMenuOpen(false)}
-        className={cn(
-          "flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition",
-          active
-            ? "bg-[#2f73ff] text-white"
-            : "text-[#4f658f] hover:bg-[#eef4ff] hover:text-[#1f3f6f]"
-        )}
-      >
-        <span className="flex items-center gap-2">
-          <Icon className="h-4 w-4" />
-          {item.label}
+  const sidebarContent = (
+    <div className="flex h-full flex-col bg-white px-4 py-5">
+      <div className="flex items-center justify-between gap-3">
+        <AppLogo />
+        <span className="rounded-full border border-slate-200 bg-blue-50/50 px-2.5 py-1 text-[11px] font-semibold text-blue-600">
+          {planLabel}
         </span>
-      </Link>
-    );
-  };
+      </div>
 
-  return (
-    <div className="dashboard-shell dashboard-surface min-h-screen w-full overflow-x-hidden text-[#1d2333]">
-      <div className="flex min-h-screen w-full">
-        <aside className={cn("dashboard-sidebar hidden lg:flex lg:flex-col", sidebarWidthClass)}>
-          <div className="sidebar-content flex h-full flex-col px-3 py-4">
-            <div className={cn("flex items-center", collapsed ? "justify-center" : "justify-between gap-3")}> 
-              <AppLogo />
-              {!collapsed ? (
-                <span className="rounded-full border border-[#d9e4f8] bg-[#f4f8ff] px-2.5 py-1 text-[11px] font-semibold text-[#486896]">
-                  {planLabel}
-                </span>
-              ) : null}
-            </div>
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          Creator Mode
+        </p>
+        <p className="mt-1 text-sm font-semibold text-slate-800">{planLabel}: aktif</p>
+      </div>
 
-            <div
-              className={cn(
-                "mt-4 rounded-xl border border-[#dce6f8] bg-[#f8fbff]",
-                collapsed ? "px-2 py-2 text-center" : "p-3"
-              )}
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#627da6]">
-                Creator Mode
-              </p>
-              <p className="mt-1 text-sm font-semibold text-[#1f3f6f]">
-                {collapsed ? planLabel : `${planLabel} plan aktif`}
-              </p>
-            </div>
+      <div className="mt-6 flex min-h-0 flex-1 flex-col">
+        <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          Main Menu
+        </p>
+        <nav className="mt-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
+          {primaryNavItems.map((item) => renderNavItem(item))}
+        </nav>
 
-            <div className="mt-4 flex min-h-0 flex-1 flex-col">
-              <p
-                className={cn(
-                  "px-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#6a84ad]",
-                  collapsed ? "sr-only" : ""
-                )}
-              >
-                Main Menu
-              </p>
-              <nav className="mt-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
-                {primaryNavItems.map((item) => renderDesktopNavItem(item))}
-
-                {settingsNavItems.length > 0 ? (
-                  <div className="mt-4 border-t border-[#e1e9f8] pt-4">
-                    <p
-                      className={cn(
-                        "px-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#6a84ad]",
-                        collapsed ? "sr-only" : ""
-                      )}
-                    >
-                      Settings
-                    </p>
-                    <div className="mt-2 space-y-1">
-                      {settingsNavItems.map((item) => renderDesktopNavItem(item))}
-                    </div>
-                  </div>
-                ) : null}
-              </nav>
-
-              <div className="sidebar-footer mt-4 space-y-2 border-t border-[#e1e9f8] pt-4">
-                {renderDesktopNavItem(helpNavItem)}
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className={cn("dashboard-tap-target w-full", collapsed ? "px-0" : "justify-start px-3")}
-                  onClick={handleSignOut}
-                  aria-label={dictionary.logout}
-                  title={collapsed ? dictionary.logout : undefined}
-                >
-                  <LogOut className="h-4 w-4" />
-                  {!collapsed ? dictionary.logout : null}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
-          <header className="sticky top-0 z-30 border-b border-[#dbe4f6]/85 bg-white/92 backdrop-blur-xl">
-            <div className="flex w-full items-center justify-between gap-3 px-3 py-3 sm:px-4 lg:px-5">
-              <div className="flex min-w-0 items-center gap-2">
-                <button
-                  type="button"
-                  className="dashboard-tap-target hidden items-center justify-center rounded-xl border border-[#d3ddf2] bg-white text-[#2c4a80] shadow-sm lg:inline-flex"
-                  onClick={() => setCollapsed((prev) => !prev)}
-                  aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                >
-                  {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-                </button>
-                <button
-                  type="button"
-                  className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#d3ddf2] bg-white text-[#2c4a80] shadow-sm lg:hidden"
-                  onClick={() => setMobileMenuOpen((prev) => !prev)}
-                  aria-label="Open dashboard menu"
-                >
-                  {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                </button>
-                <span className="lg:hidden">
-                  <AppLogo />
-                </span>
-              </div>
-
-              <div className="hidden min-w-0 items-center gap-2.5 md:flex">
-                <Link
-                  href={authProfileHref}
-                  target="_blank"
-                  className="rounded-full border border-[#d5e0f5] bg-[#f8fbff] px-3 py-2 text-xs font-semibold text-[#2f73ff] shadow-sm transition hover:border-[#a8c2f3] hover:bg-white"
-                >
-                  {displayUsername}
-                </Link>
-                <div className="flex items-center gap-2 rounded-full border border-[#d5e0f5] bg-white px-3 py-2 shadow-sm">
-                  <AvatarBadge
-                    name={user.name || "Creator"}
-                    avatarUrl={user.image || ""}
-                    crop={{
-                      x: user.avatarCropX,
-                      y: user.avatarCropY,
-                      zoom: user.avatarCropZoom,
-                    }}
-                    size="sm"
-                  />
-                  <p className="max-w-[200px] truncate whitespace-nowrap text-sm font-semibold text-[#201b18]">
-                    {user.email}
-                  </p>
-                </div>
-              </div>
-
-              <Link
-                href={authProfileHref}
-                target="_blank"
-                className="rounded-full border border-[#d5e0f5] bg-[#f8fbff] px-3 py-2 text-xs font-semibold text-[#2f73ff] shadow-sm md:hidden"
-              >
-                {displayUsername}
-              </Link>
-            </div>
-          </header>
-
-          {mobileMenuOpen ? (
-            <div className="fixed inset-0 z-40 bg-[#1c2438]/42 lg:hidden">
-              <button
-                type="button"
-                className="absolute inset-0 h-full w-full cursor-default"
-                onClick={() => setMobileMenuOpen(false)}
-                aria-label="Close menu backdrop"
-              />
-              <div className="absolute left-0 top-0 flex h-full w-[84vw] max-w-[360px] flex-col border-r border-[#cfdbf2] bg-white p-4 shadow-2xl">
-                <div className="mb-5 flex items-center justify-between">
-                  <AppLogo />
-                  <button
-                    type="button"
-                    className="dashboard-tap-target inline-flex items-center justify-center rounded-xl border border-[#d3ddf2] bg-white text-[#2c4a80]"
-                    onClick={() => setMobileMenuOpen(false)}
-                    aria-label="Close menu"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <div className="mb-4 rounded-2xl border border-[#d2ddf3] bg-[#f8fbff] p-3">
-                  <div className="flex items-center gap-2">
-                    <AvatarBadge
-                      name={user.name || "Creator"}
-                      avatarUrl={user.image || ""}
-                      crop={{
-                        x: user.avatarCropX,
-                        y: user.avatarCropY,
-                        zoom: user.avatarCropZoom,
-                      }}
-                      size="sm"
-                    />
-                    <p className="min-w-0 truncate whitespace-nowrap text-sm font-semibold text-[#201b18]">
-                      {displayUsername}
-                    </p>
-                  </div>
-                  <p className="mt-1 truncate text-xs text-[#6a84ad]">{user.email}</p>
-                </div>
-
-                <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-                  <div>
-                    <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#6a84ad]">
-                      Main Menu
-                    </p>
-                    <div className="space-y-1">
-                      {primaryNavItems.map((item) => renderMobileNavItem(item))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#6a84ad]">
-                      Settings
-                    </p>
-                    <div className="space-y-1">
-                      {settingsNavItems.map((item) => renderMobileNavItem(item))}
-                      {renderMobileNavItem(helpNavItem)}
-                    </div>
-                  </div>
-                </nav>
-
-                <div className="mt-4 border-t border-[#e0e7f5] pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-4">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="min-h-11 w-full justify-start"
-                    onClick={handleSignOut}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    {dictionary.logout}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="dashboard-shell-layout">
-            <main className="dashboard-main dashboard-stack dashboard-compact-mobile flex-1">{children}</main>
+        <div className="mt-5 border-t border-slate-200 pt-5">
+          <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Settings
+          </p>
+          <div className="mt-2 space-y-1">
+            {settingsNavItems.map((item) => renderNavItem(item))}
+            {renderNavItem(helpNavItem)}
           </div>
         </div>
+
+        <div className="mt-4 border-t border-slate-200 pt-4">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="w-full justify-start rounded-xl border-slate-200 bg-white text-slate-500 hover:bg-blue-50/50 hover:text-blue-600"
+            onClick={handleSignOut}
+            aria-label={dictionary.logout}
+          >
+            <LogOut className="h-4 w-4" />
+            {dictionary.logout}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-slate-200 bg-white lg:block">
+        {sidebarContent}
+      </aside>
+
+      <header className="fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur lg:left-64">
+        <div className="flex h-16 items-center justify-between gap-3 px-4 md:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm lg:hidden"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open dashboard menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div className="hidden lg:block">
+              <p className="text-xs font-medium text-slate-500">Dashboard / {breadcrumbLabel}</p>
+              <h1 className="text-base font-semibold text-slate-800">Dashboard Kreator</h1>
+            </div>
+            <span className="lg:hidden">
+              <AppLogo />
+            </span>
+          </div>
+
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Link
+              href={authProfileHref}
+              target="_blank"
+              className="hidden rounded-full border border-slate-200 bg-blue-50/50 px-3 py-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 md:inline-flex"
+            >
+              {displayUsername}
+            </Link>
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 shadow-sm md:px-3">
+              <AvatarBadge
+                name={user.name || "Creator"}
+                avatarUrl={user.image || ""}
+                crop={{
+                  x: user.avatarCropX,
+                  y: user.avatarCropY,
+                  zoom: user.avatarCropZoom,
+                }}
+                size="sm"
+              />
+              <p className="hidden max-w-[180px] truncate text-sm font-semibold text-slate-800 sm:block">
+                {user.email}
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {mobileMenuOpen ? (
+        <div className="fixed inset-0 z-50 bg-slate-900/35 lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 h-full w-full cursor-default"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close menu backdrop"
+          />
+          <div className="absolute left-0 top-0 h-full w-[84vw] max-w-[360px] border-r border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 p-4">
+              <AppLogo />
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="h-[calc(100%-73px)] overflow-y-auto">{sidebarContent}</div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="min-h-screen pt-16 lg:pl-64">
+        <main className="p-4 md:p-8">{children}</main>
       </div>
     </div>
   );
