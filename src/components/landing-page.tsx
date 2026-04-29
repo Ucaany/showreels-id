@@ -798,20 +798,6 @@ export function LandingPage({
                       @{currentUser.username || "creator"}
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    className="inline-flex min-h-11 items-center px-2 text-[0.95rem] font-semibold tracking-[-0.012em] text-black transition hover:text-slate-950"
-                    onClick={async () => {
-                      const supabase = createClient();
-                      await supabase?.auth.signOut();
-                      window.location.replace("/");
-                    }}
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      <LogOut className="h-4 w-4" />
-                      Sign out
-                    </span>
-                  </button>
                 </>
               ) : (
                 <>
@@ -1590,12 +1576,12 @@ export function LandingPage({
               <div className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_20px_48px_-34px_rgba(25,42,74,0.28)] sm:p-7 lg:p-9">
                 <div className="text-center">
                   <h3 className="font-display text-[clamp(1.45rem,3.2vw,2.25rem)] font-semibold tracking-[-0.03em] text-slate-950">
-                    {locale === "en" ? "Choose your perfect plan" : "Pilih paket terbaikmu"}
+                    {locale === "en" ? "Pick a plan" : "Pilih paket"}
                   </h3>
                   <p className="mt-2 text-sm text-slate-600 sm:text-base">
                     {locale === "en"
-                      ? "Pick once, then continue to secure checkout."
-                      : "Pilih paket yang cocok, lalu lanjutkan ke checkout pembayaran yang aman."}
+                      ? "Free, Creator, or Business. Checkout is simple."
+                      : "Free, Creator, atau Business. Checkout mudah."}
                   </p>
                 </div>
 
