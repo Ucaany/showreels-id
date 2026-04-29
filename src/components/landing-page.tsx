@@ -1220,28 +1220,22 @@ export function LandingPage({
             </div>
           </section>
 
-          <section className="relative overflow-hidden bg-gradient-to-b from-[#fafbfc] to-white py-16 sm:py-20 lg:py-24">
-            <div className="absolute left-0 top-0 h-64 w-64 rounded-full bg-[#eef5ff] opacity-30 blur-3xl" />
-            <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-[#f0f5ff] opacity-30 blur-3xl" />
-            
-            <div className="relative z-10 mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
-              <div className="text-center">
-                <Badge className={sectionBadgeClass}>
-                  {dictionary.landingHowItWorksBadge}
-                </Badge>
-                <h2 className="mt-4 font-display text-[2.5rem] sm:text-[3rem] lg:text-[3.5rem] font-extrabold leading-tight tracking-tight text-[#0f1419]">
-                  {dictionary.landingHowItWorksTitleLead}{" "}
-                  <span className="font-accent italic text-[#2f73ff]">
-                    {dictionary.landingHowItWorksTitleAccent}
-                  </span>
-                </h2>
-                <p className={centeredSectionDescriptionClass}>
-                  {dictionary.landingHowItWorksDescription}
-                </p>
-              </div>
+          <section className="mx-auto w-full max-w-[1160px] px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+            <div className="text-center">
+              <Badge className={sectionBadgeClass}>
+                {dictionary.landingHowItWorksBadge}
+              </Badge>
+              <h2 className={sectionTitleClass}>
+                {dictionary.landingHowItWorksTitleLead}{" "}
+                <span className={accentTextClass}>{dictionary.landingHowItWorksTitleAccent}</span>
+              </h2>
+              <p className={centeredSectionDescriptionClass}>
+                {dictionary.landingHowItWorksDescription}
+              </p>
+            </div>
 
-              <div className="relative mt-12 grid gap-8 lg:grid-cols-3 lg:gap-10 lg:gap-x-16">
-                {[
+            <div className="relative mt-10 grid gap-6 sm:gap-8 lg:grid-cols-3 lg:gap-12">
+              {[
                   {
                     label: dictionary.landingHowItWorksStep1Label,
                     title: dictionary.landingHowItWorksStep1Title,
@@ -1270,19 +1264,19 @@ export function LandingPage({
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
                       transition={{ duration: 0.4, delay: index * 0.15 }}
-                      className="relative overflow-hidden rounded-3xl border border-[#e8edf5] bg-white p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.12)] hover:-translate-y-1"
+                      className="relative rounded-2xl border border-[#e8edf5] bg-white p-5 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.1)] sm:p-6 lg:p-8"
                     >
-                      <div className="flex items-start justify-between">
-                        <span className="inline-flex items-center gap-2 rounded-lg bg-[#2f73ff] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="inline-flex items-center gap-2 rounded-lg bg-[#2f73ff] px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-white shadow-sm sm:px-4 sm:py-2 sm:text-xs">
                           {step.label}
                         </span>
 
-                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#dce7ff] to-[#c5d9ff] shadow-lg">
-                          <StepIcon className="h-10 w-10 text-[#2f66e4]" strokeWidth={2} />
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#e8f0ff] to-[#d5e5ff] sm:h-16 sm:w-16 lg:h-20 lg:w-20">
+                          <StepIcon className="h-7 w-7 text-[#2f66e4] sm:h-8 sm:w-8 lg:h-10 lg:w-10" strokeWidth={2} />
                         </div>
                       </div>
 
-                      <div className="mx-auto my-8 flex h-32 w-full items-center justify-center">
+                      <div className="mx-auto my-6 flex h-28 w-full items-center justify-center sm:my-7 sm:h-32 lg:my-8">
                         {index === 0 && (
                           <div className="flex flex-col items-center gap-3">
                             <div className="flex gap-2">
@@ -1322,17 +1316,17 @@ export function LandingPage({
                         )}
                       </div>
 
-                      <h3 className="mt-2 text-center text-2xl font-extrabold tracking-tight text-[#1a1a1a]">
+                      <h3 className="mt-3 text-center text-lg font-bold tracking-tight text-[#1d1714] sm:mt-4 sm:text-xl lg:text-2xl">
                         {step.title}
                       </h3>
 
-                      <p className="mt-3 text-center text-[0.95rem] leading-relaxed text-[#6b7280]">
+                      <p className="mt-2 text-center text-[0.875rem] leading-relaxed text-[#5c514b] sm:mt-3 sm:text-[0.95rem]">
                         {step.description}
                       </p>
 
                       {index < 2 && (
-                        <div className="absolute -right-12 top-1/2 z-10 hidden -translate-y-1/2 lg:block">
-                          <svg className="h-12 w-12 text-[#c5d4e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <div className="absolute -right-8 top-1/2 z-10 hidden -translate-y-1/2 lg:block xl:-right-10">
+                          <svg className="h-8 w-8 text-[#d1d5db] xl:h-10 xl:w-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </div>
