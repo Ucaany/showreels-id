@@ -1226,7 +1226,7 @@ export function LandingPage({
                 <Badge className={sectionBadgeClass}>
                   {dictionary.landingHowItWorksBadge}
                 </Badge>
-                <h2 className="mt-4 font-display text-[2.5rem] sm:text-[3rem] lg:text-[3.5rem] font-extrabold leading-tight tracking-tight text-[#0f1419]">
+                <h2 className="mt-4 font-display text-[2.25rem] sm:text-[2.75rem] lg:text-[3.25rem] font-extrabold leading-[1.12] tracking-tight text-[#0f1419]">
                   {dictionary.landingHowItWorksTitleLead}{" "}
                   <span className="font-accent italic text-[#2f73ff]">
                     {dictionary.landingHowItWorksTitleAccent}
