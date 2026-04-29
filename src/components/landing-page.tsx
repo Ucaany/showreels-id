@@ -692,12 +692,12 @@ export function LandingPage({
             : dictionary.landingHeroStatusIdle;
 
   const sectionBadgeClass =
-    "rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-eyebrow font-semibold uppercase text-slate-600 shadow-none";
+    "rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 text-eyebrow font-semibold uppercase text-sky-700 shadow-none";
   const sectionTitleClass =
     "mt-3 font-display text-section-display font-extrabold text-slate-950";
   const sectionDescriptionClass = "mt-3 max-w-3xl text-body-lg text-slate-600";
   const centeredSectionDescriptionClass = cn(sectionDescriptionClass, "mx-auto");
-  const accentTextClass = "font-accent text-slate-600";
+  const accentTextClass = "font-accent text-sky-700";
   const statusToneClass =
     usernameStatus === "available"
       ? "border-emerald-200 bg-emerald-50 text-emerald-800"
@@ -715,9 +715,11 @@ export function LandingPage({
           ? "bg-amber-500"
           : "bg-slate-400";
   const desktopLanguageLinkClass =
-    "inline-flex min-h-10 items-center px-1 text-[0.9rem] font-semibold text-black transition hover:text-slate-950";
+    "inline-flex min-h-8 items-center rounded-full px-3 text-[0.78rem] font-bold uppercase tracking-[0.08em] transition";
   const mobileLanguageLinkClass =
-    "inline-flex items-center px-1 py-1 text-[0.95rem] font-semibold text-black transition hover:text-slate-950";
+    "inline-flex min-h-8 items-center rounded-full px-3 text-[0.78rem] font-bold uppercase tracking-[0.08em] transition";
+  const activeLanguageClass = "bg-white text-sky-700 shadow-sm ring-1 ring-sky-100";
+  const inactiveLanguageClass = "text-slate-500 hover:bg-white/70 hover:text-slate-900";
 
   return (
     <LazyMotion features={domAnimation} strict>
@@ -754,13 +756,13 @@ export function LandingPage({
             </nav>
 
             <div className="hidden items-center gap-2.5 lg:flex">
-              <div className="inline-flex items-center gap-3">
+              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100/80 p-1 shadow-sm shadow-slate-900/5">
                 <button
                   type="button"
                   onClick={() => setLocale("id")}
                   className={cn(
                     desktopLanguageLinkClass,
-                    locale === "id" ? "border-b-2 border-black" : "border-b-2 border-transparent"
+                    locale === "id" ? activeLanguageClass : inactiveLanguageClass
                   )}
                   aria-label={`${dictionary.language} ID`}
                 >
@@ -771,7 +773,7 @@ export function LandingPage({
                   onClick={() => setLocale("en")}
                   className={cn(
                     desktopLanguageLinkClass,
-                    locale === "en" ? "border-b-2 border-black" : "border-b-2 border-transparent"
+                    locale === "en" ? activeLanguageClass : inactiveLanguageClass
                   )}
                   aria-label={`${dictionary.language} EN`}
                 >
@@ -893,13 +895,13 @@ export function LandingPage({
               </div>
 
               <div className="border-t border-slate-200 pt-5">
-                <div className="inline-flex items-center gap-4">
+                <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100/80 p-1 shadow-sm shadow-slate-900/5">
                   <button
                     type="button"
                     onClick={() => setLocale("id")}
                     className={cn(
                       mobileLanguageLinkClass,
-                      locale === "id" ? "border-b-2 border-black" : "border-b-2 border-transparent"
+                      locale === "id" ? activeLanguageClass : inactiveLanguageClass
                     )}
                     aria-label={`${dictionary.language} ID`}
                   >
@@ -910,7 +912,7 @@ export function LandingPage({
                     onClick={() => setLocale("en")}
                     className={cn(
                       mobileLanguageLinkClass,
-                      locale === "en" ? "border-b-2 border-black" : "border-b-2 border-transparent"
+                      locale === "en" ? activeLanguageClass : inactiveLanguageClass
                     )}
                     aria-label={`${dictionary.language} EN`}
                   >
@@ -1135,16 +1137,16 @@ export function LandingPage({
           >
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-7 sm:mb-8">
-                <Badge className="rounded-full border-0 bg-slate-100 px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider text-slate-700 shadow-none">
+                <Badge className={sectionBadgeClass}>
                   {dictionary.landingFeaturesBadge}
                 </Badge>
-                <h2 className="mt-3 font-display text-[1.55rem] sm:text-[1.8rem] lg:text-[2rem] font-extrabold leading-[1.12] tracking-tight text-slate-800">
+                <h2 className={sectionTitleClass}>
                   {dictionary.landingFeaturesTitleLead}{" "}
-                  <span className="bg-gradient-to-r from-slate-950 to-slate-500 bg-clip-text font-accent italic text-transparent">
+                  <span className={accentTextClass}>
                     {dictionary.landingFeaturesTitleAccent}
                   </span>
                 </h2>
-                <p className="mx-auto mt-2 max-w-[560px] text-[0.78rem] leading-relaxed text-slate-500 sm:text-[0.8125rem]">
+                <p className={centeredSectionDescriptionClass}>
                   {dictionary.landingFeaturesDescription}
                 </p>
               </div>
@@ -1157,17 +1159,17 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0 }}
-                  className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                  className="overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-md shadow-sky-900/5 transition-shadow hover:shadow-lg hover:shadow-sky-900/10"
                 >
                   {/* Cover */}
-                  <div className="h-20 bg-gradient-to-br from-slate-200 to-slate-400 sm:h-24" />
+                  <div className="h-20 bg-gradient-to-br from-sky-100 via-cyan-50 to-emerald-100 sm:h-24" />
                   
                   {/* Content */}
                   <div className="relative p-4 sm:p-5">
                     {/* Avatar */}
                     <div className="absolute -top-7 left-4 sm:-top-8 sm:left-5">
-                      <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 sm:h-16 sm:w-16">
-                        <UserRound className="h-7 w-7 text-slate-400 sm:h-8 sm:w-8" />
+                      <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-sky-50 sm:h-16 sm:w-16">
+                        <UserRound className="h-7 w-7 text-sky-600 sm:h-8 sm:w-8" />
                       </div>
                     </div>
                     
@@ -1182,7 +1184,7 @@ export function LandingPage({
                     {/* Skills */}
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {['Premiere Pro', 'Color Grading', 'Motion Graphics', 'Sound Design'].map((skill) => (
-                        <span key={skill} className="rounded-full bg-slate-100 px-2 py-1 text-[0.68rem] font-medium text-slate-700">
+                        <span key={skill} className="rounded-full bg-sky-50 px-2 py-1 text-[0.68rem] font-medium text-sky-700 ring-1 ring-sky-100">
                           {skill}
                         </span>
                       ))}
@@ -1201,11 +1203,11 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.1 }}
-                  className="bg-white rounded-2xl p-4 shadow-md transition-shadow hover:shadow-lg sm:p-5"
+                  className="rounded-2xl border border-cyan-100 bg-white p-4 shadow-md shadow-cyan-900/5 transition-shadow hover:shadow-lg hover:shadow-cyan-900/10 sm:p-5"
                 >
                   {/* Header */}
                   <div className="mb-3 flex items-center gap-2">
-                    <LinkIcon className="h-4 w-4 text-slate-700" />
+                    <LinkIcon className="h-4 w-4 text-cyan-600" />
                     <h3 className="text-base font-bold text-slate-800">Import dari Mana Saja</h3>
                   </div>
                   
@@ -1236,11 +1238,11 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.3 }}
-                  className="bg-white rounded-2xl p-4 shadow-md transition-shadow hover:shadow-lg sm:p-5"
+                  className="rounded-2xl border border-amber-100 bg-white p-4 shadow-md shadow-amber-900/5 transition-shadow hover:shadow-lg hover:shadow-amber-900/10 sm:p-5"
                 >
                   {/* Header */}
                   <div className="mb-3 flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-slate-700" />
+                    <Eye className="h-4 w-4 text-amber-600" />
                     <h3 className="text-base font-bold text-slate-800">Kontrol Visibilitas</h3>
                   </div>
                   
@@ -1250,12 +1252,12 @@ export function LandingPage({
                       { label: 'Draft', color: 'bg-slate-100 text-slate-600', icon: null, active: false },
                       { label: 'Private', color: 'bg-rose-50 text-rose-700', icon: Lock, active: false },
                       { label: 'Semi-Private', color: 'bg-amber-50 text-amber-700', icon: EyeOff, active: false },
-                      { label: 'Public', color: 'bg-slate-100 text-slate-700', icon: Globe, active: true },
+                      { label: 'Public', color: 'bg-emerald-50 text-emerald-700', icon: Globe, active: true },
                     ].map((status) => (
                       <div
                         key={status.label}
                         className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 transition-all ${
-                          status.active ? 'border-slate-900 bg-slate-100' : 'border-slate-200 hover:border-slate-300'
+                          status.active ? 'border-emerald-200 bg-emerald-50/70' : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
                         <div className={`w-4 h-4 rounded-full ${status.color.split(' ')[0]}`} />
@@ -1274,7 +1276,7 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
-                  className="bg-white rounded-2xl p-4 shadow-md transition-shadow hover:shadow-lg sm:col-span-2 sm:p-5 lg:col-span-1"
+                  className="rounded-2xl border border-violet-100 bg-white p-4 shadow-md shadow-violet-900/5 transition-shadow hover:shadow-lg hover:shadow-violet-900/10 sm:col-span-2 sm:p-5 lg:col-span-1"
                 >
                   {/* Header */}
                   <div className="mb-3">
@@ -1297,7 +1299,7 @@ export function LandingPage({
                     </div>
                     
                     {/* Video Thumbnail */}
-                    <div className="relative aspect-video bg-gradient-to-br from-slate-200 to-slate-300">
+                    <div className="relative aspect-video bg-gradient-to-br from-violet-100 via-sky-50 to-cyan-100">
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="group flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-zinc-900 transition-colors hover:bg-zinc-800">
                           <Play className="ml-0.5 h-5 w-5 text-white transition-transform group-hover:scale-110" fill="white" />
@@ -1393,16 +1395,16 @@ export function LandingPage({
             
             <div className="relative z-10 mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
               <div className="text-center">
-                <Badge className="rounded-full border-0 bg-slate-100 px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider text-slate-700 shadow-none">
+                <Badge className={sectionBadgeClass}>
                   {dictionary.landingHowItWorksBadge}
                 </Badge>
-                <h2 className="mt-3 font-display text-[1.55rem] sm:text-[1.8rem] lg:text-[2rem] font-extrabold leading-[1.12] tracking-tight text-slate-950">
+                <h2 className={sectionTitleClass}>
                   {dictionary.landingHowItWorksTitleLead}{" "}
-                  <span className="font-accent italic text-slate-700">
+                  <span className={accentTextClass}>
                     {dictionary.landingHowItWorksTitleAccent}
                   </span>
                 </h2>
-                <p className="mx-auto mt-3 max-w-[620px] text-[0.8125rem] leading-relaxed text-slate-600 sm:text-[0.875rem]">
+                <p className={centeredSectionDescriptionClass}>
                   {dictionary.landingHowItWorksDescription}
                 </p>
               </div>

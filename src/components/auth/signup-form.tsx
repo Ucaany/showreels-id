@@ -97,7 +97,7 @@ export function SignupForm({
       ? "/auth/login"
       : `/auth/login?next=${encodeURIComponent(safeNextPath)}`;
   const altActionClassName =
-    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#cad9f4] bg-white px-4 text-sm font-semibold text-[#1b365f] shadow-sm transition hover:bg-[#edf4ff] focus:outline-none focus:ring-2 focus:ring-[#b7d2ff] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-white px-4 text-sm font-semibold text-sky-800 shadow-sm shadow-sky-900/5 transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
@@ -247,9 +247,9 @@ export function SignupForm({
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#d6e2f7] sm:bg-[#f5f9ff] sm:p-4">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <UserRound className="h-4 w-4 text-[#2f73ff]" />
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-sky-100 sm:bg-sky-50/70 sm:p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <UserRound className="h-4 w-4 text-sky-600" />
             Nama Lengkap
           </label>
           <Input
@@ -265,9 +265,9 @@ export function SignupForm({
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#d6e2f7] sm:bg-[#f5f9ff] sm:p-4">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <UserRound className="h-4 w-4 text-[#2f73ff]" />
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-cyan-100 sm:bg-cyan-50/70 sm:p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <UserRound className="h-4 w-4 text-cyan-600" />
             Username
           </label>
           <Input
@@ -283,9 +283,9 @@ export function SignupForm({
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#d6e2f7] sm:bg-[#f5f9ff] sm:p-4">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <Mail className="h-4 w-4 text-[#2f73ff]" />
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-emerald-100 sm:bg-emerald-50/65 sm:p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <Mail className="h-4 w-4 text-emerald-600" />
             Email
           </label>
           <Input
@@ -301,9 +301,9 @@ export function SignupForm({
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#d6e2f7] sm:bg-[#f5f9ff] sm:p-4">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <LockKeyhole className="h-4 w-4 text-[#2f73ff]" />
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-violet-100 sm:bg-violet-50/55 sm:p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <LockKeyhole className="h-4 w-4 text-violet-600" />
             Password
           </label>
           <div className="relative">
@@ -320,7 +320,7 @@ export function SignupForm({
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#5a78ad] transition hover:text-[#2f73ff]"
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-violet-600 transition hover:text-violet-800"
               aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -331,9 +331,9 @@ export function SignupForm({
           </p>
         </div>
 
-        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-[#d6e2f7] sm:bg-[#f5f9ff] sm:p-4">
-          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-[#4c413b]">
-            <LockKeyhole className="h-4 w-4 text-[#2f73ff]" />
+        <div className="space-y-2 sm:rounded-2xl sm:border sm:border-amber-100 sm:bg-amber-50/60 sm:p-4">
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <LockKeyhole className="h-4 w-4 text-amber-600" />
             Konfirmasi Password
           </label>
           <div className="relative">
@@ -350,7 +350,7 @@ export function SignupForm({
             <button
               type="button"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#5a78ad] transition hover:text-[#2f73ff]"
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-amber-600 transition hover:text-amber-800"
               aria-label={showConfirmPassword ? "Sembunyikan password" : "Lihat password"}
             >
               {showConfirmPassword ? (
@@ -372,7 +372,7 @@ export function SignupForm({
         ) : null}
 
         <Button
-          className="w-full bg-[#2f73ff] text-white hover:bg-[#225fe0] focus-visible:ring-[#8eb3ff]"
+          className="w-full bg-sky-600 text-white shadow-sm shadow-sky-900/15 hover:bg-sky-700 focus-visible:ring-sky-200"
           type="submit"
           disabled={isFormDisabled}
         >
@@ -383,10 +383,10 @@ export function SignupForm({
               : dictionary.signup}
         </Button>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-[#7f726a]">
-          <span className="h-px bg-[#e0d6d0]" />
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-slate-500">
+          <span className="h-px bg-gradient-to-r from-transparent via-sky-200 to-cyan-100" />
           <span>atau</span>
-          <span className="h-px bg-[#e0d6d0]" />
+          <span className="h-px bg-gradient-to-r from-emerald-100 via-sky-200 to-transparent" />
         </div>
         <div className="space-y-2">
           {googleEnabled ? (
