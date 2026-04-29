@@ -22,7 +22,6 @@ import {
   Plus,
   Star,
   UserRound,
-  Video,
   X,
 } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
@@ -198,7 +197,6 @@ function PhonePreviewMockup({
   className,
   gradientClassName,
   name,
-  handle,
   avatarUrl,
   avatarText,
   rows,
@@ -300,16 +298,7 @@ function PhonePreviewMockup({
         >
           {name}
         </p>
-        <p
-          className={cn(
-            "relative z-10 text-center tracking-[-0.008em]",
-            compact ? "text-[0.72rem]" : "text-[0.86rem]",
-            isLightTone ? "text-white" : "text-slate-600"
-          )}
-        >
-          @{handle}
-        </p>
-
+ 
         <div
           className={cn(
             "relative z-10 shrink-0",
@@ -692,12 +681,12 @@ export function LandingPage({
             : dictionary.landingHeroStatusIdle;
 
   const sectionBadgeClass =
-    "rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 text-eyebrow font-semibold uppercase text-sky-700 shadow-none";
+    "rounded-full border border-[#dbe5ff] bg-[#eef4ff] px-2.5 py-1 text-eyebrow font-semibold uppercase text-[#1a46c9] shadow-none";
   const sectionTitleClass =
     "mt-3 font-display text-section-display font-extrabold text-slate-950";
   const sectionDescriptionClass = "mt-3 max-w-3xl text-body-lg text-slate-600";
   const centeredSectionDescriptionClass = cn(sectionDescriptionClass, "mx-auto");
-  const accentTextClass = "font-accent text-sky-700";
+  const accentTextClass = "font-accent text-[#1a46c9]";
   const statusToneClass =
     usernameStatus === "available"
       ? "border-emerald-200 bg-emerald-50 text-emerald-800"
@@ -718,7 +707,7 @@ export function LandingPage({
     "inline-flex min-h-8 items-center rounded-full px-3 text-[0.78rem] font-bold uppercase tracking-[0.08em] transition";
   const mobileLanguageLinkClass =
     "inline-flex min-h-8 items-center rounded-full px-3 text-[0.78rem] font-bold uppercase tracking-[0.08em] transition";
-  const activeLanguageClass = "bg-white text-sky-700 shadow-sm ring-1 ring-sky-100";
+  const activeLanguageClass = "bg-white text-[#1a46c9] shadow-sm ring-1 ring-[#dbe5ff]";
   const inactiveLanguageClass = "text-slate-500 hover:bg-white/70 hover:text-slate-900";
 
   return (
@@ -958,10 +947,10 @@ export function LandingPage({
           <section className="mx-auto w-full max-w-[1160px] overflow-visible px-4 pb-12 pt-16 sm:overflow-hidden sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
             <div className="grid items-center gap-9 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] lg:gap-11">
               <div className="mx-auto min-w-0 max-w-[36rem] text-center lg:mx-0 lg:text-left">
-                <Badge className="max-w-[calc(100vw-2rem)] overflow-hidden rounded-full border border-emerald-200 bg-emerald-50/85 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] !text-emerald-700 shadow-none backdrop-blur-[1px] sm:text-eyebrow">
+                <Badge className="max-w-[calc(100vw-2rem)] overflow-hidden rounded-full border border-[#dbe5ff] bg-[#eef4ff]/90 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] !text-[#1a46c9] shadow-none backdrop-blur-[1px] sm:text-eyebrow">
                   <span className="inline-flex max-w-full min-w-0 items-center gap-2">
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.14)]">
-                      <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/60" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#1a46c9] shadow-[0_0_0_3px_rgba(26,70,201,0.14)]">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-[#1a46c9]/45" />
                     </span>
                     <span className="min-w-0 truncate">{dictionary.landingHeroBadge}</span>
                   </span>
@@ -1014,7 +1003,7 @@ export function LandingPage({
                     </div>
                     <Button
                       type="submit"
-                      className="h-[2.62rem] w-full shrink-0 !shadow-none bg-zinc-900 px-4 font-bold text-white hover:bg-zinc-800 min-[380px]:w-[5.5rem] min-[380px]:px-2 sm:h-[2.85rem] sm:w-[6.8rem] sm:px-4"
+                      className="h-[2.62rem] w-full shrink-0 !shadow-none bg-[#1a46c9] px-4 font-bold text-white hover:bg-[#153aa8] min-[380px]:w-[5.5rem] min-[380px]:px-2 sm:h-[2.85rem] sm:w-[6.8rem] sm:px-4"
                       disabled={usernameStatus !== "available"}
                     >
                       {dictionary.landingHeroInputAction}
@@ -1080,7 +1069,7 @@ export function LandingPage({
                 />
 
                 <m.div
-                  className="absolute -left-7 top-9 hidden rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[0.84rem] shadow-sm lg:block"
+                  className="absolute -left-7 top-9 hidden rounded-xl border border-[#dbe5ff] bg-white px-3.5 py-2.5 text-[0.84rem] shadow-sm lg:block"
                   animate={prefersReducedMotion ? undefined : { y: [0, -8, 0] }}
                   transition={{
                     duration: 6.4,
@@ -1097,7 +1086,7 @@ export function LandingPage({
                   </p>
                 </m.div>
                 <m.div
-                  className="absolute -right-8 bottom-12 hidden rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[0.84rem] shadow-sm lg:block"
+                  className="absolute -right-8 bottom-12 hidden rounded-xl border border-[#dbe5ff] bg-white px-3.5 py-2.5 text-[0.84rem] shadow-sm lg:block"
                   animate={prefersReducedMotion ? undefined : { y: [0, 8, 0] }}
                   transition={{
                     duration: 6.8,
@@ -1109,8 +1098,8 @@ export function LandingPage({
                   <p className="text-slate-500">
                     {locale === "en" ? "Your link" : "Link kamu"}
                   </p>
-                  <p className="text-[1.05rem] font-semibold text-slate-950">
-                    {locale === "en" ? "your-username" : "username kamu"}
+                  <p className="text-[1.05rem] font-semibold text-[#1a46c9]">
+                    showreels.id
                   </p>
                 </m.div>
               </m.div>
@@ -1145,17 +1134,17 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0 }}
-                  className="overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-md shadow-sky-900/5 transition-shadow hover:shadow-lg hover:shadow-sky-900/10"
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md shadow-slate-900/5 transition-shadow hover:shadow-lg hover:shadow-[#1a46c9]/10"
                 >
                   {/* Cover */}
-                  <div className="h-20 bg-gradient-to-br from-sky-100 via-cyan-50 to-emerald-100 sm:h-24" />
+                  <div className="h-20 bg-gradient-to-br from-slate-100 via-white to-[#eef4ff] sm:h-24" />
                   
                   {/* Content */}
                   <div className="relative p-4 sm:p-5">
                     {/* Avatar */}
                     <div className="absolute -top-7 left-4 sm:-top-8 sm:left-5">
-                      <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-sky-50 sm:h-16 sm:w-16">
-                        <UserRound className="h-7 w-7 text-sky-600 sm:h-8 sm:w-8" />
+                      <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#eef4ff] sm:h-16 sm:w-16">
+                        <UserRound className="h-7 w-7 text-[#1a46c9] sm:h-8 sm:w-8" />
                       </div>
                     </div>
                     
@@ -1170,7 +1159,7 @@ export function LandingPage({
                     {/* Skills */}
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {['Premiere Pro', 'Color Grading', 'Motion Graphics', 'Sound Design'].map((skill) => (
-                        <span key={skill} className="rounded-full bg-sky-50 px-2 py-1 text-[0.68rem] font-medium text-sky-700 ring-1 ring-sky-100">
+                        <span key={skill} className="rounded-full bg-slate-50 px-2 py-1 text-[0.68rem] font-medium text-slate-700 ring-1 ring-slate-200">
                           {skill}
                         </span>
                       ))}
@@ -1189,11 +1178,11 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.1 }}
-                  className="rounded-2xl border border-cyan-100 bg-white p-4 shadow-md shadow-cyan-900/5 transition-shadow hover:shadow-lg hover:shadow-cyan-900/10 sm:p-5"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-900/5 transition-shadow hover:shadow-lg hover:shadow-[#1a46c9]/10 sm:p-5"
                 >
                   {/* Header */}
                   <div className="mb-3 flex items-center gap-2">
-                    <LinkIcon className="h-4 w-4 text-cyan-600" />
+                    <LinkIcon className="h-4 w-4 text-[#1a46c9]" />
                     <h3 className="text-base font-bold text-slate-800">Import dari Mana Saja</h3>
                   </div>
                   
@@ -1224,11 +1213,11 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.3 }}
-                  className="rounded-2xl border border-amber-100 bg-white p-4 shadow-md shadow-amber-900/5 transition-shadow hover:shadow-lg hover:shadow-amber-900/10 sm:p-5"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-900/5 transition-shadow hover:shadow-lg hover:shadow-[#1a46c9]/10 sm:p-5"
                 >
                   {/* Header */}
                   <div className="mb-3 flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-amber-600" />
+                    <Eye className="h-4 w-4 text-[#1a46c9]" />
                     <h3 className="text-base font-bold text-slate-800">Kontrol Visibilitas</h3>
                   </div>
                   
@@ -1262,7 +1251,7 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
-                  className="rounded-2xl border border-violet-100 bg-white p-4 shadow-md shadow-violet-900/5 transition-shadow hover:shadow-lg hover:shadow-violet-900/10 sm:col-span-2 sm:p-5 lg:col-span-1"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md shadow-slate-900/5 transition-shadow hover:shadow-lg hover:shadow-[#1a46c9]/10 sm:col-span-2 sm:p-5 lg:col-span-1"
                 >
                   {/* Header */}
                   <div className="mb-3">
@@ -1285,7 +1274,7 @@ export function LandingPage({
                     </div>
                     
                     {/* Video Thumbnail */}
-                    <div className="relative aspect-video bg-gradient-to-br from-violet-100 via-sky-50 to-cyan-100">
+                    <div className="relative aspect-video bg-gradient-to-br from-slate-100 via-white to-[#eef4ff]">
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="group flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-zinc-900 transition-colors hover:bg-zinc-800">
                           <Play className="ml-0.5 h-5 w-5 text-white transition-transform group-hover:scale-110" fill="white" />
@@ -1301,14 +1290,14 @@ export function LandingPage({
           <section className="border-y border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100 py-10 sm:py-12 lg:py-14">
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
               <div className="text-center">
-                <Badge className="rounded-full border-0 bg-slate-100 px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider text-slate-700 shadow-none">
+                <Badge className={sectionBadgeClass}>
                   {dictionary.landingPlatformBadge}
                 </Badge>
-                <h2 className="mt-3 font-display text-[1.55rem] sm:text-[1.8rem] lg:text-[2rem] font-extrabold leading-[1.12] tracking-tight text-slate-950">
+                <h2 className={sectionTitleClass}>
                   {dictionary.landingPlatformTitleLead}{" "}
-                  <span className="font-accent italic text-slate-700">{dictionary.landingPlatformTitleAccent}</span>
+                  <span className={accentTextClass}>{dictionary.landingPlatformTitleAccent}</span>
                 </h2>
-                <p className="mx-auto mt-3 max-w-[620px] text-[0.8125rem] leading-relaxed text-slate-600 sm:text-[0.875rem]">
+                <p className={cn(centeredSectionDescriptionClass, "max-w-[620px]")}>
                   {dictionary.landingPlatformDescription}
                 </p>
               </div>
@@ -1346,8 +1335,8 @@ export function LandingPage({
                               {locale === "en" ? "Publish and showcase your strongest video work." : "Tampilkan karya video terbaik dari channel utama kamu."}
                             </p>
                           </div>
-                          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[0.7rem] font-semibold text-emerald-700">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#eef4ff] px-3 py-1.5 text-[0.7rem] font-semibold text-[#1a46c9]">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#1a46c9]" />
                             {locale === "en" ? "Fully supported" : "Didukung Penuh"}
                           </div>
                         </div>
@@ -1559,12 +1548,12 @@ export function LandingPage({
           >
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
               <div className="text-center">
-                <Badge className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-eyebrow font-semibold uppercase text-slate-700 shadow-none">
+                <Badge className={sectionBadgeClass}>
                   {dictionary.landingPricingBadge}
                 </Badge>
                 <h2 className="mt-3 font-display text-section-display font-extrabold text-slate-950">
                   <span>{dictionary.landingPricingTitleLead}</span>{" "}
-                  <span className="font-accent text-slate-700">
+                  <span className={accentTextClass}>
                     {dictionary.landingPricingTitleAccent}
                   </span>
                 </h2>
@@ -1593,13 +1582,13 @@ export function LandingPage({
                       className={cn(
                         "relative flex h-full flex-col overflow-hidden rounded-[1.35rem] border p-5 transition hover:-translate-y-0.5 sm:p-6",
                         plan.featured
-                          ? "border-zinc-900 bg-slate-50 text-slate-950 shadow-sm"
+                          ? "border-[#1a46c9] bg-[#eef4ff] text-slate-950 shadow-sm"
                           : "border-slate-200 bg-white text-slate-950"
                       )}
                     >
                       {plan.featured ? (
-                        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-700">
-                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-zinc-900" />
+                        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-[#dbe5ff] bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#1a46c9]">
+                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#1a46c9]" />
                           {locale === "en" ? "Most popular" : "Paling populer"}
                         </span>
                       ) : null}
@@ -1620,7 +1609,7 @@ export function LandingPage({
 
                 <div className="mt-6 flex justify-center">
                   <Link href="/payment?plan=creator">
-                    <Button className="!shadow-none bg-zinc-900 px-6 font-extrabold text-white hover:bg-zinc-800">
+                    <Button className="!shadow-none bg-[#1a46c9] px-6 font-extrabold text-white hover:bg-[#153aa8]">
                       {locale === "en" ? "Choose plan & continue" : "Pilih paket & lanjutkan"}
                     </Button>
                   </Link>
@@ -1817,7 +1806,7 @@ export function LandingPage({
                 </Badge>
                 <h2 className="mt-5 font-display text-[clamp(1.88rem,8.2vw,4rem)] font-extrabold leading-[1.08] tracking-[-0.036em] text-white sm:text-[clamp(2rem,4.5vw,4rem)]">
                   {dictionary.landingFinalTitleLead}{" "}
-                  <span className="font-accent text-slate-300">
+                  <span className="font-accent text-[#8da8ff]">
                     {dictionary.landingFinalTitleAccent}
                   </span>{" "}
                   {dictionary.landingFinalTitleTail}
@@ -1828,7 +1817,7 @@ export function LandingPage({
 
                 <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
                   <Link href="/auth/signup" className="w-full sm:w-auto">
-                    <Button className="w-full !shadow-none bg-zinc-900 px-6 font-extrabold text-white hover:bg-zinc-800 sm:w-auto sm:min-w-[230px]">
+                    <Button className="w-full !shadow-none bg-[#1a46c9] px-6 font-extrabold text-white hover:bg-[#153aa8] sm:w-auto sm:min-w-[230px]">
                       {dictionary.landingFinalPrimaryCta}
                       <ArrowRight className="h-4 w-4" />
                     </Button>

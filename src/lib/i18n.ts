@@ -65,8 +65,8 @@ export const dictionaries = {
     landingPlatformDescription:
       "Hubungkan karya dari platform utama yang sudah dipakai creator sehari-hari, lalu tampilkan dalam halaman portfolio publikmu.",
     landingPricingBadge: "Harga",
-    landingPricingTitleLead: "Paket fleksibel untuk",
-    landingPricingTitleAccent: "creator yang berkembang.",
+    landingPricingTitleLead: "Paket simpel untuk",
+    landingPricingTitleAccent: "creator hebat.",
     landingPricingDescription:
       "Pilih paket Free, Creator, atau Business sesuai fase perkembanganmu, lalu lanjutkan checkout dengan alur pembayaran yang sederhana.",
     landingPricingMonthlyLabel: "Bulanan",
@@ -209,8 +209,8 @@ export const dictionaries = {
     landingPlatformDescription:
       "Connect your work from the most-used creator platforms and present everything in one public portfolio page.",
     landingPricingBadge: "Pricing",
-    landingPricingTitleLead: "Flexible plans for",
-    landingPricingTitleAccent: "growing creators.",
+    landingPricingTitleLead: "Simple plans for",
+    landingPricingTitleAccent: "great creators.",
     landingPricingDescription:
       "Choose Free, Creator, or Business based on your growth stage, then continue through a simple checkout flow.",
     landingPricingMonthlyLabel: "Monthly",
