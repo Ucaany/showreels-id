@@ -64,36 +64,36 @@ const PLATFORM_SOURCES = [
     name: "Google Drive",
     helper: "Drive",
     icon: SiGoogledrive,
-    bgClass: "from-[#edf4ff] to-[#dce8ff]",
-    textClass: "text-[#1d6fe7]",
+    brandColor: "#4285F4",
+    lightBg: "#E8F0FE",
   },
   {
     name: "YouTube",
     helper: "YouTube",
     icon: SiYoutube,
-    bgClass: "from-[#eef4ff] to-[#d9e8ff]",
-    textClass: "text-[#eb194b]",
+    brandColor: "#FF0000",
+    lightBg: "#FFEBEE",
   },
   {
     name: "Instagram",
     helper: "Instagram",
     icon: SiInstagram,
-    bgClass: "from-[#eef5ff] to-[#d9e8ff]",
-    textClass: "text-[#c3358d]",
+    brandColor: "#E4405F",
+    lightBg: "#FCE4EC",
   },
   {
     name: "Vimeo",
     helper: "Vimeo",
     icon: SiVimeo,
-    bgClass: "from-[#e7f1ff] to-[#d6e8ff]",
-    textClass: "text-[#1f7ee8]",
+    brandColor: "#1AB7EA",
+    lightBg: "#E1F5FE",
   },
   {
     name: "Facebook",
     helper: "Facebook",
     icon: SiFacebook,
-    bgClass: "from-[#edf4ff] to-[#d9e7ff]",
-    textClass: "text-[#1768e5]",
+    brandColor: "#1877F2",
+    lightBg: "#E3F2FD",
   },
 ] as const;
 
@@ -1186,25 +1186,29 @@ export function LandingPage({
                       viewport={{ once: true, amount: 0.4 }}
                       transition={{ duration: 0.25, delay: index * 0.05 }}
                       className={cn(
-                        "rounded-2xl border border-[#e5eaf2] bg-white p-5 text-center shadow-sm transition-all hover:shadow-md hover:-translate-y-1",
+                        "group relative overflow-hidden rounded-2xl border border-[#e8edf5] bg-white p-6 text-center shadow-[0_2px_12px_-2px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.1)] hover:-translate-y-2",
                         index === PLATFORM_SOURCES.length - 1 && "col-span-2 mx-auto w-full max-w-[calc(50%-0.5rem)] sm:col-span-1 sm:max-w-none"
                       )}
                     >
-                      <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-[#d5e1ff] bg-[#f0f4ff]">
-                        <span
-                          className={cn(
-                            "inline-flex items-center justify-center",
-                            platform.textClass
-                          )}
-                          aria-label={platform.name}
+                      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#f0f5ff] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                      
+                      <div className="relative z-10 mx-auto flex h-18 w-18 items-center justify-center rounded-full bg-gradient-to-br from-white to-[#f8faff] border-2 border-[#e0e8f5] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
+                        <div
+                          className="flex h-16 w-16 items-center justify-center rounded-full"
+                          style={{ backgroundColor: platform.lightBg }}
                         >
-                          <PlatformIcon className="h-6 w-6" />
-                        </span>
+                          <PlatformIcon
+                            className="h-8 w-8"
+                            style={{ color: platform.brandColor }}
+                            aria-label={platform.name}
+                          />
+                        </div>
                       </div>
-                      <p className="mt-3 text-[0.95rem] font-bold tracking-[-0.012em] text-[#1c273f] sm:text-[1rem]">
+                      
+                      <p className="relative z-10 mt-4 text-[0.95rem] font-bold tracking-[-0.012em] text-[#1c273f] sm:text-[1rem]">
                         {platform.name}
                       </p>
-                      <p className="mt-1.5 text-[0.8rem] leading-snug text-[#5f6d85] sm:text-[0.84rem]">
+                      <p className="relative z-10 mt-1.5 text-[0.8rem] leading-snug text-[#6b7280] sm:text-[0.84rem]">
                         {locale === "en"
                           ? "Supported source"
                           : "Sumber didukung"}
@@ -1216,78 +1220,127 @@ export function LandingPage({
             </div>
           </section>
 
-          <section className="mx-auto w-full max-w-[1160px] px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-            <div className="text-center">
-              <Badge className={sectionBadgeClass}>
-                {dictionary.landingHowItWorksBadge}
-              </Badge>
-              <h2 className={sectionTitleClass}>
-                {dictionary.landingHowItWorksTitleLead}{" "}
-                <span className={accentTextClass}>
-                  {dictionary.landingHowItWorksTitleAccent}
-                </span>
-              </h2>
-              <p className={centeredSectionDescriptionClass}>
-                {dictionary.landingHowItWorksDescription}
-              </p>
-            </div>
+          <section className="relative overflow-hidden bg-gradient-to-b from-[#fafbfc] to-white py-16 sm:py-20 lg:py-24">
+            <div className="absolute left-0 top-0 h-64 w-64 rounded-full bg-[#eef5ff] opacity-30 blur-3xl" />
+            <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-[#f0f5ff] opacity-30 blur-3xl" />
+            
+            <div className="relative z-10 mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
+              <div className="text-center">
+                <Badge className={sectionBadgeClass}>
+                  {dictionary.landingHowItWorksBadge}
+                </Badge>
+                <h2 className="mt-4 font-display text-[2.5rem] sm:text-[3rem] lg:text-[3.5rem] font-extrabold leading-tight tracking-tight text-[#0f1419]">
+                  {dictionary.landingHowItWorksTitleLead}{" "}
+                  <span className="font-accent italic text-[#2f73ff]">
+                    {dictionary.landingHowItWorksTitleAccent}
+                  </span>
+                </h2>
+                <p className={centeredSectionDescriptionClass}>
+                  {dictionary.landingHowItWorksDescription}
+                </p>
+              </div>
 
-            <div className="mt-8 grid gap-6 lg:grid-cols-3 lg:gap-8">
-              {[
-                {
-                  label: dictionary.landingHowItWorksStep1Label,
-                  title: dictionary.landingHowItWorksStep1Title,
-                  description: dictionary.landingHowItWorksStep1Description,
-                  icon: UserRound,
-                },
-                {
-                  label: dictionary.landingHowItWorksStep2Label,
-                  title: dictionary.landingHowItWorksStep2Title,
-                  description: dictionary.landingHowItWorksStep2Description,
-                  icon: PlayCircle,
-                },
-                {
-                  label: dictionary.landingHowItWorksStep3Label,
-                  title: dictionary.landingHowItWorksStep3Title,
-                  description: dictionary.landingHowItWorksStep3Description,
-                  icon: Check,
-                },
-              ].map((step, index) => {
-                const StepIcon = step.icon;
+              <div className="mt-12 grid gap-8 lg:grid-cols-3 lg:gap-10">
+                {[
+                  {
+                    label: dictionary.landingHowItWorksStep1Label,
+                    title: dictionary.landingHowItWorksStep1Title,
+                    description: dictionary.landingHowItWorksStep1Description,
+                    icon: UserRound,
+                  },
+                  {
+                    label: dictionary.landingHowItWorksStep2Label,
+                    title: dictionary.landingHowItWorksStep2Title,
+                    description: dictionary.landingHowItWorksStep2Description,
+                    icon: PlayCircle,
+                  },
+                  {
+                    label: dictionary.landingHowItWorksStep3Label,
+                    title: dictionary.landingHowItWorksStep3Title,
+                    description: dictionary.landingHowItWorksStep3Description,
+                    icon: Check,
+                  },
+                ].map((step, index) => {
+                  const StepIcon = step.icon;
 
-                return (
-                  <m.article
-                    key={step.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: 0.4, delay: index * 0.15 }}
-                    className="relative rounded-2xl border border-[#e5eaf2] bg-white p-6 text-center shadow-sm"
-                  >
-                    <span className="inline-flex items-center gap-2 rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#2f66e4]">
-                      {step.label}
-                    </span>
+                  return (
+                    <m.article
+                      key={step.label}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{ duration: 0.4, delay: index * 0.15 }}
+                      className="relative overflow-hidden rounded-3xl border border-[#e8edf5] bg-white p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.12)] hover:-translate-y-1"
+                    >
+                      <div className="flex items-start justify-between">
+                        <span className="inline-flex items-center gap-2 rounded-lg bg-[#2f73ff] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+                          {step.label}
+                        </span>
 
-                    <div className="mx-auto mt-5 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#eef5ff] to-[#d5e7ff]">
-                      <StepIcon className="h-8 w-8 text-[#2f66e4]" />
-                    </div>
-
-                    <h3 className="mt-4 text-xl font-bold text-[#1d1714]">
-                      {step.title}
-                    </h3>
-
-                    <p className="mt-2 text-sm leading-relaxed text-[#5c514b]">
-                      {step.description}
-                    </p>
-
-                    {index < 2 && (
-                      <div className="absolute -right-4 top-1/2 hidden -translate-y-1/2 lg:block">
-                        <ArrowRight className="h-6 w-6 text-[#cbd5e1]" />
+                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-[#dce7ff] to-[#c5d9ff] shadow-lg">
+                          <StepIcon className="h-10 w-10 text-[#2f66e4]" strokeWidth={2} />
+                        </div>
                       </div>
-                    )}
-                  </m.article>
-                );
-              })}
+
+                      <div className="mx-auto my-8 flex h-32 w-full items-center justify-center">
+                        {index === 0 && (
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="flex gap-2">
+                              <div className="h-8 w-20 rounded-lg border border-[#c5d9ff] bg-gradient-to-r from-[#e8f0ff] to-[#d5e5ff]" />
+                              <div className="h-8 w-20 rounded-lg border border-[#1e5fd9] bg-gradient-to-r from-[#2f73ff] to-[#1e5fd9]" />
+                              <div className="h-8 w-20 rounded-lg border border-[#c5d9ff] bg-gradient-to-r from-[#e8f0ff] to-[#d5e5ff]" />
+                            </div>
+                            <div className="flex items-center gap-2 rounded-full bg-[#1e1e1e] px-4 py-2 text-xs font-semibold text-white">
+                              <Check className="h-3 w-3" />
+                              Subscribe
+                            </div>
+                          </div>
+                        )}
+                        {index === 1 && (
+                          <div className="relative">
+                            <div className="flex h-24 w-32 items-center justify-center rounded-xl border-2 border-dashed border-[#2f73ff] bg-gradient-to-br from-[#f0f5ff] to-[#e0ebff]">
+                              <PlayCircle className="h-12 w-12 text-[#2f73ff] opacity-40" />
+                            </div>
+                            <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#2f73ff] shadow-lg">
+                              <Plus className="h-5 w-5 text-white" strokeWidth={3} />
+                            </div>
+                          </div>
+                        )}
+                        {index === 2 && (
+                          <div className="relative">
+                            <div className="h-28 w-36 rounded-xl border-2 border-[#e5eaf2] bg-white p-3 shadow-md">
+                              <div className="mb-2 h-2 w-full rounded bg-[#e8edf5]" />
+                              <div className="mb-2 h-2 w-3/4 rounded bg-[#e8edf5]" />
+                              <div className="mb-3 h-2 w-5/6 rounded bg-[#e8edf5]" />
+                              <div className="mb-1 h-1.5 w-full rounded bg-[#e8edf5]" />
+                              <div className="h-1.5 w-2/3 rounded bg-[#e8edf5]" />
+                            </div>
+                            <div className="absolute -bottom-3 -right-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#10b981] to-[#059669] shadow-lg">
+                              <Check className="h-7 w-7 text-white" strokeWidth={3} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <h3 className="mt-2 text-center text-2xl font-extrabold tracking-tight text-[#1a1a1a]">
+                        {step.title}
+                      </h3>
+
+                      <p className="mt-3 text-center text-[0.95rem] leading-relaxed text-[#6b7280]">
+                        {step.description}
+                      </p>
+
+                      {index < 2 && (
+                        <div className="absolute -right-5 top-1/2 hidden -translate-y-1/2 lg:block">
+                          <svg className="h-10 w-10 text-[#d1d5db]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                      )}
+                    </m.article>
+                  );
+                })}
+              </div>
             </div>
           </section>
 
