@@ -1130,66 +1130,66 @@ export function LandingPage({
           </section>
 
           <section
-            className="relative bg-slate-50 py-12 sm:py-16 lg:py-20"
+            className="relative bg-slate-50 py-10 sm:py-12 lg:py-14"
             id="features"
           >
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-10">
+              <div className="text-center mb-7 sm:mb-8">
                 <Badge className="rounded-full border-0 bg-[#eef5ff] px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider text-[#2f73ff] shadow-none">
                   {dictionary.landingFeaturesBadge}
                 </Badge>
-                <h2 className="mt-4 font-display text-[1.75rem] sm:text-[2rem] lg:text-[2.25rem] font-extrabold leading-[1.12] tracking-tight text-slate-800">
+                <h2 className="mt-3 font-display text-[1.55rem] sm:text-[1.8rem] lg:text-[2rem] font-extrabold leading-[1.12] tracking-tight text-slate-800">
                   {dictionary.landingFeaturesTitleLead}{" "}
                   <span className="bg-gradient-to-r from-[#2563eb] to-[#4f46e5] bg-clip-text font-accent italic text-transparent">
                     {dictionary.landingFeaturesTitleAccent}
                   </span>
                 </h2>
-                <p className="mx-auto mt-3 max-w-[620px] text-[0.8125rem] text-slate-500 sm:text-sm">
+                <p className="mx-auto mt-2 max-w-[560px] text-[0.78rem] leading-relaxed text-slate-500 sm:text-[0.8125rem]">
                   {dictionary.landingFeaturesDescription}
                 </p>
               </div>
 
               {/* Bento Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-stretch">
                 {/* Card 1: Profil Creator Publik (Hero) */}
                 <m.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0 }}
-                  className="sm:col-span-2 lg:col-span-2 lg:row-span-2 bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                  className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
                 >
                   {/* Cover */}
-                  <div className="h-32 sm:h-40 bg-gradient-to-br from-blue-500 to-indigo-600" />
+                  <div className="h-20 bg-gradient-to-br from-blue-500 to-indigo-600 sm:h-24" />
                   
                   {/* Content */}
-                  <div className="p-6 sm:p-8 relative">
+                  <div className="relative p-4 sm:p-5">
                     {/* Avatar */}
-                    <div className="absolute -top-10 sm:-top-12 left-6 sm:left-8">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-white bg-slate-200 flex items-center justify-center overflow-hidden">
-                        <UserRound className="w-10 h-10 sm:w-12 sm:h-12 text-slate-400" />
+                    <div className="absolute -top-7 left-4 sm:-top-8 sm:left-5">
+                      <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-200 sm:h-16 sm:w-16">
+                        <UserRound className="h-7 w-7 text-slate-400 sm:h-8 sm:w-8" />
                       </div>
                     </div>
                     
                     {/* Name & Bio */}
-                    <div className="mt-12 sm:mt-14">
-                      <h3 className="text-xl sm:text-2xl font-bold text-slate-800">Alex Johnson</h3>
-                      <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+                    <div className="mt-8 sm:mt-9">
+                      <h3 className="text-base font-bold text-slate-800 sm:text-lg">Alex Johnson</h3>
+                      <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
                         Professional video editor specializing in documentaries and commercials with 5+ years experience
                       </p>
                     </div>
                     
                     {/* Skills */}
-                    <div className="flex flex-wrap gap-2 mt-4 sm:mt-6">
+                    <div className="mt-3 flex flex-wrap gap-1.5">
                       {['Premiere Pro', 'Color Grading', 'Motion Graphics', 'Sound Design'].map((skill) => (
-                        <span key={skill} className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full text-xs font-medium">
+                        <span key={skill} className="rounded-full bg-blue-50 px-2 py-1 text-[0.68rem] font-medium text-blue-600">
                           {skill}
                         </span>
                       ))}
                     </div>
                     
                     {/* Button */}
-                    <button className="mt-6 sm:mt-8 w-full sm:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    <button className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700 sm:w-auto">
                       Contact Me
                     </button>
                   </div>
@@ -1201,16 +1201,16 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.1 }}
-                  className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow"
+                  className="bg-white rounded-2xl p-4 shadow-md transition-shadow hover:shadow-lg sm:p-5"
                 >
                   {/* Header */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <LinkIcon className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-lg font-bold text-slate-800">Import dari Mana Saja</h3>
+                  <div className="mb-3 flex items-center gap-2">
+                    <LinkIcon className="h-4 w-4 text-blue-600" />
+                    <h3 className="text-base font-bold text-slate-800">Import dari Mana Saja</h3>
                   </div>
                   
                   {/* Platform Icons */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2">
                     {[
                       { Icon: SiYoutube, color: '#FF0000', bg: '#FFE5E5', name: 'YouTube' },
                       { Icon: SiGoogledrive, color: '#4285F4', bg: '#E3F2FD', name: 'Drive' },
@@ -1224,7 +1224,7 @@ export function LandingPage({
                         className="flex items-center justify-center aspect-square rounded-xl hover:scale-110 transition-transform cursor-pointer"
                         style={{ backgroundColor: platform.bg }}
                       >
-                        <platform.Icon style={{ color: platform.color }} className="w-6 h-6" />
+                        <platform.Icon style={{ color: platform.color }} className="h-5 w-5" />
                       </div>
                     ))}
                   </div>
@@ -1236,16 +1236,16 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.3 }}
-                  className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow"
+                  className="bg-white rounded-2xl p-4 shadow-md transition-shadow hover:shadow-lg sm:p-5"
                 >
                   {/* Header */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <Eye className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-lg font-bold text-slate-800">Kontrol Visibilitas</h3>
+                  <div className="mb-3 flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-blue-600" />
+                    <h3 className="text-base font-bold text-slate-800">Kontrol Visibilitas</h3>
                   </div>
                   
                   {/* Status Options */}
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {[
                       { label: 'Draft', color: 'bg-slate-100 text-slate-600', icon: null, active: false },
                       { label: 'Private', color: 'bg-red-50 text-red-600', icon: Lock, active: false },
@@ -1254,15 +1254,15 @@ export function LandingPage({
                     ].map((status) => (
                       <div
                         key={status.label}
-                        className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                        className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 transition-all ${
                           status.active ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
                         <div className={`w-4 h-4 rounded-full ${status.color.split(' ')[0]}`} />
                         <div className="flex-1">
-                          <p className="font-semibold text-sm text-slate-800">{status.label}</p>
+                          <p className="text-xs font-semibold text-slate-800">{status.label}</p>
                         </div>
-                        {status.icon && <status.icon className="w-4 h-4 text-slate-400" />}
+                        {status.icon && <status.icon className="h-3.5 w-3.5 text-slate-400" />}
                       </div>
                     ))}
                   </div>
@@ -1274,12 +1274,12 @@ export function LandingPage({
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
-                  className="sm:col-span-2 lg:col-span-2 bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow"
+                  className="bg-white rounded-2xl p-4 shadow-md transition-shadow hover:shadow-lg sm:col-span-2 sm:p-5 lg:col-span-1"
                 >
                   {/* Header */}
-                  <div className="mb-4">
-                    <h3 className="text-lg font-bold text-slate-800">Halaman Publik per Slug</h3>
-                    <p className="text-sm text-slate-500 mt-1">Sajikan karyamu dengan profesional untuk dinilai klien.</p>
+                  <div className="mb-3">
+                    <h3 className="text-base font-bold text-slate-800">Halaman Publik per Slug</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">Sajikan karyamu dengan profesional untuk dinilai klien.</p>
                   </div>
                   
                   {/* Browser Mockup */}
@@ -1299,8 +1299,8 @@ export function LandingPage({
                     {/* Video Thumbnail */}
                     <div className="relative aspect-video bg-gradient-to-br from-slate-200 to-slate-300">
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer group">
-                          <Play className="w-8 h-8 text-white ml-1 group-hover:scale-110 transition-transform" fill="white" />
+                        <div className="group flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-blue-600 transition-colors hover:bg-blue-700">
+                          <Play className="ml-0.5 h-5 w-5 text-white transition-transform group-hover:scale-110" fill="white" />
                         </div>
                       </div>
                     </div>
