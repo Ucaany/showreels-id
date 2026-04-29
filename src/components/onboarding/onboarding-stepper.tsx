@@ -14,10 +14,14 @@ import {
   Globe,
   Link2,
   MessageCircle,
+  Pencil,
+  Plus,
   Music2,
   PlayCircle,
+  Trash2,
   UserRound,
   Video,
+  X,
 } from "lucide-react";
 import type { DbUserOnboarding } from "@/db/schema";
 import { Button } from "@/components/ui/button";
@@ -105,6 +109,36 @@ function buildPlatformUrl(platformId: string, rawValue: string) {
   return normalizeSocialUrl(value);
 }
 
+type OnboardingLinkDraft = {
+  title: string;
+  url: string;
+  platform: string;
+  enabled: boolean;
+};
+
+function createEmptyLinkDraft(platformId = "Website"): OnboardingLinkDraft {
+  const platform = getPlatformOption(platformId) ?? PLATFORM_OPTIONS[0];
+  return {
+    title: platform.defaultTitle,
+    url: "",
+    platform: platform.id,
+    enabled: true,
+  };
+}
+
+function normalizePayloadLinks(value: unknown, fallback: OnboardingLinkDraft[]): OnboardingLinkDraft[] {
+  if (!Array.isArray(value)) return fallback;
+  return value
+    .filter((item): item is Partial<OnboardingLinkDraft> => Boolean(item) && typeof item === "object")
+    .map((item) => ({
+      title: typeof item.title === "string" ? item.title : "",
+      url: typeof item.url === "string" ? item.url : "",
+      platform: typeof item.platform === "string" ? item.platform : "",
+      enabled: item.enabled !== false,
+    }))
+    .filter((item) => item.title.trim() || item.url.trim() || item.platform.trim());
+}
+
 function getProgressPayload(status: DbUserOnboarding) {
   if (!status.progressPayload || typeof status.progressPayload !== "object") {
     return {};
@@ -149,24 +183,17 @@ export function OnboardingStepper({
       : {};
   const payloadFirstLink =
     payload.firstLink && typeof payload.firstLink === "object"
-      ? (payload.firstLink as {
-          title?: string;
-          url?: string;
-          platform?: string;
-          enabled?: boolean;
-        })
+      ? (payload.firstLink as OnboardingLinkDraft)
       : {};
+  const fallbackLinks = normalizePayloadLinks(payloadFirstLink ? [payloadFirstLink] : [], []);
+  const payloadLinks = normalizePayloadLinks((payload as { links?: unknown }).links, fallbackLinks);
   const payloadOnboarding =
     payload.onboarding && typeof payload.onboarding === "object"
       ? (payload.onboarding as {
           wantsToAddFirstLink?: boolean;
         })
       : {};
-  const hasFirstLinkDraft = Boolean(
-    (payloadFirstLink.title || "").trim() ||
-      (payloadFirstLink.url || "").trim() ||
-      (payloadFirstLink.platform || "").trim()
-  );
+  const hasLinkDraft = payloadLinks.length > 0;
 
   const [step, setStep] = useState(Math.min(4, Math.max(1, initialStatus.currentStep || 1)));
   const [fullName, setFullName] = useState(payloadProfile.fullName || initialUser.fullName);
@@ -177,17 +204,15 @@ export function OnboardingStepper({
   const [coverImageUrl, setCoverImageUrl] = useState(
     payloadProfile.coverImageUrl || initialUser.coverImageUrl
   );
-  const [firstLinkTitle, setFirstLinkTitle] = useState(payloadFirstLink.title || "");
-  const [firstLinkUrl, setFirstLinkUrl] = useState(payloadFirstLink.url || "");
-  const [firstLinkPlatform, setFirstLinkPlatform] = useState(payloadFirstLink.platform || "");
-  const selectedPlatform = getPlatformOption(firstLinkPlatform);
-  const [firstLinkEnabled, setFirstLinkEnabled] = useState(
-    payloadFirstLink.enabled !== false
-  );
+  const [onboardingLinks, setOnboardingLinks] = useState<OnboardingLinkDraft[]>(payloadLinks);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [editingLinkIndex, setEditingLinkIndex] = useState<number | null>(null);
+  const [linkDraft, setLinkDraft] = useState<OnboardingLinkDraft>(createEmptyLinkDraft());
+  const selectedPlatform = getPlatformOption(linkDraft.platform);
   const [wantsToAddFirstLink, setWantsToAddFirstLink] = useState(
     typeof payloadOnboarding.wantsToAddFirstLink === "boolean"
       ? payloadOnboarding.wantsToAddFirstLink
-      : hasFirstLinkDraft
+      : hasLinkDraft
   );
   const [optionalMediaExpanded, setOptionalMediaExpanded] = useState(
     Boolean(payloadProfile.image || payloadProfile.coverImageUrl || initialUser.image || initialUser.coverImageUrl)
@@ -220,6 +245,47 @@ export function OnboardingStepper({
   }, [normalizedUsername, usernameState]);
   const stepIndex = STEP_ITEMS.findIndex((item) => item.id === step);
 
+  const getReadyOnboardingLinks = () =>
+    onboardingLinks
+      .map((link) => ({
+        ...link,
+        title: link.title.trim(),
+        url: buildPlatformUrl(link.platform, link.url),
+        platform: link.platform.trim(),
+      }))
+      .filter((link) => link.title && link.url);
+
+  const openLinkModal = (index?: number) => {
+    if (typeof index === "number") {
+      setEditingLinkIndex(index);
+      setLinkDraft(onboardingLinks[index] ?? createEmptyLinkDraft());
+    } else {
+      setEditingLinkIndex(null);
+      setLinkDraft(createEmptyLinkDraft());
+    }
+    setWantsToAddFirstLink(true);
+    setLinkModalOpen(true);
+  };
+
+  const saveLinkDraft = async () => {
+    const normalizedUrl = buildPlatformUrl(linkDraft.platform, linkDraft.url);
+    if (!linkDraft.platform.trim() || !linkDraft.title.trim() || !normalizedUrl) {
+      await showFeedbackAlert({ title: "Link belum lengkap", text: "Pilih platform, isi judul, dan lengkapi alamat link.", icon: "warning" });
+      return;
+    }
+    const nextDraft = { ...linkDraft, url: linkDraft.url.trim(), title: linkDraft.title.trim() };
+    setOnboardingLinks((prev) => {
+      if (editingLinkIndex === null) return [...prev, nextDraft];
+      return prev.map((item, index) => (index === editingLinkIndex ? nextDraft : item));
+    });
+    setLinkModalOpen(false);
+    setEditingLinkIndex(null);
+  };
+
+  const removeOnboardingLink = (index: number) => {
+    setOnboardingLinks((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+  };
+
   const saveProgress = async (input: {
     currentStep?: number;
     createFirstLink?: boolean;
@@ -227,13 +293,7 @@ export function OnboardingStepper({
   }) => {
     const shouldCreateFirstLink = Boolean(input.createFirstLink);
     const resolvedWantsToAddFirstLink = input.wantsToAddFirstLink ?? wantsToAddFirstLink;
-    const normalizedFirstLinkUrl = buildPlatformUrl(firstLinkPlatform, firstLinkUrl);
-    const firstLinkPayload = {
-      title: firstLinkTitle,
-      url: normalizedFirstLinkUrl,
-      platform: firstLinkPlatform,
-      enabled: firstLinkEnabled,
-    };
+    const readyLinks = getReadyOnboardingLinks();
 
     const response = await fetch("/api/onboarding/progress", {
       method: "PATCH",
@@ -242,33 +302,13 @@ export function OnboardingStepper({
         currentStep: input.currentStep ?? step,
         createFirstLink: shouldCreateFirstLink,
         wantsToAddFirstLink: resolvedWantsToAddFirstLink,
-        profile: {
-          fullName,
-          username: normalizedUsername,
-          role,
-          bio,
-          image,
-          coverImageUrl,
-        },
-        ...(shouldCreateFirstLink ? { firstLink: firstLinkPayload } : {}),
+        profile: { fullName, username: normalizedUsername, role, bio, image, coverImageUrl },
+        ...(shouldCreateFirstLink ? { links: readyLinks, firstLink: readyLinks[0] } : {}),
         progressPayload: {
-          profile: {
-            fullName,
-            username: normalizedUsername,
-            role,
-            bio,
-            image,
-            coverImageUrl,
-          },
-          onboarding: {
-            wantsToAddFirstLink: resolvedWantsToAddFirstLink,
-          },
-          firstLink: {
-            title: firstLinkTitle,
-            url: firstLinkUrl,
-            platform: firstLinkPlatform,
-            enabled: firstLinkEnabled,
-          },
+          profile: { fullName, username: normalizedUsername, role, bio, image, coverImageUrl },
+          onboarding: { wantsToAddFirstLink: resolvedWantsToAddFirstLink },
+          links: onboardingLinks,
+          firstLink: onboardingLinks[0],
         },
       }),
     });
@@ -311,35 +351,10 @@ export function OnboardingStepper({
   };
 
   const validateStepTwo = async () => {
-    if (!wantsToAddFirstLink) {
-      return true;
-    }
-
-    if (!firstLinkPlatform.trim()) {
-      await showFeedbackAlert({
-        title: "Pilih jenis link terlebih dahulu",
-        text: "Tentukan platform link utama sebelum lanjut.",
-        icon: "warning",
-      });
-      return false;
-    }
-
-    const normalizedUrl = buildPlatformUrl(firstLinkPlatform, firstLinkUrl);
-    if (!firstLinkTitle.trim() || !normalizedUrl) {
-      await showFeedbackAlert({
-        title: "Link pertama belum lengkap",
-        text: "Isi judul dan URL jika ingin menambahkan link pertama.",
-        icon: "warning",
-      });
-      return false;
-    }
-
-    if (!normalizedUrl.startsWith("http")) {
-      await showFeedbackAlert({
-        title: "URL belum valid",
-        text: "Gunakan URL yang diawali http:// atau https://.",
-        icon: "warning",
-      });
+    if (!wantsToAddFirstLink || onboardingLinks.length === 0) return true;
+    const invalidLink = onboardingLinks.find((link) => !link.platform.trim() || !link.title.trim() || !buildPlatformUrl(link.platform, link.url).startsWith("http"));
+    if (invalidLink) {
+      await showFeedbackAlert({ title: "Ada link belum valid", text: "Edit link yang belum lengkap sebelum lanjut.", icon: "warning" });
       return false;
     }
     return true;
@@ -358,7 +373,7 @@ export function OnboardingStepper({
       if (!valid) return;
     }
 
-    const createFirstLink = step === 2 && wantsToAddFirstLink;
+    const createFirstLink = step === 2 && wantsToAddFirstLink && onboardingLinks.length > 0;
     setBusy(true);
     const response = await saveProgress({
       currentStep: Math.min(4, step + 1),
@@ -568,10 +583,7 @@ export function OnboardingStepper({
     bio,
     image,
     coverImageUrl,
-    firstLinkTitle,
-    firstLinkUrl,
-    firstLinkPlatform,
-    firstLinkEnabled,
+    onboardingLinks,
     wantsToAddFirstLink,
   ]);
 
@@ -624,16 +636,27 @@ export function OnboardingStepper({
             ) : null}
 
             {step === 2 ? (
-              <div className="mt-4 grid gap-4 xl:grid-cols-[0.82fr_1.18fr]">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-sm font-semibold text-slate-900">Tambah link pertama?</p><p className="mt-1 text-sm leading-6 text-slate-500">Pilih satu link utama. Kamu tetap bisa melewati langkah ini dan menambahkannya nanti.</p><div className="mt-4 grid gap-2"><button type="button" onClick={() => setWantsToAddFirstLink(true)} className={cn("rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition", wantsToAddFirstLink ? "border-zinc-900 bg-white text-slate-950" : "border-slate-200 bg-white text-slate-600")}>Tambahkan link</button><button type="button" onClick={() => setWantsToAddFirstLink(false)} className={cn("rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition", !wantsToAddFirstLink ? "border-zinc-900 bg-white text-slate-950" : "border-slate-200 bg-white text-slate-600")}>Lewati dulu</button></div></div>
-                {wantsToAddFirstLink ? <div className="space-y-4"><div className="grid gap-2 min-[360px]:grid-cols-2 lg:grid-cols-3">{PLATFORM_OPTIONS.map((platform) => { const Icon = platform.icon; const active = firstLinkPlatform === platform.id; return <button key={platform.id} type="button" onClick={() => { setWantsToAddFirstLink(true); setFirstLinkPlatform(platform.id); setFirstLinkTitle(platform.defaultTitle); }} className={cn("flex min-h-12 items-center gap-2 rounded-2xl border p-3 text-left text-sm font-semibold transition", active ? "border-zinc-900 bg-slate-50 text-slate-950" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}><span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200"><Icon className={cn("h-4 w-4", platform.brandClassName)} /></span><span className="truncate">{platform.title}</span></button>; })}</div><div className="grid gap-3 sm:grid-cols-2"><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Judul tombol</label><Input value={firstLinkTitle} onChange={(event) => setFirstLinkTitle(event.target.value)} /></div><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">{selectedPlatform?.inputLabel || "URL"}</label><Input value={firstLinkUrl} onChange={(event) => setFirstLinkUrl(event.target.value)} placeholder={selectedPlatform?.inputPlaceholder || "https://..."} /><p className="mt-1 text-xs text-slate-500">{selectedPlatform?.helperText || "Pilih platform agar format link otomatis disesuaikan."}</p>{firstLinkPlatform && firstLinkUrl.trim() ? <p className="mt-1 truncate text-xs font-medium text-slate-700">Preview: {buildPlatformUrl(firstLinkPlatform, firstLinkUrl) || "Belum valid"}</p> : null}</div></div><label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={firstLinkEnabled} onChange={(event) => setFirstLinkEnabled(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-zinc-900 focus:ring-zinc-900" />Aktifkan link ini</label></div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">Link pertama dilewati. Kamu bisa lanjut ke preview.</div>}
+              <div className="mt-4 grid gap-4 xl:grid-cols-[0.74fr_1.26fr]">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">Tambah beberapa link</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">Buat daftar link secara compact. Form link dibuka dalam popup agar layar tetap rapi.</p>
+                  <div className="mt-4 grid gap-2">
+                    <button type="button" onClick={() => openLinkModal()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-zinc-900 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-800"><Plus className="h-4 w-4" />Tambah link</button>
+                    <button type="button" onClick={() => { setWantsToAddFirstLink(false); setOnboardingLinks([]); }} className={cn("rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition", !wantsToAddFirstLink ? "border-zinc-900 bg-white text-slate-950" : "border-slate-200 bg-white text-slate-600")}>Lewati dulu</button>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                  <div className="flex items-center justify-between gap-3 px-1 pb-3"><div><p className="text-sm font-semibold text-slate-900">Daftar link</p><p className="text-xs text-slate-500">{onboardingLinks.length ? `${onboardingLinks.length} link ditambahkan` : "Belum ada link"}</p></div><Button type="button" variant="secondary" onClick={() => openLinkModal()} className="min-h-9 px-3 text-xs"><Plus className="h-3.5 w-3.5" />Tambah</Button></div>
+                  {onboardingLinks.length ? <div className="grid gap-2 sm:grid-cols-2">{onboardingLinks.map((link, index) => { const platform = getPlatformOption(link.platform); const Icon = platform?.icon ?? Link2; return <div key={`${link.platform}-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-3"><div className="flex items-start gap-2"><span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200"><Icon className={cn("h-4 w-4", platform?.brandClassName)} /></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-900">{link.title || platform?.defaultTitle || "Link"}</p><p className="truncate text-xs text-slate-500">{buildPlatformUrl(link.platform, link.url) || platform?.title || "URL belum diisi"}</p></div></div><div className="mt-3 flex gap-2"><button type="button" onClick={() => openLinkModal(index)} className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700"><Pencil className="h-3.5 w-3.5" />Edit</button><button type="button" onClick={() => removeOnboardingLink(index)} className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-white px-2.5 py-2 text-rose-600"><Trash2 className="h-3.5 w-3.5" /></button></div></div>; })}</div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-sm text-slate-500">Klik Tambah link untuk memasukkan Website, Instagram, YouTube, WhatsApp, TikTok, atau link custom.</div>}
+                </div>
+                {linkModalOpen ? <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-3 backdrop-blur-sm sm:items-center"><div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-xl sm:p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Popup Link</p><h3 className="mt-1 text-xl font-semibold text-slate-950">{editingLinkIndex === null ? "Tambah link" : "Edit link"}</h3></div><button type="button" onClick={() => setLinkModalOpen(false)} className="rounded-full border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"><X className="h-4 w-4" /></button></div><div className="mt-4 grid gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3">{PLATFORM_OPTIONS.map((platform) => { const Icon = platform.icon; const active = linkDraft.platform === platform.id; return <button key={platform.id} type="button" onClick={() => setLinkDraft((prev) => ({ ...prev, platform: platform.id, title: prev.title || platform.defaultTitle }))} className={cn("flex items-center gap-2 rounded-2xl border p-3 text-left text-sm font-semibold transition", active ? "border-zinc-900 bg-slate-50 text-slate-950" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}><span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200"><Icon className={cn("h-4 w-4", platform.brandClassName)} /></span><span className="truncate">{platform.title}</span></button>; })}</div><div className="mt-4 grid gap-3 sm:grid-cols-2"><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Judul tombol</label><Input value={linkDraft.title} onChange={(event) => setLinkDraft((prev) => ({ ...prev, title: event.target.value }))} /></div><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">{selectedPlatform?.inputLabel || "URL"}</label><Input value={linkDraft.url} onChange={(event) => setLinkDraft((prev) => ({ ...prev, url: event.target.value }))} placeholder={selectedPlatform?.inputPlaceholder || "https://..."} /><p className="mt-1 text-xs text-slate-500">{selectedPlatform?.helperText || "Pilih platform agar format link otomatis disesuaikan."}</p>{linkDraft.url.trim() ? <p className="mt-1 truncate text-xs font-medium text-slate-700">Preview: {buildPlatformUrl(linkDraft.platform, linkDraft.url) || "Belum valid"}</p> : null}</div></div><label className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={linkDraft.enabled} onChange={(event) => setLinkDraft((prev) => ({ ...prev, enabled: event.target.checked }))} className="h-4 w-4 rounded border-slate-300 text-zinc-900 focus:ring-zinc-900" />Aktifkan link ini</label><div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end"><Button type="button" variant="secondary" onClick={() => setLinkModalOpen(false)} className="min-h-10">Batal</Button><Button type="button" onClick={() => void saveLinkDraft()} className="min-h-10">Simpan link</Button></div></div></div> : null}
               </div>
             ) : null}
 
             {step === 3 ? (
               <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">
-                <div className="grid gap-3 sm:grid-cols-2">{[["Nama", fullName || "Display Name"], ["Username", normalizedUsername ? `showreels.id/${normalizedUsername}` : "Belum valid"], ["Role", role || "Role / profession"], ["Link", wantsToAddFirstLink ? firstLinkTitle || "Link pertama" : "Belum ada link"]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p><p className="mt-2 truncate text-sm font-semibold text-slate-900">{value}</p></div>)}</div>
-                <div className="mx-auto w-full max-w-[320px] rounded-[28px] border-[8px] border-zinc-950 bg-zinc-950 p-3 shadow-sm"><div className="overflow-hidden rounded-[22px] bg-slate-50"><div className="h-[92px] w-full bg-gradient-to-b from-slate-200 to-slate-300">{coverImageUrl ? <img src={coverImageUrl} alt="Cover preview" className="h-full w-full object-cover" /> : null}</div><div className="px-4 pb-5"><div className="-mt-8 mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-zinc-900 text-white">{image ? <img src={image} alt="Avatar preview" className="h-full w-full object-cover" /> : <UserRound className="h-6 w-6" />}</div><p className="mt-3 text-center text-lg font-semibold text-slate-900">{fullName || "Display Name"}</p><p className="mt-1 text-center text-sm text-slate-500">{role || "Role / profession"}</p><p className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800">{bio || "Bio singkat akan muncul di sini."}</p><div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2"><p className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Link2 className="h-4 w-4" />{wantsToAddFirstLink ? firstLinkTitle || "Link pertama kamu" : "Belum ada link"}</p><p className="mt-1 truncate text-xs text-slate-500">{wantsToAddFirstLink ? buildPlatformUrl(firstLinkPlatform, firstLinkUrl) || "https://..." : "Tambahkan nanti dari dashboard."}</p></div></div></div></div>
+                <div className="grid gap-3 sm:grid-cols-2">{[["Nama", fullName || "Display Name"], ["Username", normalizedUsername ? `showreels.id/${normalizedUsername}` : "Belum valid"], ["Role", role || "Role / profession"], ["Link", onboardingLinks.length ? `${onboardingLinks.length} link` : "Belum ada link"]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p><p className="mt-2 truncate text-sm font-semibold text-slate-900">{value}</p></div>)}</div>
+                <div className="mx-auto w-full max-w-[320px] rounded-[28px] border-[8px] border-zinc-950 bg-zinc-950 p-3 shadow-sm"><div className="overflow-hidden rounded-[22px] bg-slate-50"><div className="h-[92px] w-full bg-gradient-to-b from-slate-200 to-slate-300">{coverImageUrl ? <img src={coverImageUrl} alt="Cover preview" className="h-full w-full object-cover" /> : null}</div><div className="px-4 pb-5"><div className="-mt-8 mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-zinc-900 text-white">{image ? <img src={image} alt="Avatar preview" className="h-full w-full object-cover" /> : <UserRound className="h-6 w-6" />}</div><p className="mt-3 text-center text-lg font-semibold text-slate-900">{fullName || "Display Name"}</p><p className="mt-1 text-center text-sm text-slate-500">{role || "Role / profession"}</p><p className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800">{bio || "Bio singkat akan muncul di sini."}</p><div className="mt-3 grid gap-2">{onboardingLinks.length ? onboardingLinks.slice(0, 4).map((link, index) => <div key={index} className="rounded-xl border border-slate-200 bg-white px-3 py-2"><p className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Link2 className="h-4 w-4" />{link.title || "Link"}</p><p className="mt-1 truncate text-xs text-slate-500">{buildPlatformUrl(link.platform, link.url) || "https://..."}</p></div>) : <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500">Tambahkan nanti dari dashboard.</div>}</div></div></div></div>
               </div>
             ) : null}
 

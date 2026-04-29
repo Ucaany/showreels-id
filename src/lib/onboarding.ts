@@ -77,6 +77,7 @@ export const onboardingProgressSchema = z.object({
   currentStep: z.coerce.number().int().min(1).max(4).optional(),
   profile: onboardingProfileSchema.optional(),
   firstLink: onboardingFirstLinkSchema.optional(),
+  links: z.array(onboardingFirstLinkSchema).max(12, "Maksimal 12 link saat onboarding.").optional(),
   createFirstLink: z.boolean().optional().default(false),
   wantsToAddFirstLink: z.boolean().optional(),
   progressPayload: z.record(z.string(), z.unknown()).optional(),

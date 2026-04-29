@@ -159,10 +159,10 @@ export async function PATCH(request: Request) {
   }
 
   if (parsed.data.createFirstLink && wantsToAddFirstLink) {
-    const firstLink = parsed.data.firstLink;
-    if (!firstLink) {
+    const requestedLinks = parsed.data.links?.length ? parsed.data.links : parsed.data.firstLink ? [parsed.data.firstLink] : [];
+    if (!requestedLinks.length) {
       return NextResponse.json(
-        { error: "Isi data link pertama terlebih dahulu." },
+        { error: "Isi minimal satu link terlebih dahulu." },
         { status: 400 }
       );
     }
@@ -171,7 +171,8 @@ export async function PATCH(request: Request) {
       firstLinkCreated = true;
     } else if (!firstLinkCreated) {
       const activeCount = latestLinks.filter((item) => item.enabled !== false).length;
-      if (typeof linkBuilderMax === "number" && activeCount >= linkBuilderMax) {
+      const enabledIncomingCount = requestedLinks.filter((item) => item.enabled !== false).length;
+      if (typeof linkBuilderMax === "number" && activeCount + enabledIncomingCount > linkBuilderMax) {
         return NextResponse.json(
           {
             error:
@@ -184,25 +185,28 @@ export async function PATCH(request: Request) {
         );
       }
 
-      const createdLink = createLinkItem(
-        {
-          type: "link",
-          title: firstLink.title,
-          url: firstLink.url,
-          value: "",
-          platform: firstLink.platform || "",
-          description: "",
-          badge: "",
-          thumbnailUrl: "",
-          style: "",
-          iconKey: "",
-          iconUrl: "",
-          enabled: firstLink.enabled !== false,
-        },
-        latestLinks
-      );
+      const createdLinks = requestedLinks.reduce((items, link) => {
+        const createdLink = createLinkItem(
+          {
+            type: "link",
+            title: link.title,
+            url: link.url,
+            value: "",
+            platform: link.platform || "",
+            description: "",
+            badge: "",
+            thumbnailUrl: "",
+            style: "",
+            iconKey: "",
+            iconUrl: "",
+            enabled: link.enabled !== false,
+          },
+          items
+        );
+        return [...items, createdLink];
+      }, latestLinks);
 
-      const nextLinks = normalizeOrder([...latestLinks, createdLink]);
+      const nextLinks = normalizeOrder(createdLinks);
       const [updated] = await db
         .update(users)
         .set({
@@ -232,6 +236,7 @@ export async function PATCH(request: Request) {
     ...(parsed.data.progressPayload || {}),
     ...(profile ? { profile } : {}),
     ...(parsed.data.firstLink ? { firstLink: parsed.data.firstLink } : {}),
+    ...(parsed.data.links ? { links: parsed.data.links } : {}),
   };
 
   const status = await updateUserOnboardingProgress({
