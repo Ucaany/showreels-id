@@ -21,6 +21,7 @@ import { showFeedbackAlert } from "@/lib/feedback-alert";
 type ShareProfileActionsProps = {
   username: string;
   iconOnlyOnMobile?: boolean;
+  compact?: boolean;
 };
 
 function getShareChannels(publicLink: string) {
@@ -61,7 +62,11 @@ function getShareChannels(publicLink: string) {
   ] as const;
 }
 
-export function ShareProfileActions({ username, iconOnlyOnMobile = false }: ShareProfileActionsProps) {
+export function ShareProfileActions({
+  username,
+  iconOnlyOnMobile = false,
+  compact = false,
+}: ShareProfileActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -146,16 +151,32 @@ export function ShareProfileActions({ username, iconOnlyOnMobile = false }: Shar
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        <Button type="button" size="sm" onClick={() => setIsOpen(true)}>
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => setIsOpen(true)}
+          className={compact ? "h-9 px-3 text-sm" : ""}
+        >
           <Share2 className="h-4 w-4" />
           <span className={iconOnlyOnMobile ? "sr-only sm:not-sr-only" : ""}>Share Link</span>
         </Button>
-        <Button type="button" variant="secondary" size="sm" onClick={handleCopy}>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={handleCopy}
+          className={compact ? "h-9 px-3 text-sm" : ""}
+        >
           <Copy className="h-4 w-4" />
           <span className={iconOnlyOnMobile ? "sr-only sm:not-sr-only" : ""}>Copy Link</span>
         </Button>
         <Link href={publicPath} target="_blank">
-          <Button type="button" variant="secondary" size="sm">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className={compact ? "h-9 px-3 text-sm" : ""}
+          >
             <ExternalLink className="h-4 w-4" />
             <span className={iconOnlyOnMobile ? "sr-only sm:not-sr-only" : ""}>Buka Public Link</span>
           </Button>

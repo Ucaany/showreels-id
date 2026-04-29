@@ -13,6 +13,8 @@ import {
   Link2,
   LogOut,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Settings2,
   UserRound,
   X,
@@ -66,6 +68,7 @@ export function DashboardShell({
   const planLabel =
     planName === "business" ? "Business" : planName === "creator" ? "Creator" : "Free";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const primaryNavItems: NavItem[] =
     mode === "admin"
@@ -150,7 +153,7 @@ export function DashboardShell({
     window.location.replace("/");
   };
 
-  const renderNavItem = (item: NavItem, mobile = false) => {
+  const renderNavItem = (item: NavItem, mobile = false, expanded = sidebarOpen) => {
     const Icon = item.icon;
     const active = isNavItemActive(item);
 
@@ -161,50 +164,100 @@ export function DashboardShell({
         onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
         className={cn(
           "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-          active ? "bg-zinc-800 text-white" : "text-slate-900 hover:bg-slate-100"
+          active ? "bg-zinc-800 text-white" : "text-slate-900 hover:bg-slate-100",
+          !expanded && !mobile && "justify-center"
         )}
+        title={!expanded && !mobile ? item.label : undefined}
       >
         <Icon className={cn("h-4 w-4", active ? "text-white" : "text-slate-400")} />
-        <span>{item.label}</span>
+        {(expanded || mobile) && <span>{item.label}</span>}
       </Link>
     );
   };
 
-  const sidebarContent = (
+  const renderSidebarContent = (expanded = sidebarOpen, mobile = false) => (
     <div className="flex h-full flex-col bg-white px-4 py-5">
-      <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-900 text-white">
-          <Link2 className="h-4 w-4" />
+      <div
+        className={cn(
+          "flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2",
+          !expanded && "justify-center"
+        )}
+      >
+        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-zinc-900">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="Showreels.id"
+            className="h-5 w-5 object-contain"
+            onError={(event) => {
+              const target = event.currentTarget;
+              target.style.display = "none";
+              const fallback = target.nextElementSibling as HTMLElement | null;
+              fallback?.classList.remove("hidden");
+            }}
+          />
+          <Link2 className="hidden h-4 w-4 text-white" />
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-slate-900">showreels.id</p>
-          <p className="text-xs text-slate-500">Creator workspace</p>
-        </div>
-        <ChevronDown className="h-4 w-4 text-slate-400" />
+        {expanded && (
+          <>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-slate-900">showreels.id</p>
+              <p className="text-xs text-slate-500">Creator workspace</p>
+            </div>
+            <ChevronDown className="h-4 w-4 text-slate-400" />
+          </>
+        )}
       </div>
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-          Creator Mode
-        </p>
-        <p className="mt-1 text-sm font-medium text-slate-900">{planLabel} plan aktif</p>
-      </div>
+      {!mobile && (
+        <button
+          type="button"
+          onClick={() => setSidebarOpen((current) => !current)}
+          className={cn(
+            "mt-4 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900",
+            expanded ? "h-9 gap-2 px-3" : "h-10 w-full"
+          )}
+          aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {expanded ? (
+            <>
+              <PanelLeftClose className="h-4 w-4" />
+              <span className="text-xs font-medium">Collapse</span>
+            </>
+          ) : (
+            <PanelLeftOpen className="h-4 w-4" />
+          )}
+        </button>
+      )}
+
+      {expanded && (
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+            Creator Mode
+          </p>
+          <p className="mt-1 text-sm font-medium text-slate-900">{planLabel} plan aktif</p>
+        </div>
+      )}
 
       <div className="mt-6 flex min-h-0 flex-1 flex-col">
-        <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-          Main Menu
-        </p>
+        {expanded && (
+          <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Main Menu
+          </p>
+        )}
         <nav className="mt-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
-          {primaryNavItems.map((item) => renderNavItem(item))}
+          {primaryNavItems.map((item) => renderNavItem(item, mobile, expanded))}
         </nav>
 
         <div className="mt-5 border-t border-slate-200 pt-5">
-          <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-            Settings
-          </p>
+          {expanded && (
+            <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Settings
+            </p>
+          )}
           <div className="mt-2 space-y-1">
-            {settingsNavItems.map((item) => renderNavItem(item))}
-            {renderNavItem(helpNavItem)}
+            {settingsNavItems.map((item) => renderNavItem(item, mobile, expanded))}
+            {renderNavItem(helpNavItem, mobile, expanded)}
           </div>
         </div>
 
@@ -212,25 +265,41 @@ export function DashboardShell({
           <Button
             variant="secondary"
             size="sm"
-            className="w-full justify-start rounded-xl border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            className={cn(
+              "w-full rounded-xl border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+              expanded ? "justify-start" : "justify-center px-0"
+            )}
             onClick={handleSignOut}
             aria-label={dictionary.logout}
           >
             <LogOut className="h-4 w-4" />
-            {dictionary.logout}
+            {expanded && dictionary.logout}
           </Button>
         </div>
       </div>
     </div>
   );
 
+  const sidebarContent = renderSidebarContent();
+  const mobileSidebarContent = renderSidebarContent(true, true);
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-slate-200 bg-white md:block">
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 hidden border-r border-slate-200 bg-white transition-all duration-300 ease-in-out md:block",
+          sidebarOpen ? "w-72" : "w-20"
+        )}
+      >
         {sidebarContent}
       </aside>
 
-      <header className="fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-xl md:left-72">
+      <header
+        className={cn(
+          "fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-xl transition-all duration-300 ease-in-out",
+          sidebarOpen ? "md:left-72" : "md:left-20"
+        )}
+      >
         <div className="flex h-16 items-center justify-between gap-3 px-4 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
@@ -297,12 +366,17 @@ export function DashboardShell({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="h-[calc(100%-73px)] overflow-y-auto">{sidebarContent}</div>
+            <div className="h-[calc(100%-73px)] overflow-y-auto">{mobileSidebarContent}</div>
           </div>
         </div>
       ) : null}
 
-      <div className="min-h-screen pt-16 md:pl-72">
+      <div
+        className={cn(
+          "min-h-screen pt-16 transition-all duration-300 ease-in-out",
+          sidebarOpen ? "md:pl-72" : "md:pl-20"
+        )}
+      >
         <main className="p-4 pb-24 md:p-8 md:pb-8">{children}</main>
       </div>
 
