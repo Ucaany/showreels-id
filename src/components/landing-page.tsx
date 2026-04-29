@@ -1217,21 +1217,27 @@ export function LandingPage({
             </div>
           </section>
 
-          <section className="mx-auto w-full max-w-[1160px] px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-            <div className="text-center">
-              <Badge className={sectionBadgeClass}>
-                {dictionary.landingHowItWorksBadge}
-              </Badge>
-              <h2 className={sectionTitleClass}>
-                {dictionary.landingHowItWorksTitleLead}{" "}
-                <span className={accentTextClass}>{dictionary.landingHowItWorksTitleAccent}</span>
-              </h2>
-              <p className={centeredSectionDescriptionClass}>
-                {dictionary.landingHowItWorksDescription}
-              </p>
-            </div>
+          <section className="relative overflow-hidden bg-gradient-to-b from-[#fafbfc] to-white py-16 sm:py-20 lg:py-24">
+            <div className="absolute left-0 top-0 h-64 w-64 rounded-full bg-[#eef5ff] opacity-30 blur-3xl" />
+            <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-[#f0f5ff] opacity-30 blur-3xl" />
+            
+            <div className="relative z-10 mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
+              <div className="text-center">
+                <Badge className={sectionBadgeClass}>
+                  {dictionary.landingHowItWorksBadge}
+                </Badge>
+                <h2 className="mt-4 font-display text-[2.5rem] sm:text-[3rem] lg:text-[3.5rem] font-extrabold leading-tight tracking-tight text-[#0f1419]">
+                  {dictionary.landingHowItWorksTitleLead}{" "}
+                  <span className="font-accent italic text-[#2f73ff]">
+                    {dictionary.landingHowItWorksTitleAccent}
+                  </span>
+                </h2>
+                <p className="mx-auto mt-5 max-w-[680px] text-[1.05rem] leading-relaxed text-[#4a5568]">
+                  {dictionary.landingHowItWorksDescription}
+                </p>
+              </div>
 
-            <div className="relative mt-10 grid gap-6 sm:gap-8 lg:grid-cols-3 lg:gap-12">
+              <div className="relative mt-12 grid gap-8 lg:grid-cols-3 lg:gap-10 lg:gap-x-16">
               {[
                   {
                     label: dictionary.landingHowItWorksStep1Label,
