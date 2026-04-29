@@ -43,21 +43,67 @@ const STEP_ITEMS = [
   { id: 4, title: "Selesai" },
 ] as const;
 
-const PLATFORM_OPTIONS: Array<{
+type PlatformOption = {
   id: string;
   title: string;
   icon: LucideIcon | IconType;
   defaultTitle: string;
+  inputLabel: string;
+  inputPlaceholder: string;
+  helperText: string;
   brandClassName?: string;
-}> = [
-  { id: "Website", title: "Website", icon: Globe, defaultTitle: "Kunjungi Website", brandClassName: "text-sky-600" },
-  { id: "Instagram", title: "Instagram", icon: SiInstagram, defaultTitle: "Follow Instagram", brandClassName: "text-pink-600" },
-  { id: "YouTube", title: "YouTube", icon: SiYoutube, defaultTitle: "Lihat YouTube", brandClassName: "text-red-600" },
-  { id: "WhatsApp", title: "WhatsApp", icon: MessageCircle, defaultTitle: "Hubungi WhatsApp", brandClassName: "text-emerald-600" },
-  { id: "TikTok", title: "TikTok", icon: SiTiktok, defaultTitle: "Lihat TikTok", brandClassName: "text-slate-950" },
-  { id: "Custom Link", title: "Custom Link", icon: Link2, defaultTitle: "Buka Link", brandClassName: "text-slate-700" },
-  { id: "Portfolio Video", title: "Portfolio Video", icon: PlayCircle, defaultTitle: "Lihat Portfolio Video", brandClassName: "text-violet-600" },
+};
+
+const PLATFORM_OPTIONS: PlatformOption[] = [
+  { id: "Website", title: "Website", icon: Globe, defaultTitle: "Kunjungi Website", inputLabel: "URL Website", inputPlaceholder: "websitekamu.com", helperText: "Isi domain atau URL website. Contoh: websitekamu.com", brandClassName: "text-sky-600" },
+  { id: "Instagram", title: "Instagram", icon: SiInstagram, defaultTitle: "Follow Instagram", inputLabel: "Username Instagram", inputPlaceholder: "username", helperText: "Cukup isi username tanpa @. Link otomatis menjadi instagram.com/username", brandClassName: "text-pink-600" },
+  { id: "YouTube", title: "YouTube", icon: SiYoutube, defaultTitle: "Lihat YouTube", inputLabel: "Channel / Username YouTube", inputPlaceholder: "@channel atau channel URL", helperText: "Isi @handle, nama channel, atau URL YouTube.", brandClassName: "text-red-600" },
+  { id: "WhatsApp", title: "WhatsApp", icon: MessageCircle, defaultTitle: "Hubungi WhatsApp", inputLabel: "Nomor WhatsApp", inputPlaceholder: "6281234567890", helperText: "Isi nomor dengan kode negara. Contoh: 6281234567890", brandClassName: "text-emerald-600" },
+  { id: "TikTok", title: "TikTok", icon: SiTiktok, defaultTitle: "Lihat TikTok", inputLabel: "Username TikTok", inputPlaceholder: "username", helperText: "Cukup isi username tanpa @. Link otomatis menjadi tiktok.com/@username", brandClassName: "text-slate-950" },
+  { id: "Custom Link", title: "Custom Link", icon: Link2, defaultTitle: "Buka Link", inputLabel: "URL Custom", inputPlaceholder: "https://...", helperText: "Isi URL lengkap atau domain custom.", brandClassName: "text-slate-700" },
+  { id: "Portfolio Video", title: "Portfolio Video", icon: PlayCircle, defaultTitle: "Lihat Portfolio Video", inputLabel: "URL Portfolio Video", inputPlaceholder: "youtube.com/watch?v=...", helperText: "Isi link video portfolio dari YouTube, Vimeo, TikTok, atau website lain.", brandClassName: "text-violet-600" },
 ];
+
+function getPlatformOption(platformId: string) {
+  return PLATFORM_OPTIONS.find((platform) => platform.id === platformId) ?? null;
+}
+
+function sanitizeSocialHandle(input: string) {
+  return input.trim().replace(/^@+/, "").replace(/^https?:\/\/(www\.)?/i, "").split(/[/?#]/)[0];
+}
+
+function buildPlatformUrl(platformId: string, rawValue: string) {
+  const value = rawValue.trim();
+  if (!value) return "";
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  if (platformId === "Instagram") {
+    const handle = sanitizeSocialHandle(value).replace(/^instagram\.com\//i, "");
+    return handle ? `https://instagram.com/${handle}` : "";
+  }
+
+  if (platformId === "TikTok") {
+    const handle = sanitizeSocialHandle(value).replace(/^tiktok\.com\/@?/i, "");
+    return handle ? `https://www.tiktok.com/@${handle}` : "";
+  }
+
+  if (platformId === "YouTube") {
+    const handle = value.trim();
+    if (handle.startsWith("@")) return `https://www.youtube.com/${handle}`;
+    const cleanHandle = sanitizeSocialHandle(handle).replace(/^youtube\.com\//i, "").replace(/^youtu\.be\//i, "");
+    return cleanHandle ? `https://www.youtube.com/@${cleanHandle.replace(/^@+/, "")}` : "";
+  }
+
+  if (platformId === "WhatsApp") {
+    const phone = value.replace(/[^0-9]/g, "");
+    return phone ? `https://wa.me/${phone}` : "";
+  }
+
+  return normalizeSocialUrl(value);
+}
 
 function getProgressPayload(status: DbUserOnboarding) {
   if (!status.progressPayload || typeof status.progressPayload !== "object") {
@@ -134,6 +180,7 @@ export function OnboardingStepper({
   const [firstLinkTitle, setFirstLinkTitle] = useState(payloadFirstLink.title || "");
   const [firstLinkUrl, setFirstLinkUrl] = useState(payloadFirstLink.url || "");
   const [firstLinkPlatform, setFirstLinkPlatform] = useState(payloadFirstLink.platform || "");
+  const selectedPlatform = getPlatformOption(firstLinkPlatform);
   const [firstLinkEnabled, setFirstLinkEnabled] = useState(
     payloadFirstLink.enabled !== false
   );
@@ -180,7 +227,7 @@ export function OnboardingStepper({
   }) => {
     const shouldCreateFirstLink = Boolean(input.createFirstLink);
     const resolvedWantsToAddFirstLink = input.wantsToAddFirstLink ?? wantsToAddFirstLink;
-    const normalizedFirstLinkUrl = normalizeSocialUrl(firstLinkUrl);
+    const normalizedFirstLinkUrl = buildPlatformUrl(firstLinkPlatform, firstLinkUrl);
     const firstLinkPayload = {
       title: firstLinkTitle,
       url: normalizedFirstLinkUrl,
@@ -277,7 +324,7 @@ export function OnboardingStepper({
       return false;
     }
 
-    const normalizedUrl = normalizeSocialUrl(firstLinkUrl);
+    const normalizedUrl = buildPlatformUrl(firstLinkPlatform, firstLinkUrl);
     if (!firstLinkTitle.trim() || !normalizedUrl) {
       await showFeedbackAlert({
         title: "Link pertama belum lengkap",
@@ -579,14 +626,14 @@ export function OnboardingStepper({
             {step === 2 ? (
               <div className="mt-4 grid gap-4 xl:grid-cols-[0.82fr_1.18fr]">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-sm font-semibold text-slate-900">Tambah link pertama?</p><p className="mt-1 text-sm leading-6 text-slate-500">Pilih satu link utama. Kamu tetap bisa melewati langkah ini dan menambahkannya nanti.</p><div className="mt-4 grid gap-2"><button type="button" onClick={() => setWantsToAddFirstLink(true)} className={cn("rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition", wantsToAddFirstLink ? "border-zinc-900 bg-white text-slate-950" : "border-slate-200 bg-white text-slate-600")}>Tambahkan link</button><button type="button" onClick={() => setWantsToAddFirstLink(false)} className={cn("rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition", !wantsToAddFirstLink ? "border-zinc-900 bg-white text-slate-950" : "border-slate-200 bg-white text-slate-600")}>Lewati dulu</button></div></div>
-                {wantsToAddFirstLink ? <div className="space-y-4"><div className="grid gap-2 min-[360px]:grid-cols-2 lg:grid-cols-3">{PLATFORM_OPTIONS.map((platform) => { const Icon = platform.icon; const active = firstLinkPlatform === platform.id; return <button key={platform.id} type="button" onClick={() => { setWantsToAddFirstLink(true); setFirstLinkPlatform(platform.id); if (!firstLinkTitle) setFirstLinkTitle(platform.defaultTitle); }} className={cn("flex min-h-12 items-center gap-2 rounded-2xl border p-3 text-left text-sm font-semibold transition", active ? "border-zinc-900 bg-slate-50 text-slate-950" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}><span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200"><Icon className={cn("h-4 w-4", platform.brandClassName)} /></span><span className="truncate">{platform.title}</span></button>; })}</div><div className="grid gap-3 sm:grid-cols-2"><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Judul tombol</label><Input value={firstLinkTitle} onChange={(event) => setFirstLinkTitle(event.target.value)} /></div><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">URL</label><Input value={firstLinkUrl} onChange={(event) => setFirstLinkUrl(event.target.value)} placeholder="https://..." /></div></div><label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={firstLinkEnabled} onChange={(event) => setFirstLinkEnabled(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-zinc-900 focus:ring-zinc-900" />Aktifkan link ini</label></div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">Link pertama dilewati. Kamu bisa lanjut ke preview.</div>}
+                {wantsToAddFirstLink ? <div className="space-y-4"><div className="grid gap-2 min-[360px]:grid-cols-2 lg:grid-cols-3">{PLATFORM_OPTIONS.map((platform) => { const Icon = platform.icon; const active = firstLinkPlatform === platform.id; return <button key={platform.id} type="button" onClick={() => { setWantsToAddFirstLink(true); setFirstLinkPlatform(platform.id); setFirstLinkTitle(platform.defaultTitle); }} className={cn("flex min-h-12 items-center gap-2 rounded-2xl border p-3 text-left text-sm font-semibold transition", active ? "border-zinc-900 bg-slate-50 text-slate-950" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}><span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200"><Icon className={cn("h-4 w-4", platform.brandClassName)} /></span><span className="truncate">{platform.title}</span></button>; })}</div><div className="grid gap-3 sm:grid-cols-2"><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Judul tombol</label><Input value={firstLinkTitle} onChange={(event) => setFirstLinkTitle(event.target.value)} /></div><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">{selectedPlatform?.inputLabel || "URL"}</label><Input value={firstLinkUrl} onChange={(event) => setFirstLinkUrl(event.target.value)} placeholder={selectedPlatform?.inputPlaceholder || "https://..."} /><p className="mt-1 text-xs text-slate-500">{selectedPlatform?.helperText || "Pilih platform agar format link otomatis disesuaikan."}</p>{firstLinkPlatform && firstLinkUrl.trim() ? <p className="mt-1 truncate text-xs font-medium text-slate-700">Preview: {buildPlatformUrl(firstLinkPlatform, firstLinkUrl) || "Belum valid"}</p> : null}</div></div><label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={firstLinkEnabled} onChange={(event) => setFirstLinkEnabled(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-zinc-900 focus:ring-zinc-900" />Aktifkan link ini</label></div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">Link pertama dilewati. Kamu bisa lanjut ke preview.</div>}
               </div>
             ) : null}
 
             {step === 3 ? (
               <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">
                 <div className="grid gap-3 sm:grid-cols-2">{[["Nama", fullName || "Display Name"], ["Username", normalizedUsername ? `showreels.id/${normalizedUsername}` : "Belum valid"], ["Role", role || "Role / profession"], ["Link", wantsToAddFirstLink ? firstLinkTitle || "Link pertama" : "Belum ada link"]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p><p className="mt-2 truncate text-sm font-semibold text-slate-900">{value}</p></div>)}</div>
-                <div className="mx-auto w-full max-w-[320px] rounded-[28px] border-[8px] border-zinc-950 bg-zinc-950 p-3 shadow-sm"><div className="overflow-hidden rounded-[22px] bg-slate-50"><div className="h-[92px] w-full bg-gradient-to-b from-slate-200 to-slate-300">{coverImageUrl ? <img src={coverImageUrl} alt="Cover preview" className="h-full w-full object-cover" /> : null}</div><div className="px-4 pb-5"><div className="-mt-8 mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-zinc-900 text-white">{image ? <img src={image} alt="Avatar preview" className="h-full w-full object-cover" /> : <UserRound className="h-6 w-6" />}</div><p className="mt-3 text-center text-lg font-semibold text-slate-900">{fullName || "Display Name"}</p><p className="mt-1 text-center text-sm text-slate-500">{role || "Role / profession"}</p><p className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800">{bio || "Bio singkat akan muncul di sini."}</p><div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2"><p className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Link2 className="h-4 w-4" />{wantsToAddFirstLink ? firstLinkTitle || "Link pertama kamu" : "Belum ada link"}</p><p className="mt-1 truncate text-xs text-slate-500">{wantsToAddFirstLink ? normalizeSocialUrl(firstLinkUrl) || "https://..." : "Tambahkan nanti dari dashboard."}</p></div></div></div></div>
+                <div className="mx-auto w-full max-w-[320px] rounded-[28px] border-[8px] border-zinc-950 bg-zinc-950 p-3 shadow-sm"><div className="overflow-hidden rounded-[22px] bg-slate-50"><div className="h-[92px] w-full bg-gradient-to-b from-slate-200 to-slate-300">{coverImageUrl ? <img src={coverImageUrl} alt="Cover preview" className="h-full w-full object-cover" /> : null}</div><div className="px-4 pb-5"><div className="-mt-8 mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-zinc-900 text-white">{image ? <img src={image} alt="Avatar preview" className="h-full w-full object-cover" /> : <UserRound className="h-6 w-6" />}</div><p className="mt-3 text-center text-lg font-semibold text-slate-900">{fullName || "Display Name"}</p><p className="mt-1 text-center text-sm text-slate-500">{role || "Role / profession"}</p><p className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800">{bio || "Bio singkat akan muncul di sini."}</p><div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2"><p className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Link2 className="h-4 w-4" />{wantsToAddFirstLink ? firstLinkTitle || "Link pertama kamu" : "Belum ada link"}</p><p className="mt-1 truncate text-xs text-slate-500">{wantsToAddFirstLink ? buildPlatformUrl(firstLinkPlatform, firstLinkUrl) || "https://..." : "Tambahkan nanti dari dashboard."}</p></div></div></div></div>
               </div>
             ) : null}
 

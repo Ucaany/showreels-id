@@ -48,8 +48,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       slug: input,
       sanitized,
-      available: false,
-      reason: "idle",
+      available: process.env.NODE_ENV !== "production",
+      reason: process.env.NODE_ENV !== "production" ? "local_preview" : "idle",
     });
   }
 

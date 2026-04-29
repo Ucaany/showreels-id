@@ -1,6 +1,6 @@
 import { and, eq, ne } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { db, isDatabaseConfigured } from "@/db";
 import { users } from "@/db/schema";
 import { createLinkItem, normalizeOrder, normalizeStoredLinks } from "@/lib/link-builder";
 import { onboardingProgressSchema } from "@/lib/onboarding";
@@ -117,37 +117,44 @@ export async function PATCH(request: Request) {
       updatePayload.coverImageUrl = profile.coverImageUrl.trim();
     }
 
-    if (typeof profile.username === "string" && profile.username !== currentUser.username) {
-      const existingUser = await db.query.users.findFirst({
-        where: and(eq(users.username, profile.username), ne(users.id, currentUser.id)),
-        columns: { id: true },
-      });
-      if (existingUser) {
-        return NextResponse.json(
-          { error: "Username sudah dipakai user lain.", code: "username_taken" },
-          { status: 409 }
-        );
-      }
-      updatePayload.username = profile.username;
-    }
-
-    if (Object.keys(updatePayload).length > 0) {
-      profilePatchApplied = true;
-      const [updatedUser] = await db
-        .update(users)
-        .set({
-          ...updatePayload,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, currentUser.id))
-        .returning({
-          customLinks: users.customLinks,
+    if (isDatabaseConfigured) {
+      if (typeof profile.username === "string" && profile.username !== currentUser.username) {
+        const existingUser = await db.query.users.findFirst({
+          where: and(eq(users.username, profile.username), ne(users.id, currentUser.id)),
+          columns: { id: true },
         });
+        if (existingUser) {
+          return NextResponse.json(
+            { error: "Username sudah dipakai user lain.", code: "username_taken" },
+            { status: 409 }
+          );
+        }
+        updatePayload.username = profile.username;
+      }
 
-      latestLinks =
-        typeof linkBuilderMax === "number"
-          ? normalizeStoredLinks(updatedUser?.customLinks ?? latestLinks, linkBuilderMax)
-          : normalizeStoredLinks(updatedUser?.customLinks ?? latestLinks);
+      if (Object.keys(updatePayload).length > 0) {
+        profilePatchApplied = true;
+        const [updatedUser] = await db
+          .update(users)
+          .set({
+            ...updatePayload,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, currentUser.id))
+          .returning({
+            customLinks: users.customLinks,
+          });
+
+        latestLinks =
+          typeof linkBuilderMax === "number"
+            ? normalizeStoredLinks(updatedUser?.customLinks ?? latestLinks, linkBuilderMax)
+            : normalizeStoredLinks(updatedUser?.customLinks ?? latestLinks);
+      }
+    } else if (process.env.NODE_ENV !== "production") {
+      if (typeof profile.username === "string") {
+        updatePayload.username = profile.username;
+      }
+      profilePatchApplied = Object.keys(updatePayload).length > 0;
     }
   }
 
@@ -160,7 +167,9 @@ export async function PATCH(request: Request) {
       );
     }
 
-    if (!firstLinkCreated) {
+    if (!firstLinkCreated && !isDatabaseConfigured && process.env.NODE_ENV !== "production") {
+      firstLinkCreated = true;
+    } else if (!firstLinkCreated) {
       const activeCount = latestLinks.filter((item) => item.enabled !== false).length;
       if (typeof linkBuilderMax === "number" && activeCount >= linkBuilderMax) {
         return NextResponse.json(
