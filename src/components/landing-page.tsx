@@ -970,10 +970,10 @@ export function LandingPage({
           <section className="mx-auto w-full max-w-[1160px] overflow-visible px-4 pb-12 pt-16 sm:overflow-hidden sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
             <div className="grid items-center gap-9 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] lg:gap-11">
               <div className="mx-auto min-w-0 max-w-[36rem] text-center lg:mx-0 lg:text-left">
-                <Badge className="max-w-[calc(100vw-2rem)] overflow-hidden rounded-full border border-black/20 bg-transparent px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] !text-[#111111] shadow-none backdrop-blur-[1px] sm:text-eyebrow">
+                <Badge className="max-w-[calc(100vw-2rem)] overflow-hidden rounded-full border border-emerald-200 bg-emerald-50/85 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] !text-emerald-700 shadow-none backdrop-blur-[1px] sm:text-eyebrow">
                   <span className="inline-flex max-w-full min-w-0 items-center gap-2">
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-black/70">
-                      <span className="absolute inset-0 animate-ping rounded-full bg-black/20" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.14)]">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/60" />
                     </span>
                     <span className="min-w-0 truncate">{dictionary.landingHeroBadge}</span>
                   </span>
