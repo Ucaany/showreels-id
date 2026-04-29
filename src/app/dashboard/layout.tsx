@@ -34,16 +34,19 @@ export default async function DashboardLayout({
     }),
   ]);
 
-  if (
-    !onboarding.onboardingCompleted &&
-    !onboarding.onboardingSkipped &&
-    pathname !== "/dashboard"
-  ) {
+  const shouldShowOnboarding =
+    !onboarding.onboardingCompleted && !onboarding.onboardingSkipped;
+
+  if (shouldShowOnboarding && pathname !== "/dashboard") {
     redirect("/dashboard");
   }
 
   return (
-    <DashboardShell user={user} planName={effectivePlan.planName}>
+    <DashboardShell
+      user={user}
+      planName={effectivePlan.planName}
+      hideChrome={shouldShowOnboarding && pathname === "/dashboard"}
+    >
       {children}
     </DashboardShell>
   );

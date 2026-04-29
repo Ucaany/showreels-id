@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
+import type { IconType } from "react-icons";
+import { SiInstagram, SiTiktok, SiYoutube } from "react-icons/si";
 import {
   Camera,
   Check,
@@ -19,7 +21,6 @@ import {
 } from "lucide-react";
 import type { DbUserOnboarding } from "@/db/schema";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
@@ -45,16 +46,17 @@ const STEP_ITEMS = [
 const PLATFORM_OPTIONS: Array<{
   id: string;
   title: string;
-  icon: LucideIcon;
+  icon: LucideIcon | IconType;
   defaultTitle: string;
+  brandClassName?: string;
 }> = [
-  { id: "Website", title: "Website", icon: Globe, defaultTitle: "Kunjungi Website" },
-  { id: "Instagram", title: "Instagram", icon: Camera, defaultTitle: "Follow Instagram" },
-  { id: "YouTube", title: "YouTube", icon: Video, defaultTitle: "Lihat YouTube" },
-  { id: "WhatsApp", title: "WhatsApp", icon: MessageCircle, defaultTitle: "Hubungi WhatsApp" },
-  { id: "TikTok", title: "TikTok", icon: Music2, defaultTitle: "Lihat TikTok" },
-  { id: "Custom Link", title: "Custom Link", icon: Link2, defaultTitle: "Buka Link" },
-  { id: "Portfolio Video", title: "Portfolio Video", icon: PlayCircle, defaultTitle: "Lihat Portfolio Video" },
+  { id: "Website", title: "Website", icon: Globe, defaultTitle: "Kunjungi Website", brandClassName: "text-sky-600" },
+  { id: "Instagram", title: "Instagram", icon: SiInstagram, defaultTitle: "Follow Instagram", brandClassName: "text-pink-600" },
+  { id: "YouTube", title: "YouTube", icon: SiYoutube, defaultTitle: "Lihat YouTube", brandClassName: "text-red-600" },
+  { id: "WhatsApp", title: "WhatsApp", icon: MessageCircle, defaultTitle: "Hubungi WhatsApp", brandClassName: "text-emerald-600" },
+  { id: "TikTok", title: "TikTok", icon: SiTiktok, defaultTitle: "Lihat TikTok", brandClassName: "text-slate-950" },
+  { id: "Custom Link", title: "Custom Link", icon: Link2, defaultTitle: "Buka Link", brandClassName: "text-slate-700" },
+  { id: "Portfolio Video", title: "Portfolio Video", icon: PlayCircle, defaultTitle: "Lihat Portfolio Video", brandClassName: "text-violet-600" },
 ];
 
 function getProgressPayload(status: DbUserOnboarding) {
@@ -527,9 +529,9 @@ export function OnboardingStepper({
   ]);
 
   return (
-    <div className={cn(embedded ? "min-h-[calc(100vh-8rem)]" : "min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8")}>
-      <div className={cn("mx-auto h-full", embedded ? "max-w-none" : "max-w-6xl")}>
-        <div className="grid min-h-[calc(100vh-8rem)] gap-4 lg:grid-cols-[340px_1fr]">
+    <div className="min-h-screen bg-slate-50 px-3 py-3 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
+      <div className="mx-auto h-full max-w-7xl">
+        <div className="grid min-h-[calc(100vh-1.5rem)] gap-4 sm:min-h-[calc(100vh-2.5rem)] lg:min-h-[calc(100vh-3rem)] lg:grid-cols-[340px_1fr]">
           <aside className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
             <div className="rounded-2xl bg-zinc-950 p-5 text-white">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">Onboarding</p>
@@ -577,7 +579,7 @@ export function OnboardingStepper({
             {step === 2 ? (
               <div className="mt-4 grid gap-4 xl:grid-cols-[0.82fr_1.18fr]">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-sm font-semibold text-slate-900">Tambah link pertama?</p><p className="mt-1 text-sm leading-6 text-slate-500">Pilih satu link utama. Kamu tetap bisa melewati langkah ini dan menambahkannya nanti.</p><div className="mt-4 grid gap-2"><button type="button" onClick={() => setWantsToAddFirstLink(true)} className={cn("rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition", wantsToAddFirstLink ? "border-zinc-900 bg-white text-slate-950" : "border-slate-200 bg-white text-slate-600")}>Tambahkan link</button><button type="button" onClick={() => setWantsToAddFirstLink(false)} className={cn("rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition", !wantsToAddFirstLink ? "border-zinc-900 bg-white text-slate-950" : "border-slate-200 bg-white text-slate-600")}>Lewati dulu</button></div></div>
-                {wantsToAddFirstLink ? <div className="space-y-4"><div className="grid gap-2 min-[360px]:grid-cols-2 lg:grid-cols-3">{PLATFORM_OPTIONS.map((platform) => { const Icon = platform.icon; const active = firstLinkPlatform === platform.id; return <button key={platform.id} type="button" onClick={() => { setWantsToAddFirstLink(true); setFirstLinkPlatform(platform.id); if (!firstLinkTitle) setFirstLinkTitle(platform.defaultTitle); }} className={cn("flex min-h-12 items-center gap-2 rounded-2xl border p-3 text-left text-sm font-semibold transition", active ? "border-zinc-900 bg-slate-50 text-slate-950" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}><span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700"><Icon className="h-4 w-4" /></span><span className="truncate">{platform.title}</span></button>; })}</div><div className="grid gap-3 sm:grid-cols-2"><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Judul tombol</label><Input value={firstLinkTitle} onChange={(event) => setFirstLinkTitle(event.target.value)} /></div><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">URL</label><Input value={firstLinkUrl} onChange={(event) => setFirstLinkUrl(event.target.value)} placeholder="https://..." /></div></div><label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={firstLinkEnabled} onChange={(event) => setFirstLinkEnabled(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-zinc-900 focus:ring-zinc-900" />Aktifkan link ini</label></div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">Link pertama dilewati. Kamu bisa lanjut ke preview.</div>}
+                {wantsToAddFirstLink ? <div className="space-y-4"><div className="grid gap-2 min-[360px]:grid-cols-2 lg:grid-cols-3">{PLATFORM_OPTIONS.map((platform) => { const Icon = platform.icon; const active = firstLinkPlatform === platform.id; return <button key={platform.id} type="button" onClick={() => { setWantsToAddFirstLink(true); setFirstLinkPlatform(platform.id); if (!firstLinkTitle) setFirstLinkTitle(platform.defaultTitle); }} className={cn("flex min-h-12 items-center gap-2 rounded-2xl border p-3 text-left text-sm font-semibold transition", active ? "border-zinc-900 bg-slate-50 text-slate-950" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}><span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200"><Icon className={cn("h-4 w-4", platform.brandClassName)} /></span><span className="truncate">{platform.title}</span></button>; })}</div><div className="grid gap-3 sm:grid-cols-2"><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Judul tombol</label><Input value={firstLinkTitle} onChange={(event) => setFirstLinkTitle(event.target.value)} /></div><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">URL</label><Input value={firstLinkUrl} onChange={(event) => setFirstLinkUrl(event.target.value)} placeholder="https://..." /></div></div><label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={firstLinkEnabled} onChange={(event) => setFirstLinkEnabled(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-zinc-900 focus:ring-zinc-900" />Aktifkan link ini</label></div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">Link pertama dilewati. Kamu bisa lanjut ke preview.</div>}
               </div>
             ) : null}
 

@@ -51,11 +51,13 @@ export function DashboardShell({
   user,
   planName = "free",
   mode = "creator",
+  hideChrome = false,
 }: {
   children: React.ReactNode;
   user: DbUser;
   planName?: "free" | "creator" | "business";
   mode?: "creator" | "admin";
+  hideChrome?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -163,14 +165,14 @@ export function DashboardShell({
         href={item.href}
         onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
         className={cn(
-          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-          active ? "bg-zinc-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
+          active ? "bg-zinc-900 !text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
           !expanded && !mobile && "justify-center"
         )}
         title={!expanded && !mobile ? item.label : undefined}
       >
-        <Icon className={cn("h-4 w-4", active ? "text-white" : "text-slate-500")} />
-        {(expanded || mobile) && <span>{item.label}</span>}
+        <Icon className={cn("h-4 w-4", active ? "!text-white" : "text-slate-500")} />
+        {(expanded || mobile) && <span className={cn(active && "text-white")}>{item.label}</span>}
       </Link>
     );
   };
@@ -278,6 +280,10 @@ export function DashboardShell({
 
   const sidebarContent = renderSidebarContent();
   const mobileSidebarContent = renderSidebarContent(true, true);
+
+  if (hideChrome) {
+    return <div className="min-h-screen bg-slate-50 font-sans text-slate-900">{children}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
