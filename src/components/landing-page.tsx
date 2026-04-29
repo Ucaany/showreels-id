@@ -1122,96 +1122,93 @@ export function LandingPage({
           </section>
 
           <section
-            className="mx-auto w-full max-w-[1160px] scroll-mt-28 px-6 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20"
+            className="mx-auto w-full max-w-[1160px] scroll-mt-28 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
             id="features"
           >
-            <div className="max-w-[760px]">
-              <div>
+            <div className="mx-auto max-w-[880px]">
+              <div className="text-center">
                 <Badge className={sectionBadgeClass}>
                   {dictionary.landingFeaturesBadge}
                 </Badge>
-                <h2 className={sectionTitleClass}>
+                <h2 className="mt-4 font-display text-[2.25rem] sm:text-[2.75rem] lg:text-[3.25rem] font-extrabold leading-[1.12] tracking-tight text-[#0f1419]">
                   {dictionary.landingFeaturesTitleLead}{" "}
-                  <span className={accentTextClass}>{dictionary.landingFeaturesTitleAccent}</span>
+                  <span className="font-accent italic text-[#2f73ff]">{dictionary.landingFeaturesTitleAccent}</span>
                 </h2>
-                <p className={sectionDescriptionClass}>
+                <p className="mx-auto mt-5 max-w-[680px] text-[1.05rem] leading-relaxed text-[#4a5568]">
                   {dictionary.landingFeaturesDescription}
                 </p>
+              </div>
 
-                <div className="mt-6 space-y-4 sm:space-y-5">
-                  {marketingFeatures.map((item) => (
-                    <article key={item.title} className="flex gap-3.5">
-                      <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.85rem] bg-[#e7f0ff] text-[#2f66e4]">
-                        <Check className="h-3.5 w-3.5" />
-                      </span>
-                      <div>
-                        <h3 className="text-card-title font-bold text-[#1d1714]">
-                          {item.title}
-                        </h3>
-                        <p className="text-body-base mt-0.5 text-[#5c514b]">
-                          {item.description}
-                        </p>
-                      </div>
-                    </article>
-                  ))}
-                </div>
+              <div className="mt-12 space-y-6 sm:space-y-7">
+                {marketingFeatures.map((item, index) => (
+                  <m.article
+                    key={item.title}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    className="group flex gap-5 rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm transition-all hover:border-[#2f73ff]/30 hover:shadow-md hover:-translate-y-1"
+                  >
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#dbeafe] to-[#bfdbfe] shadow-sm transition-transform group-hover:scale-110">
+                      <Check className="h-6 w-6 text-[#2563eb]" strokeWidth={2.5} />
+                    </div>
+                    <div className="flex-1 pt-1">
+                      <h3 className="text-[1.15rem] font-bold leading-tight tracking-tight text-[#111827]">
+                        {item.title}
+                      </h3>
+                      <p className="mt-2 text-[0.95rem] leading-relaxed text-[#6b7280]">
+                        {item.description}
+                      </p>
+                    </div>
+                  </m.article>
+                ))}
               </div>
             </div>
           </section>
 
-          <section className="border-y border-[#dce4f5] bg-[#f4f7fd] py-12 sm:py-16 lg:py-20">
+          <section className="border-y border-[#e0e7ef] bg-gradient-to-b from-[#f8fafc] to-[#f1f5f9] py-16 sm:py-20 lg:py-24">
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
               <div className="text-center">
                 <Badge className={sectionBadgeClass}>
                   {dictionary.landingPlatformBadge}
                 </Badge>
-                <h2 className={sectionTitleClass}>
+                <h2 className="mt-4 font-display text-[2.25rem] sm:text-[2.75rem] lg:text-[3.25rem] font-extrabold leading-[1.12] tracking-tight text-[#0f1419]">
                   {dictionary.landingPlatformTitleLead}{" "}
-                  <span className={accentTextClass}>{dictionary.landingPlatformTitleAccent}</span>
+                  <span className="font-accent italic text-[#2f73ff]">{dictionary.landingPlatformTitleAccent}</span>
                 </h2>
-                <p className={centeredSectionDescriptionClass}>
+                <p className="mx-auto mt-5 max-w-[680px] text-[1.05rem] leading-relaxed text-[#4a5568]">
                   {dictionary.landingPlatformDescription}
                 </p>
               </div>
 
-              <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 lg:gap-5">
+              <div className="mx-auto mt-12 grid max-w-[960px] grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
                 {PLATFORM_SOURCES.map((platform, index) => {
                   const PlatformIcon = platform.icon;
-
+                  
                   return (
                     <m.article
                       key={platform.name}
-                      initial={{ opacity: 0, y: 8 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.4 }}
-                      transition={{ duration: 0.25, delay: index * 0.05 }}
-                      className={cn(
-                        "group relative overflow-hidden rounded-2xl border border-[#e8edf5] bg-white p-6 text-center shadow-[0_2px_12px_-2px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.1)] hover:-translate-y-2",
-                        index === PLATFORM_SOURCES.length - 1 && "col-span-2 mx-auto w-full max-w-[calc(50%-0.5rem)] sm:col-span-1 sm:max-w-none"
-                      )}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{ duration: 0.3, delay: index * 0.08 }}
+                      className="group relative overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white p-5 text-center shadow-sm transition-all hover:border-[#2f73ff]/40 hover:shadow-lg hover:-translate-y-2"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#f0f5ff] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#f8faff] via-transparent to-[#eff6ff] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       
-                      <div className="relative z-10 mx-auto flex h-18 w-18 items-center justify-center rounded-full bg-gradient-to-br from-white to-[#f8faff] border-2 border-[#e0e8f5] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
-                        <div
-                          className="flex h-16 w-16 items-center justify-center rounded-full"
-                          style={{ backgroundColor: platform.lightBg }}
-                        >
-                          <PlatformIcon
-                            className="h-8 w-8"
-                            style={{ color: platform.brandColor }}
-                            aria-label={platform.name}
-                          />
-                        </div>
+                      <div className="relative z-10 mx-auto flex h-16 w-16 items-center justify-center rounded-xl shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md" style={{ backgroundColor: platform.lightBg }}>
+                        <PlatformIcon
+                          className="h-8 w-8 transition-transform group-hover:scale-110"
+                          style={{ color: platform.brandColor }}
+                          aria-label={platform.name}
+                        />
                       </div>
                       
-                      <p className="relative z-10 mt-4 text-[0.95rem] font-bold tracking-[-0.012em] text-[#1c273f] sm:text-[1rem]">
+                      <p className="relative z-10 mt-4 text-[0.95rem] font-bold tracking-tight text-[#1e293b]">
                         {platform.name}
                       </p>
-                      <p className="relative z-10 mt-1.5 text-[0.8rem] leading-snug text-[#6b7280] sm:text-[0.84rem]">
-                        {locale === "en"
-                          ? "Supported source"
-                          : "Sumber didukung"}
+                      <p className="relative z-10 mt-1 text-[0.82rem] font-medium text-[#64748b]">
+                        {locale === "en" ? "Supported" : "Didukung"}
                       </p>
                     </m.article>
                   );
