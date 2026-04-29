@@ -527,405 +527,72 @@ export function OnboardingStepper({
   ]);
 
   return (
-    <div
-      className={cn(
-        embedded
-          ? ""
-          : "min-h-screen bg-[linear-gradient(180deg,#edf3ff_0%,#f8fbff_50%,#f1f6ff_100%)] px-4 py-6 sm:px-6 sm:py-8"
-      )}
-    >
-      <div className={cn("mx-auto", embedded ? "max-w-none" : "max-w-6xl")}>
-        <Card className="overflow-hidden border-[#cbddfd] bg-white/95 shadow-[0_24px_58px_rgba(33,78,149,0.12)]">
-          <div className="grid gap-0 lg:grid-cols-[280px_1fr]">
-            <aside className="border-b border-[#dce8fb] bg-[#f4f8ff] p-4 lg:border-b-0 lg:border-r lg:p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4f77b4]">
-                Onboarding
-              </p>
-              <h1 className="mt-2 text-xl font-semibold text-slate-900">Setup creator page</h1>
-              <p className="mt-1 text-sm text-[#5e78a5]">
-                Plan aktif: {planName.toUpperCase()}{" "}
-                {planName === "creator" && subscriptionStatus === "trial" && (
-                  <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
-                    TRIAL 1 BULAN
-                  </span>
-                )}{" "}
-                {typeof linkBuilderMax === "number"
-                  ? `- Maks ${linkBuilderMax} link`
-                  : "- Unlimited link"}
-              </p>
-
-              <div className="mt-4 grid grid-cols-4 gap-1.5 lg:hidden">
-                {STEP_ITEMS.map((item) => (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      "inline-flex min-w-0 items-center justify-center gap-1 rounded-full border px-2 py-1.5 text-[11px] font-semibold",
-                      step === item.id
-                        ? "border-[#27272a] bg-slate-50 text-slate-900"
-                        : step > item.id
-                          ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                          : "border-[#d2dff7] bg-white text-[#6b83ad]"
-                    )}
-                  >
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white">
-                      {step > item.id ? <Check className="h-3.5 w-3.5" /> : item.id}
-                    </span>
-                    <span className="hidden min-[360px]:inline">{item.title}</span>
-                  </div>
-                ))}
+    <div className={cn(embedded ? "min-h-[calc(100vh-8rem)]" : "min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8")}>
+      <div className={cn("mx-auto h-full", embedded ? "max-w-none" : "max-w-6xl")}>
+        <div className="grid min-h-[calc(100vh-8rem)] gap-4 lg:grid-cols-[340px_1fr]">
+          <aside className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
+            <div className="rounded-2xl bg-zinc-950 p-5 text-white">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">Onboarding</p>
+              <h1 className="mt-3 text-2xl font-semibold tracking-tight md:text-3xl">Setup singkat halaman creator</h1>
+              <p className="mt-2 text-sm leading-6 text-white/70">Lengkapi profil, tambah link pertama, lalu preview sebelum masuk dashboard.</p>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-white/80">
+                <span className="rounded-full bg-white/10 px-2.5 py-1">{planName.toUpperCase()}</span>
+                <span className="rounded-full bg-white/10 px-2.5 py-1">{typeof linkBuilderMax === "number" ? `Maks ${linkBuilderMax} link` : "Unlimited link"}</span>
+                {planName === "creator" && subscriptionStatus === "trial" ? <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-emerald-100">Trial aktif</span> : null}
               </div>
-              <p className="mt-2 text-xs font-semibold text-[#4f77b4] lg:hidden">
-                {STEP_ITEMS[stepIndex]?.title}
-              </p>
+            </div>
 
-              <div className="mt-5 hidden space-y-2 lg:block">
-                {STEP_ITEMS.map((item) => (
-                  <div
-                    key={item.id}
-                    className={cn(
-                      "flex items-center gap-3 rounded-xl border px-3 py-2",
-                      step === item.id
-                        ? "border-[#27272a] bg-slate-50"
-                        : step > item.id
-                          ? "border-emerald-200 bg-emerald-50"
-                          : "border-[#d2dff7] bg-white"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold",
-                        step === item.id
-                          ? "bg-zinc-800 text-white"
-                          : step > item.id
-                            ? "bg-emerald-600 text-white"
-                            : "bg-slate-50 text-slate-500"
-                      )}
-                    >
-                      {step > item.id ? <Check className="h-4 w-4" /> : item.id}
-                    </span>
-                    <p className="text-sm font-semibold text-[#26406a]">{item.title}</p>
-                  </div>
-                ))}
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+              {STEP_ITEMS.map((item) => (
+                <button key={item.id} type="button" onClick={() => item.id < step && setStep(item.id)} className={cn("flex min-h-16 items-center gap-3 rounded-2xl border p-3 text-left transition", step === item.id ? "border-zinc-900 bg-slate-50 text-slate-950" : step > item.id ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100/70" : "border-slate-200 bg-white text-slate-500")}>
+                  <span className={cn("inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold", step === item.id ? "bg-zinc-900 text-white" : step > item.id ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500")}>{step > item.id ? <Check className="h-4 w-4" /> : item.id}</span>
+                  <span className="min-w-0"><span className="block text-sm font-semibold">{item.title}</span><span className="mt-0.5 block text-xs opacity-70">{step === item.id ? "Sedang diisi" : step > item.id ? "Selesai" : "Berikutnya"}</span></span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-auto rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Auto-save</p>
+              <p className="mt-1 text-sm font-medium text-slate-700">{lastDraftLabel}</p>
+            </div>
+          </aside>
+
+          <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:p-5 lg:p-6">
+            <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+              <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Langkah {step} dari 4</p><h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">{STEP_ITEMS[stepIndex]?.title}</h2></div>
+              <div className="h-2 overflow-hidden rounded-full bg-slate-100 sm:mt-3 sm:w-40"><div className="h-full rounded-full bg-zinc-900 transition-all" style={{ width: `${(step / STEP_ITEMS.length) * 100}%` }} /></div>
+            </div>
+
+            {step === 1 ? (
+              <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:col-span-2"><p className="text-sm font-medium text-slate-700">Data akun sudah diisi otomatis. Rapikan bagian penting saja agar halaman publik siap dibagikan.</p></div>
+                <div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Nama / Display Name</label><Input value={fullName} onChange={(event) => setFullName(event.target.value)} /></div>
+                <div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Username</label><Input value={username} onChange={(event) => setUsername(event.target.value.toLowerCase())} placeholder="username-kamu" /><p className="mt-1 text-xs text-slate-500">{resolvedUsernameState.checking ? "Mengecek username..." : resolvedUsernameState.reason === "owned_by_current_user" ? "Username ini sudah terhubung ke akun kamu." : resolvedUsernameState.available ? "Username tersedia." : resolvedUsernameState.reason === "taken" ? `Username dipakai. ${resolvedUsernameState.suggestion ? `Saran: ${resolvedUsernameState.suggestion}` : ""}` : "Username belum valid."}</p></div>
+                <div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Role / Profesi</label><Input value={role} onChange={(event) => setRole(event.target.value)} /></div>
+                <div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Bio singkat</label><Textarea value={bio} maxLength={240} onChange={(event) => setBio(event.target.value)} placeholder="Ceritakan singkat tentang kamu." className="min-h-24" /></div>
+                <div className="rounded-2xl border border-slate-200 bg-white lg:col-span-2"><button type="button" onClick={() => setOptionalMediaExpanded((prev) => !prev)} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm font-semibold text-slate-800"><span>Foto & Cover opsional</span><ChevronDown className={cn("h-4 w-4 text-slate-500 transition-transform", optionalMediaExpanded ? "rotate-180" : "")} /></button>{optionalMediaExpanded ? <div className="grid gap-3 border-t border-slate-200 p-4 sm:grid-cols-2"><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Foto profile</label><Input value={image} onChange={(event) => setImage(event.target.value)} placeholder="https://..." /></div><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Cover image</label><Input value={coverImageUrl} onChange={(event) => setCoverImageUrl(event.target.value)} placeholder="https://..." /></div></div> : null}</div>
               </div>
-            </aside>
+            ) : null}
 
-            <section className="p-4 sm:p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5b79ab]">
-                    Langkah {step} dari 4
-                  </p>
-                  <h2 className="mt-1 text-2xl font-semibold text-slate-900">
-                    {STEP_ITEMS[stepIndex]?.title}
-                  </h2>
-                </div>
-                <p className="text-xs font-medium text-[#6380ad]">{lastDraftLabel}</p>
+            {step === 2 ? (
+              <div className="mt-4 grid gap-4 xl:grid-cols-[0.82fr_1.18fr]">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-sm font-semibold text-slate-900">Tambah link pertama?</p><p className="mt-1 text-sm leading-6 text-slate-500">Pilih satu link utama. Kamu tetap bisa melewati langkah ini dan menambahkannya nanti.</p><div className="mt-4 grid gap-2"><button type="button" onClick={() => setWantsToAddFirstLink(true)} className={cn("rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition", wantsToAddFirstLink ? "border-zinc-900 bg-white text-slate-950" : "border-slate-200 bg-white text-slate-600")}>Tambahkan link</button><button type="button" onClick={() => setWantsToAddFirstLink(false)} className={cn("rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition", !wantsToAddFirstLink ? "border-zinc-900 bg-white text-slate-950" : "border-slate-200 bg-white text-slate-600")}>Lewati dulu</button></div></div>
+                {wantsToAddFirstLink ? <div className="space-y-4"><div className="grid gap-2 min-[360px]:grid-cols-2 lg:grid-cols-3">{PLATFORM_OPTIONS.map((platform) => { const Icon = platform.icon; const active = firstLinkPlatform === platform.id; return <button key={platform.id} type="button" onClick={() => { setWantsToAddFirstLink(true); setFirstLinkPlatform(platform.id); if (!firstLinkTitle) setFirstLinkTitle(platform.defaultTitle); }} className={cn("flex min-h-12 items-center gap-2 rounded-2xl border p-3 text-left text-sm font-semibold transition", active ? "border-zinc-900 bg-slate-50 text-slate-950" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}><span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700"><Icon className="h-4 w-4" /></span><span className="truncate">{platform.title}</span></button>; })}</div><div className="grid gap-3 sm:grid-cols-2"><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">Judul tombol</label><Input value={firstLinkTitle} onChange={(event) => setFirstLinkTitle(event.target.value)} /></div><div><label className="mb-1.5 block text-sm font-semibold text-slate-700">URL</label><Input value={firstLinkUrl} onChange={(event) => setFirstLinkUrl(event.target.value)} placeholder="https://..." /></div></div><label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={firstLinkEnabled} onChange={(event) => setFirstLinkEnabled(event.target.checked)} className="h-4 w-4 rounded border-slate-300 text-zinc-900 focus:ring-zinc-900" />Aktifkan link ini</label></div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">Link pertama dilewati. Kamu bisa lanjut ke preview.</div>}
               </div>
+            ) : null}
 
-              {step === 1 ? (
-                <div className="mt-5 grid gap-3">
-                  <div className="rounded-xl border border-[#d8e5fb] bg-[#f6f9ff] px-3 py-2 text-sm text-[#50709f]">
-                    Data dari akun kamu sudah kami isi otomatis. Kamu bisa mengubahnya jika perlu.
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-[#35598e]">Nama / Display Name</label>
-                    <Input value={fullName} onChange={(event) => setFullName(event.target.value)} />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-[#35598e]">Username</label>
-                    <Input
-                      value={username}
-                      onChange={(event) => setUsername(event.target.value.toLowerCase())}
-                      placeholder="username-kamu"
-                    />
-                    <p className="mt-1 text-xs text-[#5f7da9]">
-                      {resolvedUsernameState.checking
-                        ? "Mengecek username..."
-                        : resolvedUsernameState.reason === "owned_by_current_user"
-                          ? "Username ini sudah terhubung ke akun kamu."
-                          : resolvedUsernameState.available
-                          ? "Username tersedia."
-                          : resolvedUsernameState.reason === "taken"
-                            ? `Username dipakai. ${resolvedUsernameState.suggestion ? `Saran: ${resolvedUsernameState.suggestion}` : ""}`
-                            : "Username belum valid."}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-[#35598e]">Role / Profesi</label>
-                    <Input value={role} onChange={(event) => setRole(event.target.value)} />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-sm font-semibold text-[#35598e]">Bio singkat</label>
-                    <Textarea
-                      value={bio}
-                      maxLength={240}
-                      onChange={(event) => setBio(event.target.value)}
-                      placeholder="Ceritakan singkat tentang kamu."
-                    />
-                  </div>
-                  <div className="rounded-xl border border-[#d8e5fb] bg-[#f9fbff]">
-                    <button
-                      type="button"
-                      onClick={() => setOptionalMediaExpanded((prev) => !prev)}
-                      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm font-semibold text-[#35598e]"
-                    >
-                      <span>Foto & Cover (opsional)</span>
-                      <ChevronDown
-                        className={cn(
-                          "h-4 w-4 text-[#4f73a8] transition-transform",
-                          optionalMediaExpanded ? "rotate-180" : ""
-                        )}
-                      />
-                    </button>
-                    {optionalMediaExpanded ? (
-                      <div className="grid gap-3 border-t border-[#d8e5fb] px-3 py-3 sm:grid-cols-2">
-                        <div>
-                          <label className="mb-1 block text-sm font-semibold text-[#35598e]">
-                            Foto profile
-                          </label>
-                          <Input
-                            value={image}
-                            onChange={(event) => setImage(event.target.value)}
-                            placeholder="https://..."
-                          />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-sm font-semibold text-[#35598e]">
-                            Cover image
-                          </label>
-                          <Input
-                            value={coverImageUrl}
-                            onChange={(event) => setCoverImageUrl(event.target.value)}
-                            placeholder="https://..."
-                          />
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
+            {step === 3 ? (
+              <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">
+                <div className="grid gap-3 sm:grid-cols-2">{[["Nama", fullName || "Display Name"], ["Username", normalizedUsername ? `showreels.id/${normalizedUsername}` : "Belum valid"], ["Role", role || "Role / profession"], ["Link", wantsToAddFirstLink ? firstLinkTitle || "Link pertama" : "Belum ada link"]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p><p className="mt-2 truncate text-sm font-semibold text-slate-900">{value}</p></div>)}</div>
+                <div className="mx-auto w-full max-w-[320px] rounded-[28px] border-[8px] border-zinc-950 bg-zinc-950 p-3 shadow-sm"><div className="overflow-hidden rounded-[22px] bg-slate-50"><div className="h-[92px] w-full bg-gradient-to-b from-slate-200 to-slate-300">{coverImageUrl ? <img src={coverImageUrl} alt="Cover preview" className="h-full w-full object-cover" /> : null}</div><div className="px-4 pb-5"><div className="-mt-8 mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-zinc-900 text-white">{image ? <img src={image} alt="Avatar preview" className="h-full w-full object-cover" /> : <UserRound className="h-6 w-6" />}</div><p className="mt-3 text-center text-lg font-semibold text-slate-900">{fullName || "Display Name"}</p><p className="mt-1 text-center text-sm text-slate-500">{role || "Role / profession"}</p><p className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800">{bio || "Bio singkat akan muncul di sini."}</p><div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2"><p className="flex items-center gap-2 text-sm font-semibold text-slate-900"><Link2 className="h-4 w-4" />{wantsToAddFirstLink ? firstLinkTitle || "Link pertama kamu" : "Belum ada link"}</p><p className="mt-1 truncate text-xs text-slate-500">{wantsToAddFirstLink ? normalizeSocialUrl(firstLinkUrl) || "https://..." : "Tambahkan nanti dari dashboard."}</p></div></div></div></div>
+              </div>
+            ) : null}
 
-              {step === 2 ? (
-                <div className="mt-5 space-y-4">
-                  <div>
-                    <p className="text-sm font-semibold text-[#35598e]">Mau tambahkan link pertama sekarang?</p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => setWantsToAddFirstLink(true)}
-                        className={cn(
-                          "rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
-                          wantsToAddFirstLink
-                            ? "border-[#27272a] bg-slate-50 text-slate-900"
-                            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
-                        )}
-                      >
-                        Tambahkan link pertama
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setWantsToAddFirstLink(false)}
-                        className={cn(
-                          "rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
-                          !wantsToAddFirstLink
-                            ? "border-[#27272a] bg-slate-50 text-slate-900"
-                            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
-                        )}
-                      >
-                        Lewati dulu
-                      </button>
-                    </div>
-                  </div>
-                  {wantsToAddFirstLink ? (
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm font-semibold text-[#35598e]">
-                          Pilih satu link utama yang ingin kamu tampilkan.
-                        </p>
-                        <div className="mt-2 grid gap-2 min-[360px]:grid-cols-2 lg:grid-cols-3">
-                          {PLATFORM_OPTIONS.map((platform) => {
-                            const Icon = platform.icon;
-                            const active = firstLinkPlatform === platform.id;
-                            return (
-                              <button
-                                key={platform.id}
-                                type="button"
-                                onClick={() => {
-                                  setWantsToAddFirstLink(true);
-                                  setFirstLinkPlatform(platform.id);
-                                  if (!firstLinkTitle) {
-                                    setFirstLinkTitle(platform.defaultTitle);
-                                  }
-                                }}
-                                className={cn(
-                                  "flex min-h-12 items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
-                                  active
-                                    ? "border-[#27272a] bg-slate-50 text-slate-900"
-                                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                                )}
-                              >
-                                <span className="inline-flex min-w-0 items-center gap-2">
-                                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-700">
-                                    <Icon className="h-4 w-4" />
-                                  </span>
-                                  <span className="truncate">{platform.title}</span>
-                                </span>
-                                <span
-                                  className={cn(
-                                    "inline-flex h-4 w-4 shrink-0 rounded-full border",
-                                    active ? "border-[#27272a] bg-zinc-800" : "border-[#b9ccec]"
-                                  )}
-                                />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      <div className="grid gap-3">
-                        <div>
-                          <label className="mb-1 block text-sm font-semibold text-[#35598e]">Judul tombol</label>
-                          <Input value={firstLinkTitle} onChange={(event) => setFirstLinkTitle(event.target.value)} />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-sm font-semibold text-[#35598e]">URL</label>
-                          <Input
-                            value={firstLinkUrl}
-                            onChange={(event) => setFirstLinkUrl(event.target.value)}
-                            placeholder="https://..."
-                          />
-                        </div>
-                        <label className="inline-flex items-center gap-2 text-sm font-medium text-[#3a5f98]">
-                          <input
-                            type="checkbox"
-                            checked={firstLinkEnabled}
-                            onChange={(event) => setFirstLinkEnabled(event.target.checked)}
-                            className="h-4 w-4 rounded border-[#b8caea] text-slate-700 focus:ring-zinc-800"
-                          />
-                          Aktifkan link ini
-                        </label>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-xl border border-dashed border-[#b8cff4] bg-slate-50 px-3 py-3 text-sm text-[#5d7da9]">
-                      Kamu bisa lanjut ke preview tanpa menambahkan link sekarang.
-                    </div>
-                  )}
-                </div>
-              ) : null}
+            {step === 4 ? <div className="mt-4 grid gap-4 lg:grid-cols-3"><div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 lg:col-span-2"><span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-white"><Check className="h-5 w-5" /></span><h3 className="mt-4 text-xl font-semibold text-slate-950">Halaman creator kamu siap</h3><p className="mt-2 text-sm leading-6 text-slate-600">Lanjut ke dashboard untuk mengatur link, upload video, dan membaca analytics.</p></div><div className="grid content-start gap-2"><Button onClick={() => void handleComplete("dashboard")} disabled={busy} className="min-h-11">{busy ? "Memproses..." : "Masuk Dashboard"}</Button><Button variant="secondary" onClick={() => void handleComplete("build-link")} disabled={busy} className="min-h-11">Lanjut Edit Build Link</Button></div></div> : null}
 
-              {step === 3 ? (
-                <div className="mt-5 space-y-4">
-                  <p className="text-sm text-[#5c79a8]">
-                    Lihat tampilan awal halaman creator kamu sebelum masuk dashboard.
-                  </p>
-                  <div className="mx-auto max-w-[360px] rounded-[28px] border-[8px] border-[#0f172a] bg-[#0f172a] p-3 shadow-[0_22px_44px_rgba(16,41,85,0.25)]">
-                    <div className="overflow-hidden rounded-[22px] bg-slate-50">
-                      <div className="h-[104px] w-full bg-gradient-to-b from-[#dae8ff] to-[#a3c5ff]">
-                        {coverImageUrl ? (
-                          <img
-                            src={coverImageUrl}
-                            alt="Cover preview"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </div>
-                      <div className="px-4 pb-5">
-                        <div className="-mt-8 mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-zinc-800 text-white">
-                          {image ? (
-                            <img src={image} alt="Avatar preview" className="h-full w-full object-cover" />
-                          ) : (
-                            <UserRound className="h-6 w-6" />
-                          )}
-                        </div>
-                        <p className="mt-3 text-center text-lg font-semibold text-slate-900">
-                          {fullName || "Display Name"}
-                        </p>
-                        <p className="mt-1 text-center text-sm text-[#5f7ca8]">
-                          {role || "Role / profession"}
-                        </p>
-                        <p className="mt-3 rounded-xl border border-[#d5e3fb] bg-white px-3 py-2 text-sm font-medium text-slate-900">
-                          {bio || "Bio singkat akan muncul di sini."}
-                        </p>
-                        <div className="mt-3 rounded-xl border border-[#d5e3fb] bg-white px-3 py-2">
-                          <p className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                            <Link2 className="h-4 w-4 text-slate-700" />
-                            {wantsToAddFirstLink
-                              ? firstLinkTitle || "Link pertama kamu"
-                              : "Belum ada link pertama"}
-                          </p>
-                          <p className="mt-1 truncate text-xs text-[#5f7ca8]">
-                            {wantsToAddFirstLink
-                              ? normalizeSocialUrl(firstLinkUrl) || "https://..."
-                              : "Kamu bisa menambahkannya nanti dari dashboard."}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
-              {step === 4 ? (
-                <div className="mt-5 space-y-4">
-                  <div className="rounded-2xl border border-[#d6e5fb] bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-900">Halaman creator kamu siap</p>
-                    <p className="mt-1 text-sm text-[#5e79a6]">
-                      Kamu bisa lanjut mengatur link, upload video, atau melihat dashboard.
-                    </p>
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <Button onClick={() => void handleComplete("dashboard")} disabled={busy}>
-                      {busy ? "Memproses..." : "Masuk Dashboard"}
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => void handleComplete("build-link")}
-                      disabled={busy}
-                    >
-                      Lanjut Edit Build Link
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
-
-              {step < 4 ? (
-                <div className="sticky bottom-0 z-10 mt-6 border-t border-[#d5e3fb] bg-white/95 pt-3 backdrop-blur">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {step > 1 ? (
-                        <Button
-                          variant="secondary"
-                          onClick={handleBack}
-                          disabled={busy}
-                          className="min-h-10 px-3"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                          Back
-                        </Button>
-                      ) : null}
-                      <Button
-                        variant="ghost"
-                        onClick={() => void handleSkip()}
-                        disabled={busy}
-                        className="min-h-10 px-2 text-xs sm:text-sm"
-                      >
-                        {step === 2 ? "Lewati langkah link" : "Saya mengisinya nanti"}
-                      </Button>
-                    </div>
-                    <Button
-                      onClick={() => void handleNext()}
-                      disabled={busy || draftSaving}
-                      className="min-h-11 w-full sm:w-auto"
-                    >
-                      {busy ? "Menyimpan..." : "Next"}
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
-            </section>
-          </div>
-        </Card>
+            {step < 4 ? <div className="sticky bottom-0 z-10 mt-5 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap items-center gap-2">{step > 1 ? <Button variant="secondary" onClick={handleBack} disabled={busy} className="min-h-10 px-3"><ChevronLeft className="h-4 w-4" />Back</Button> : null}<Button variant="ghost" onClick={() => void handleSkip()} disabled={busy} className="min-h-10 px-2 text-xs sm:text-sm">{step === 2 ? "Lewati langkah link" : "Saya mengisinya nanti"}</Button></div><Button onClick={() => void handleNext()} disabled={busy || draftSaving} className="min-h-11 w-full sm:w-auto">{busy ? "Menyimpan..." : "Next"}<ChevronRight className="h-4 w-4" /></Button></div></div> : null}
+          </section>
+        </div>
       </div>
     </div>
   );
