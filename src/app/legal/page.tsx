@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 const legalLinks = [
   {
@@ -25,26 +26,39 @@ const legalLinks = [
 
 export default function LegalPage() {
   return (
-    <main className="min-h-screen bg-canvas px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-4xl rounded-[1.5rem] border border-[#d9e3f7] bg-white p-6 shadow-sm sm:p-8">
-        <p className="text-eyebrow font-semibold uppercase text-[#2f66e4]">Legal</p>
-        <h1 className="mt-2 text-[clamp(1.65rem,4.2vw,2.3rem)] font-extrabold tracking-[-0.03em] text-[#17120f]">
-          Halaman legal Showreels
-        </h1>
-        <p className="mt-3 text-body-base text-[#5a4e48]">
-          Dokumen legal berikut aktif dan bisa kamu akses kapan saja untuk melihat
-          aturan penggunaan, privasi, serta pemrosesan data.
-        </p>
+    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-950 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-900/5 sm:p-8 lg:p-10">
+        <div className="max-w-3xl">
+          <p className="text-eyebrow font-semibold uppercase text-[#1a46c9]">Legal</p>
+          <h1 className="mt-3 font-display text-[clamp(2rem,5vw,3.5rem)] font-extrabold leading-[1.06] tracking-[-0.04em] text-slate-950">
+            Halaman legal Showreels
+          </h1>
+          <p className="mt-4 text-body-lg text-slate-600">
+            Dokumen legal berikut aktif dan bisa kamu akses kapan saja untuk melihat aturan
+            penggunaan, privasi, serta pemrosesan data.
+          </p>
+        </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="mt-8 grid gap-3 sm:grid-cols-2">
           {legalLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-[1rem] border border-[#d8e4ff] bg-[#f5f9ff] px-4 py-3 transition hover:border-[#b8ceff] hover:bg-[#ecf3ff]"
+              className="group rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-4 transition hover:-translate-y-0.5 hover:border-[#dbe5ff] hover:bg-[#eef4ff] hover:shadow-md hover:shadow-[#1a46c9]/10 sm:px-5"
             >
-              <p className="text-[1rem] font-bold text-[#1c2b45]">{item.title}</p>
-              <p className="mt-1 text-[0.9rem] text-[#4d5e7f]">{item.description}</p>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[1rem] font-extrabold tracking-[-0.02em] text-slate-950">
+                    {item.title}
+                  </p>
+                  <p className="mt-1 text-[0.9rem] leading-6 text-slate-600">
+                    {item.description}
+                  </p>
+                </div>
+                <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#1a46c9] ring-1 ring-[#dbe5ff] transition group-hover:bg-[#1a46c9] group-hover:text-white">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              </div>
             </Link>
           ))}
         </div>

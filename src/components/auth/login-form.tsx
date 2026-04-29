@@ -119,7 +119,7 @@ export function LoginForm({
       ? "/auth/signup"
       : `/auth/signup?next=${encodeURIComponent(safeNextPath)}`;
   const altActionClassName =
-    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-sky-100 bg-white px-4 text-sm font-semibold text-sky-800 shadow-sm shadow-sky-900/5 transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm shadow-slate-900/5 transition hover:border-[#dbe5ff] hover:bg-[#eef4ff] hover:text-[#1a46c9] focus:outline-none focus:ring-2 focus:ring-[#dbe5ff] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -234,7 +234,7 @@ export function LoginForm({
   return (
     <AuthShell
       title={dictionary.authLoginTitle}
-      subtitle="Masuk dengan tampilan yang lebih ringkas, aman, dan mudah dipahami."
+      subtitle="Masuk ke dashboard creator dengan pengalaman yang bersih, aman, dan konsisten."
       showPreferences={false}
     >
       <motion.form
@@ -245,14 +245,14 @@ export function LoginForm({
         className="space-y-4"
       >
         {oauthErrorMessage ? (
-          <p className="rounded-2xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          <p className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
             {oauthErrorMessage}
           </p>
         ) : null}
 
         <div className="space-y-2">
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-            <Mail className="h-4 w-4 text-sky-600" />
+            <Mail className="h-4 w-4 text-[#1a46c9]" />
             Email
           </label>
           <Input
@@ -272,12 +272,12 @@ export function LoginForm({
         <div className="space-y-2">
           <div className="mb-2 flex items-center justify-between gap-3">
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-              <LockKeyhole className="h-4 w-4 text-emerald-600" />
+              <LockKeyhole className="h-4 w-4 text-[#1a46c9]" />
               Password
             </label>
             <Link
               href="/auth/forgot-password"
-              className="text-xs font-semibold text-sky-700 hover:text-sky-800"
+              className="text-xs font-semibold text-[#1a46c9] hover:text-[#153aa8]"
             >
               Lupa password?
             </Link>
@@ -297,7 +297,7 @@ export function LoginForm({
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-sky-600 transition hover:text-sky-800"
+              className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center justify-center text-[#1a46c9] transition hover:text-[#153aa8]"
               aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -309,13 +309,13 @@ export function LoginForm({
         </div>
 
         {authLock.lockMessage || visibleSubmitError ? (
-          <p className="rounded-2xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
             {authLock.lockMessage || visibleSubmitError}
           </p>
         ) : null}
 
         <Button
-          className="w-full bg-sky-600 text-white shadow-sm shadow-sky-900/15 hover:bg-sky-700 focus-visible:ring-sky-200"
+          className="w-full bg-[#1a46c9] text-white shadow-sm shadow-[#1a46c9]/20 hover:bg-[#153aa8] focus-visible:ring-[#dbe5ff]"
           type="submit"
           disabled={isFormDisabled}
         >
@@ -327,11 +327,11 @@ export function LoginForm({
         </Button>
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1 text-xs text-slate-500">
-          <span className="h-px bg-gradient-to-r from-transparent via-sky-200 to-sky-100" />
+          <span className="h-px bg-gradient-to-r from-transparent via-slate-200 to-[#dbe5ff]" />
           <span>atau</span>
-          <span className="h-px bg-gradient-to-r from-sky-100 via-emerald-200 to-transparent" />
+          <span className="h-px bg-gradient-to-r from-[#dbe5ff] via-slate-200 to-transparent" />
         </div>
-        <p className="pt-1 text-center text-sm text-sky-800/75">{dictionary.noAccount}</p>
+        <p className="pt-1 text-center text-sm text-slate-600">{dictionary.noAccount}</p>
         <div className="space-y-2">
           {googleEnabled ? (
             <button
