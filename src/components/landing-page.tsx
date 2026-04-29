@@ -1125,7 +1125,7 @@ export function LandingPage({
           </section>
 
           <section
-            className="relative bg-gradient-to-b from-white via-[#f8fafc] to-white py-12 sm:py-16 lg:py-20"
+            className="relative bg-gradient-to-b from-white to-[#fafbfc] py-12 sm:py-16 lg:py-20"
             id="features"
           >
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
@@ -1139,47 +1139,46 @@ export function LandingPage({
                     {dictionary.landingFeaturesTitleAccent}
                   </span>
                 </h2>
-                <p className="mx-auto mt-5 max-w-[680px] text-[1.05rem] leading-relaxed text-[#4a5568]">
+                <p className="mx-auto mt-3 max-w-[620px] text-sm text-[#5a6e91] sm:text-base">
                   {dictionary.landingFeaturesDescription}
                 </p>
               </div>
 
-              <div className="mt-8 grid gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:gap-6">
+              <div className="mt-8 space-y-3 sm:mt-10 sm:space-y-4">
                 {marketingFeatures.map((item, index) => {
                   const icons = [
-                    { Icon: UserRound, gradient: "from-[#dbeafe] to-[#bfdbfe]", color: "#2563eb" },
-                    { Icon: Video, gradient: "from-[#e0e7ff] to-[#c7d2fe]", color: "#4f46e5" },
-                    { Icon: Globe, gradient: "from-[#ddd6fe] to-[#c4b5fd]", color: "#7c3aed" },
-                    { Icon: Lock, gradient: "from-[#e0f2fe] to-[#bae6fd]", color: "#0284c7" },
+                    { Icon: UserRound, gradient: "from-[#dbeafe] to-[#bfdbfe]", color: "#2563eb", bg: "#eff6ff" },
+                    { Icon: Video, gradient: "from-[#e0e7ff] to-[#c7d2fe]", color: "#4f46e5", bg: "#eef2ff" },
+                    { Icon: Globe, gradient: "from-[#ddd6fe] to-[#c4b5fd]", color: "#7c3aed", bg: "#f5f3ff" },
+                    { Icon: Lock, gradient: "from-[#e0f2fe] to-[#bae6fd]", color: "#0284c7", bg: "#f0f9ff" },
                   ];
-                  const { Icon, gradient, color } = icons[index] || icons[0];
+                  const { Icon, gradient, color, bg } = icons[index] || icons[0];
 
                   return (
                     <m.article
                       key={item.title}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
                       transition={{
                         duration: 0.4,
-                        delay: index * 0.08,
+                        delay: index * 0.06,
                         ease: "easeOut"
                       }}
-                      className="group relative overflow-hidden rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-all duration-300 hover:border-[#2f73ff]/30 hover:shadow-lg hover:-translate-y-1 sm:p-5 lg:p-6"
+                      className="group flex items-start gap-4 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-all duration-300 hover:border-[#2f73ff]/30 hover:shadow-md sm:gap-5 sm:p-5"
                     >
-                      <div className="absolute -right-6 -top-6 hidden h-24 w-24 rounded-full bg-gradient-to-br from-[#2f73ff]/4 to-transparent blur-xl transition-all duration-500 group-hover:scale-125 sm:block" />
+                      <div
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md sm:h-12 sm:w-12"
+                        style={{ backgroundColor: bg }}
+                      >
+                        <Icon className="h-5 w-5 sm:h-5.5 sm:w-5.5" style={{ color }} strokeWidth={2.5} />
+                      </div>
                       
-                      <div className="relative">
-                        <div
-                          className={`mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br ${gradient} shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md group-hover:rotate-3 sm:mb-4 sm:h-14 sm:w-14`}
-                        >
-                          <Icon className="h-6 w-6 sm:h-6.5 sm:w-6.5" style={{ color }} strokeWidth={2.5} />
-                        </div>
-                        
-                        <h3 className="text-[1.05rem] font-bold leading-tight tracking-tight text-[#0f1419] transition-colors group-hover:text-[#2f73ff] sm:text-[1.15rem] lg:text-[1.2rem]">
+                      <div className="flex-1 pt-0.5">
+                        <h3 className="text-[0.95rem] font-bold leading-tight tracking-tight text-[#0f1419] transition-colors group-hover:text-[#2f73ff] sm:text-[1.05rem]">
                           {item.title}
                         </h3>
-                        <p className="mt-2 text-[0.9rem] leading-relaxed text-[#6b7280] sm:mt-2.5 sm:text-[0.95rem]">
+                        <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-[#6b7280] sm:text-sm">
                           {item.description}
                         </p>
                       </div>
