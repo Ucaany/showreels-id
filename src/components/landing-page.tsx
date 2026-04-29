@@ -9,12 +9,15 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
+  Globe,
+  Lock,
   LogOut,
   Menu,
   PlayCircle,
   Plus,
   Star,
   UserRound,
+  Video,
   X,
 } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
@@ -1122,46 +1125,72 @@ export function LandingPage({
           </section>
 
           <section
-            className="mx-auto w-full max-w-[1160px] scroll-mt-28 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+            className="relative overflow-hidden bg-gradient-to-b from-[#fafbff] via-[#f0f5ff] to-white py-16 sm:py-20 lg:py-24"
             id="features"
           >
-            <div className="mx-auto max-w-[880px]">
+            <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
               <div className="text-center">
                 <Badge className={sectionBadgeClass}>
                   {dictionary.landingFeaturesBadge}
                 </Badge>
                 <h2 className="mt-4 font-display text-[2.25rem] sm:text-[2.75rem] lg:text-[3.25rem] font-extrabold leading-[1.12] tracking-tight text-[#0f1419]">
                   {dictionary.landingFeaturesTitleLead}{" "}
-                  <span className="font-accent italic text-[#2f73ff]">{dictionary.landingFeaturesTitleAccent}</span>
+                  <span className="bg-gradient-to-r from-[#2f73ff] to-[#1e5dd9] bg-clip-text font-accent italic text-transparent">
+                    {dictionary.landingFeaturesTitleAccent}
+                  </span>
                 </h2>
                 <p className="mx-auto mt-5 max-w-[680px] text-[1.05rem] leading-relaxed text-[#4a5568]">
                   {dictionary.landingFeaturesDescription}
                 </p>
               </div>
 
-              <div className="mt-12 space-y-6 sm:space-y-7">
-                {marketingFeatures.map((item, index) => (
-                  <m.article
-                    key={item.title}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className="group flex gap-5 rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm transition-all hover:border-[#2f73ff]/30 hover:shadow-md hover:-translate-y-1"
-                  >
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#dbeafe] to-[#bfdbfe] shadow-sm transition-transform group-hover:scale-110">
-                      <Check className="h-6 w-6 text-[#2563eb]" strokeWidth={2.5} />
-                    </div>
-                    <div className="flex-1 pt-1">
-                      <h3 className="text-[1.15rem] font-bold leading-tight tracking-tight text-[#111827]">
-                        {item.title}
-                      </h3>
-                      <p className="mt-2 text-[0.95rem] leading-relaxed text-[#6b7280]">
-                        {item.description}
-                      </p>
-                    </div>
-                  </m.article>
-                ))}
+              <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:gap-8">
+                {marketingFeatures.map((item, index) => {
+                  const icons = [
+                    { Icon: UserRound, gradient: "from-[#dbeafe] to-[#bfdbfe]", color: "#2563eb" },
+                    { Icon: Video, gradient: "from-[#fce7f3] to-[#fbcfe8]", color: "#db2777" },
+                    { Icon: Globe, gradient: "from-[#d1fae5] to-[#a7f3d0]", color: "#059669" },
+                    { Icon: Lock, gradient: "from-[#fef3c7] to-[#fde68a]", color: "#d97706" },
+                  ];
+                  const { Icon, gradient, color } = icons[index] || icons[0];
+
+                  return (
+                    <m.article
+                      key={item.title}
+                      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{
+                        duration: 0.5,
+                        delay: index * 0.1,
+                        type: "spring",
+                        stiffness: 100
+                      }}
+                      className="group relative overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white p-7 shadow-md transition-all duration-300 hover:border-[#2f73ff]/40 hover:shadow-xl hover:-translate-y-2"
+                    >
+                      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-gradient-to-br from-[#2f73ff]/5 to-transparent blur-2xl transition-all duration-500 group-hover:scale-150" />
+                      
+                      <div className="relative">
+                        <m.div
+                          initial={{ rotate: 0 }}
+                          whileInView={{ rotate: [0, -10, 10, 0] }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.6, delay: index * 0.1 + 0.3 }}
+                          className={`mb-5 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl group-hover:rotate-6`}
+                        >
+                          <Icon className="h-7 w-7" style={{ color }} strokeWidth={2.5} />
+                        </m.div>
+                        
+                        <h3 className="text-[1.25rem] font-extrabold leading-tight tracking-tight text-[#0f1419] transition-colors group-hover:text-[#2f73ff]">
+                          {item.title}
+                        </h3>
+                        <p className="mt-3 text-[1rem] leading-relaxed text-[#6b7280]">
+                          {item.description}
+                        </p>
+                      </div>
+                    </m.article>
+                  );
+                })}
               </div>
             </div>
           </section>
