@@ -13,6 +13,7 @@ import {
   Menu,
   PlayCircle,
   Plus,
+  Star,
   UserRound,
   X,
 } from "lucide-react";
@@ -513,6 +514,7 @@ export function LandingPage({
             ? "Freelance Video Editor"
             : "Freelance Video Editor",
         light: true,
+        rating: 5,
       },
       {
         quote:
@@ -525,6 +527,7 @@ export function LandingPage({
             ? "Content Creator"
             : "Kreator Konten",
         light: false,
+        rating: 4,
       },
       {
         quote:
@@ -537,6 +540,7 @@ export function LandingPage({
             ? "Videographer"
             : "Videografer",
         light: true,
+        rating: 5,
       },
     ],
     [locale]
@@ -1277,9 +1281,9 @@ export function LandingPage({
                 <Badge className="rounded-full border border-[#bcd3ff] bg-[#eaf2ff] px-2.5 py-1 text-eyebrow font-semibold uppercase text-[#2f73ff] shadow-none">
                   {dictionary.landingPricingBadge}
                 </Badge>
-                <h2 className="mt-3 font-display text-section-display font-extrabold text-[#1f58d8]">
-                  <span className="text-[#2f73ff]">{dictionary.landingPricingTitleLead}</span>{" "}
-                  <span className="font-accent text-[#2b67e9]">
+                <h2 className="mt-3 font-display text-section-display font-extrabold text-[#2f73ff]">
+                  <span>{dictionary.landingPricingTitleLead}</span>{" "}
+                  <span className="font-accent text-[#140f0d]">
                     {dictionary.landingPricingTitleAccent}
                   </span>
                 </h2>
@@ -1371,6 +1375,35 @@ export function LandingPage({
                       : "border-[#1f1917] bg-[#181210] text-white"
                   )}
                 >
+                  <div className="mb-4 flex items-center gap-2" aria-label={`${item.rating} dari 5 bintang`}>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, index) => {
+                        const active = index < item.rating;
+
+                        return (
+                          <Star
+                            key={`${item.name}-star-${index}`}
+                            className={cn(
+                              "h-4 w-4",
+                              active
+                                ? "fill-[#f8b84e] text-[#f8b84e]"
+                                : item.light
+                                  ? "fill-[#eadfd7] text-[#eadfd7]"
+                                  : "fill-white/18 text-white/18"
+                            )}
+                          />
+                        );
+                      })}
+                    </div>
+                    <span
+                      className={cn(
+                        "text-[0.78rem] font-semibold tracking-[-0.006em]",
+                        item.light ? "text-[#6d5f58]" : "text-white/68"
+                      )}
+                    >
+                      {item.rating}/5
+                    </span>
+                  </div>
                   <p
                     className={cn(
                       "text-body-base",
