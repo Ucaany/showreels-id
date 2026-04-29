@@ -1240,7 +1240,7 @@ export function LandingPage({
                 </p>
               </div>
 
-              <div className="mt-12 grid gap-8 lg:grid-cols-3 lg:gap-10">
+              <div className="relative mt-12 grid gap-8 lg:grid-cols-3 lg:gap-10 lg:gap-x-16">
                 {[
                   {
                     label: dictionary.landingHowItWorksStep1Label,
@@ -1331,8 +1331,8 @@ export function LandingPage({
                       </p>
 
                       {index < 2 && (
-                        <div className="absolute -right-5 top-1/2 hidden -translate-y-1/2 lg:block">
-                          <svg className="h-10 w-10 text-[#d1d5db]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <div className="absolute -right-12 top-1/2 z-10 hidden -translate-y-1/2 lg:block">
+                          <svg className="h-12 w-12 text-[#c5d4e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </div>
