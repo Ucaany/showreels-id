@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppLogo } from "@/components/app-logo";
 import { SitePreferences } from "@/components/site-preferences";
+import { FeatureNotification } from "@/components/auth/feature-notification";
 
 interface AuthShellProps {
   title: string;
@@ -16,9 +17,9 @@ export function AuthShell({
   showPreferences = true,
 }: AuthShellProps) {
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-2">
-      {/* Video Section - Desktop Only */}
-      <div className="relative hidden overflow-hidden bg-[#0a1628] lg:block">
+    <div className="min-h-screen lg:flex">
+      {/* Video Section - Desktop Only, Fixed Position */}
+      <div className="relative hidden overflow-hidden bg-[#0a1628] lg:fixed lg:left-0 lg:top-0 lg:block lg:h-screen lg:w-1/2">
         {/* Background Video */}
         <video
           autoPlay
@@ -34,19 +35,12 @@ export function AuthShell({
         {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628]/80 via-[#1a2d4f]/70 to-[#0d1b35]/85" />
         
-        {/* Optional Content Overlay */}
-        <div className="relative z-10 flex h-full flex-col items-center justify-center px-12 text-center">
-          <h2 className="font-display text-4xl font-bold text-white">
-            Selamat datang di Showreels
-          </h2>
-          <p className="mt-4 max-w-md text-lg text-white/80">
-            Platform portfolio video untuk creator yang ingin menampilkan karya terbaik mereka
-          </p>
-        </div>
+        {/* Feature Notification - Desktop Only */}
+        <FeatureNotification />
       </div>
 
-      {/* Form Section */}
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_12%_-3%,rgba(37,99,235,0.16),transparent_34%),radial-gradient(circle_at_90%_0%,rgba(67,117,255,0.16),transparent_30%),linear-gradient(180deg,rgba(249,252,255,0.98),rgba(243,248,255,0.96))] px-4 py-8 sm:py-12 lg:bg-white">
+      {/* Form Section - Scrollable, Offset on Desktop */}
+      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_12%_-3%,rgba(37,99,235,0.16),transparent_34%),radial-gradient(circle_at_90%_0%,rgba(67,117,255,0.16),transparent_30%),linear-gradient(180deg,rgba(249,252,255,0.98),rgba(243,248,255,0.96))] px-4 py-8 sm:py-12 lg:ml-[50%] lg:w-1/2 lg:bg-white">
         {/* Decorative Blurs - Mobile Only */}
         <div className="pointer-events-none absolute -left-20 top-0 h-80 w-80 rounded-full bg-[#9dbdf8]/50 blur-3xl lg:hidden" />
         <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-[#a7c7ff]/50 blur-3xl lg:hidden" />
