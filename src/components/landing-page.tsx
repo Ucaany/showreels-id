@@ -1174,11 +1174,11 @@ export function LandingPage({
                 </p>
               </div>
 
-                <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-5">
-                  {PLATFORM_SOURCES.map((platform, index) => {
-                    const PlatformIcon = platform.icon;
+              <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 lg:gap-5">
+                {PLATFORM_SOURCES.map((platform, index) => {
+                  const PlatformIcon = platform.icon;
 
-                    return (
+                  return (
                     <m.article
                       key={platform.name}
                       initial={{ opacity: 0, y: 8 }}
@@ -1186,34 +1186,108 @@ export function LandingPage({
                       viewport={{ once: true, amount: 0.4 }}
                       transition={{ duration: 0.25, delay: index * 0.05 }}
                       className={cn(
-                        "rounded-[1.2rem] border border-[#cfdcf2] bg-gradient-to-b p-3.5 text-center shadow-sm sm:p-[1.125rem]",
-                        index === PLATFORM_SOURCES.length - 1 && "col-span-2 mx-auto w-full max-w-[calc(50%-0.375rem)] lg:col-span-1 lg:max-w-none",
-                        platform.bgClass
+                        "rounded-2xl border border-[#e5eaf2] bg-white p-5 text-center shadow-sm transition-all hover:shadow-md hover:-translate-y-1",
+                        index === PLATFORM_SOURCES.length - 1 && "col-span-2 mx-auto w-full max-w-[calc(50%-0.5rem)] sm:col-span-1 sm:max-w-none"
                       )}
                     >
-                      <div className="mx-auto inline-flex min-h-11 items-center justify-center">
+                      <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-[#d5e1ff] bg-[#f0f4ff]">
                         <span
                           className={cn(
-                            "inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/80 bg-white shadow-sm",
+                            "inline-flex items-center justify-center",
                             platform.textClass
                           )}
                           aria-label={platform.name}
                         >
-                          <PlatformIcon className="h-5 w-5" />
+                          <PlatformIcon className="h-6 w-6" />
                         </span>
                       </div>
-                      <p className="mt-2.5 text-[0.92rem] font-bold tracking-[-0.012em] text-[#1c273f] sm:text-[1rem]">
+                      <p className="mt-3 text-[0.95rem] font-bold tracking-[-0.012em] text-[#1c273f] sm:text-[1rem]">
                         {platform.name}
                       </p>
-                      <p className="mt-1 text-[0.74rem] leading-snug text-[#4f5d76] sm:text-helper">
+                      <p className="mt-1.5 text-[0.8rem] leading-snug text-[#5f6d85] sm:text-[0.84rem]">
                         {locale === "en"
-                          ? "Supported as video source"
-                          : "Didukung sebagai sumber video"}
+                          ? "Supported source"
+                          : "Sumber didukung"}
                       </p>
                     </m.article>
                   );
                 })}
               </div>
+            </div>
+          </section>
+
+          <section className="mx-auto w-full max-w-[1160px] px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+            <div className="text-center">
+              <Badge className={sectionBadgeClass}>
+                {dictionary.landingHowItWorksBadge}
+              </Badge>
+              <h2 className={sectionTitleClass}>
+                {dictionary.landingHowItWorksTitleLead}{" "}
+                <span className={accentTextClass}>
+                  {dictionary.landingHowItWorksTitleAccent}
+                </span>
+              </h2>
+              <p className={centeredSectionDescriptionClass}>
+                {dictionary.landingHowItWorksDescription}
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-6 lg:grid-cols-3 lg:gap-8">
+              {[
+                {
+                  label: dictionary.landingHowItWorksStep1Label,
+                  title: dictionary.landingHowItWorksStep1Title,
+                  description: dictionary.landingHowItWorksStep1Description,
+                  icon: UserRound,
+                },
+                {
+                  label: dictionary.landingHowItWorksStep2Label,
+                  title: dictionary.landingHowItWorksStep2Title,
+                  description: dictionary.landingHowItWorksStep2Description,
+                  icon: PlayCircle,
+                },
+                {
+                  label: dictionary.landingHowItWorksStep3Label,
+                  title: dictionary.landingHowItWorksStep3Title,
+                  description: dictionary.landingHowItWorksStep3Description,
+                  icon: Check,
+                },
+              ].map((step, index) => {
+                const StepIcon = step.icon;
+
+                return (
+                  <m.article
+                    key={step.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.4, delay: index * 0.15 }}
+                    className="relative rounded-2xl border border-[#e5eaf2] bg-white p-6 text-center shadow-sm"
+                  >
+                    <span className="inline-flex items-center gap-2 rounded-full bg-[#eef5ff] px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#2f66e4]">
+                      {step.label}
+                    </span>
+
+                    <div className="mx-auto mt-5 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#eef5ff] to-[#d5e7ff]">
+                      <StepIcon className="h-8 w-8 text-[#2f66e4]" />
+                    </div>
+
+                    <h3 className="mt-4 text-xl font-bold text-[#1d1714]">
+                      {step.title}
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-relaxed text-[#5c514b]">
+                      {step.description}
+                    </p>
+
+                    {index < 2 && (
+                      <div className="absolute -right-4 top-1/2 hidden -translate-y-1/2 lg:block">
+                        <ArrowRight className="h-6 w-6 text-[#cbd5e1]" />
+                      </div>
+                    )}
+                  </m.article>
+                );
+              })}
             </div>
           </section>
 
