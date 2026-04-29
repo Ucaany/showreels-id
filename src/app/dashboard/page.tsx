@@ -60,7 +60,7 @@ function BentoCard({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-slate-200 bg-white p-5 text-slate-800 shadow-sm md:p-6",
+        "rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm md:p-6",
         className
       )}
     >
@@ -80,11 +80,11 @@ function HeroCard({
     <BentoCard className="overflow-hidden lg:col-span-2">
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-blue-50/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
             <Sparkles className="h-3.5 w-3.5" />
             Dashboard Creator
           </div>
-          <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-slate-800 md:text-4xl">
+          <h2 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
             Selamat datang, {userName || "Kreator"}
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
@@ -93,7 +93,7 @@ function HeroCard({
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-3">
           <Link href={canUseBuildLink ? "/dashboard/link-builder" : "/dashboard/billing"}>
-            <Button className="rounded-full bg-blue-600 px-6 py-2 text-white hover:bg-blue-700">
+            <Button className="rounded-xl bg-zinc-800 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-700">
               {canUseBuildLink ? <Wand2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
               {canUseBuildLink ? "Mulai Build Link" : "Unlock Build Link"}
             </Button>
@@ -101,7 +101,7 @@ function HeroCard({
           <Link href="/dashboard/videos/new">
             <Button
               variant="secondary"
-              className="rounded-full border border-slate-200 bg-white px-6 py-2 text-slate-800 hover:bg-blue-50/50 hover:text-blue-600"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 hover:bg-slate-100"
             >
               <Plus className="h-4 w-4" />
               Upload Video
@@ -121,18 +121,18 @@ function PublicLinkCard({
   username: string;
 }) {
   return (
-    <BentoCard className="bg-gradient-to-br from-blue-50 to-white lg:col-span-1">
+    <BentoCard className="lg:col-span-1">
       <div className="flex h-full flex-col justify-between gap-6">
         <div>
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
               Public Link
             </p>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-800 text-white shadow-sm">
               <Share2 className="h-4 w-4" />
             </span>
           </div>
-          <h3 className="mt-5 truncate text-xl font-semibold text-slate-800">{profilePath}</h3>
+          <h3 className="mt-5 truncate text-xl font-semibold text-slate-900">{profilePath}</h3>
           <p className="mt-2 text-sm leading-6 text-slate-500">
             Bagikan profil creator, link penting, bio, dan portfolio video ke client.
           </p>
@@ -147,15 +147,21 @@ function StatCard({ item }: { item: MetricCard }) {
   const Icon = item.icon;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50/50 text-blue-600">
-        <Icon className="h-5 w-5" />
-      </span>
-      <p className="mt-4 text-sm font-medium text-slate-500">{item.label}</p>
-      <p className="mt-1 text-3xl font-semibold tracking-[-0.03em] text-slate-800">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+          {item.label}
+        </p>
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-700">
+          <Icon className="h-4 w-4" />
+        </span>
+      </div>
+      <p className="mt-5 text-3xl font-semibold tracking-tight text-slate-900">
         {formatNumber(item.value)}
       </p>
-      <p className="mt-1 text-xs leading-5 text-slate-500">{item.helper}</p>
+      <span className="mt-2 inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-600">
+        {item.helper}
+      </span>
     </div>
   );
 }
@@ -177,19 +183,19 @@ function AnalyticsChartCard() {
     <BentoCard className="lg:col-span-2">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
             Analytics Trafik
           </p>
-          <h3 className="mt-1 text-xl font-semibold text-slate-800">Performa kunjungan publik</h3>
+          <h3 className="mt-1 text-xl font-semibold text-slate-900">Performa kunjungan publik</h3>
         </div>
-        <span className="rounded-full border border-slate-200 bg-blue-50/50 px-3 py-1 text-xs font-semibold text-blue-600">
+        <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-600">
           7 hari terakhir
         </span>
       </div>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <div className="relative h-64">
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white via-blue-50/50 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white via-slate-100 to-transparent" />
           <div className="absolute inset-0 grid grid-rows-4">
             <span className="border-b border-slate-200" />
             <span className="border-b border-slate-200" />
@@ -203,7 +209,7 @@ function AnalyticsChartCard() {
           >
             <defs>
               <linearGradient id="trafficArea" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="rgb(37 99 235)" stopOpacity="0.22" />
+                <stop offset="0%" stopColor="rgb(39 39 42)" stopOpacity="0.18" />
                 <stop offset="100%" stopColor="rgb(255 255 255)" stopOpacity="0" />
               </linearGradient>
             </defs>
@@ -214,7 +220,7 @@ function AnalyticsChartCard() {
             <path
               d="M0 178 C70 138 105 150 150 118 C205 78 242 102 295 74 C355 42 398 68 440 100 C488 136 530 118 640 56"
               fill="none"
-              stroke="rgb(37 99 235)"
+              stroke="rgb(39 39 42)"
               strokeLinecap="round"
               strokeWidth="5"
             />
@@ -228,27 +234,27 @@ function AnalyticsChartCard() {
 function QuickActionCard({ actions }: { actions: QuickAction[] }) {
   return (
     <BentoCard className="lg:col-span-1">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
         Quick Action
       </p>
-      <h3 className="mt-1 text-xl font-semibold text-slate-800">Aksi utama creator</h3>
+      <h3 className="mt-1 text-xl font-semibold text-slate-900">Aksi utama creator</h3>
       <div className="mt-5 space-y-3">
         {actions.map((item) => {
           const Icon = item.icon;
           return (
             <Link key={item.title} href={item.href} className="group block">
-              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 transition-colors hover:bg-blue-50/50">
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 transition-colors hover:bg-slate-100">
                 <span
                   className={cn(
                     "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
-                    item.locked ? "bg-slate-100 text-slate-500" : "bg-blue-50/50 text-blue-600"
+                    item.locked ? "bg-slate-100 text-slate-500" : "bg-slate-50 text-slate-700"
                   )}
                 >
                   <Icon className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-slate-800">{item.title}</p>
+                    <p className="truncate text-sm font-semibold text-slate-900">{item.title}</p>
                     {item.locked ? (
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
                         Locked
@@ -258,7 +264,7 @@ function QuickActionCard({ actions }: { actions: QuickAction[] }) {
                   <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
                     {item.description}
                   </p>
-                  <p className="mt-2 text-xs font-semibold text-blue-600">{item.cta}</p>
+                  <p className="mt-2 text-xs font-semibold text-slate-900">{item.cta}</p>
                 </div>
               </div>
             </Link>
@@ -422,7 +428,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <OnboardingReminderCard userId={user.id} resumeHref="/dashboard?onboarding=1" />
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
         <HeroCard userName={user.name} canUseBuildLink={canUseBuildLink} />
         <PublicLinkCard profilePath={profilePath} username={user.username || "creator"} />
         <StatsGrid metricCards={metricCards} />

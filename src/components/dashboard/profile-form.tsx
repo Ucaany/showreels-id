@@ -1034,14 +1034,14 @@ export function ProfileForm({ user }: { user: DbUser }) {
                 </div>
               </div>
 
-              <div className="profile-panel rounded-2xl border border-[#d6e2f7] bg-[#f8fbff] p-4 shadow-sm">
+              <div className="profile-panel rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#2f73ff] ring-1 ring-[#d6e2f7]">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-700 ring-1 ring-[#d6e2f7]">
                       <Link2 className="h-4 w-4" />
                     </span>
                     <div>
-                      <h2 className="text-base font-semibold text-[#1b2e4f]">
+                      <h2 className="text-base font-semibold text-slate-900">
                         Link dan block dipindahkan ke Build Link
                       </h2>
                       <p className="mt-1 text-sm leading-6 text-[#5b7198]">
@@ -1382,3 +1382,4 @@ export function ProfileForm({ user }: { user: DbUser }) {
     </>
   );
 }
+

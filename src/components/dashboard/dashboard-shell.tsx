@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart3,
+  ChevronDown,
   CreditCard,
   Film,
   Home,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { AvatarBadge } from "@/components/avatar-badge";
+import { BottomNavigation } from "@/components/dashboard/bottom-navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
@@ -159,12 +161,10 @@ export function DashboardShell({
         onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
         className={cn(
           "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-          active
-            ? "bg-blue-50/80 text-blue-600"
-            : "text-slate-500 hover:bg-blue-50/50 hover:text-blue-600"
+          active ? "bg-zinc-800 text-white" : "text-slate-900 hover:bg-slate-100"
         )}
       >
-        <Icon className={cn("h-4 w-4", active ? "text-blue-600" : "text-slate-400")} />
+        <Icon className={cn("h-4 w-4", active ? "text-white" : "text-slate-400")} />
         <span>{item.label}</span>
       </Link>
     );
@@ -172,18 +172,22 @@ export function DashboardShell({
 
   const sidebarContent = (
     <div className="flex h-full flex-col bg-white px-4 py-5">
-      <div className="flex items-center justify-between gap-3">
-        <AppLogo />
-        <span className="rounded-full border border-slate-200 bg-blue-50/50 px-2.5 py-1 text-[11px] font-semibold text-blue-600">
-          {planLabel}
-        </span>
+      <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-900 text-white">
+          <Link2 className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-slate-900">showreels.id</p>
+          <p className="text-xs text-slate-500">Creator workspace</p>
+        </div>
+        <ChevronDown className="h-4 w-4 text-slate-400" />
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
           Creator Mode
         </p>
-        <p className="mt-1 text-sm font-semibold text-slate-800">{planLabel}: aktif</p>
+        <p className="mt-1 text-sm font-medium text-slate-900">{planLabel} plan aktif</p>
       </div>
 
       <div className="mt-6 flex min-h-0 flex-1 flex-col">
@@ -208,7 +212,7 @@ export function DashboardShell({
           <Button
             variant="secondary"
             size="sm"
-            className="w-full justify-start rounded-xl border-slate-200 bg-white text-slate-500 hover:bg-blue-50/50 hover:text-blue-600"
+            className="w-full justify-start rounded-xl border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             onClick={handleSignOut}
             aria-label={dictionary.logout}
           >
@@ -221,27 +225,27 @@ export function DashboardShell({
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-slate-200 bg-white lg:block">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 border-r border-slate-200 bg-white md:block">
         {sidebarContent}
       </aside>
 
-      <header className="fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur lg:left-64">
+      <header className="fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-xl md:left-72">
         <div className="flex h-16 items-center justify-between gap-3 px-4 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm md:hidden"
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open dashboard menu"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div className="hidden lg:block">
-              <p className="text-xs font-medium text-slate-500">Dashboard / {breadcrumbLabel}</p>
-              <h1 className="text-base font-semibold text-slate-800">Dashboard Kreator</h1>
+            <div className="hidden text-sm text-slate-500 md:block">
+              Dashboard <span className="mx-2 text-slate-300">/</span>
+              <span className="font-medium text-slate-900">{breadcrumbLabel}</span>
             </div>
-            <span className="lg:hidden">
+            <span className="md:hidden">
               <AppLogo />
             </span>
           </div>
@@ -250,7 +254,7 @@ export function DashboardShell({
             <Link
               href={authProfileHref}
               target="_blank"
-              className="hidden rounded-full border border-slate-200 bg-blue-50/50 px-3 py-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 md:inline-flex"
+              className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:inline-flex"
             >
               {displayUsername}
             </Link>
@@ -274,7 +278,7 @@ export function DashboardShell({
       </header>
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-900/35 lg:hidden">
+        <div className="fixed inset-0 z-50 bg-slate-900/35 md:hidden">
           <button
             type="button"
             className="absolute inset-0 h-full w-full cursor-default"
@@ -298,9 +302,11 @@ export function DashboardShell({
         </div>
       ) : null}
 
-      <div className="min-h-screen pt-16 lg:pl-64">
-        <main className="p-4 md:p-8">{children}</main>
+      <div className="min-h-screen pt-16 md:pl-72">
+        <main className="p-4 pb-24 md:p-8 md:pb-8">{children}</main>
       </div>
+
+      <BottomNavigation />
     </div>
   );
 }

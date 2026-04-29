@@ -71,7 +71,7 @@ export default function SettingsSecurityPage() {
       <Card className="dashboard-clean-card border-border bg-surface p-4 sm:p-5">
         <div className="rounded-2xl border border-[#e3d8d2] bg-white p-4">
           <div className="mb-3 flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-[#2f73ff]" />
+            <ShieldCheck className="h-4 w-4 text-slate-700" />
             <p className="text-sm font-semibold text-[#201b18]">Password Security</p>
           </div>
           <div className="grid gap-3">
@@ -115,7 +115,7 @@ export default function SettingsSecurityPage() {
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, logoutAll: event.target.checked }))
                 }
-                className="h-4 w-4 accent-[#2f73ff]"
+                className="h-4 w-4 accent-zinc-800"
               />
               Logout dari semua perangkat setelah ganti password
             </label>
@@ -130,3 +130,4 @@ export default function SettingsSecurityPage() {
     </div>
   );
 }
+

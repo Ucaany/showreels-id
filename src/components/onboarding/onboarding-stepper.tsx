@@ -541,11 +541,11 @@ export function OnboardingStepper({
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4f77b4]">
                 Onboarding
               </p>
-              <h1 className="mt-2 text-xl font-semibold text-[#17305b]">Setup creator page</h1>
+              <h1 className="mt-2 text-xl font-semibold text-slate-900">Setup creator page</h1>
               <p className="mt-1 text-sm text-[#5e78a5]">
                 Plan aktif: {planName.toUpperCase()}{" "}
                 {planName === "creator" && subscriptionStatus === "trial" && (
-                  <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                  <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
                     TRIAL 1 BULAN
                   </span>
                 )}{" "}
@@ -561,7 +561,7 @@ export function OnboardingStepper({
                     className={cn(
                       "inline-flex min-w-0 items-center justify-center gap-1 rounded-full border px-2 py-1.5 text-[11px] font-semibold",
                       step === item.id
-                        ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
+                        ? "border-[#27272a] bg-slate-50 text-slate-900"
                         : step > item.id
                           ? "border-emerald-300 bg-emerald-50 text-emerald-700"
                           : "border-[#d2dff7] bg-white text-[#6b83ad]"
@@ -585,7 +585,7 @@ export function OnboardingStepper({
                     className={cn(
                       "flex items-center gap-3 rounded-xl border px-3 py-2",
                       step === item.id
-                        ? "border-[#2f73ff] bg-[#edf4ff]"
+                        ? "border-[#27272a] bg-slate-50"
                         : step > item.id
                           ? "border-emerald-200 bg-emerald-50"
                           : "border-[#d2dff7] bg-white"
@@ -595,10 +595,10 @@ export function OnboardingStepper({
                       className={cn(
                         "inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold",
                         step === item.id
-                          ? "bg-[#2f73ff] text-white"
+                          ? "bg-zinc-800 text-white"
                           : step > item.id
                             ? "bg-emerald-600 text-white"
-                            : "bg-[#edf4ff] text-[#4d6f9f]"
+                            : "bg-slate-50 text-slate-500"
                       )}
                     >
                       {step > item.id ? <Check className="h-4 w-4" /> : item.id}
@@ -615,7 +615,7 @@ export function OnboardingStepper({
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5b79ab]">
                     Langkah {step} dari 4
                   </p>
-                  <h2 className="mt-1 text-2xl font-semibold text-[#17305b]">
+                  <h2 className="mt-1 text-2xl font-semibold text-slate-900">
                     {STEP_ITEMS[stepIndex]?.title}
                   </h2>
                 </div>
@@ -716,8 +716,8 @@ export function OnboardingStepper({
                         className={cn(
                           "rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
                           wantsToAddFirstLink
-                            ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
-                            : "border-[#d4e3fb] bg-white text-[#466692] hover:border-[#a9c6f5]"
+                            ? "border-[#27272a] bg-slate-50 text-slate-900"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                         )}
                       >
                         Tambahkan link pertama
@@ -728,8 +728,8 @@ export function OnboardingStepper({
                         className={cn(
                           "rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
                           !wantsToAddFirstLink
-                            ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
-                            : "border-[#d4e3fb] bg-white text-[#466692] hover:border-[#a9c6f5]"
+                            ? "border-[#27272a] bg-slate-50 text-slate-900"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                         )}
                       >
                         Lewati dulu
@@ -760,12 +760,12 @@ export function OnboardingStepper({
                                 className={cn(
                                   "flex min-h-12 items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-sm font-semibold transition",
                                   active
-                                    ? "border-[#2f73ff] bg-[#edf4ff] text-[#1f58e3]"
-                                    : "border-[#d4e3fb] bg-white text-[#3e6399] hover:border-[#a9c6f5]"
+                                    ? "border-[#27272a] bg-slate-50 text-slate-900"
+                                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                                 )}
                               >
                                 <span className="inline-flex min-w-0 items-center gap-2">
-                                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#2f73ff]">
+                                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-700">
                                     <Icon className="h-4 w-4" />
                                   </span>
                                   <span className="truncate">{platform.title}</span>
@@ -773,7 +773,7 @@ export function OnboardingStepper({
                                 <span
                                   className={cn(
                                     "inline-flex h-4 w-4 shrink-0 rounded-full border",
-                                    active ? "border-[#2f73ff] bg-[#2f73ff]" : "border-[#b9ccec]"
+                                    active ? "border-[#27272a] bg-zinc-800" : "border-[#b9ccec]"
                                   )}
                                 />
                               </button>
@@ -799,14 +799,14 @@ export function OnboardingStepper({
                             type="checkbox"
                             checked={firstLinkEnabled}
                             onChange={(event) => setFirstLinkEnabled(event.target.checked)}
-                            className="h-4 w-4 rounded border-[#b8caea] text-[#2f73ff] focus:ring-[#2f73ff]"
+                            className="h-4 w-4 rounded border-[#b8caea] text-slate-700 focus:ring-zinc-800"
                           />
                           Aktifkan link ini
                         </label>
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-xl border border-dashed border-[#b8cff4] bg-[#f8fbff] px-3 py-3 text-sm text-[#5d7da9]">
+                    <div className="rounded-xl border border-dashed border-[#b8cff4] bg-slate-50 px-3 py-3 text-sm text-[#5d7da9]">
                       Kamu bisa lanjut ke preview tanpa menambahkan link sekarang.
                     </div>
                   )}
@@ -819,7 +819,7 @@ export function OnboardingStepper({
                     Lihat tampilan awal halaman creator kamu sebelum masuk dashboard.
                   </p>
                   <div className="mx-auto max-w-[360px] rounded-[28px] border-[8px] border-[#0f172a] bg-[#0f172a] p-3 shadow-[0_22px_44px_rgba(16,41,85,0.25)]">
-                    <div className="overflow-hidden rounded-[22px] bg-[#f8fbff]">
+                    <div className="overflow-hidden rounded-[22px] bg-slate-50">
                       <div className="h-[104px] w-full bg-gradient-to-b from-[#dae8ff] to-[#a3c5ff]">
                         {coverImageUrl ? (
                           <img
@@ -830,25 +830,25 @@ export function OnboardingStepper({
                         ) : null}
                       </div>
                       <div className="px-4 pb-5">
-                        <div className="-mt-8 mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-[#2f73ff] text-white">
+                        <div className="-mt-8 mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-zinc-800 text-white">
                           {image ? (
                             <img src={image} alt="Avatar preview" className="h-full w-full object-cover" />
                           ) : (
                             <UserRound className="h-6 w-6" />
                           )}
                         </div>
-                        <p className="mt-3 text-center text-lg font-semibold text-[#17305b]">
+                        <p className="mt-3 text-center text-lg font-semibold text-slate-900">
                           {fullName || "Display Name"}
                         </p>
                         <p className="mt-1 text-center text-sm text-[#5f7ca8]">
                           {role || "Role / profession"}
                         </p>
-                        <p className="mt-3 rounded-xl border border-[#d5e3fb] bg-white px-3 py-2 text-sm font-medium text-[#23457b]">
+                        <p className="mt-3 rounded-xl border border-[#d5e3fb] bg-white px-3 py-2 text-sm font-medium text-slate-900">
                           {bio || "Bio singkat akan muncul di sini."}
                         </p>
                         <div className="mt-3 rounded-xl border border-[#d5e3fb] bg-white px-3 py-2">
-                          <p className="flex items-center gap-2 text-sm font-semibold text-[#23457b]">
-                            <Link2 className="h-4 w-4 text-[#2f73ff]" />
+                          <p className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                            <Link2 className="h-4 w-4 text-slate-700" />
                             {wantsToAddFirstLink
                               ? firstLinkTitle || "Link pertama kamu"
                               : "Belum ada link pertama"}
@@ -867,8 +867,8 @@ export function OnboardingStepper({
 
               {step === 4 ? (
                 <div className="mt-5 space-y-4">
-                  <div className="rounded-2xl border border-[#d6e5fb] bg-[#f5f9ff] p-4">
-                    <p className="text-sm font-semibold text-[#1f58e3]">Halaman creator kamu siap</p>
+                  <div className="rounded-2xl border border-[#d6e5fb] bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-900">Halaman creator kamu siap</p>
                     <p className="mt-1 text-sm text-[#5e79a6]">
                       Kamu bisa lanjut mengatur link, upload video, atau melihat dashboard.
                     </p>
@@ -930,3 +930,4 @@ export function OnboardingStepper({
     </div>
   );
 }
+

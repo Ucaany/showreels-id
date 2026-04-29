@@ -37,11 +37,11 @@ export default async function DashboardVideosPage() {
       <Card className="dashboard-clean-card overflow-hidden border-[#cfddf5] bg-white p-0">
         <div className="grid gap-0 lg:grid-cols-[1fr_0.78fr]">
           <div className="p-5 sm:p-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#cfe0ff] bg-[#edf4ff] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#2f73ff]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
               <UploadCloud className="h-3.5 w-3.5" />
               Upload Video
             </div>
-            <h1 className="mt-4 font-display text-3xl font-semibold tracking-[-0.04em] text-[#142033] sm:text-4xl">
+            <h1 className="mt-4 font-display text-3xl font-semibold tracking-[-0.04em] text-slate-900 sm:text-4xl">
               Video portfolio creator
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#55709d] sm:text-base">
@@ -62,15 +62,15 @@ export default async function DashboardVideosPage() {
               </Link>
             </div>
           </div>
-          <div className="border-t border-[#dbe7f8] bg-[radial-gradient(circle_at_top_right,#dceaff,transparent_36%),linear-gradient(180deg,#f8fbff,#edf4ff)] p-5 sm:p-7 lg:border-l lg:border-t-0">
+          <div className="border-t border-slate-200 bg-[radial-gradient(circle_at_top_right,#f1f5f9,transparent_36%),linear-gradient(180deg,#f8fbff,#f8fafc)] p-5 sm:p-7 lg:border-l lg:border-t-0">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <div className="rounded-[1.35rem] border border-[#cfe0ff] bg-white/90 p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6078a2]">Total Video</p>
-                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#142033]">{myVideos.length}</p>
+              <div className="rounded-[1.35rem] border border-slate-200 bg-white/90 p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Total Video</p>
+                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-900">{myVideos.length}</p>
               </div>
-              <div className="rounded-[1.35rem] border border-[#cfe0ff] bg-white/90 p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6078a2]">Public Ready</p>
-                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#142033]">{publicCount}</p>
+              <div className="rounded-[1.35rem] border border-slate-200 bg-white/90 p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Public Ready</p>
+                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-900">{publicCount}</p>
               </div>
             </div>
           </div>
@@ -79,10 +79,10 @@ export default async function DashboardVideosPage() {
 
       <Card className="dashboard-clean-card border-[#cfddf5] bg-white p-4 sm:p-5">
         {myVideos.length === 0 ? (
-          <div className="rounded-[1.4rem] border border-dashed border-[#cfe0ff] bg-[#f8fbff] p-8 text-center">
-            <Film className="mx-auto h-9 w-9 text-[#2f73ff]" />
-            <p className="mt-3 font-semibold text-[#142033]">Belum ada video portfolio.</p>
-            <p className="mx-auto mt-1 max-w-md text-sm text-[#6078a2]">
+          <div className="rounded-[1.4rem] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+            <Film className="mx-auto h-9 w-9 text-slate-700" />
+            <p className="mt-3 font-semibold text-slate-900">Belum ada video portfolio.</p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
               Tambahkan video pertama untuk mulai membangun portfolio dan block video di halaman creator.
             </p>
             <Link href="/dashboard/videos/new" className="mt-4 inline-block">
@@ -107,3 +107,4 @@ export default async function DashboardVideosPage() {
     </div>
   );
 }
+

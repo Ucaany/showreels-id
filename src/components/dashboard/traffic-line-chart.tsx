@@ -80,15 +80,15 @@ export function TrafficLineChart({
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
               <defs>
                 <linearGradient id="trafficAreaFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2f73ff" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#2f73ff" stopOpacity="0.03" />
+                  <stop offset="0%" stopColor="#27272a" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#27272a" stopOpacity="0.03" />
                 </linearGradient>
               </defs>
               <polygon points={chartData.area} fill="url(#trafficAreaFill)" />
               <polyline
                 points={chartData.line}
                 fill="none"
-                stroke="#2f73ff"
+                stroke="#27272a"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -99,7 +99,7 @@ export function TrafficLineChart({
                   cx={item.x}
                   cy={item.y}
                   r={hoveredIndex === index ? 2.6 : 1.8}
-                  fill={hoveredIndex === index ? "#e24f3b" : "#2f73ff"}
+                  fill={hoveredIndex === index ? "#e24f3b" : "#27272a"}
                   opacity={hoveredIndex === null || hoveredIndex === index ? 1 : 0.55}
                 />
               ))}
@@ -149,3 +149,4 @@ export function TrafficLineChart({
     </div>
   );
 }
+

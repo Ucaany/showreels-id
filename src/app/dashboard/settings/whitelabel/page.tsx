@@ -107,7 +107,7 @@ export default function SettingsWhitelabelPage() {
                 onChange={(event) =>
                   setState((prev) => ({ ...prev, enabled: event.target.checked }))
                 }
-                className="h-5 w-5 accent-[#2f73ff]"
+                className="h-5 w-5 accent-zinc-800"
               />
             </label>
             <div className="rounded-2xl border border-dashed border-[#d9cec7] bg-[#faf6f3] p-4">
@@ -143,3 +143,4 @@ export default function SettingsWhitelabelPage() {
     </div>
   );
 }
+

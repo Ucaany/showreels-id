@@ -137,7 +137,7 @@ export default function SettingsPrivacyPage() {
                       [item.key]: event.target.checked,
                     }))
                   }
-                  className="mt-1 h-5 w-5 accent-[#2f73ff]"
+                  className="mt-1 h-5 w-5 accent-zinc-800"
                 />
               </label>
             ))}
@@ -150,3 +150,4 @@ export default function SettingsPrivacyPage() {
     </div>
   );
 }
+

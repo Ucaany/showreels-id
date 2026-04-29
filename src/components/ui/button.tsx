@@ -11,19 +11,19 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    "bg-[#2f73ff] text-white shadow-soft hover:bg-[#225fe0] focus-visible:ring-[#8eb3ff]",
+    "bg-zinc-800 text-white shadow-sm hover:bg-zinc-700 focus-visible:ring-zinc-300",
   secondary:
-    "bg-white text-[#1b2e4f] ring-1 ring-[#ccdbf5] shadow-sm hover:bg-[#edf4ff] focus-visible:ring-[#c4d9ff]",
+    "border border-slate-200 bg-white text-slate-900 shadow-sm hover:bg-slate-100 focus-visible:ring-slate-300",
   ghost:
-    "bg-transparent text-[#1f365c] hover:bg-[#e9f1ff] focus-visible:ring-[#c4d9ff]",
+    "bg-transparent text-slate-900 hover:bg-slate-100 focus-visible:ring-slate-300",
   danger:
-    "bg-rose-600 text-white shadow-soft hover:bg-rose-700 focus-visible:ring-rose-300",
+    "bg-rose-600 text-white shadow-sm hover:bg-rose-700 focus-visible:ring-rose-300",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "h-11 min-w-11 px-3.5 text-[0.86rem]",
-  md: "h-11 min-w-11 px-4 text-[0.91rem]",
-  lg: "h-12 min-w-12 px-5 text-[0.95rem] sm:h-[3.25rem] sm:px-6",
+  sm: "h-10 min-w-10 px-3.5 text-sm",
+  md: "h-11 min-w-11 px-4 text-sm",
+  lg: "h-12 min-w-12 px-5 text-sm sm:px-6",
 };
 
 export function Button({
@@ -37,7 +37,7 @@ export function Button({
     <button
       type={type}
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-full font-semibold leading-[1.2] tracking-[-0.008em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex items-center justify-center gap-2 rounded-xl font-medium leading-[1.2] tracking-[-0.008em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
         variantClasses[variant],
         sizeClasses[size],
         className

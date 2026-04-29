@@ -54,13 +54,13 @@ function SettingsNavCard({
       }`}
     >
       <div className="flex items-start justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#d5e1f4] bg-[#edf4ff] text-[#2f73ff]">
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700">
           <Icon className="h-5 w-5" />
         </span>
         <ChevronRight className="h-4 w-4 text-[#7d95bd]" />
       </div>
-      <h2 className="mt-3 text-base font-semibold text-[#1b2e4f]">{title}</h2>
-      <p className="mt-1 text-sm leading-6 text-[#4f658f]">{description}</p>
+      <h2 className="mt-3 text-base font-semibold text-slate-900">{title}</h2>
+      <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
       {meta ? <p className="mt-2 text-xs font-medium text-[#5f78a3]">{meta}</p> : null}
     </Card>
   );
@@ -154,30 +154,30 @@ export function SettingsHub({
   return (
     <div className="dashboard-stack">
       <Card className="dashboard-panel bg-gradient-to-b from-[#ffffff] to-[#f6faff] p-4 sm:p-5">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#d5e1f4] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#2f73ff]">
+        <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
           <Sparkles className="h-3.5 w-3.5" />
           Settings
         </div>
-        <h1 className="mt-2 font-display text-2xl font-semibold text-[#1b2e4f] sm:text-3xl">
+        <h1 className="mt-2 font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
           Pengaturan Akun Creator
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4f658f]">
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
           Atur privasi, slug profil, payment, whitelabel, keamanan, dan penghapusan akun dalam
           satu halaman yang rapi.
         </p>
-        <div className="mt-4 grid gap-3 rounded-2xl border border-[#d6e2f7] bg-white p-3 sm:grid-cols-[auto_1fr] sm:items-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#cde0ff] bg-[#edf4ff] px-3 py-1 text-sm font-semibold text-[#1f58e3]">
+        <div className="mt-4 grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:grid-cols-[auto_1fr] sm:items-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-900">
             <Wrench className="h-4 w-4" />
             {planBadge}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-[#d6e2f7] bg-[#f8fbff] px-2.5 py-1 text-xs font-medium text-[#5b7198]">
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-[#5b7198]">
               Username: {entitlements.usernameChangesPer30Days}x / 30 hari
             </span>
-            <span className="rounded-full border border-[#d6e2f7] bg-[#f8fbff] px-2.5 py-1 text-xs font-medium text-[#5b7198]">
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-[#5b7198]">
               Analytics: {entitlements.analyticsMaxDays} hari
             </span>
-            <span className="rounded-full border border-[#d6e2f7] bg-[#f8fbff] px-2.5 py-1 text-xs font-medium text-[#5b7198]">
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-[#5b7198]">
               Plan aktif: {planLabel}
             </span>
           </div>
@@ -281,3 +281,4 @@ export function SettingsHub({
     </div>
   );
 }
+

@@ -299,12 +299,12 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                       <Badge
                         className={
                           video.visibility === "public"
-                            ? "bg-emerald-600"
+                            ? "bg-emerald-50 text-emerald-600"
                             : video.visibility === "semi_private"
-                              ? "bg-blue-600"
+                              ? "bg-slate-100 text-slate-700"
                             : video.visibility === "private"
-                              ? "bg-amber-500 text-slate-950"
-                              : "bg-slate-700"
+                              ? "bg-amber-50 text-amber-700"
+                              : "bg-slate-100 text-slate-500"
                         }
                       >
                         {getVisibilityLabel(video.visibility)}

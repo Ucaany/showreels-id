@@ -138,15 +138,15 @@ export function CreatorTrafficPanel({
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5f79a8]">
             Traffic Overview
           </p>
-          <h2 className="font-display text-2xl font-semibold text-[#1b2e4f]">
+          <h2 className="font-display text-2xl font-semibold text-slate-900">
             Analytics Trafik Creator
           </h2>
-          <p className="mt-1 text-sm text-[#4f658f]">
+          <p className="mt-1 text-sm text-slate-600">
             Pantau kunjungan profil dan video publik secara interaktif.
           </p>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <span className="rounded-full border border-[#d5e1f4] bg-[#f6faff] px-2.5 py-1 text-xs font-semibold text-[#56709d]">
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-500">
             Limit plan: {analyticsMaxDays} hari
           </span>
           <Select
@@ -169,7 +169,7 @@ export function CreatorTrafficPanel({
         <div className="mt-3 rounded-2xl border border-[#d3e1f8] bg-gradient-to-r from-[#eff5ff] to-white p-3 sm:p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#2f73ff]">
+              <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
                 <Lock className="h-3.5 w-3.5" />
                 Analytics Lock
               </p>
@@ -192,8 +192,8 @@ export function CreatorTrafficPanel({
       ) : null}
 
       {periodMode === "full" && (appliedPeriod !== effectivePeriod || hasRangeClamp) ? (
-        <div className="mt-3 rounded-2xl border border-[#d5e1f4] bg-[#f6faff] p-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2f73ff]">
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
             Range disesuaikan
           </p>
           <p className="mt-1 text-sm text-[#5b7198]">
@@ -206,22 +206,22 @@ export function CreatorTrafficPanel({
 
       {periodMode === "full" && effectivePeriod === "custom" ? (
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <label className="text-xs font-medium text-[#4f658f]">
+          <label className="text-xs font-medium text-slate-600">
             Mulai
             <input
               type="date"
               value={start}
               onChange={(event) => setStart(event.target.value)}
-              className="mt-1 h-11 w-full rounded-xl border border-[#d7e2f5] bg-white px-3 text-sm text-[#1b2e4f] outline-none focus:border-[#2f73ff] focus:ring-2 focus:ring-[#b7d2ff]"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-zinc-800 focus:ring-2 focus:ring-slate-300"
             />
           </label>
-          <label className="text-xs font-medium text-[#4f658f]">
+          <label className="text-xs font-medium text-slate-600">
             Sampai
             <input
               type="date"
               value={end}
               onChange={(event) => setEnd(event.target.value)}
-              className="mt-1 h-11 w-full rounded-xl border border-[#d7e2f5] bg-white px-3 text-sm text-[#1b2e4f] outline-none focus:border-[#2f73ff] focus:ring-2 focus:ring-[#b7d2ff]"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-zinc-800 focus:ring-2 focus:ring-slate-300"
             />
           </label>
           <p className="text-xs text-[#5b7198] sm:col-span-2">
@@ -233,22 +233,22 @@ export function CreatorTrafficPanel({
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div className="dashboard-kpi-card p-3.5 sm:p-4">
-          <div className="flex items-center gap-2 text-[#4f658f]">
-            <Eye className="h-4 w-4 text-[#2f73ff]" />
+          <div className="flex items-center gap-2 text-slate-600">
+            <Eye className="h-4 w-4 text-slate-700" />
             <p className="text-xs font-semibold uppercase tracking-[0.14em]">Total Views</p>
           </div>
-          <p className="mt-2 font-display text-2xl font-semibold text-[#1b2e4f]">
+          <p className="mt-2 font-display text-2xl font-semibold text-slate-900">
             {summary.totalViews}
           </p>
         </div>
         <div className="dashboard-kpi-card p-3.5 sm:p-4">
-          <div className="flex items-center gap-2 text-[#4f658f]">
-            <Activity className="h-4 w-4 text-[#2f73ff]" />
+          <div className="flex items-center gap-2 text-slate-600">
+            <Activity className="h-4 w-4 text-slate-700" />
             <p className="text-xs font-semibold uppercase tracking-[0.14em]">
               Unique Visitors
             </p>
           </div>
-          <p className="mt-2 font-display text-2xl font-semibold text-[#1b2e4f]">
+          <p className="mt-2 font-display text-2xl font-semibold text-slate-900">
             {summary.uniqueVisitors}
           </p>
         </div>
@@ -270,3 +270,4 @@ export function CreatorTrafficPanel({
     </Card>
   );
 }
+
