@@ -164,12 +164,12 @@ export function DashboardShell({
         onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
         className={cn(
           "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-          active ? "bg-zinc-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+          active ? "bg-zinc-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
           !expanded && !mobile && "justify-center"
         )}
         title={!expanded && !mobile ? item.label : undefined}
       >
-        <Icon className={cn("h-4 w-4", active ? "text-white" : "text-slate-400 group-hover:text-slate-700")} />
+        <Icon className={cn("h-4 w-4", active ? "text-white" : "text-slate-500")} />
         {(expanded || mobile) && <span>{item.label}</span>}
       </Link>
     );
@@ -182,12 +182,12 @@ export function DashboardShell({
         "flex items-center gap-3",
         !expanded && !mobile && "justify-center"
       )}>
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-900">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.png"
             alt="Showreels.id"
-            className="h-6 w-6 object-contain"
+            className="h-10 w-10 object-contain"
             onError={(event) => {
               const target = event.currentTarget;
               target.style.display = "none";
@@ -195,7 +195,7 @@ export function DashboardShell({
               fallback?.classList.remove("hidden");
             }}
           />
-          <Link2 className="hidden h-5 w-5 text-white" />
+          <Link2 className="hidden h-6 w-6 text-slate-900" />
         </div>
         {(expanded || mobile) && (
           <div className="min-w-0 flex-1">
@@ -306,13 +306,10 @@ export function DashboardShell({
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div className="hidden text-sm text-slate-500 md:block">
+            <div className="text-sm text-slate-500">
               Dashboard <span className="mx-2 text-slate-300">/</span>
               <span className="font-medium text-slate-900">{breadcrumbLabel}</span>
             </div>
-            <span className="md:hidden">
-              <AppLogo />
-            </span>
           </div>
 
           <div className="flex min-w-0 items-center gap-2.5">
