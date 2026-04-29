@@ -1,6 +1,6 @@
 import { count, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "@/db";
+import { db, isDatabaseConfigured } from "@/db";
 import { videos } from "@/db/schema";
 import { onboardingCompleteSchema } from "@/lib/onboarding";
 import { isAdminEmail } from "@/server/admin-access";
@@ -61,10 +61,12 @@ export async function POST(request: Request) {
   const linksCount = Array.isArray(currentUser.customLinks)
     ? currentUser.customLinks.length
     : 0;
-  const videoRows = await db
-    .select({ value: count() })
-    .from(videos)
-    .where(eq(videos.userId, currentUser.id));
+  const videoRows = isDatabaseConfigured
+    ? await db
+        .select({ value: count() })
+        .from(videos)
+        .where(eq(videos.userId, currentUser.id))
+    : [];
   const videoCount = Number(videoRows[0]?.value ?? 0);
 
   const status = await completeUserOnboarding(currentUser.id, {
