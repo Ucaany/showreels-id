@@ -164,12 +164,12 @@ export function DashboardShell({
         onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
         className={cn(
           "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-          active ? "bg-zinc-800 text-white" : "text-slate-900 hover:bg-slate-100",
+          active ? "bg-zinc-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
           !expanded && !mobile && "justify-center"
         )}
         title={!expanded && !mobile ? item.label : undefined}
       >
-        <Icon className={cn("h-4 w-4", active ? "text-white" : "text-slate-400")} />
+        <Icon className={cn("h-4 w-4", active ? "text-white" : "text-slate-400 group-hover:text-slate-700")} />
         {(expanded || mobile) && <span>{item.label}</span>}
       </Link>
     );
@@ -177,38 +177,6 @@ export function DashboardShell({
 
   const renderSidebarContent = (expanded = sidebarOpen, mobile = false) => (
     <div className="flex h-full flex-col bg-white px-4 py-5">
-      <div
-        className={cn(
-          "flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2",
-          !expanded && "justify-center"
-        )}
-      >
-        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-zinc-900">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.png"
-            alt="Showreels.id"
-            className="h-5 w-5 object-contain"
-            onError={(event) => {
-              const target = event.currentTarget;
-              target.style.display = "none";
-              const fallback = target.nextElementSibling as HTMLElement | null;
-              fallback?.classList.remove("hidden");
-            }}
-          />
-          <Link2 className="hidden h-4 w-4 text-white" />
-        </div>
-        {expanded && (
-          <>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-slate-900">showreels.id</p>
-              <p className="text-xs text-slate-500">Creator workspace</p>
-            </div>
-            <ChevronDown className="h-4 w-4 text-slate-400" />
-          </>
-        )}
-      </div>
-
       {!mobile && (
         <button
           type="button"

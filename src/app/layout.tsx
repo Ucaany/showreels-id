@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Instrument_Serif, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/providers/app-providers";
+import { ToastContainer } from "@/components/ui/toast-container";
 import { getRequestLocale } from "@/server/request-locale";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -39,6 +40,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <AppProviders initialLocale={locale}>{children}</AppProviders>
+        <ToastContainer />
       </body>
     </html>
   );

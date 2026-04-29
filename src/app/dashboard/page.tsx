@@ -6,14 +6,13 @@ import {
   Lock,
   MousePointerClick,
   Plus,
-  Share2,
   Sparkles,
   UploadCloud,
   Video,
   Wand2,
 } from "lucide-react";
 import { OnboardingReminderCard } from "@/components/dashboard/onboarding-reminder-card";
-import { ShareProfileActions } from "@/components/dashboard/share-profile-actions";
+import { PublicLinkCardCompact } from "@/components/dashboard/public-link-card-compact";
 import { OnboardingStepper } from "@/components/onboarding/onboarding-stepper";
 import { Button } from "@/components/ui/button";
 import { db, isDatabaseConfigured } from "@/db";
@@ -113,35 +112,6 @@ function HeroCard({
   );
 }
 
-function PublicLinkCard({
-  profilePath,
-  username,
-}: {
-  profilePath: string;
-  username: string;
-}) {
-  return (
-    <BentoCard className="lg:col-span-1">
-      <div className="flex h-full flex-col justify-between space-y-3">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-              Public Link
-            </p>
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-zinc-800 text-white shadow-sm">
-              <Share2 className="h-4 w-4" />
-            </span>
-          </div>
-          <h3 className="truncate text-xl font-semibold text-slate-900">{profilePath}</h3>
-          <p className="line-clamp-2 text-sm leading-relaxed text-slate-500">
-            Bagikan profil creator, link penting, bio, dan portfolio video ke client.
-          </p>
-        </div>
-        <ShareProfileActions username={username} iconOnlyOnMobile compact />
-      </div>
-    </BentoCard>
-  );
-}
 
 function StatCard({ item }: { item: MetricCard }) {
   const Icon = item.icon;
@@ -430,7 +400,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
         <HeroCard userName={user.name} canUseBuildLink={canUseBuildLink} />
-        <PublicLinkCard profilePath={profilePath} username={user.username || "creator"} />
+        <PublicLinkCardCompact profilePath={profilePath} username={user.username || "creator"} />
         <StatsGrid metricCards={metricCards} />
         <AnalyticsChartCard />
         <QuickActionCard actions={quickActions} />
