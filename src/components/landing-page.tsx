@@ -1129,62 +1129,62 @@ export function LandingPage({
             id="features"
           >
             <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
-              <div className="mx-auto max-w-[680px]">
+              <div className="text-center">
                 <Badge className="rounded-full border-0 bg-[#eef5ff] px-2.5 py-1 text-[0.625rem] font-bold uppercase tracking-wider text-[#2f73ff] shadow-none">
                   {dictionary.landingFeaturesBadge}
                 </Badge>
-                <h2 className="mt-2 text-[1.75rem] font-extrabold leading-[1.15] text-[#0f1419] sm:text-[2rem] lg:text-[2.25rem]">
+                <h2 className="mt-4 font-display text-[1.75rem] sm:text-[2rem] lg:text-[2.25rem] font-extrabold leading-[1.12] tracking-tight text-[#0f1419]">
                   {dictionary.landingFeaturesTitleLead}{" "}
-                  <span className="italic text-[#2f73ff]">
+                  <span className="bg-gradient-to-r from-[#2f73ff] to-[#1e5dd9] bg-clip-text font-accent italic text-transparent">
                     {dictionary.landingFeaturesTitleAccent}
                   </span>
                 </h2>
-                <p className="mt-2 text-[0.8125rem] leading-relaxed text-[#6b7280] sm:text-sm">
+                <p className="mx-auto mt-3 max-w-[620px] text-[0.8125rem] text-[#5a6e91] sm:text-sm">
                   {dictionary.landingFeaturesDescription}
                 </p>
+              </div>
 
-                <div className="mt-6 space-y-4 sm:mt-8 sm:space-y-5">
-                  {marketingFeatures.map((item, index) => {
-                    const icons = [
-                      { Icon: UserRound, color: "#2563eb", bg: "#dbeafe" },
-                      { Icon: Video, color: "#4f46e5", bg: "#e0e7ff" },
-                      { Icon: Globe, color: "#7c3aed", bg: "#ddd6fe" },
-                      { Icon: Lock, color: "#0284c7", bg: "#e0f2fe" },
-                    ];
-                    const { Icon, color, bg } = icons[index] || icons[0];
+              <div className="mt-8 space-y-3 sm:mt-10 sm:space-y-4">
+                {marketingFeatures.map((item, index) => {
+                  const icons = [
+                    { Icon: UserRound, gradient: "from-[#dbeafe] to-[#bfdbfe]", color: "#2563eb", bg: "#eff6ff" },
+                    { Icon: Video, gradient: "from-[#e0e7ff] to-[#c7d2fe]", color: "#4f46e5", bg: "#eef2ff" },
+                    { Icon: Globe, gradient: "from-[#ddd6fe] to-[#c4b5fd]", color: "#7c3aed", bg: "#f5f3ff" },
+                    { Icon: Lock, gradient: "from-[#e0f2fe] to-[#bae6fd]", color: "#0284c7", bg: "#f0f9ff" },
+                  ];
+                  const { Icon, gradient, color, bg } = icons[index] || icons[0];
 
-                    return (
-                      <m.div
-                        key={item.title}
-                        initial={{ opacity: 0, x: -15 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true, amount: 0.3 }}
-                        transition={{
-                          duration: 0.35,
-                          delay: index * 0.08,
-                          ease: "easeOut"
-                        }}
-                        className="flex gap-3.5"
+                  return (
+                    <m.article
+                      key={item.title}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: index * 0.06,
+                        ease: "easeOut"
+                      }}
+                      className="group flex items-start gap-4 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm transition-all duration-300 hover:border-[#2f73ff]/30 hover:shadow-md sm:gap-5 sm:p-5"
+                    >
+                      <div
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md sm:h-12 sm:w-12"
+                        style={{ backgroundColor: bg }}
                       >
-                        <div
-                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-                          style={{ backgroundColor: bg }}
-                        >
-                          <Icon className="h-3 w-3" style={{ color }} strokeWidth={2.5} />
-                        </div>
-                        
-                        <div className="flex-1">
-                          <h3 className="text-[0.9375rem] font-bold leading-tight text-[#0f1419] sm:text-base">
-                            {item.title}
-                          </h3>
-                          <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-[#6b7280] sm:text-sm">
-                            {item.description}
-                          </p>
-                        </div>
-                      </m.div>
-                    );
-                  })}
-                </div>
+                        <Icon className="h-5 w-5 sm:h-5.5 sm:w-5.5" style={{ color }} strokeWidth={2.5} />
+                      </div>
+                      
+                      <div className="flex-1 pt-0.5">
+                        <h3 className="text-[0.9375rem] font-bold leading-tight tracking-tight text-[#0f1419] transition-colors group-hover:text-[#2f73ff] sm:text-base">
+                          {item.title}
+                        </h3>
+                        <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-[#6b7280] sm:text-sm">
+                          {item.description}
+                        </p>
+                      </div>
+                    </m.article>
+                  );
+                })}
               </div>
             </div>
           </section>
