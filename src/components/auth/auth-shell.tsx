@@ -16,10 +16,10 @@ export function AuthShell({
   showPreferences = true,
 }: AuthShellProps) {
   return (
-    <div className="min-h-screen bg-zinc-200 px-4 py-6 text-slate-950 sm:px-6 lg:flex lg:items-center lg:justify-center lg:px-8 lg:py-10">
-      <div className="grid min-h-[calc(100vh-3rem)] w-full max-w-[1120px] overflow-hidden rounded-[2rem] bg-white p-3 shadow-[0_24px_80px_rgba(15,23,42,0.22)] ring-1 ring-black/5 lg:min-h-[720px] lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,0.98fr)] lg:gap-4 lg:rounded-[2.25rem] lg:p-4">
+    <div className="min-h-screen bg-white text-slate-950 lg:grid lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,0.98fr)]">
+      <div className="contents">
         {/* Video Section - Desktop Only */}
-        <div className="relative hidden min-h-[688px] overflow-hidden rounded-[1.5rem] border border-zinc-800 bg-zinc-950 shadow-[0_20px_70px_rgba(15,23,42,0.22)] ring-1 ring-white/10 lg:block">
+        <div className="relative hidden min-h-screen overflow-hidden bg-zinc-950 lg:block">
           {/* Background Video */}
           <video
             autoPlay
@@ -65,7 +65,7 @@ export function AuthShell({
         </div>
 
         {/* Form Section */}
-        <div className="relative flex min-h-[calc(100vh-4.5rem)] items-center justify-center overflow-hidden rounded-[1.5rem] bg-white px-4 py-8 sm:px-8 sm:py-10 lg:min-h-[688px] lg:px-10 xl:px-14">
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white px-4 py-8 sm:px-8 sm:py-10 lg:px-10 xl:px-14">
           <div className="pointer-events-none absolute -right-28 -top-28 h-72 w-72 rounded-full bg-[#dbe5ff]/55 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-slate-100 blur-3xl" />
 

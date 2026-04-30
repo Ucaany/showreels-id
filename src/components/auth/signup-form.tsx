@@ -189,15 +189,24 @@ export function SignupForm({
       }
 
       if (!data.session) {
-        authLock.clearFailures();
-        const message = "Akun dibuat, tetapi login otomatis gagal.";
-        setSubmitError(message);
-        void showFeedbackAlert({
-          title: "Akun berhasil dibuat",
-          text: "Silakan login manual dengan email dan password yang baru dibuat.",
-          icon: "warning",
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: values.email,
+          password: values.password,
         });
-        return;
+
+        if (signInError) {
+          authLock.clearFailures();
+          const message =
+            signInError.message ||
+            "Akun dibuat, tetapi login otomatis gagal.";
+          setSubmitError(message);
+          void showFeedbackAlert({
+            title: "Akun berhasil dibuat",
+            text: "Login otomatis belum berhasil. Silakan coba masuk dengan email dan password yang baru dibuat.",
+            icon: "warning",
+          });
+          return;
+        }
       }
 
       const bootstrapResult = await finalizeSignedInSession(safeNextPath);
