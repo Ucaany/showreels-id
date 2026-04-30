@@ -102,7 +102,7 @@ const items = [
   ["notion", "Notion Portfolio", "notion", "portfolio", "custom", "briefcase", "Link Notion portfolio"],
   ["heading", "Heading Text", "heading", "utility", "utility", "text", "Judul section tanpa URL"],
   ["description", "Description Text", "description", "utility", "utility", "text", "Teks deskripsi pendek"],
-  ["divider", "Divider", "divider", "utility", "utility", "divider", "Garis pemisah antar section"],
+  ["divider", "Garis / Divider", "divider", "utility", "utility", "divider", "Tambahkan garis pemisah antar section", "Quick Add", true, false, ""],
   ["announcement", "Announcement", "announcement", "utility", "utility", "sparkles", "Pengumuman singkat"],
 ] as const;
 
@@ -126,7 +126,7 @@ export function getAddLinkItem(id: string) {
 
 export function getItemsForCategory(categoryId: AddLinkCategoryId) {
   if (categoryId === "suggested") {
-    const suggestedIds = new Set(["custom-link", "instagram", "tiktok", "youtube", "whatsapp", "portfolio-video", "email", "website"]);
+    const suggestedIds = new Set(["custom-link", "instagram", "tiktok", "youtube", "whatsapp", "portfolio-video", "divider", "email", "website"]);
     return ADD_LINK_ITEMS.filter((item) => suggestedIds.has(item.id));
   }
   return ADD_LINK_ITEMS.filter((item) => item.category === categoryId);
