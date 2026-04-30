@@ -371,6 +371,57 @@ export const adminNotifications = pgTable(
   })
 );
 
+export const adminNotificationSchedules = pgTable(
+  "admin_notification_schedules",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    notificationId: text("notification_id").references(() => adminNotifications.id, {
+      onDelete: "set null",
+    }),
+    targetType: text("target_type")
+      .$type<"all" | "active" | "blocked" | "public" | "private">()
+      .notNull()
+      .default("all"),
+    targetUserId: uuid("target_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    title: text("title").notNull(),
+    message: text("message").notNull().default(""),
+    status: text("status")
+      .$type<"draft" | "scheduled" | "sent" | "paused" | "cancelled">()
+      .notNull()
+      .default("scheduled"),
+    sendMode: text("send_mode")
+      .$type<"now" | "scheduled">()
+      .notNull()
+      .default("now"),
+    recurrence: text("recurrence")
+      .$type<"once" | "daily" | "weekly" | "monthly">()
+      .notNull()
+      .default("once"),
+    startsAt: timestamp("starts_at", { mode: "date" }).notNull().defaultNow(),
+    endsAt: timestamp("ends_at", { mode: "date" }),
+    lastSentAt: timestamp("last_sent_at", { mode: "date" }),
+    nextRunAt: timestamp("next_run_at", { mode: "date" }),
+    activeDurationDays: integer("active_duration_days").notNull().default(1),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => ({
+    statusIdx: index("admin_notification_schedules_status_idx").on(table.status),
+    nextRunIdx: index("admin_notification_schedules_next_run_idx").on(table.nextRunAt),
+    targetTypeIdx: index("admin_notification_schedules_target_type_idx").on(table.targetType),
+    targetUserIdx: index("admin_notification_schedules_target_user_idx").on(table.targetUserId),
+  })
+);
+
 export const billingTransactions = pgTable(
   "billing_transactions",
   {
@@ -487,6 +538,24 @@ export const userOnboardingRelations = relations(userOnboarding, ({ one }) => ({
   }),
 }));
 
+export const adminNotificationSchedulesRelations = relations(
+  adminNotificationSchedules,
+  ({ one }) => ({
+    notification: one(adminNotifications, {
+      fields: [adminNotificationSchedules.notificationId],
+      references: [adminNotifications.id],
+    }),
+    targetUser: one(users, {
+      fields: [adminNotificationSchedules.targetUserId],
+      references: [users.id],
+    }),
+    creator: one(users, {
+      fields: [adminNotificationSchedules.createdBy],
+      references: [users.id],
+    }),
+  })
+);
+
 export type DbUser = typeof users.$inferSelect;
 export type NewDbUser = typeof users.$inferInsert;
 export type DbVideo = typeof videos.$inferSelect;
@@ -509,5 +578,7 @@ export type DbVideoEngagementStats = typeof videoEngagementStats.$inferSelect;
 export type NewDbVideoEngagementStats = typeof videoEngagementStats.$inferInsert;
 export type DbAdminNotification = typeof adminNotifications.$inferSelect;
 export type NewDbAdminNotification = typeof adminNotifications.$inferInsert;
+export type DbAdminNotificationSchedule = typeof adminNotificationSchedules.$inferSelect;
+export type NewDbAdminNotificationSchedule = typeof adminNotificationSchedules.$inferInsert;
 export type DbUserOnboarding = typeof userOnboarding.$inferSelect;
 export type NewDbUserOnboarding = typeof userOnboarding.$inferInsert;
