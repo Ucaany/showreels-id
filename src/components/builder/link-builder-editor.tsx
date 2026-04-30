@@ -47,6 +47,7 @@ import {
   Video,
   X,
 } from "lucide-react";
+import { AddLinkModal } from "@/components/build-link/add-link-modal/AddLinkModal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1616,7 +1617,7 @@ export function LinkBuilderEditor({
         </div>
       ) : null}
 
-      {isAddBlockOpen ? (
+      {false ? (
         <div className="fixed inset-0 z-[95] flex items-end justify-center bg-[#0f2347]/55 p-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] sm:items-center sm:p-4">
           <button
             type="button"
@@ -1781,6 +1782,20 @@ export function LinkBuilderEditor({
         </div>
       ) : null}
 
+      <AddLinkModal
+        open={isAddBlockOpen}
+        onClose={() => setIsAddBlockOpen(false)}
+        onCreated={(nextLinks) => {
+          setLinks(nextLinks.map((link) => ({ ...link, isDirty: false })));
+          setIsAddBlockOpen(false);
+          setSaveStatus("saved");
+          window.setTimeout(() => setSaveStatus("idle"), 1400);
+        }}
+        isLimitReached={isLinkLimitReached}
+        maxLinksLabel={maxLinksLabel}
+        planName={planName}
+      />
+ 
       {isShareOpen ? (
         <div className="fixed inset-0 z-[98] flex items-end justify-center bg-[#0f2347]/55 p-2 sm:items-center sm:p-4">
           <button

@@ -25,6 +25,10 @@ export interface DbCustomLink {
   style?: string;
   iconKey?: string;
   iconUrl?: string;
+  inputValue?: string;
+  finalUrl?: string;
+  inactiveReason?: string;
+  metadata?: Record<string, unknown>;
   enabled: boolean;
   order: number;
 }

@@ -18,6 +18,10 @@ export interface CustomLinkItem {
   style?: string;
   iconKey?: string;
   iconUrl?: string;
+  inputValue?: string;
+  finalUrl?: string;
+  inactiveReason?: string;
+  metadata?: Record<string, unknown>;
   enabled: boolean;
   order: number;
 }
@@ -125,7 +129,16 @@ export function normalizeCustomLinks(
       const style = String(source.style || "").trim().slice(0, 40);
       const iconKey = String(source.iconKey || "").trim().slice(0, 40);
       const iconUrl = normalizeSocialUrl(String(source.iconUrl || ""));
-
+      const inputValue = String(source.inputValue || source.input_value || "").trim().slice(0, 500);
+      const finalUrl = normalizeSocialUrl(String(source.finalUrl || source.final_url || ""));
+      const inactiveReason = String(source.inactiveReason || source.inactive_reason || "")
+        .trim()
+        .slice(0, 80);
+      const metadata =
+        source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
+          ? (source.metadata as Record<string, unknown>)
+          : undefined;
+ 
       const providedId = String(source.id || "").trim();
       const safeId =
         providedId.length > 0
@@ -174,7 +187,19 @@ export function normalizeCustomLinks(
       if (iconUrl) {
         nextItem.iconUrl = iconUrl;
       }
-
+      if (inputValue) {
+        nextItem.inputValue = inputValue;
+      }
+      if (finalUrl) {
+        nextItem.finalUrl = finalUrl;
+      }
+      if (inactiveReason) {
+        nextItem.inactiveReason = inactiveReason;
+      }
+      if (metadata) {
+        nextItem.metadata = metadata;
+      }
+ 
       return nextItem;
     })
     .filter((item): item is CustomLinkItem => Boolean(item));
