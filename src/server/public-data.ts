@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ne, notInArray, or } from "drizzle-orm";
+import { and, count, desc, eq, ne, notInArray } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
 import { creatorSettings, users, videos } from "@/db/schema";
@@ -480,10 +480,7 @@ export async function getPublicProfile(
       createdAt: true,
     } as const;
 
-    const videoWhere = and(
-      eq(videos.userId, user.id),
-      or(eq(videos.visibility, "public"), eq(videos.visibility, "semi_private"))
-    );
+    const videoWhere = and(eq(videos.userId, user.id), eq(videos.visibility, "public"));
 
     const profileVideos = await db.query.videos
       .findMany({
@@ -583,7 +580,8 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
 
     if (
       normalizedVideo.visibility === "draft" ||
-      normalizedVideo.visibility === "private"
+      normalizedVideo.visibility === "private" ||
+      normalizedVideo.visibility === "semi_private"
     ) {
       return isOwner ? normalizedVideo : null;
     }
