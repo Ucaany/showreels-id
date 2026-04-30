@@ -1794,6 +1794,7 @@ export function LinkBuilderEditor({
         isLimitReached={isLinkLimitReached}
         maxLinksLabel={maxLinksLabel}
         planName={planName}
+        portfolioHref={portfolioPath}
       />
  
       {isShareOpen ? (

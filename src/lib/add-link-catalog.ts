@@ -60,7 +60,7 @@ const items = [
   ["tiktok", "TikTok", "tiktok", "social", "social", "tiktok", "Isi username TikTok saja", "Popular", true, false, "ucaanystore"],
   ["youtube", "YouTube", "youtube", "media", "social", "youtube", "Channel atau handle YouTube", "Popular", true, false, "ucaanystore"],
   ["whatsapp", "WhatsApp", "whatsapp", "contact", "whatsapp", "whatsapp", "Chat WhatsApp dengan pesan default", "Popular", true, false, "628123456789"],
-  ["portfolio-video", "Portfolio Video", "portfolio", "portfolio", "portfolio", "video", "Tautkan portfolio video Showreels", "Creator Plan", true, false, "https://..."],
+  ["portfolio-video", "Showreels Portfolio Video", "portfolio", "portfolio", "portfolio", "portfolio", "Buka halaman lengkap seluruh portfolio video", "Portfolio", true, false, "/creator/username/portfolio"],
   ["email", "Email", "email", "contact", "email", "email", "Buka email dengan subject opsional", undefined, true, false, "hello@domain.com"],
   ["website", "Website", "website", "suggested", "custom", "website", "Tambahkan website personal", undefined, true, false, "https://website.com"],
   ["facebook", "Facebook", "facebook", "social", "social", "facebook", "Isi username atau page Facebook"],

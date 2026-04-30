@@ -72,6 +72,7 @@ type Props = {
   isLimitReached: boolean;
   maxLinksLabel: string;
   planName: "free" | "creator" | "business";
+  portfolioHref?: string;
 };
 
 type FormState = {
@@ -157,6 +158,34 @@ const itemIconMap: Record<string, React.ComponentType<{ className?: string }>> =
   divider: Minus,
 };
 
+const itemColorMap: Record<string, string> = {
+  instagram: "text-pink-600",
+  tiktok: "text-zinc-950",
+  tiktokshop: "text-zinc-950",
+  youtube: "text-red-600",
+  whatsapp: "text-emerald-600",
+  facebook: "text-blue-600",
+  x: "text-zinc-950",
+  linkedin: "text-sky-700",
+  snapchat: "text-yellow-500",
+  pinterest: "text-red-600",
+  telegram: "text-sky-500",
+  discord: "text-indigo-600",
+  line: "text-green-600",
+  spotify: "text-green-600",
+  "apple-music": "text-pink-600",
+  soundcloud: "text-orange-500",
+  twitch: "text-purple-600",
+  vimeo: "text-sky-500",
+  shopee: "text-orange-600",
+  behance: "text-blue-700",
+  dribbble: "text-pink-500",
+  github: "text-zinc-950",
+  medium: "text-zinc-950",
+  portfolio: "text-violet-600",
+  divider: "text-zinc-500",
+};
+
 function trackAddLinkEvent(event: string, metadata?: Record<string, unknown>) {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent("showreels:add-link-analytics", { detail: { event, metadata } }));
@@ -168,20 +197,21 @@ function BrandIcon({ item, large = false }: { item: AddLinkItem; large?: boolean
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-2xl border border-zinc-200 bg-white text-zinc-950 shadow-sm transition-transform duration-150 group-hover:scale-105",
-        large ? "h-11 w-11 text-base sm:h-12 sm:w-12" : "h-10 w-10 text-sm"
+        "inline-flex shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-white shadow-sm transition-transform duration-150 group-hover:scale-105",
+        itemColorMap[item.iconKey] || itemColorMap[item.platform] || "text-zinc-950",
+        large ? "h-9 w-9 text-sm sm:h-10 sm:w-10" : "h-8 w-8 text-xs"
       )}
     >
-      {isBrand ? <span className="font-black uppercase">{item.label.slice(0, 2)}</span> : <Icon className={large ? "h-5 w-5" : "h-4 w-4"} />}
+      {isBrand ? <span className="font-black uppercase">{item.label.slice(0, 2)}</span> : <Icon className={large ? "h-4 w-4" : "h-3.5 w-3.5"} />}
     </span>
   );
 }
 
 function LimitReachedCard({ maxLinksLabel, onClose }: { maxLinksLabel: string; onClose: () => void }) {
   return (
-    <div className="rounded-3xl border border-zinc-200 bg-zinc-950 p-5 text-white shadow-sm">
+    <div className="rounded-2xl border border-zinc-200 bg-zinc-950 p-4 text-white shadow-sm">
       <p className="text-sm font-semibold">Limit paket Free tercapai</p>
-      <p className="mt-1 text-sm text-zinc-300">
+      <p className="mt-1 text-xs leading-5 text-zinc-300">
         Kamu sudah menggunakan {maxLinksLabel} link aktif. Upgrade untuk menambahkan lebih banyak link.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -196,7 +226,7 @@ function LimitReachedCard({ maxLinksLabel, onClose }: { maxLinksLabel: string; o
   );
 }
 
-export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLinksLabel, planName }: Props) {
+export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLinksLabel, planName, portfolioHref = "" }: Props) {
   const [activeCategory, setActiveCategory] = useState<AddLinkCategoryId>("suggested");
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<AddLinkItem | null>(null);
@@ -247,7 +277,7 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
       ...initialForm,
       label: item.label,
       inputValue: detectedValue,
-      url: item.formType === "custom" && search.startsWith("http") ? search : "",
+      url: item.platform === "portfolio" && portfolioHref ? portfolioHref : item.formType === "custom" && search.startsWith("http") ? search : "",
     });
   };
 
@@ -266,7 +296,7 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
       platform: selectedItem.platform,
       label: form.label,
       inputValue: form.inputValue,
-      url: form.url,
+      url: selectedItem.platform === "portfolio" && portfolioHref ? portfolioHref : form.url,
       subject: form.subject,
       body: form.body,
       message: form.message,
@@ -331,33 +361,33 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
   return (
     <div className="fixed inset-0 z-[95] flex items-end justify-center bg-zinc-950/60 p-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="add-link-modal-title">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="Close add link modal backdrop" onClick={onClose} />
-      <div className="relative z-[96] flex h-[min(92dvh,760px)] w-full max-w-[980px] flex-col overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white shadow-2xl sm:h-[min(88vh,760px)] sm:rounded-[1.75rem] lg:max-w-[1024px]">
-        <div className="flex items-start justify-between gap-3 border-b border-zinc-200 p-4 sm:p-5">
+      <div className="relative z-[96] flex h-[min(90dvh,700px)] w-full max-w-[900px] flex-col overflow-hidden rounded-[1.25rem] border border-zinc-200 bg-white shadow-2xl sm:h-[min(86vh,700px)] sm:rounded-[1.5rem] lg:max-w-[940px]">
+        <div className="flex items-start justify-between gap-3 border-b border-zinc-200 p-3.5 sm:p-4">
           <div>
-            <h3 id="add-link-modal-title" className="text-xl font-black tracking-tight text-zinc-950 sm:text-2xl">Add Link</h3>
-            <p className="mt-1 max-w-2xl text-sm leading-5 text-zinc-500">Pilih jenis tombol yang ingin ditambahkan ke halaman Bio Link kamu.</p>
-            {planName === "free" ? <p className="mt-2 inline-flex rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700">Free Plan · limit {maxLinksLabel} link aktif</p> : null}
+            <h3 id="add-link-modal-title" className="text-lg font-black tracking-tight text-zinc-950 sm:text-xl">Add Link</h3>
+            <p className="mt-0.5 max-w-2xl text-xs leading-5 text-zinc-500 sm:text-sm">Pilih jenis tombol yang ingin ditambahkan ke halaman Bio Link kamu.</p>
+            {planName === "free" ? <p className="mt-1.5 inline-flex rounded-full bg-zinc-100 px-2.5 py-0.5 text-[11px] font-semibold text-zinc-700">Free Plan · limit {maxLinksLabel} link aktif</p> : null}
           </div>
-          <button type="button" className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-700 transition hover:bg-zinc-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-zinc-950/20" aria-label="Close add link modal" onClick={onClose}>
-            <X className="h-5 w-5" />
+          <button type="button" className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-700 transition hover:bg-zinc-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-zinc-950/20" aria-label="Close add link modal" onClick={onClose}>
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="sticky top-0 z-10 border-b border-zinc-200 bg-white/95 p-3 backdrop-blur sm:p-4">
+        <div className="sticky top-0 z-10 border-b border-zinc-200 bg-white/95 p-3 backdrop-blur">
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 sm:h-5 sm:w-5" />
-            <Input ref={searchRef} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari platform, kategori, atau paste link..." className="h-12 rounded-2xl border-zinc-200 bg-zinc-50 pl-11 text-sm transition focus:bg-white sm:h-[52px] sm:text-base" />
+            <Input ref={searchRef} value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari platform, kategori, atau paste link..." className="h-10 rounded-2xl border-zinc-200 bg-zinc-50 pl-10 text-sm transition focus:bg-white sm:h-11" />
           </div>
         </div>
 
-        <div className="grid min-h-0 flex-1 overflow-hidden md:grid-cols-[200px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(0,1fr)]">
-          <aside className="hidden border-r border-zinc-200 p-3 md:block lg:p-4">
+        <div className="grid min-h-0 flex-1 overflow-hidden md:grid-cols-[180px_minmax(0,1fr)] lg:grid-cols-[196px_minmax(0,1fr)]">
+          <aside className="hidden border-r border-zinc-200 p-2.5 md:block lg:p-3">
             <div className="grid gap-1">
               {ADD_LINK_CATEGORIES.map((category) => {
                 const Icon = categoryIcons[category.id];
                 const active = activeCategory === category.id;
                 return (
-                  <button key={category.id} type="button" onClick={() => { setActiveCategory(category.id); trackAddLinkEvent("add_link_category_selected", { category: category.id }); }} className={cn("flex min-h-11 items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold transition active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-zinc-950/15", active ? "bg-zinc-950 text-white shadow-sm" : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950")}>
+                  <button key={category.id} type="button" onClick={() => { setActiveCategory(category.id); trackAddLinkEvent("add_link_category_selected", { category: category.id }); }} className={cn("flex min-h-10 items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs font-semibold transition active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-zinc-950/15", active ? "bg-zinc-950 text-white shadow-sm" : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950")}>
                     <Icon className="h-4 w-4" />
                     {category.label}
                   </button>
@@ -366,25 +396,25 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
             </div>
           </aside>
 
-          <main className="min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4 lg:p-5">
+          <main className="min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-3.5 lg:p-4">
             <div className="mb-4 flex gap-2 overflow-x-auto pb-1 md:hidden">
               {ADD_LINK_CATEGORIES.map((category) => (
-                <button key={category.id} type="button" onClick={() => setActiveCategory(category.id)} className={cn("min-h-10 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-zinc-950/15", activeCategory === category.id ? "border-zinc-950 bg-zinc-950 text-white" : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50")}>{category.label}</button>
+                <button key={category.id} type="button" onClick={() => setActiveCategory(category.id)} className={cn("min-h-9 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-zinc-950/15", activeCategory === category.id ? "border-zinc-950 bg-zinc-950 text-white" : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50")}>{category.label}</button>
               ))}
             </div>
 
             {isLimitReached ? <LimitReachedCard maxLinksLabel={maxLinksLabel} onClose={onClose} /> : null}
 
             {selectedItem ? (
-              <section className="mt-3 rounded-3xl border border-zinc-200 bg-zinc-50 p-4 sm:mt-4 sm:p-5">
+              <section className="mt-2 rounded-2xl border border-zinc-200 bg-zinc-50 p-3.5 sm:mt-3 sm:p-4">
                 <div className="flex items-start gap-3">
                   <BrandIcon item={selectedItem} large />
                   <div>
-                    <p className="text-lg font-black text-zinc-950">{selectedItem.label}</p>
-                    <p className="text-sm text-zinc-500">{selectedItem.description}</p>
+                    <p className="text-base font-black text-zinc-950">{selectedItem.label}</p>
+                    <p className="text-xs leading-5 text-zinc-500">{selectedItem.description}</p>
                   </div>
                 </div>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-xs font-bold text-zinc-600">Display label</label>
                     <Input value={form.label} onChange={(event) => updateForm({ label: event.target.value })} placeholder="Judul tombol" />
@@ -404,13 +434,13 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
                   ) : (
                     <div className="sm:col-span-2 rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-5">
                       <span className="block border-t border-zinc-300" />
-                      <p className="mt-3 text-sm font-semibold text-zinc-600">Garis pemisah akan ditambahkan ke halaman Bio Link tanpa URL.</p>
+                      <p className="mt-2 text-xs font-semibold text-zinc-600">Garis pemisah akan ditambahkan ke halaman Bio Link tanpa URL.</p>
                     </div>
                   )}
                 </div>
                 {form.error ? <p className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{form.error}</p> : null}
                 {form.status === "success" ? <p className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">Link berhasil ditambahkan.</p> : null}
-                <div className="sticky bottom-0 mt-5 flex flex-col-reverse gap-2 bg-zinc-50/95 pt-3 backdrop-blur sm:flex-row sm:justify-end">
+                <div className="sticky bottom-0 mt-4 flex flex-col-reverse gap-2 bg-zinc-50/95 pt-2.5 backdrop-blur sm:flex-row sm:justify-end">
                   <Button variant="secondary" onClick={() => setSelectedItem(null)} className="w-full active:scale-[0.98] sm:w-auto">Kembali</Button>
                   <Button onClick={submit} disabled={form.status === "saving" || isLimitReached} className="w-full active:scale-[0.98] sm:w-auto">{form.status === "saving" ? "Menyimpan..." : "Simpan Link"}</Button>
                 </div>
@@ -419,22 +449,22 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
               <>
                 {featured.length > 0 ? (
                   <section className="mt-3 sm:mt-4">
-                    <p className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">Quick Add</p>
-                    <div className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:grid-cols-3">
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-zinc-500">Quick Add</p>
+                    <div className="mt-2 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 lg:grid-cols-3">
                       {featured.map((item) => (
-                        <button key={item.id} type="button" onClick={() => chooseItem(item)} className="group min-h-[132px] rounded-3xl border border-zinc-200 bg-zinc-50 p-4 text-left transition hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:shadow-sm active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-zinc-950/15">
+                        <button key={item.id} type="button" onClick={() => chooseItem(item)} className="group min-h-[108px] rounded-2xl border border-zinc-200 bg-zinc-50 p-3 text-left transition hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:shadow-sm active:translate-y-0 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-zinc-950/15">
                           <BrandIcon item={item} large />
-                          <p className="mt-3 font-black text-zinc-950">{item.label}</p>
-                          <p className="mt-1 line-clamp-2 text-sm text-zinc-500">{item.description}</p>
+                          <p className="mt-2 text-sm font-black text-zinc-950">{item.label}</p>
+                          <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-zinc-500">{item.description}</p>
                         </button>
                       ))}
                     </div>
                   </section>
                 ) : null}
 
-                <section className="mt-6">
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-zinc-500">{search.trim() ? "Search Result" : ADD_LINK_CATEGORIES.find((cat) => cat.id === activeCategory)?.label}</p>
-                  <div className="mt-3 grid gap-2">
+                <section className="mt-4">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-zinc-500">{search.trim() ? "Search Result" : ADD_LINK_CATEGORIES.find((cat) => cat.id === activeCategory)?.label}</p>
+                  <div className="mt-2 grid gap-2">
                     {searchedItems.length === 0 ? (
                       <div className="rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center">
                         <p className="font-black text-zinc-950">Tidak ada hasil ditemukan</p>
@@ -442,14 +472,14 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
                         <Button className="mt-4" onClick={() => chooseItem(ADD_LINK_ITEMS[0])}>Tambah Custom Link</Button>
                       </div>
                     ) : searchedItems.map((item) => (
-                      <button key={item.id} type="button" onClick={() => chooseItem(item)} className="group flex min-h-[72px] items-center gap-3 rounded-3xl border border-zinc-200 bg-white p-3 text-left transition hover:border-zinc-300 hover:bg-zinc-50 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-zinc-950/15">
+                      <button key={item.id} type="button" onClick={() => chooseItem(item)} className="group flex min-h-[60px] items-center gap-2.5 rounded-2xl border border-zinc-200 bg-white p-2.5 text-left transition hover:border-zinc-300 hover:bg-zinc-50 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-zinc-950/15">
                         <BrandIcon item={item} />
                         <span className="min-w-0 flex-1">
-                          <span className="block font-black text-zinc-950">{item.label}</span>
-                          <span className="block truncate text-sm text-zinc-500">{item.description}</span>
+                          <span className="block text-sm font-black text-zinc-950">{item.label}</span>
+                          <span className="block truncate text-xs text-zinc-500">{item.description}</span>
                         </span>
-                        {item.badge ? <span className="hidden rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-bold text-zinc-600 sm:inline-flex">{item.badge}</span> : null}
-                        <ChevronRight className="h-4 w-4 text-zinc-400" />
+                        {item.badge ? <span className="hidden rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-bold text-zinc-600 sm:inline-flex">{item.badge}</span> : null}
+                        <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
                       </button>
                     ))}
                   </div>
