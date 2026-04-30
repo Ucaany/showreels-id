@@ -777,15 +777,12 @@ export function LandingPage({
                   >
                     Dashboard
                   </Link>
-                  <div className="inline-flex min-h-11 items-center gap-2 px-1">
+                  <div className="inline-flex min-h-11 items-center px-1">
                     <AvatarBadge
                       name={currentUser.name || "Creator"}
                       avatarUrl={currentUser.image || ""}
                       size="sm"
                     />
-                    <span className="pr-1 text-sm font-semibold text-black">
-                      @{currentUser.username || "creator"}
-                    </span>
                   </div>
                 </>
               ) : (

@@ -1,0 +1,68 @@
+<svg width="520" height="420" viewBox="0 0 520 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Showreels auth illustration</title>
+  <desc id="desc">Decorative monochrome creator portfolio illustration with blue accent.</desc>
+  <rect width="520" height="420" rx="40" fill="#F8FAFC"/>
+  <circle cx="422" cy="78" r="92" fill="#EEF4FF"/>
+  <circle cx="94" cy="328" r="110" fill="#F1F5F9"/>
+  <path d="M70 114C136 50 234 42 306 82C386 126 426 218 388 292C348 370 236 388 150 342C68 298 12 170 70 114Z" fill="white" stroke="#E2E8F0" stroke-width="2"/>
+  <path d="M106 88C164 60 234 60 292 90" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 10"/>
+  <path d="M108 356C172 386 268 386 342 342" stroke="#DBE5FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 10"/>
+
+  <rect x="126" y="102" width="268" height="188" rx="28" fill="#0F172A"/>
+  <rect x="143" y="121" width="234" height="150" rx="20" fill="#FFFFFF"/>
+  <rect x="163" y="143" width="108" height="12" rx="6" fill="#CBD5E1"/>
+  <rect x="163" y="165" width="154" height="10" rx="5" fill="#E2E8F0"/>
+  <rect x="163" y="185" width="82" height="10" rx="5" fill="#E2E8F0"/>
+  <rect x="163" y="221" width="86" height="30" rx="15" fill="#1A46C9"/>
+  <rect x="263" y="221" width="76" height="30" rx="15" fill="#F8FAFC" stroke="#CBD5E1"/>
+
+  <circle cx="334" cy="158" r="34" fill="#EEF4FF" stroke="#DBE5FF" stroke-width="2"/>
+  <path d="M319 161L330 172L351 145" stroke="#1A46C9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g filter="url(#softShadow)">
+    <rect x="70" y="218" width="134" height="76" rx="22" fill="white"/>
+    <rect x="92" y="240" width="54" height="10" rx="5" fill="#94A3B8"/>
+    <rect x="92" y="260" width="86" height="9" rx="4.5" fill="#E2E8F0"/>
+    <circle cx="169" cy="246" r="13" fill="#1A46C9"/>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <rect x="330" y="246" width="132" height="84" rx="24" fill="white"/>
+    <rect x="352" y="272" width="74" height="10" rx="5" fill="#94A3B8"/>
+    <rect x="352" y="293" width="48" height="9" rx="4.5" fill="#E2E8F0"/>
+    <path d="M424 304C442 292 450 276 454 262" stroke="#1A46C9" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <rect x="68" y="74" width="118" height="58" rx="20" fill="white"/>
+    <circle cx="96" cy="103" r="12" fill="#1A46C9"/>
+    <rect x="116" y="94" width="45" height="8" rx="4" fill="#94A3B8"/>
+    <rect x="116" y="109" width="31" height="7" rx="3.5" fill="#E2E8F0"/>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <rect x="360" y="94" width="92" height="58" rx="20" fill="white"/>
+    <path d="M392 123H421" stroke="#1A46C9" stroke-width="7" stroke-linecap="round"/>
+    <path d="M407 108V137" stroke="#1A46C9" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+  <path d="M244 301C244 288 254 278 267 278H286C299 278 309 288 309 301V336H244V301Z" fill="#1A46C9"/>
+  <circle cx="276.5" cy="249.5" r="27.5" fill="#0F172A"/>
+  <path d="M236 336H317" stroke="#0F172A" stroke-width="16" stroke-linecap="round"/>
+  <path d="M236 304C214 306 198 318 188 338" stroke="#0F172A" stroke-width="14" stroke-linecap="round"/>
+  <path d="M316 304C338 306 354 318 364 338" stroke="#0F172A" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="268" cy="246" r="4" fill="white"/>
+  <circle cx="287" cy="246" r="4" fill="white"/>
+  <path d="M267 261C274 266 282 266 289 261" stroke="white" stroke-width="4" stroke-linecap="round"/>
+
+  <circle cx="98" cy="164" r="7" fill="#1A46C9"/>
+  <circle cx="430" cy="204" r="6" fill="#0F172A"/>
+  <path d="M440 358L455 373L476 342" stroke="#1A46C9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M54 176L70 160L86 176L70 192L54 176Z" fill="#EEF4FF" stroke="#1A46C9" stroke-width="2"/>
+
+  <defs>
+    <filter id="softShadow" x="40" y="54" width="452" height="306" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+</svg>

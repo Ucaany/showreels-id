@@ -95,9 +95,6 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     status,
-    redirectTo:
-      parsed.data.goTo === "build-link"
-        ? "/dashboard/link-builder"
-        : "/dashboard",
+    redirectTo: "/dashboard",
   });
 }

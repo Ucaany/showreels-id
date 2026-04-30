@@ -475,13 +475,13 @@ export function OnboardingStepper({
     router.refresh();
   };
 
-  const handleComplete = async (goTo: "dashboard" | "build-link") => {
+  const handleComplete = async () => {
     setBusy(true);
     const response = await fetch("/api/onboarding/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        goTo,
+        goTo: "dashboard",
       }),
     });
     const payloadResponse = (await response.json().catch(() => null)) as
@@ -660,7 +660,7 @@ export function OnboardingStepper({
               </div>
             ) : null}
 
-            {step === 4 ? <div className="mt-4 grid gap-4 lg:grid-cols-3"><div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 lg:col-span-2"><span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-white"><Check className="h-5 w-5" /></span><h3 className="mt-4 text-xl font-semibold text-slate-950">Halaman creator kamu siap</h3><p className="mt-2 text-sm leading-6 text-slate-600">Lanjut ke dashboard untuk mengatur link, upload video, dan membaca analytics.</p></div><div className="grid content-start gap-2"><Button onClick={() => void handleComplete("dashboard")} disabled={busy} className="min-h-11">{busy ? "Memproses..." : "Masuk Dashboard"}</Button><Button variant="secondary" onClick={() => void handleComplete("build-link")} disabled={busy} className="min-h-11">Lanjut Edit Build Link</Button></div></div> : null}
+            {step === 4 ? <div className="mt-4 grid gap-4 lg:grid-cols-3"><div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 lg:col-span-2"><span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-white"><Check className="h-5 w-5" /></span><h3 className="mt-4 text-xl font-semibold text-slate-950">Halaman creator kamu siap</h3><p className="mt-2 text-sm leading-6 text-slate-600">Lanjut ke dashboard untuk mengatur link, upload video, dan membaca analytics.</p></div><div className="grid content-start gap-2"><Button onClick={() => void handleComplete()} disabled={busy} className="min-h-11">{busy ? "Memproses..." : "Masuk Dashboard"}</Button></div></div> : null}
 
             {step < 4 ? <div className="sticky bottom-0 z-10 mt-5 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap items-center gap-2">{step > 1 ? <Button variant="secondary" onClick={handleBack} disabled={busy} className="min-h-10 px-3"><ChevronLeft className="h-4 w-4" />Back</Button> : null}<Button variant="ghost" onClick={() => void handleSkip()} disabled={busy} className="min-h-10 px-2 text-xs sm:text-sm">{step === 2 ? "Lewati langkah link" : "Saya mengisinya nanti"}</Button></div><Button onClick={() => void handleNext()} disabled={busy || draftSaving} className="min-h-11 w-full sm:w-auto">{busy ? "Menyimpan..." : "Next"}<ChevronRight className="h-4 w-4" /></Button></div></div> : null}
           </section>

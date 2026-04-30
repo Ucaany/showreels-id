@@ -209,22 +209,22 @@ export function BillingPanel({
   }, [searchParams]);
 
   return (
-    <div className="space-y-5">
-      <Card className="dashboard-clean-card overflow-hidden border-[#cfddf5] bg-white p-0">
+    <div className="space-y-5 text-zinc-900">
+      <Card className="dashboard-clean-card overflow-hidden border-zinc-200 bg-white p-0 shadow-sm shadow-zinc-200/70">
         <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="p-5 sm:p-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
+          <div className="bg-[radial-gradient(circle_at_top_left,#f4f4f5,transparent_34%)] p-5 sm:p-7">
+            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-700">
               <CreditCard className="h-3.5 w-3.5" />
               Billing
             </div>
-            <h1 className="mt-4 font-display text-3xl font-semibold tracking-[-0.04em] text-slate-900 sm:text-4xl">
+            <h1 className="mt-4 font-display text-3xl font-semibold tracking-[-0.04em] text-zinc-950 sm:text-4xl">
               Paket aktif kamu: {activePlanLabel}
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#55709d] sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-base">
               Ringkasan paket, masa aktif, perpanjang, dan stop paket dibuat sederhana agar mudah dipantau.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Button onClick={handleRenew} disabled={!midtransConfig.serverKeySet}>
+              <Button className="bg-zinc-900 text-white hover:bg-zinc-800" onClick={handleRenew} disabled={!midtransConfig.serverKeySet}>
                 <Sparkles className="h-4 w-4" />
                 Perpanjang
               </Button>
@@ -239,20 +239,20 @@ export function BillingPanel({
             </div>
           </div>
 
-          <div className="border-t border-slate-200 bg-[radial-gradient(circle_at_top_right,#f1f5f9,transparent_36%),linear-gradient(180deg,#f8fbff,#f8fafc)] p-5 sm:p-7 lg:border-l lg:border-t-0">
+          <div className="border-t border-zinc-200 bg-[radial-gradient(circle_at_top_right,#e4e4e7,transparent_36%),linear-gradient(180deg,#fafafa,#f4f4f5)] p-5 sm:p-7 lg:border-l lg:border-t-0">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <div className="rounded-[1.35rem] border border-slate-200 bg-white/90 p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Harga Bulanan</p>
-                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-900">{toIdr(activePrice)}</p>
-                <p className="mt-1 text-xs text-slate-500">Status: <span className="font-semibold capitalize text-slate-900">{activePlan.status}</span></p>
+              <div className="rounded-[1.35rem] border border-zinc-200 bg-white/90 p-4 shadow-sm shadow-zinc-200/70">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Harga Bulanan</p>
+                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-zinc-950">{toIdr(activePrice)}</p>
+                <p className="mt-1 text-xs text-zinc-500">Status: <span className="font-semibold capitalize text-zinc-950">{activePlan.status}</span></p>
               </div>
-              <div className="rounded-[1.35rem] border border-slate-200 bg-white/90 p-4 shadow-sm">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                  <CalendarClock className="h-4 w-4 text-slate-700" />
+              <div className="rounded-[1.35rem] border border-zinc-200 bg-white/90 p-4 shadow-sm shadow-zinc-200/70">
+                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  <CalendarClock className="h-4 w-4 text-zinc-700" />
                   Sisa Masa Aktif
                 </p>
-                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-900">{remainingDays} hari</p>
-                <p className="mt-1 text-xs text-slate-500">Renewal: {formatDate(activePlan.renewalDate)}</p>
+                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-zinc-950">{remainingDays} hari</p>
+                <p className="mt-1 text-xs text-zinc-500">Renewal: {formatDate(activePlan.renewalDate)}</p>
               </div>
             </div>
           </div>
@@ -260,21 +260,21 @@ export function BillingPanel({
       </Card>
 
       {activePlan.status === "trial" && activePlan.renewalDate && (
-        <Card className="dashboard-clean-card overflow-hidden border-slate-200 bg-slate-50 p-5">
+        <Card className="dashboard-clean-card overflow-hidden border-zinc-200 bg-zinc-50 p-5 shadow-sm shadow-zinc-200/70">
           <div className="flex items-start gap-4">
             <span className="text-4xl">🎁</span>
             <div className="flex-1">
-              <p className="text-lg font-semibold text-slate-900">
+              <p className="text-lg font-semibold text-zinc-950">
                 Trial Plan Creator Aktif
               </p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-zinc-600">
                 Berakhir pada: {new Date(activePlan.renewalDate).toLocaleDateString("id-ID", {
                   day: "numeric",
                   month: "long",
                   year: "numeric"
                 })} ({remainingDays} hari lagi)
               </p>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-zinc-500">
                 Setelah trial berakhir, akun akan otomatis turun ke plan Free. Upgrade sekarang untuk terus menggunakan fitur Creator!
               </p>
               <Link href="/payment?plan=creator&intent=checkout" className="mt-3 inline-block">
@@ -289,34 +289,34 @@ export function BillingPanel({
       )}
 
       {!midtransConfig.serverKeySet ? (
-        <Card className="dashboard-clean-card border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm font-semibold text-amber-700">Konfigurasi pembayaran belum lengkap</p>
-          <p className="mt-1 text-sm text-amber-700">
+        <Card className="dashboard-clean-card border-zinc-300 bg-zinc-100 p-4 shadow-sm shadow-zinc-200/70">
+          <p className="text-sm font-semibold text-zinc-900">Konfigurasi pembayaran belum lengkap</p>
+          <p className="mt-1 text-sm text-zinc-600">
             Konfigurasi server pembayaran belum terdeteksi. Checkout berbayar dapat gagal sampai environment production diperbarui.
           </p>
         </Card>
       ) : null}
 
       <section className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-        <Card className="dashboard-clean-card border-[#cfddf5] bg-white p-4 sm:p-5">
-          <h2 className="text-lg font-semibold text-slate-900">Rincian akun billing</h2>
+        <Card className="dashboard-clean-card border-zinc-200 bg-white p-4 shadow-sm shadow-zinc-200/70 sm:p-5">
+          <h2 className="text-lg font-semibold text-zinc-950">Rincian akun billing</h2>
           <div className="mt-4 space-y-3">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Billing Email</p>
-              <p className="mt-1 truncate text-sm font-semibold text-slate-900">{billingEmail}</p>
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Billing Email</p>
+              <p className="mt-1 truncate text-sm font-semibold text-zinc-950">{billingEmail}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Payment Method</p>
-              <p className="mt-1 text-sm font-semibold capitalize text-slate-900">{paymentMethod}</p>
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Payment Method</p>
+              <p className="mt-1 text-sm font-semibold capitalize text-zinc-950">{paymentMethod}</p>
             </div>
           </div>
         </Card>
 
-        <Card className="dashboard-clean-card border-[#cfddf5] bg-white p-4 sm:p-5">
+        <Card className="dashboard-clean-card border-zinc-200 bg-white p-4 shadow-sm shadow-zinc-200/70 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Transaksi</p>
-              <h2 className="mt-1 text-lg font-semibold text-slate-900">Riwayat terbaru</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-700">Transaksi</p>
+              <h2 className="mt-1 text-lg font-semibold text-zinc-950">Riwayat terbaru</h2>
             </div>
             <Link href="/payment">
               <Button variant="secondary" size="sm">
@@ -328,21 +328,21 @@ export function BillingPanel({
 
           <div className="mt-4 space-y-3">
             {recentTransactions.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
+              <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-5 text-sm text-zinc-500">
                 Belum ada transaksi.
               </div>
             ) : (
               recentTransactions.map((item) => (
-                <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900">{item.invoiceId}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="truncate text-sm font-semibold text-zinc-950">{item.invoiceId}</p>
+                    <p className="text-xs text-zinc-500">
                       {catalog[item.planName]?.label || item.planName} - {formatDate(item.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-[#d6e4fb] bg-white px-2.5 py-1 text-xs font-semibold capitalize text-slate-500">
-                      {item.status === "paid" ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : null}
+                    <span className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold capitalize text-zinc-500">
+                      {item.status === "paid" ? <CheckCircle2 className="h-3.5 w-3.5 text-zinc-900" /> : null}
                       {item.status}
                     </span>
                     <Link href={`/api/billing/invoice/${item.invoiceId}?download=1`} target="_blank">
