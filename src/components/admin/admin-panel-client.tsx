@@ -4,8 +4,11 @@ import { FormEvent, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
+  Bell,
   CalendarDays,
+  CreditCard,
   Database,
+  Download,
   Film,
   HardDrive,
   Link2,
@@ -14,6 +17,7 @@ import {
   Search,
   Settings2,
   ShieldCheck,
+  MousePointerClick,
   Trash2,
   Users,
 } from "lucide-react";
@@ -28,6 +32,7 @@ import {
   confirmFeedbackAction,
   showFeedbackAlert,
 } from "@/lib/feedback-alert";
+import type { AdminAnalyticsOverview } from "@/server/admin-analytics";
 
 export type AdminUserItem = {
   id: string;
@@ -82,6 +87,7 @@ type AdminPanelClientProps = {
     latencyMs?: number;
     storage?: DatabaseStorageInfo | null;
   };
+  analytics: AdminAnalyticsOverview;
   settings: {
     maintenanceEnabled: boolean;
     pauseEnabled: boolean;
@@ -129,6 +135,47 @@ async function parseApiError(response: Response) {
     | { error?: string }
     | null;
   return payload?.error || "Aksi belum berhasil diproses.";
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("id-ID").format(value);
+}
+
+function AdminMiniLineChart({
+  points,
+}: {
+  points: Array<{ day: string; views: number; visitors: number; income: number }>;
+}) {
+  const maxValue = Math.max(
+    ...points.map((point) => Math.max(point.views, point.visitors, Math.round(point.income / 10000))),
+    1
+  );
+  const width = 100;
+  const height = 100;
+  const step = points.length > 1 ? width / (points.length - 1) : width;
+  const viewLine = points
+    .map((point, index) => `${points.length > 1 ? index * step : width / 2},${height - (point.views / maxValue) * height}`)
+    .join(" ");
+  const visitorLine = points
+    .map((point, index) => `${points.length > 1 ? index * step : width / 2},${height - (point.visitors / maxValue) * height}`)
+    .join(" ");
+
+  return (
+    <div className="h-64 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
+        <polyline points={visitorLine} fill="none" stroke="#94a3b8" strokeWidth="1.7" strokeDasharray="3 3" />
+        <polyline points={viewLine} fill="none" stroke="#18181b" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
 }
 
 function StatCard({
@@ -261,6 +308,7 @@ function DatabaseStoragePreview({
 
 export function AdminPanelClient({
   stats,
+  analytics,
   dbHealth,
   settings,
   users,
@@ -541,6 +589,82 @@ export function AdminPanelClient({
           value={stats.visitorLast7Days}
           tone="emerald"
         />
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-3">
+        <Card className="border-slate-200 bg-white p-5 xl:col-span-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">Revenue & Analytics</p>
+              <h2 className="mt-1 font-display text-2xl font-semibold text-slate-950">Pemasukan, visitor, dan engagement 30 hari</h2>
+            </div>
+            <a
+              href="/api/admin/export/transactions"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-900 shadow-sm shadow-slate-900/5 transition hover:bg-slate-50"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </a>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard icon={CreditCard} label="Revenue bulan ini" value={formatCurrency(analytics.revenue.monthlyPaid)} tone="emerald" />
+            <StatCard icon={Users} label="Subscription aktif" value={formatNumber(analytics.subscriptions.active)} />
+            <StatCard icon={MousePointerClick} label="Klik 30 hari" value={formatNumber(analytics.engagement.clicks)} tone="amber" />
+            <StatCard icon={Bell} label="Notif unread" value={formatNumber(analytics.unreadNotifications)} tone="rose" />
+          </div>
+          <div className="mt-4">
+            <AdminMiniLineChart points={analytics.chart} />
+            <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
+              <span>Total revenue: <strong className="text-slate-950">{formatCurrency(analytics.revenue.totalPaid)}</strong></span>
+              <span>Paid transactions: <strong className="text-slate-950">{formatNumber(analytics.revenue.paidTransactions)}</strong></span>
+              <span>Share/Like: <strong className="text-slate-950">{formatNumber(analytics.engagement.shares)} / {formatNumber(analytics.engagement.likes)}</strong></span>
+            </div>
+          </div>
+        </Card>
+        <Card className="border-slate-200 bg-white p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">Notifications</p>
+          <h2 className="mt-1 font-display text-2xl font-semibold text-slate-950">Update admin</h2>
+          <div className="mt-4 space-y-3">
+            {analytics.notifications.map((item) => (
+              <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <div className="flex items-start justify-between gap-3"><p className="text-sm font-semibold text-slate-950">{item.title}</p><Badge className="bg-slate-900">{item.severity}</Badge></div>
+                <p className="mt-1 text-xs leading-5 text-slate-600">{item.message || item.type}</p>
+              </div>
+            ))}
+            {!analytics.notifications.length ? <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-center text-sm text-slate-500">Belum ada notifikasi.</p> : null}
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-3">
+        <Card className="border-slate-200 bg-white p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">Top clicks</p>
+          <h2 className="mt-1 font-display text-2xl font-semibold text-slate-950">Klik terbanyak</h2>
+          <div className="mt-4 space-y-2">
+            {analytics.topClicks.map((item) => (
+              <div key={`${item.path}-${item.targetUrl}`} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                <div className="min-w-0"><p className="truncate text-sm font-semibold text-slate-950">{item.label}</p><p className="truncate text-xs text-slate-500">{item.path}</p></div>
+                <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">{formatNumber(item.clicks)}</span>
+              </div>
+            ))}
+            {!analytics.topClicks.length ? <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-center text-sm text-slate-500">Belum ada data klik.</p> : null}
+          </div>
+        </Card>
+        <Card className="border-slate-200 bg-white p-5 xl:col-span-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">Content performance</p>
+          <h2 className="mt-1 font-display text-2xl font-semibold text-slate-950">Video teratas</h2>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <thead className="text-xs uppercase tracking-[0.14em] text-slate-500"><tr><th className="py-2">Video</th><th>Author</th><th>Views</th><th>Clicks</th><th>Shares</th><th>Likes</th></tr></thead>
+              <tbody className="divide-y divide-slate-100">
+                {analytics.contentPerformance.map((item) => (
+                  <tr key={item.id}><td className="py-3 font-semibold text-slate-950">{item.title}<p className="text-xs font-normal text-slate-500">/v/{item.slug}</p></td><td>{item.author}</td><td>{formatNumber(item.views)}</td><td>{formatNumber(item.clicks)}</td><td>{formatNumber(item.shares)}</td><td>{formatNumber(item.likes)}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            {!analytics.contentPerformance.length ? <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-center text-sm text-slate-500">Belum ada performa konten.</p> : null}
+          </div>
+        </Card>
       </section>
 
       <Card className="border-slate-200 bg-white">

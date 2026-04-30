@@ -295,6 +295,82 @@ export const billingSubscriptions = pgTable(
   })
 );
 
+export const analyticsEvents = pgTable(
+  "analytics_events",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    visitorId: text("visitor_id").notNull(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    videoId: text("video_id").references(() => videos.id, { onDelete: "set null" }),
+    eventType: text("event_type")
+      .$type<"page_view" | "video_view" | "link_click" | "share" | "like">()
+      .notNull()
+      .default("page_view"),
+    path: text("path").notNull().default("/"),
+    targetType: text("target_type").notNull().default("page"),
+    targetId: text("target_id").notNull().default(""),
+    targetUrl: text("target_url").notNull().default(""),
+    country: text("country").notNull().default(""),
+    city: text("city").notNull().default(""),
+    region: text("region").notNull().default(""),
+    device: text("device").notNull().default(""),
+    referrer: text("referrer").notNull().default(""),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => ({
+    eventTypeIdx: index("analytics_events_event_type_idx").on(table.eventType),
+    createdAtIdx: index("analytics_events_created_at_idx").on(table.createdAt),
+    userIdIdx: index("analytics_events_user_id_idx").on(table.userId),
+    videoIdIdx: index("analytics_events_video_id_idx").on(table.videoId),
+    geoIdx: index("analytics_events_geo_idx").on(table.country, table.city),
+  })
+);
+
+export const videoEngagementStats = pgTable("video_engagement_stats", {
+  videoId: text("video_id")
+    .primaryKey()
+    .references(() => videos.id, { onDelete: "cascade" }),
+  views: integer("views").notNull().default(0),
+  uniqueVisitors: integer("unique_visitors").notNull().default(0),
+  clicks: integer("clicks").notNull().default(0),
+  shares: integer("shares").notNull().default(0),
+  likes: integer("likes").notNull().default(0),
+  lastEventAt: timestamp("last_event_at", { mode: "date" }),
+  updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const adminNotifications = pgTable(
+  "admin_notifications",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    type: text("type").notNull().default("system"),
+    severity: text("severity")
+      .$type<"info" | "success" | "warning" | "danger">()
+      .notNull()
+      .default("info"),
+    title: text("title").notNull(),
+    message: text("message").notNull().default(""),
+    entityType: text("entity_type").notNull().default(""),
+    entityId: text("entity_id").notNull().default(""),
+    isRead: boolean("is_read").notNull().default(false),
+    readAt: timestamp("read_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => ({
+    readIdx: index("admin_notifications_is_read_idx").on(table.isRead),
+    createdAtIdx: index("admin_notifications_created_at_idx").on(table.createdAt),
+    severityIdx: index("admin_notifications_severity_idx").on(table.severity),
+  })
+);
+
 export const billingTransactions = pgTable(
   "billing_transactions",
   {
@@ -354,6 +430,25 @@ export const videosRelations = relations(videos, ({ one }) => ({
     fields: [videos.userId],
     references: [users.id],
   }),
+  engagementStats: one(videoEngagementStats),
+}));
+
+export const analyticsEventsRelations = relations(analyticsEvents, ({ one }) => ({
+  user: one(users, {
+    fields: [analyticsEvents.userId],
+    references: [users.id],
+  }),
+  video: one(videos, {
+    fields: [analyticsEvents.videoId],
+    references: [videos.id],
+  }),
+}));
+
+export const videoEngagementStatsRelations = relations(videoEngagementStats, ({ one }) => ({
+  video: one(videos, {
+    fields: [videoEngagementStats.videoId],
+    references: [videos.id],
+  }),
 }));
 
 export const creatorSettingsRelations = relations(creatorSettings, ({ one }) => ({
@@ -408,5 +503,11 @@ export type DbBillingSubscription = typeof billingSubscriptions.$inferSelect;
 export type NewDbBillingSubscription = typeof billingSubscriptions.$inferInsert;
 export type DbBillingTransaction = typeof billingTransactions.$inferSelect;
 export type NewDbBillingTransaction = typeof billingTransactions.$inferInsert;
+export type DbAnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type NewDbAnalyticsEvent = typeof analyticsEvents.$inferInsert;
+export type DbVideoEngagementStats = typeof videoEngagementStats.$inferSelect;
+export type NewDbVideoEngagementStats = typeof videoEngagementStats.$inferInsert;
+export type DbAdminNotification = typeof adminNotifications.$inferSelect;
+export type NewDbAdminNotification = typeof adminNotifications.$inferInsert;
 export type DbUserOnboarding = typeof userOnboarding.$inferSelect;
 export type NewDbUserOnboarding = typeof userOnboarding.$inferInsert;

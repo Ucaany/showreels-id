@@ -18,6 +18,7 @@ import {
 } from "@/components/admin/admin-panel-client";
 import { db } from "@/db";
 import { users, videos, visitorDailyStats, visitorEvents } from "@/db/schema";
+import { getAdminAnalyticsOverview } from "@/server/admin-analytics";
 import { getAdminEmailList } from "@/server/admin-access";
 import { getSiteSettings } from "@/server/site-settings";
 import {
@@ -112,6 +113,7 @@ export default async function AdminPanelPage({
     videoRows,
     settings,
     dbHealth,
+    adminAnalytics,
   ] = await Promise.all([
     db.select({ value: count() }).from(users).where(userBaseFilter),
     db
@@ -201,6 +203,7 @@ export default async function AdminPanelPage({
       .limit(30),
     getSiteSettings(),
     getDatabaseHealth(),
+    getAdminAnalyticsOverview(),
   ]);
 
   const adminUsers: AdminUserItem[] = userRows.map((user) => ({
@@ -257,6 +260,7 @@ export default async function AdminPanelPage({
         pauseEnabled: settings.pauseEnabled,
         maintenanceMessage: settings.maintenanceMessage,
       }}
+      analytics={adminAnalytics}
       users={adminUsers}
       videos={adminVideos}
       userSearch={userSearch}
