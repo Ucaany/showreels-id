@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, count, eq, ne } from "drizzle-orm";
+import { and, count, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { videoSchema } from "@/lib/auth-schemas";
@@ -108,36 +108,61 @@ export async function POST(request: Request) {
     existingVideos.map((item) => item.publicSlug)
   );
 
-  const [video] = await db
-    .insert(videos)
-    .values({
-      userId: currentUser.id,
-      title: parsed.data.title.trim(),
-      description:
-        parsed.data.description?.trim() ||
-        buildAiDescription({
-          title: parsed.data.title.trim(),
-          tags: parsed.data.tags,
-          source,
-        }),
+  const trimmedTitle = parsed.data.title.trim();
+  const description =
+    parsed.data.description?.trim() ||
+    buildAiDescription({
+      title: trimmedTitle,
       tags: parsed.data.tags,
-      visibility: parsed.data.visibility,
-      thumbnailUrl: normalizedThumbnailUrl,
-      extraVideoUrls: parsed.data.extraVideoUrls,
-      imageUrls: parsed.data.imageUrls,
-      sourceUrl: sourceValidation.canonicalUrl,
       source,
-      aspectRatio: parsed.data.aspectRatio,
-      outputType: parsed.data.outputType.trim(),
-      durationLabel: parsed.data.durationLabel.trim(),
-      publicSlug,
-    })
-    .returning({
-      id: videos.id,
-      publicSlug: videos.publicSlug,
-      title: videos.title,
-      visibility: videos.visibility,
     });
+
+  const insertedVideo = await db.execute<{
+    id: string;
+    publicSlug: string;
+    title: string;
+    visibility: string;
+  }>(sql`
+    insert into "videos" (
+      "id",
+      "user_id",
+      "title",
+      "description",
+      "tags",
+      "visibility",
+      "thumbnail_url",
+      "extra_video_urls",
+      "image_urls",
+      "source_url",
+      "source",
+      "aspect_ratio",
+      "output_type",
+      "duration_label",
+      "public_slug"
+    ) values (
+      ${crypto.randomUUID()},
+      ${currentUser.id},
+      ${trimmedTitle},
+      ${description},
+      ${JSON.stringify(parsed.data.tags)}::jsonb,
+      ${parsed.data.visibility},
+      ${normalizedThumbnailUrl},
+      ${JSON.stringify(parsed.data.extraVideoUrls)}::jsonb,
+      ${JSON.stringify(parsed.data.imageUrls)}::jsonb,
+      ${sourceValidation.canonicalUrl},
+      ${source},
+      ${parsed.data.aspectRatio},
+      ${parsed.data.outputType.trim()},
+      ${parsed.data.durationLabel.trim()},
+      ${publicSlug}
+    ) returning
+      "id",
+      "public_slug" as "publicSlug",
+      "title",
+      "visibility"
+  `);
+
+  const video = insertedVideo.rows[0];
 
   await markFirstVideoUploaded(currentUser.id).catch(() => null);
 
