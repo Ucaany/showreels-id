@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart3,
-  BellRing,
   CreditCard,
   Film,
   Home,
@@ -73,13 +72,7 @@ export function DashboardShell({
 
   const primaryNavItems: NavItem[] =
     mode === "admin"
-      ? [
-          { href: "/admin?section=dashboard", label: "Dashboard", icon: Home },
-          { href: "/admin?section=users", label: "User", icon: UserRound },
-          { href: "/admin?section=videos", label: "Video", icon: Film },
-          { href: "/admin?section=maintenance", label: "Maintenance", icon: Settings2 },
-          { href: "/admin?section=notifications", label: "Kirim Notifikasi", icon: BellRing },
-        ]
+      ? [{ href: "/admin", label: "Owner Panel", icon: Home }]
       : [
           { href: "/dashboard", label: "Dashboard", icon: Home },
           { href: "/dashboard/link-builder", label: "Build Link", icon: Link2 },
@@ -114,10 +107,6 @@ export function DashboardShell({
 
   const isNavItemActive = (item: NavItem) => {
     if (item.matchPrefix) return pathname.startsWith(item.matchPrefix);
-    if (item.href.startsWith("/admin?section=")) {
-      const section = item.href.split("section=")[1];
-      return pathname === "/admin" && (searchParams.get("section") || "dashboard") === section;
-    }
     if (item.href === "/dashboard" || item.href === "/admin") return pathname === item.href;
     return pathname === item.href || pathname.startsWith(`${item.href}/`);
   };
@@ -175,35 +164,26 @@ export function DashboardShell({
         href={item.href}
         onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
         className={cn(
-          "group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition-all duration-200",
-          active
-            ? "bg-zinc-950 !text-white shadow-[0_14px_30px_rgba(24,24,27,0.16)]"
-            : "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
-          !expanded && !mobile && "justify-center px-0"
+          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
+          active ? "bg-zinc-900 !text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+          !expanded && !mobile && "justify-center"
         )}
         title={!expanded && !mobile ? item.label : undefined}
       >
-        <span
-          className={cn(
-            "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-colors",
-            active ? "bg-white/12 text-white" : "bg-white text-slate-500 ring-1 ring-slate-200 group-hover:text-slate-950"
-          )}
-        >
-          <Icon className="h-4 w-4" />
-        </span>
-        {(expanded || mobile) && <span className={cn("truncate", active && "text-white")}>{item.label}</span>}
+        <Icon className={cn("h-4 w-4", active ? "!text-white" : "text-slate-500")} />
+        {(expanded || mobile) && <span className={cn(active && "text-white")}>{item.label}</span>}
       </Link>
     );
   };
 
   const renderSidebarContent = (expanded = sidebarOpen, mobile = false) => (
-    <div className="flex h-full flex-col bg-white px-3 py-4 text-slate-950 sm:px-4 sm:py-5">
+    <div className="flex h-full flex-col bg-white px-4 py-5">
       {/* Logo Showreels.id */}
       <div className={cn(
         "flex items-center gap-3",
         !expanded && !mobile && "justify-center"
       )}>
-        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.png"
@@ -231,7 +211,7 @@ export function DashboardShell({
           type="button"
           onClick={() => setSidebarOpen((current) => !current)}
           className={cn(
-            "mt-4 flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950",
+            "mt-4 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900",
             expanded ? "h-9 gap-2 px-3" : "h-10 w-full"
           )}
           aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
@@ -296,10 +276,10 @@ export function DashboardShell({
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(148,163,184,0.22),transparent_34%),linear-gradient(180deg,#f8fafc_0%,#f4f4f5_48%,#f8fafc_100%)] font-sans text-slate-950">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden border-r border-slate-200/80 bg-white/95 shadow-[18px_0_60px_rgba(15,23,42,0.06)] backdrop-blur-xl transition-all duration-300 ease-in-out md:block",
+          "fixed inset-y-0 left-0 z-40 hidden border-r border-slate-200 bg-white transition-all duration-300 ease-in-out md:block",
           sidebarOpen ? "w-72" : "w-20"
         )}
       >
@@ -308,7 +288,7 @@ export function DashboardShell({
 
       <header
         className={cn(
-          "fixed inset-x-0 top-0 z-30 border-b border-slate-200/80 bg-white/82 backdrop-blur-xl transition-all duration-300 ease-in-out",
+          "fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-xl transition-all duration-300 ease-in-out",
           sidebarOpen ? "md:left-72" : "md:left-20"
         )}
       >
@@ -322,10 +302,9 @@ export function DashboardShell({
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div className="min-w-0 text-sm text-slate-500">
-              <span className="hidden sm:inline">Creator Workspace</span>
-              <span className="mx-2 hidden text-slate-300 sm:inline">/</span>
-              <span className="font-semibold text-slate-950">{breadcrumbLabel}</span>
+            <div className="text-sm text-slate-500">
+              Dashboard <span className="mx-2 text-slate-300">/</span>
+              <span className="font-medium text-slate-900">{breadcrumbLabel}</span>
             </div>
           </div>
 
@@ -333,7 +312,7 @@ export function DashboardShell({
             <Link
               href={authProfileHref}
               target="_blank"
-              className="hidden rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 sm:inline-flex"
+              className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:inline-flex"
             >
               {displayUsername}
             </Link>
@@ -387,11 +366,10 @@ export function DashboardShell({
           sidebarOpen ? "md:pl-72" : "md:pl-20"
         )}
       >
-        <main className="mx-auto w-full max-w-[1440px] p-4 pb-24 md:p-8 md:pb-8">{children}</main>
+        <main className="p-4 pb-24 md:p-8 md:pb-8">{children}</main>
       </div>
 
       <BottomNavigation />
     </div>
   );
 }
-

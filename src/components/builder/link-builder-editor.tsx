@@ -143,7 +143,7 @@ function SortableLinkItem({
         transform: CSS.Transform.toString(transform),
         transition,
       }}
-      className={`rounded-[1.35rem] border border-slate-200 bg-white/95 p-3 shadow-sm ring-1 ring-white/70 ${
+      className={`rounded-2xl border border-[#d6e2f7] bg-white p-3 shadow-sm ${
         isDragging ? "opacity-80" : ""
       }`}
     >
@@ -151,16 +151,16 @@ function SortableLinkItem({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#d6ccc6] bg-[#f8f3ef] text-[#4f433d]"
             aria-label="Geser urutan link"
             {...attributes}
             {...listeners}
           >
             <GripVertical className="h-4 w-4" />
           </button>
-          <p className="text-sm font-semibold text-slate-950">Link #{index + 1}</p>
+          <p className="text-sm font-semibold text-[#201b18]">Link #{index + 1}</p>
           {link.enabled === false ? (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+            <span className="rounded-full bg-[#f3efed] px-2 py-0.5 text-[10px] font-semibold text-[#6e6058]">
               Inactive
             </span>
           ) : null}
@@ -209,7 +209,7 @@ function SortableLinkItem({
       <div className="mt-3 grid gap-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-600">Judul tombol</label>
+            <label className="mb-1 block text-xs font-semibold text-[#5f524b]">Judul tombol</label>
             <Input
               value={link.title}
               maxLength={MAX_LINK_TITLE_LENGTH}
@@ -218,7 +218,7 @@ function SortableLinkItem({
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-600">URL</label>
+            <label className="mb-1 block text-xs font-semibold text-[#5f524b]">URL</label>
             <Input
               value={link.url}
               onChange={(event) => onChange(link.id, { url: event.target.value, isDirty: true })}
@@ -235,7 +235,7 @@ function SortableLinkItem({
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-600">Platform / Icon</label>
+            <label className="mb-1 block text-xs font-semibold text-[#5f524b]">Platform / Icon</label>
             <Input
               value={link.platform || ""}
               maxLength={30}
@@ -244,7 +244,7 @@ function SortableLinkItem({
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-slate-600">Badge highlight</label>
+            <label className="mb-1 block text-xs font-semibold text-[#5f524b]">Badge highlight</label>
             <Input
               value={link.badge || ""}
               maxLength={30}
@@ -255,7 +255,7 @@ function SortableLinkItem({
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-semibold text-slate-600">Deskripsi singkat</label>
+          <label className="mb-1 block text-xs font-semibold text-[#5f524b]">Deskripsi singkat</label>
           <Textarea
             value={link.description || ""}
             maxLength={MAX_LINK_DESCRIPTION_LENGTH}
@@ -265,12 +265,12 @@ function SortableLinkItem({
           />
         </div>
 
-        <label className="inline-flex items-center gap-2 text-sm text-slate-600">
+        <label className="inline-flex items-center gap-2 text-sm text-[#5f524b]">
           <input
             type="checkbox"
             checked={link.enabled !== false}
             onChange={(event) => onToggle(link.id, event.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 text-zinc-950"
+            className="h-4 w-4 rounded border-[#ccbfb7] text-[#1f58e3]"
           />
           Tampilkan di halaman publik
         </label>
@@ -986,26 +986,26 @@ export function LinkBuilderEditor({
 
   return (
     <div className="space-y-4">
-      <Card className="dashboard-clean-card overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-4 shadow-sm ring-1 ring-white/70 backdrop-blur sm:p-5">
+      <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
         <div className="flex flex-col items-center justify-center gap-3">
           {/* Creator Info Section */}
           <div className="flex flex-col items-center justify-center gap-2 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2f73ff]">
               showreels.id
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <h1 className="font-display text-2xl font-semibold tracking-[-0.04em] text-slate-950">
+              <h1 className="font-display text-2xl font-semibold text-[#201b18]">
                 {profileFields.fullName || "Creator"}
               </h1>
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                 LIVE
               </span>
             </div>
-            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+            <span className="inline-flex items-center rounded-full border border-[#d4e3fb] bg-[#edf4ff] px-3 py-1 text-xs font-semibold text-[#2f73ff]">
               {publicPath}
             </span>
             {saveStatus === "saving" || saveStatus === "error" ? (
-              <p className="text-xs font-semibold text-slate-500">
+              <p className="text-xs font-semibold text-[#5d5049]">
                 {saveStatus === "saving" ? "Menyimpan..." : "Gagal menyimpan"}
               </p>
             ) : null}
@@ -1017,8 +1017,8 @@ export function LinkBuilderEditor({
               type="button"
               className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
                 activeSection === "edit"
-                  ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
+                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
               }`}
               onClick={() => setActiveSection("edit")}
             >
@@ -1029,8 +1029,8 @@ export function LinkBuilderEditor({
               type="button"
               className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
                 activeSection === "links"
-                  ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
+                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
               }`}
               onClick={() => setActiveSection("links")}
             >
@@ -1041,8 +1041,8 @@ export function LinkBuilderEditor({
               type="button"
               className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
                 activeSection === "design"
-                  ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
+                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
               }`}
               onClick={() => setActiveSection("design")}
             >
@@ -1053,8 +1053,8 @@ export function LinkBuilderEditor({
               type="button"
               className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
                 activeSection === "preview"
-                  ? "border-zinc-950 bg-zinc-950 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
+                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
               }`}
               onClick={() => setActiveSection("preview")}
             >
@@ -1067,11 +1067,11 @@ export function LinkBuilderEditor({
 
       {activeSection === "edit" ? (
         <div className="space-y-4">
-          <Card className="dashboard-clean-card rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-4 shadow-sm ring-1 ring-white/70 backdrop-blur sm:p-5">
+          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
-                <PencilLine className="h-4 w-4 text-zinc-950" />
-                <h2 className="text-lg font-semibold text-slate-950">Bio & Experience</h2>
+                <PencilLine className="h-4 w-4 text-[#2f73ff]" />
+                <h2 className="text-lg font-semibold text-[#201b18]">Bio & Experience</h2>
               </div>
               <Button
                 type="button"
@@ -1087,7 +1087,7 @@ export function LinkBuilderEditor({
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600">Display Name</label>
+                <label className="mb-1 block text-xs font-semibold text-[#5f524b]">Display Name</label>
                 <Input
                   value={profileFields.fullName}
                   onChange={(event) =>
@@ -1096,7 +1096,7 @@ export function LinkBuilderEditor({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600">Role / Profession</label>
+                <label className="mb-1 block text-xs font-semibold text-[#5f524b]">Role / Profession</label>
                 <Input
                   value={profileFields.role}
                   onChange={(event) =>
@@ -1106,7 +1106,7 @@ export function LinkBuilderEditor({
               </div>
             </div>
             <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-slate-600">Username / Slug</label>
+              <label className="mb-1 block text-xs font-semibold text-[#5f524b]">Username / Slug</label>
               <Input
                 value={profileFields.username}
                 onChange={(event) =>
@@ -1116,7 +1116,7 @@ export function LinkBuilderEditor({
               />
             </div>
             <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-slate-600">Bio</label>
+              <label className="mb-1 block text-xs font-semibold text-[#5f524b]">Bio</label>
               <Textarea
                 maxLength={240}
                 value={profileFields.bio}
@@ -1138,7 +1138,7 @@ export function LinkBuilderEditor({
                         bio: suggestion.slice(0, 240),
                       }))
                     }
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-950"
+                    className="rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] px-3 py-2 text-left text-sm text-[#244064] transition hover:border-[#2f73ff]"
                   >
                     {suggestion}
                   </button>
@@ -1147,20 +1147,20 @@ export function LinkBuilderEditor({
             ) : null}
 
             <details
-              className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3"
+              className="mt-3 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3"
               open={experienceItems.length === 0}
             >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#3f5f93]">
                   Experience ({experienceItems.length})
                 </span>
-                <span className="inline-flex items-center gap-2 text-xs font-medium text-slate-500">
+                <span className="inline-flex items-center gap-2 text-xs font-medium text-[#5b7198]">
                   {serializedExperience.length}/700
                   <ChevronDown className="h-3.5 w-3.5" />
                 </span>
               </summary>
 
-              <div className="mt-3 grid gap-2 rounded-xl border border-dashed border-slate-300 bg-white p-3">
+              <div className="mt-3 grid gap-2 rounded-xl border border-dashed border-[#c9dbf6] bg-white p-3">
                 <Input
                   value={newExperience.title}
                   onChange={(event) =>
@@ -1215,17 +1215,17 @@ export function LinkBuilderEditor({
 
               <div className="mt-3 space-y-2">
                 {experienceItems.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-sm text-slate-500">
+                  <p className="rounded-xl border border-dashed border-[#c9dbf6] bg-white px-3 py-2 text-sm text-[#5b7198]">
                     Belum ada experience. Tambahkan minimal satu item agar profil lebih kuat.
                   </p>
                 ) : (
                   experienceItems.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-xl border border-slate-200 bg-white p-3"
+                      className="rounded-xl border border-[#dce7f8] bg-white p-3"
                     >
                       <div className="mb-2 flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-slate-950">
+                        <p className="text-sm font-semibold text-[#1b2e4f]">
                           {item.title || "Experience"}
                         </p>
                         <Button
@@ -1292,12 +1292,12 @@ export function LinkBuilderEditor({
               </div>
             </details>
 
-            <details className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+            <details className="mt-4 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#3f5f93]">
                   Social Links
                 </span>
-                <ChevronDown className="h-3.5 w-3.5 text-slate-500" />
+                <ChevronDown className="h-3.5 w-3.5 text-[#5b7198]" />
               </summary>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Input
@@ -1373,19 +1373,19 @@ export function LinkBuilderEditor({
 
       {activeSection === "links" ? (
         <div className="space-y-4">
-          <Card className="dashboard-clean-card rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-4 shadow-sm ring-1 ring-white/70 backdrop-blur sm:p-5">
+          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f73ff]">
                   Custom Link
                 </p>
-                <h2 className="text-lg font-semibold text-slate-950">
+                <h2 className="text-lg font-semibold text-[#201b18]">
                   Tambah Link (maks {maxLinksLabel})
                 </h2>
               </div>
               <Button
                 size="sm"
-                className="rounded-xl bg-zinc-950 hover:bg-zinc-800"
+                className="bg-[#2f73ff] hover:bg-[#225fe0]"
                 onClick={() => (isLinkLimitReached ? void showFreeLimitModal() : openAddBlockModal())}
               >
                 <Plus className="h-4 w-4" />
@@ -1393,16 +1393,16 @@ export function LinkBuilderEditor({
               </Button>
             </div>
 
-            <p className="mb-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            <p className="mb-4 rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-3 py-2 text-xs text-[#5b7198]">
               Tambahkan block dari popup agar tampilan editor lebih ringkas dan fokus.
             </p>
 
             <div className="mt-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5b7198]">
                   {links.length} Blocks
                 </p>
-                <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-500">
+                <span className="rounded-full border border-[#e0d4ce] bg-white px-2.5 py-1 text-xs font-semibold text-[#5b7198]">
                   {previewLinks.length} active - Plan {planName.toUpperCase()}
                 </span>
               </div>
@@ -1415,13 +1415,13 @@ export function LinkBuilderEditor({
               </div>
 
               {links.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                <p className="rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-4 py-3 text-sm text-[#5b7198]">
                   Belum ada link. Tambahkan link pertama untuk mulai membangun halaman Showreels kamu.
                 </p>
               ) : null}
 
               {links.length > 0 && filteredLinks.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                <p className="rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-4 py-3 text-sm text-[#5b7198]">
                   Tidak ada block yang cocok dengan kata kunci pencarian.
                 </p>
               ) : null}
@@ -1470,14 +1470,14 @@ export function LinkBuilderEditor({
       ) : null}
 
       {activeSection === "design" ? (
-        <Card className="dashboard-clean-card rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-4 shadow-sm ring-1 ring-white/70 backdrop-blur sm:p-5">
+        <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
           <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-zinc-950" />
-            <h2 className="text-lg font-semibold text-slate-950">Design</h2>
+            <Sparkles className="h-4 w-4 text-[#2f73ff]" />
+            <h2 className="text-lg font-semibold text-[#201b18]">Design</h2>
           </div>
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4">
-            <p className="text-sm font-semibold text-slate-950">Theme selector akan ditingkatkan.</p>
-            <p className="mt-1 text-sm text-slate-500">
+          <div className="rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] p-4">
+            <p className="text-sm font-semibold text-[#244064]">Theme selector akan ditingkatkan.</p>
+            <p className="mt-1 text-sm text-[#5b7198]">
               Untuk saat ini, style publik mengikuti tema clean default showreels. Kontrol design lanjutan segera hadir.
             </p>
           </div>
@@ -1486,18 +1486,18 @@ export function LinkBuilderEditor({
 
       {activeSection === "preview" ? (
         <div className="space-y-4">
-          <Card className="dashboard-clean-card rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-4 shadow-sm ring-1 ring-white/70 backdrop-blur sm:p-5">
+          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-slate-950">Live Preview</h2>
+              <h2 className="text-lg font-semibold text-[#201b18]">Live Preview</h2>
               <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex rounded-full border border-slate-200 bg-white p-1">
+                <div className="inline-flex rounded-full border border-[#d7cec7] bg-white p-1">
                   <button
                     type="button"
                     onClick={() => setDeviceMode("mobile")}
                     className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
                       deviceMode === "mobile"
-                        ? "bg-zinc-950 text-white shadow-sm"
-                        : "text-slate-600 hover:bg-slate-100"
+                        ? "bg-[#2f73ff] text-white"
+                        : "text-[#5e514b] hover:bg-[#edf4ff]"
                     }`}
                   >
                     <Smartphone className="h-3.5 w-3.5" />
@@ -1508,8 +1508,8 @@ export function LinkBuilderEditor({
                     onClick={() => setDeviceMode("desktop")}
                     className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
                       deviceMode === "desktop"
-                        ? "bg-zinc-950 text-white shadow-sm"
-                        : "text-slate-600 hover:bg-slate-100"
+                        ? "bg-[#2f73ff] text-white"
+                        : "text-[#5e514b] hover:bg-[#edf4ff]"
                     }`}
                   >
                     <Monitor className="h-3.5 w-3.5" />
@@ -1522,27 +1522,27 @@ export function LinkBuilderEditor({
               </div>
             </div>
 
-            <div className="mt-4 rounded-[26px] border border-slate-200 bg-[radial-gradient(circle_at_1px_1px,#e2e8f0_1px,transparent_0)] p-4 [background-size:18px_18px]">
+            <div className="mt-4 rounded-[26px] border border-[#e2d7d1] bg-[radial-gradient(circle_at_1px_1px,#eadfd8_1px,transparent_0)] [background-size:16px_16px] p-4">
               <div
                 className={`mx-auto transition-all ${
                   deviceMode === "desktop" ? "max-w-[380px]" : "max-w-[340px]"
                 }`}
               >
-                <div className="relative rounded-[36px] border-[7px] border-zinc-950 bg-zinc-900 p-2 shadow-[0_24px_48px_rgba(24,24,27,0.22)]">
-                  <div className="absolute left-1/2 top-1.5 h-4 w-24 -translate-x-1/2 rounded-full bg-zinc-950" />
-                  <div className="h-[620px] overflow-y-auto rounded-[28px] bg-slate-50 px-5 pb-6 pt-12 text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-zinc-950 to-slate-700 text-2xl font-semibold text-white shadow">
+                <div className="relative rounded-[36px] border-[7px] border-[#0c121d] bg-[#111827] p-2 shadow-[0_24px_48px_rgba(16,29,55,0.3)]">
+                  <div className="absolute left-1/2 top-1.5 h-4 w-24 -translate-x-1/2 rounded-full bg-[#05080d]" />
+                  <div className="h-[620px] overflow-y-auto rounded-[28px] bg-[#f8fbff] px-5 pb-6 pt-12 text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-[#2f73ff] to-[#5b8dff] text-2xl font-semibold text-white shadow">
                       {(profileFields.fullName || "C").slice(0, 1).toUpperCase()}
                     </div>
-                    <p className="mt-4 text-[32px] font-semibold leading-none tracking-[-0.05em] text-slate-950">
+                    <p className="mt-4 text-[32px] font-semibold leading-none text-[#1f2a44]">
                       {profileFields.fullName || "Display Name"}
                     </p>
-                    <p className="mt-2 text-sm text-slate-500">
+                    <p className="mt-2 text-sm text-[#6a7da3]">
                       {profileFields.role || "Deskripsi singkat tentang Anda"}
                     </p>
                     <div className="mt-5 space-y-2 text-left">
                       {previewLinks.length === 0 ? (
-                        <p className="rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2 text-xs text-slate-500">
+                        <p className="rounded-xl border border-dashed border-[#cfe0fa] bg-white px-3 py-2 text-xs text-[#5b7198]">
                           Belum ada link aktif.
                         </p>
                       ) : (
@@ -1550,7 +1550,7 @@ export function LinkBuilderEditor({
                           link.type === "divider" ? (
                             <div
                               key={link.id}
-                              className={`my-3 border-slate-200 ${
+                              className={`my-3 border-[#cfe0fa] ${
                                 link.style === "dashed"
                                   ? "border-t border-dashed"
                                   : link.style === "solid"
@@ -1561,17 +1561,17 @@ export function LinkBuilderEditor({
                           ) : (
                             <div
                               key={link.id}
-                              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"
+                              className="flex items-center gap-2 rounded-xl border border-[#dce7f8] bg-white px-3 py-2"
                             >
-                              <span className="h-4 w-4 rounded-[5px] bg-zinc-950" />
-                              <p className="truncate text-sm font-medium text-slate-950">{link.title}</p>
+                              <span className="h-4 w-4 rounded-[5px] bg-[#5f6cff]" />
+                              <p className="truncate text-sm font-medium text-[#1f2a44]">{link.title}</p>
                             </div>
                           )
                         )
                       )}
                     </div>
                     {previewExperiences.length > 0 ? (
-                      <p className="mt-4 text-left text-xs text-slate-500">
+                      <p className="mt-4 text-left text-xs text-[#6b7ca1]">
                         {previewExperiences[0]?.title}
                         {previewExperiences[0]?.organization
                           ? ` - ${previewExperiences[0].organization}`
@@ -1584,7 +1584,7 @@ export function LinkBuilderEditor({
             </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
+              <span className="inline-flex items-center rounded-full border border-[#e0d5ce] bg-white px-3 py-1.5 text-xs font-semibold text-[#5e514b]">
                 <Link2 className="mr-1.5 h-3.5 w-3.5" />
                 {publicPath}
               </span>
@@ -1594,19 +1594,19 @@ export function LinkBuilderEditor({
       ) : null}
 
       {isAddBlockOpen ? (
-        <div className="fixed inset-0 z-[95] flex items-end justify-center bg-zinc-950/55 p-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] sm:items-center sm:p-4">
+        <div className="fixed inset-0 z-[95] flex items-end justify-center bg-[#0f2347]/55 p-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] sm:items-center sm:p-4">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
             aria-label="Close add block modal backdrop"
             onClick={() => setIsAddBlockOpen(false)}
           />
-          <div className="relative z-[96] max-h-[92vh] w-full max-w-[860px] overflow-hidden rounded-t-[1.4rem] border border-slate-200 bg-white shadow-xl sm:rounded-[1.4rem]">
-            <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-slate-200 bg-white p-4 sm:p-5">
-              <h3 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">Add a block</h3>
+          <div className="relative z-[96] max-h-[92vh] w-full max-w-[860px] overflow-hidden rounded-t-[1.4rem] border border-[#c8d9f4] bg-white shadow-xl sm:rounded-[1.4rem]">
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[#d6e2f7] bg-white p-4 sm:p-5">
+              <h3 className="text-2xl font-semibold text-[#1a2b48]">Add a block</h3>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-100"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#cfdcf2] text-[#44608d] hover:bg-[#eff5ff]"
                 aria-label="Close add block modal"
                 onClick={() => setIsAddBlockOpen(false)}
               >
@@ -1616,7 +1616,7 @@ export function LinkBuilderEditor({
 
             <div className="max-h-[calc(92vh-76px)] overflow-y-auto p-4 sm:p-5">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8aa2c8]" />
               <Input
                 value={blockSearch}
                 onChange={(event) => setBlockSearch(event.target.value)}
@@ -1626,7 +1626,7 @@ export function LinkBuilderEditor({
             </div>
 
             <div className="mt-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5b7198]">
                 Quick Add
               </p>
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-4">
@@ -1637,24 +1637,24 @@ export function LinkBuilderEditor({
                       key={item.key}
                       type="button"
                       onClick={() => openAddBlockModal(item)}
-                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-left transition hover:border-slate-300 hover:bg-white hover:shadow-sm"
+                      className="rounded-xl border border-[#d8e5fa] bg-[#f7fbff] px-3 py-3 text-left transition hover:border-[#aac7f5] hover:bg-[#edf4ff]"
                     >
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white text-zinc-950 ring-1 ring-slate-200">
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#2f73ff]">
                         <Icon className="h-4 w-4" />
                       </span>
-                      <span className="mt-2 inline-flex rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                      <span className="mt-2 inline-flex rounded-full border border-[#d6e4fb] bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6078a2]">
                         {item.category}
                       </span>
-                      <p className="mt-2 text-sm font-semibold text-slate-950">{item.label}</p>
-                      <p className="text-xs text-slate-500">{item.helper}</p>
+                      <p className="mt-2 text-sm font-semibold text-[#1f2a44]">{item.label}</p>
+                      <p className="text-xs text-[#6b7ca1]">{item.helper}</p>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <div className="mt-5 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-4">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2f73ff]">
                 Custom Link
               </p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -1686,7 +1686,7 @@ export function LinkBuilderEditor({
                   onChange={(event) =>
                     setNewLink((prev) => ({ ...prev, iconKey: event.target.value }))
                   }
-                  className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-950"
+                  className="h-11 rounded-xl border border-[#d6e2f7] bg-white px-3 text-sm text-[#1f2a44]"
                 >
                   {[
                     "link",
@@ -1745,7 +1745,7 @@ export function LinkBuilderEditor({
                 </Button>
                 <Button
                   type="button"
-                  className="h-10 w-full bg-zinc-950 px-3 text-xs font-semibold hover:bg-zinc-800 sm:h-9 sm:w-auto"
+                  className="h-10 w-full bg-[#2f73ff] px-3 text-xs font-semibold hover:bg-[#225fe0] sm:h-9 sm:w-auto"
                   onClick={handleAddLink}
                 >
                   <Plus className="h-4 w-4" />
@@ -1759,22 +1759,22 @@ export function LinkBuilderEditor({
       ) : null}
 
       {isShareOpen ? (
-        <div className="fixed inset-0 z-[98] flex items-end justify-center bg-zinc-950/55 p-2 sm:items-center sm:p-4">
+        <div className="fixed inset-0 z-[98] flex items-end justify-center bg-[#0f2347]/55 p-2 sm:items-center sm:p-4">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
             aria-label="Close share modal backdrop"
             onClick={() => setIsShareOpen(false)}
           />
-          <div className="relative z-[99] max-h-[88vh] w-full max-w-[560px] overflow-hidden rounded-t-[1.4rem] border border-slate-200 bg-white shadow-xl sm:rounded-[1.4rem]">
-            <div className="flex items-start justify-between gap-3 border-b border-slate-200 bg-white p-4">
+          <div className="relative z-[99] max-h-[88vh] w-full max-w-[560px] overflow-hidden rounded-t-[1.4rem] border border-[#c8d9f4] bg-white shadow-xl sm:rounded-[1.4rem]">
+            <div className="flex items-start justify-between gap-3 border-b border-[#d6e2f7] bg-white p-4">
               <div>
-                <h3 className="text-xl font-semibold tracking-[-0.04em] text-slate-950">Share Build Link</h3>
-                <p className="text-xs text-slate-500">Copy, social share, dan QR disatukan di sini.</p>
+                <h3 className="text-xl font-semibold text-[#142033]">Share Build Link</h3>
+                <p className="text-xs text-[#6078a2]">Copy, social share, dan QR disatukan di sini.</p>
               </div>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-100"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#cfdcf2] text-[#44608d] hover:bg-[#eff5ff]"
                 onClick={() => setIsShareOpen(false)}
                 aria-label="Close share modal"
               >
@@ -1782,8 +1782,8 @@ export function LinkBuilderEditor({
               </button>
             </div>
             <div className="max-h-[calc(88vh-76px)] overflow-y-auto p-4">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <p className="truncate text-sm font-semibold text-slate-950">{absolutePublicUrl}</p>
+              <div className="rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3">
+                <p className="truncate text-sm font-semibold text-[#142033]">{absolutePublicUrl}</p>
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   <Button type="button" size="sm" onClick={handleCopyPublicLink}>
                     <Copy className="h-4 w-4" />
@@ -1816,7 +1816,7 @@ export function LinkBuilderEditor({
                 </div>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-[180px_1fr]">
-                <div className="rounded-2xl border border-slate-200 bg-white p-3 text-center">
+                <div className="rounded-2xl border border-[#d6e2f7] bg-white p-3 text-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(
@@ -1830,7 +1830,7 @@ export function LinkBuilderEditor({
                       absolutePublicUrl
                     )}`}
                     download="showreels-qr.png"
-                    className="mt-3 inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-950"
+                    className="mt-3 inline-flex h-9 items-center justify-center rounded-xl border border-[#d6e2f7] bg-[#f7fbff] px-3 text-xs font-semibold text-[#2f73ff]"
                   >
                     <Download className="mr-1 h-4 w-4" />
                     Download QR
@@ -1849,9 +1849,9 @@ export function LinkBuilderEditor({
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+                      className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#d6e2f7] bg-white px-3 text-sm font-semibold text-[#244064] hover:border-[#2f73ff] hover:bg-[#f7fbff]"
                     >
-                      <Share2 className="h-4 w-4 text-zinc-950" />
+                      <Share2 className="h-4 w-4 text-[#2f73ff]" />
                       {label}
                     </a>
                   ))}
@@ -1863,18 +1863,18 @@ export function LinkBuilderEditor({
       ) : null}
 
       <div className="fixed inset-x-0 bottom-3 z-20 px-3 md:hidden">
-        <div className="mx-auto grid max-w-sm grid-cols-3 gap-2 rounded-[1.25rem] border border-slate-200 bg-white/95 p-2 shadow-[0_18px_42px_rgba(24,24,27,0.16)] backdrop-blur">
+        <div className="mx-auto grid max-w-sm grid-cols-3 gap-2 rounded-[1.25rem] border border-[#cfe0ff] bg-white/95 p-2 shadow-[0_18px_42px_rgba(24,58,115,0.22)] backdrop-blur">
           <Link
             href={publicPath}
             target="_blank"
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-100 text-zinc-950"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#edf4ff] text-[#2f73ff]"
             aria-label="Preview"
           >
             <Eye className="h-5 w-5" />
           </Link>
           <button
             type="button"
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-zinc-950 text-white disabled:opacity-50"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#2f73ff] text-white disabled:opacity-50"
             aria-label="Publish"
             onClick={handlePublish}
             disabled={isSavingNow}
@@ -1883,7 +1883,7 @@ export function LinkBuilderEditor({
           </button>
           <button
             type="button"
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-100 text-zinc-950"
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-[#edf4ff] text-[#2f73ff]"
             aria-label="Share"
             onClick={() => setIsShareOpen(true)}
           >
