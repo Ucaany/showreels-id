@@ -44,6 +44,7 @@ type AdminSearchParams = {
   page?: string;
   userSearch?: string;
   videoSearch?: string;
+  section?: string;
 };
 
 const PAGE_SIZE = 9;
@@ -81,7 +82,9 @@ export default async function AdminPanelPage({
   searchParams: Promise<AdminSearchParams>;
 }) {
   const params = await searchParams;
-  const search = (params.search || params.videoSearch || params.userSearch || "").trim();
+  const search = (params.search || params.videoSearch || "").trim();
+  const userSearch = (params.userSearch || "").trim();
+  const section = ["dashboard", "users", "videos", "maintenance", "notifications"].includes(params.section || "") ? params.section || "dashboard" : "dashboard";
   const platform = PLATFORM_VALUES.includes((params.platform || "").toLowerCase())
     ? (params.platform || "").toLowerCase()
     : "all";
@@ -101,6 +104,20 @@ export default async function AdminPanelPage({
   const videoBaseFilter = adminEmails.length
     ? and(ne(users.role, "owner"), notInArray(users.email, adminEmails))
     : ne(users.role, "owner");
+
+  const userFilters = [userBaseFilter];
+  if (userSearch) {
+    userFilters.push(
+      or(
+        ilike(users.name, `%${userSearch}%`),
+        ilike(users.email, `%${userSearch}%`),
+        ilike(users.username, `%${userSearch}%`),
+        ilike(users.role, `%${userSearch}%`),
+        ilike(users.city, `%${userSearch}%`)
+      )
+    );
+  }
+  const userWhere = and(...userFilters);
 
   const unifiedVideoFilters = [videoBaseFilter];
   if (search) {
@@ -162,7 +179,7 @@ export default async function AdminPanelPage({
     db.select({ value: sql<number>`coalesce(sum(${visitorDailyStats.uniqueVisitors}), 0)`.mapWith(Number) }).from(visitorDailyStats).where(eq(visitorDailyStats.day, yesterdayWibDay)),
     db.select({ value: sql<number>`coalesce(sum(${visitorDailyStats.uniqueVisitors}), 0)`.mapWith(Number) }).from(visitorDailyStats).where(and(gte(visitorDailyStats.day, sevenDaysAgoWibDay), lt(visitorDailyStats.day, currentWibDay))),
     db.query.users.findMany({
-      where: userBaseFilter,
+      where: userWhere,
       orderBy: desc(users.createdAt),
       limit: 40,
       with: { videos: { columns: { id: true } } },
@@ -288,7 +305,7 @@ export default async function AdminPanelPage({
       users={adminUsers}
       videos={adminVideos}
       schedules={schedules}
-      filters={{ search, platform, status, sort, page }}
+      filters={{ search, userSearch, platform, status, sort, page, section }}
       pagination={{
         page,
         pageSize: PAGE_SIZE,

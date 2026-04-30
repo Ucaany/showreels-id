@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { NotificationInboxPanel } from "@/components/dashboard/notification-inbox-panel";
 import { OnboardingReminderCard } from "@/components/dashboard/onboarding-reminder-card";
-import { PublicLinkCardCompact } from "@/components/dashboard/public-link-card-compact";
 import { OnboardingStepper } from "@/components/onboarding/onboarding-stepper";
 import { Button } from "@/components/ui/button";
 import { db, isDatabaseConfigured } from "@/db";
@@ -60,7 +59,7 @@ function BentoCard({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm md:p-6",
+        "rounded-[1.75rem] border border-slate-200/80 bg-white/95 p-5 text-slate-950 shadow-[0_18px_45px_rgba(15,23,42,0.06)] ring-1 ring-white/70 md:p-6",
         className
       )}
     >
@@ -77,23 +76,25 @@ function HeroCard({
   canUseBuildLink: boolean;
 }) {
   return (
-    <BentoCard className="overflow-hidden lg:col-span-2">
-      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+    <BentoCard className="relative overflow-hidden lg:col-span-2">
+      <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-slate-200/70 blur-3xl" />
+      <div className="absolute bottom-0 right-0 h-32 w-52 rounded-tl-[4rem] bg-gradient-to-br from-white via-slate-100 to-zinc-200/80" />
+      <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 shadow-sm">
             <Sparkles className="h-3.5 w-3.5" />
             Dashboard Creator
           </div>
-          <h2 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
+          <h2 className="mt-5 max-w-2xl text-3xl font-semibold tracking-[-0.04em] text-slate-950 md:text-5xl">
             Selamat datang, {userName || "Kreator"}
           </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-            Kelola link publik, video portfolio, analytics, dan billing dari satu workspace Bento Grid yang bersih dan ramah mata.
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 md:text-base">
+            Kelola Bio Link, portfolio video, upload, profile, dan analytics dari satu workspace Bento UI yang clean, monochromatic, dan responsif.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Link href={canUseBuildLink ? "/dashboard/link-builder" : "/dashboard/billing"}>
-            <Button className="inline-flex h-10 items-center gap-2 rounded-xl bg-zinc-800 px-3.5 text-sm font-medium text-white hover:bg-zinc-700">
+            <Button className="inline-flex h-11 items-center gap-2 rounded-2xl bg-zinc-950 px-4 text-sm font-semibold text-white shadow-[0_18px_32px_rgba(24,24,27,0.18)] hover:bg-zinc-800">
               {canUseBuildLink ? <Wand2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
               {canUseBuildLink ? "Mulai Build Link" : "Unlock Build Link"}
             </Button>
@@ -101,7 +102,7 @@ function HeroCard({
           <Link href="/dashboard/videos/new">
             <Button
               variant="secondary"
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-900 hover:bg-slate-100"
+              className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm hover:bg-slate-100"
             >
               <Plus className="h-4 w-4" />
               Upload Video
@@ -114,11 +115,48 @@ function HeroCard({
 }
 
 
+function WorkspaceFocusCard({ profilePath }: { profilePath: string }) {
+  return (
+    <BentoCard className="lg:col-span-1">
+      <div className="flex h-full flex-col justify-between gap-6">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Live Preview
+          </p>
+          <h3 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-slate-950">
+            Cek tampilan publik creator
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Pastikan Bio Link, portfolio, dan tombol kontak tampil rapi sebelum dibagikan ke client.
+          </p>
+        </div>
+        <Link href={profilePath} target="_blank" className="group block">
+          <div className="rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(145deg,#fafafa,#f1f5f9)] p-4 transition-all group-hover:-translate-y-0.5 group-hover:shadow-sm">
+            <div className="mx-auto aspect-[9/16] max-h-56 w-32 rounded-[1.5rem] border border-zinc-200 bg-white p-2 shadow-inner">
+              <div className="h-full rounded-[1.1rem] bg-[radial-gradient(circle_at_top,#e2e8f0,transparent_36%),linear-gradient(180deg,#fafafa,#f4f4f5)] p-3">
+                <div className="h-10 w-10 rounded-2xl bg-zinc-900" />
+                <div className="mt-4 h-2 w-16 rounded-full bg-zinc-900" />
+                <div className="mt-2 h-2 w-20 rounded-full bg-slate-300" />
+                <div className="mt-5 space-y-2">
+                  <span className="block h-8 rounded-xl bg-white shadow-sm" />
+                  <span className="block h-8 rounded-xl bg-white shadow-sm" />
+                  <span className="block h-8 rounded-xl bg-zinc-900 shadow-sm" />
+                </div>
+              </div>
+            </div>
+            <p className="mt-4 text-center text-sm font-semibold text-slate-950">Buka halaman publik</p>
+          </div>
+        </Link>
+      </div>
+    </BentoCard>
+  );
+}
+
 function StatCard({ item }: { item: MetricCard }) {
   const Icon = item.icon;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-2.5 md:rounded-2xl md:p-5">
+    <div className="rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] md:rounded-[1.5rem] md:p-5">
       <div className="flex items-start justify-between gap-1 md:gap-3">
         <p className="truncate text-[10px] font-medium uppercase leading-tight tracking-[0.12em] text-slate-400 md:text-xs md:tracking-[0.18em]">
           {item.label}
@@ -140,7 +178,7 @@ function StatCard({ item }: { item: MetricCard }) {
 function StatsGrid({ metricCards }: { metricCards: MetricCard[] }) {
   return (
     <section className="lg:col-span-3">
-      <div className="grid grid-cols-4 gap-2 md:gap-4">
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
         {metricCards.map((item) => (
           <StatCard key={item.label} item={item} />
         ))}
@@ -164,7 +202,7 @@ function AnalyticsChartCard() {
         </span>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,#f8fafc,#f4f4f5)] p-4">
         <div className="relative h-64">
           <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white via-slate-100 to-transparent" />
           <div className="absolute inset-0 grid grid-rows-4">
@@ -214,7 +252,7 @@ function QuickActionCard({ actions }: { actions: QuickAction[] }) {
           const Icon = item.icon;
           return (
             <Link key={item.title} href={item.href} className="group block">
-              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 transition-colors hover:bg-slate-100">
+              <div className="flex items-start gap-3 rounded-[1.35rem] border border-slate-200 bg-white p-3 transition-all hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm">
                 <span
                   className={cn(
                     "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
@@ -395,13 +433,29 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <div className="space-y-6">
+      <div className="rounded-[2rem] border border-slate-200/80 bg-white/65 px-4 py-3 shadow-sm backdrop-blur-xl">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Showreels Dashboard</p>
+            <h1 className="mt-1 text-xl font-semibold tracking-[-0.04em] text-slate-950 md:text-2xl">
+              Creator control center
+            </h1>
+          </div>
+          <Link href={profilePath} target="_blank">
+            <Button variant="secondary" className="rounded-2xl border-slate-200 bg-white text-slate-950 shadow-sm hover:bg-slate-100">
+              Preview Bio Link
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       {onboarding.onboardingSkipped && !onboarding.onboardingCompleted ? (
         <OnboardingReminderCard userId={user.id} resumeHref="/dashboard?onboarding=1" />
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
         <HeroCard userName={user.name} canUseBuildLink={canUseBuildLink} />
-        <PublicLinkCardCompact profilePath={profilePath} username={user.username || "creator"} />
+        <WorkspaceFocusCard profilePath={profilePath} />
         <StatsGrid metricCards={metricCards} />
         <AnalyticsChartCard />
         <QuickActionCard actions={quickActions} />
