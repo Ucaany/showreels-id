@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
@@ -16,6 +16,14 @@ const pinVideoSchema = z.object({
 
 function isPinnableVisibility(visibility: string) {
   return visibility === "public" || visibility === "semi_private";
+}
+
+async function ensureVideoPinColumns() {
+  await db.execute(sql.raw(`
+    ALTER TABLE "videos" ADD COLUMN IF NOT EXISTS "pinned_to_profile" boolean DEFAULT false NOT NULL;
+    ALTER TABLE "videos" ADD COLUMN IF NOT EXISTS "pinned_order" integer DEFAULT 0 NOT NULL;
+    CREATE INDEX IF NOT EXISTS "videos_user_pinned_idx" ON "videos" ("user_id", "pinned_to_profile", "pinned_order");
+  `));
 }
 
 async function getPinnedVideos(userId: string) {
@@ -119,7 +127,7 @@ export async function POST(request: Request) {
       );
     }
 
-    try {
+    const pinVideo = async () => {
       await db
         .update(videos)
         .set({
@@ -130,30 +138,36 @@ export async function POST(request: Request) {
           updatedAt: new Date(),
         })
         .where(and(eq(videos.id, video.id), eq(videos.userId, currentUser.id)));
+    };
+
+    try {
+      await pinVideo();
     } catch (error) {
-      if (isVideoPinSchemaError(error)) {
-        return NextResponse.json(
-          { error: "Fitur pin video belum aktif karena database production belum termigrasi." },
-          { status: 503 }
-        );
+      if (!isVideoPinSchemaError(error)) {
+        throw error;
       }
-      throw error;
+
+      await ensureVideoPinColumns();
+      await pinVideo();
     }
   } else {
-    try {
+    const unpinVideo = async () => {
       await db
         .update(videos)
         .set({ pinnedToProfile: false, pinnedOrder: 0, updatedAt: new Date() })
         .where(and(eq(videos.id, video.id), eq(videos.userId, currentUser.id)));
       await normalizePinnedOrder(currentUser.id);
+    };
+
+    try {
+      await unpinVideo();
     } catch (error) {
-      if (isVideoPinSchemaError(error)) {
-        return NextResponse.json(
-          { error: "Fitur pin video belum aktif karena database production belum termigrasi." },
-          { status: 503 }
-        );
+      if (!isVideoPinSchemaError(error)) {
+        throw error;
       }
-      throw error;
+
+      await ensureVideoPinColumns();
+      await unpinVideo();
     }
   }
 
