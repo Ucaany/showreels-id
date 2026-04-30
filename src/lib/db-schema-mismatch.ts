@@ -1,25 +1,40 @@
 const UNDEFINED_COLUMN_CODE = "42703";
 
-function readErrorCode(error: unknown): string {
+function readNestedError(error: unknown): unknown {
   if (!error || typeof error !== "object") {
+    return null;
+  }
+
+  return (error as { cause?: unknown }).cause ?? null;
+}
+
+function readErrorCode(error: unknown, depth = 0): string {
+  if (!error || typeof error !== "object" || depth > 4) {
     return "";
   }
 
   const candidate = (error as { code?: unknown }).code;
-  return typeof candidate === "string" ? candidate : "";
-}
-
-function readErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
+  if (typeof candidate === "string") {
+    return candidate;
   }
 
-  if (!error || typeof error !== "object") {
+  return readErrorCode(readNestedError(error), depth + 1);
+}
+
+function readErrorMessage(error: unknown, depth = 0): string {
+  if (!error || depth > 4) {
     return "";
   }
 
-  const candidate = (error as { message?: unknown }).message;
-  return typeof candidate === "string" ? candidate : "";
+  const ownMessage =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" && typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : "";
+
+  const nestedMessage = readErrorMessage(readNestedError(error), depth + 1);
+  return [ownMessage, nestedMessage].filter(Boolean).join(" ");
 }
 
 export function summarizeError(error: unknown) {
