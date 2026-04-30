@@ -488,10 +488,10 @@ export function VideoForm({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      <Card className="border-border bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.14),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))]">
+      <Card className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.12),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.99),_rgba(248,250,252,0.98))] shadow-sm shadow-slate-900/5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-brand-600">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-700">
               Video dashboard
             </p>
             <h1 className="mt-2 font-display text-2xl font-semibold text-slate-900">
@@ -515,9 +515,9 @@ export function VideoForm({
         </div>
 
         <form onSubmit={onSubmit} className="mt-6 space-y-5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5">
             <div className="mb-4 flex items-center gap-2">
-              <Clapperboard className="h-4 w-4 text-brand-600" />
+              <Clapperboard className="h-4 w-4 text-zinc-700" />
               <h2 className="text-base font-semibold text-slate-900">
                 Informasi utama video
               </h2>
@@ -618,9 +618,9 @@ export function VideoForm({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5">
             <div className="mb-4 flex items-center gap-2">
-              <LayoutTemplate className="h-4 w-4 text-brand-600" />
+              <LayoutTemplate className="h-4 w-4 text-zinc-700" />
               <h2 className="text-base font-semibold text-slate-900">
                 Thumbnail & galeri
               </h2>
@@ -664,7 +664,7 @@ export function VideoForm({
               </p>
             )}
             {!manualThumbnailUrl && source ? (
-              <p className="mt-1 text-xs text-brand-700">
+              <p className="mt-1 text-xs text-emerald-700">
                 Thumbnail otomatis diambil dari video utama dan slider dinonaktifkan.
               </p>
             ) : null}
@@ -699,9 +699,9 @@ export function VideoForm({
           </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5">
             <div className="mb-4 flex items-center gap-2">
-              <Link2 className="h-4 w-4 text-brand-600" />
+              <Link2 className="h-4 w-4 text-zinc-700" />
               <h2 className="text-base font-semibold text-slate-900">
                 Detail publik
               </h2>
@@ -738,7 +738,7 @@ export function VideoForm({
                     type="button"
                     variant="secondary"
                     size="sm"
-                    className="rounded-full border border-brand-200 bg-gradient-to-r from-brand-50 to-white px-4 text-brand-700 hover:from-brand-100 hover:to-brand-50"
+                    className="rounded-full border border-emerald-200 bg-emerald-50 px-4 text-emerald-700 hover:bg-emerald-100"
                     onClick={handleGenerateDescription}
                     disabled={aiLoading}
                   >
@@ -778,9 +778,9 @@ export function VideoForm({
         </form>
       </Card>
 
-      <Card className="h-fit space-y-4 border-border bg-surface">
+      <Card className="sticky top-24 h-fit space-y-4 rounded-[1.75rem] border border-slate-200 bg-white shadow-sm shadow-slate-900/5">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700">
             Link publik
           </p>
           <h2 className="mt-1 font-display text-lg font-semibold text-slate-900">
