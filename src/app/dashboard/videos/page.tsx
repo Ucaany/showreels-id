@@ -2,6 +2,7 @@ import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 import { Film, Link2, Plus, UploadCloud } from "lucide-react";
 import { DashboardVideoList } from "@/components/dashboard/dashboard-video-list";
+import { isVideoPinSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { db, isDatabaseConfigured } from "@/db";
@@ -11,23 +12,52 @@ import { requireCurrentUser } from "@/server/current-user";
 export default async function DashboardVideosPage() {
   const user = await requireCurrentUser();
 
+  const videoColumns = {
+    id: true,
+    title: true,
+    source: true,
+    sourceUrl: true,
+    thumbnailUrl: true,
+    visibility: true,
+    pinnedToProfile: true,
+    pinnedOrder: true,
+    publicSlug: true,
+    createdAt: true,
+  } as const;
+
   const myVideos = isDatabaseConfigured
-    ? await db.query.videos.findMany({
-        where: eq(videos.userId, user.id),
-        orderBy: desc(videos.createdAt),
-        columns: {
-          id: true,
-          title: true,
-          source: true,
-          sourceUrl: true,
-          thumbnailUrl: true,
-          visibility: true,
-          pinnedToProfile: true,
-          pinnedOrder: true,
-          publicSlug: true,
-          createdAt: true,
-        },
-      })
+    ? await db.query.videos
+        .findMany({
+          where: eq(videos.userId, user.id),
+          orderBy: desc(videos.createdAt),
+          columns: videoColumns,
+        })
+        .catch(async (error) => {
+          if (!isVideoPinSchemaError(error)) {
+            throw error;
+          }
+
+          console.warn("db_schema_mismatch dashboard videos without video pin columns", {
+            userId: user.id,
+            ...summarizeError(error),
+          });
+
+          const fallbackVideos = await db.query.videos.findMany({
+            where: eq(videos.userId, user.id),
+            orderBy: desc(videos.createdAt),
+            columns: {
+              ...videoColumns,
+              pinnedToProfile: false,
+              pinnedOrder: false,
+            },
+          });
+
+          return fallbackVideos.map((video) => ({
+            ...video,
+            pinnedToProfile: false,
+            pinnedOrder: 0,
+          }));
+        })
     : [];
 
   const publicReadyCount = myVideos.filter(

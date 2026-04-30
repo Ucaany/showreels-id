@@ -3,6 +3,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
+import { isVideoPinSchemaError } from "@/lib/db-schema-mismatch";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 
@@ -18,14 +19,22 @@ function isPinnableVisibility(visibility: string) {
 }
 
 async function getPinnedVideos(userId: string) {
-  return db.query.videos.findMany({
-    where: and(eq(videos.userId, userId), eq(videos.pinnedToProfile, true)),
-    orderBy: [asc(videos.pinnedOrder), asc(videos.createdAt)],
-    columns: {
-      id: true,
-      pinnedOrder: true,
-    },
-  });
+  return db.query.videos
+    .findMany({
+      where: and(eq(videos.userId, userId), eq(videos.pinnedToProfile, true)),
+      orderBy: [asc(videos.pinnedOrder), asc(videos.createdAt)],
+      columns: {
+        id: true,
+        pinnedOrder: true,
+      },
+    })
+    .catch((error) => {
+      if (isVideoPinSchemaError(error)) {
+        return [];
+      }
+
+      throw error;
+    });
 }
 
 async function normalizePinnedOrder(userId: string) {
@@ -63,14 +72,30 @@ export async function POST(request: Request) {
     );
   }
 
-  const video = await db.query.videos.findFirst({
-    where: and(eq(videos.id, parsed.data.videoId), eq(videos.userId, currentUser.id)),
-    columns: {
-      id: true,
-      visibility: true,
-      pinnedToProfile: true,
-    },
-  });
+  const video = await db.query.videos
+    .findFirst({
+      where: and(eq(videos.id, parsed.data.videoId), eq(videos.userId, currentUser.id)),
+      columns: {
+        id: true,
+        visibility: true,
+        pinnedToProfile: true,
+      },
+    })
+    .catch(async (error) => {
+      if (!isVideoPinSchemaError(error)) {
+        throw error;
+      }
+
+      const fallbackVideo = await db.query.videos.findFirst({
+        where: and(eq(videos.id, parsed.data.videoId), eq(videos.userId, currentUser.id)),
+        columns: {
+          id: true,
+          visibility: true,
+        },
+      });
+
+      return fallbackVideo ? { ...fallbackVideo, pinnedToProfile: false } : fallbackVideo;
+    });
 
   if (!video) {
     return NextResponse.json({ error: "Video tidak ditemukan." }, { status: 404 });
@@ -94,46 +119,65 @@ export async function POST(request: Request) {
       );
     }
 
-    await db
-      .update(videos)
-      .set({
-        pinnedToProfile: true,
-        pinnedOrder: alreadyPinned
-          ? pinnedVideos.find((item) => item.id === video.id)?.pinnedOrder || 1
-          : pinnedVideos.length + 1,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(videos.id, video.id), eq(videos.userId, currentUser.id)));
+    try {
+      await db
+        .update(videos)
+        .set({
+          pinnedToProfile: true,
+          pinnedOrder: alreadyPinned
+            ? pinnedVideos.find((item) => item.id === video.id)?.pinnedOrder || 1
+            : pinnedVideos.length + 1,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(videos.id, video.id), eq(videos.userId, currentUser.id)));
+    } catch (error) {
+      if (isVideoPinSchemaError(error)) {
+        return NextResponse.json(
+          { error: "Fitur pin video belum aktif karena database production belum termigrasi." },
+          { status: 503 }
+        );
+      }
+      throw error;
+    }
   } else {
-    await db
-      .update(videos)
-      .set({ pinnedToProfile: false, pinnedOrder: 0, updatedAt: new Date() })
-      .where(and(eq(videos.id, video.id), eq(videos.userId, currentUser.id)));
-    await normalizePinnedOrder(currentUser.id);
+    try {
+      await db
+        .update(videos)
+        .set({ pinnedToProfile: false, pinnedOrder: 0, updatedAt: new Date() })
+        .where(and(eq(videos.id, video.id), eq(videos.userId, currentUser.id)));
+      await normalizePinnedOrder(currentUser.id);
+    } catch (error) {
+      if (isVideoPinSchemaError(error)) {
+        return NextResponse.json(
+          { error: "Fitur pin video belum aktif karena database production belum termigrasi." },
+          { status: 503 }
+        );
+      }
+      throw error;
+    }
   }
 
-  const pinnedVideos = await db.query.videos.findMany({
-    where: and(eq(videos.userId, currentUser.id), eq(videos.pinnedToProfile, true)),
-    orderBy: [asc(videos.pinnedOrder), asc(videos.createdAt)],
-    columns: {
-      id: true,
-      pinnedOrder: true,
-    },
-  });
+  const pinnedVideos = await getPinnedVideos(currentUser.id);
 
   if (pinnedVideos.length > PIN_LIMIT) {
     const overflowIds = pinnedVideos.slice(PIN_LIMIT).map((item) => item.id);
 
-    await db
-      .update(videos)
-      .set({ pinnedToProfile: false, pinnedOrder: 0, updatedAt: new Date() })
-      .where(
-        and(
-          eq(videos.userId, currentUser.id),
-          eq(videos.pinnedToProfile, true),
-          inArray(videos.id, overflowIds)
-        )
-      );
+    try {
+      await db
+        .update(videos)
+        .set({ pinnedToProfile: false, pinnedOrder: 0, updatedAt: new Date() })
+        .where(
+          and(
+            eq(videos.userId, currentUser.id),
+            eq(videos.pinnedToProfile, true),
+            inArray(videos.id, overflowIds)
+          )
+        );
+    } catch (error) {
+      if (!isVideoPinSchemaError(error)) {
+        throw error;
+      }
+    }
   }
 
   return NextResponse.json({

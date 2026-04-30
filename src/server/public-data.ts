@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions, creatorSettings, users, videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
-import { isLinkedinSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
+import { isLinkedinSchemaError, isVideoPinSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
 import { getThumbnailCandidates } from "@/lib/video-utils";
@@ -482,31 +482,62 @@ export async function getPublicProfile(
       return null;
     }
 
-    const profileVideos = await db.query.videos.findMany({
-      where: and(
-        eq(videos.userId, user.id),
-        or(eq(videos.visibility, "public"), eq(videos.visibility, "semi_private"))
-      ),
-      orderBy: desc(videos.createdAt),
-      columns: {
-        id: true,
-        title: true,
-        description: true,
-        visibility: true,
-        pinnedToProfile: true,
-        pinnedOrder: true,
-        thumbnailUrl: true,
-        extraVideoUrls: true,
-        imageUrls: true,
-        sourceUrl: true,
-        source: true,
-        aspectRatio: true,
-        outputType: true,
-        durationLabel: true,
-        publicSlug: true,
-        createdAt: true,
-      },
-    });
+    const videoColumns = {
+      id: true,
+      title: true,
+      description: true,
+      visibility: true,
+      pinnedToProfile: true,
+      pinnedOrder: true,
+      thumbnailUrl: true,
+      extraVideoUrls: true,
+      imageUrls: true,
+      sourceUrl: true,
+      source: true,
+      aspectRatio: true,
+      outputType: true,
+      durationLabel: true,
+      publicSlug: true,
+      createdAt: true,
+    } as const;
+
+    const videoWhere = and(
+      eq(videos.userId, user.id),
+      or(eq(videos.visibility, "public"), eq(videos.visibility, "semi_private"))
+    );
+
+    const profileVideos = await db.query.videos
+      .findMany({
+        where: videoWhere,
+        orderBy: desc(videos.createdAt),
+        columns: videoColumns,
+      })
+      .catch(async (error) => {
+        if (!isVideoPinSchemaError(error)) {
+          throw error;
+        }
+
+        console.warn("db_schema_mismatch public profile without video pin columns", {
+          username,
+          ...summarizeError(error),
+        });
+
+        const fallbackVideos = await db.query.videos.findMany({
+          where: videoWhere,
+          orderBy: desc(videos.createdAt),
+          columns: {
+            ...videoColumns,
+            pinnedToProfile: false,
+            pinnedOrder: false,
+          },
+        });
+
+        return fallbackVideos.map((video) => ({
+          ...video,
+          pinnedToProfile: false,
+          pinnedOrder: 0,
+        }));
+      });
 
     const pinnedVideos = profileVideos
       .filter((video) => video.pinnedToProfile)
