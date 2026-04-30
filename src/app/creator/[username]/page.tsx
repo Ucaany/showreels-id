@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowUpRight,
-  Lock,
   Mail,
   MapPin,
   Phone,
@@ -71,9 +70,8 @@ export default async function CreatorProfilePage({
   const hireMeExternal = !hireMeLink.startsWith("/");
   const aboutHref = `/creator/${username}/about`;
   const portfolioHref = `/creator/${username}/portfolio`;
-  const previewVideos = profile.videos.slice(0, 3);
+  const previewVideos = (profile.pinnedVideos?.length ? profile.pinnedVideos : profile.videos).slice(0, 3);
   const isProfileOwner = Boolean(currentUser && currentUser.id === profile.user.id);
-  const showPremiumSection = profile.businessPlanActive || isProfileOwner;
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#edf3ff_0%,#f8fbff_48%,#f2f7ff_100%)]">
@@ -206,73 +204,61 @@ export default async function CreatorProfilePage({
               <CustomLinksList links={profile.user.customLinks} />
             </Card>
 
-            {showPremiumSection ? (
-              <Card className="space-y-4 rounded-[1.7rem] border-[#d4e2f8] bg-white/95 p-4 shadow-[0_12px_30px_rgba(36,74,145,0.08)] sm:p-5">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5873a0]">
-                    Section Premium
-                  </p>
-                  <h2 className="mt-1 font-display text-2xl font-semibold text-[#1b2e4f]">
-                    Portfolio Preview
-                  </h2>
-                </div>
+            <Card className="space-y-4 rounded-[1.7rem] border-[#d4e2f8] bg-white/95 p-4 shadow-[0_12px_30px_rgba(36,74,145,0.08)] sm:p-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5873a0]">
+                  Bio Link Portfolio
+                </p>
+                <h2 className="mt-1 font-display text-2xl font-semibold text-[#1b2e4f]">
+                  Video Pilihan Creator
+                </h2>
+              </div>
 
-                {profile.businessPlanActive ? (
-                  <>
-                    {previewVideos.length === 0 ? (
-                      <p className="rounded-2xl border border-dashed border-[#d4e2f8] bg-[#f7fbff] px-4 py-3 text-sm text-[#5f78a3]">
-                        Belum ada video public untuk ditampilkan.
-                      </p>
-                    ) : (
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        {previewVideos.map((video) => (
-                          <Link key={video.id} href={`/v/${video.publicSlug}`} className="group block">
-                            <div className="overflow-hidden rounded-2xl border border-[#dce7f8] bg-white">
-                              {video.thumbnailUrl || getAutoThumbnailFromVideoUrl(video.sourceUrl) ? (
-                                <Image
-                                  src={video.thumbnailUrl || getAutoThumbnailFromVideoUrl(video.sourceUrl)}
-                                  alt={`Thumbnail ${video.title}`}
-                                  width={420}
-                                  height={236}
-                                  className="aspect-video w-full object-cover transition group-hover:scale-[1.02]"
-                                  unoptimized
-                                />
-                              ) : (
-                                <div className="flex aspect-video items-center justify-center bg-[#edf4ff] text-xs text-[#5f78a3]">
-                                  Thumbnail belum tersedia
-                                </div>
-                              )}
-                              <p className="line-clamp-2 px-3 py-2 text-sm font-semibold text-[#243a5f]">
-                                {video.title}
-                              </p>
-                            </div>
-                          </Link>
-                        ))}
+              {previewVideos.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-[#d4e2f8] bg-[#f7fbff] px-4 py-3 text-sm text-[#5f78a3]">
+                  Belum ada video public atau semi-private untuk ditampilkan.
+                </p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {previewVideos.map((video) => (
+                    <Link key={video.id} href={`/v/${video.publicSlug}`} className="group block">
+                      <div className="overflow-hidden rounded-2xl border border-[#dce7f8] bg-white">
+                        {video.thumbnailUrl || getAutoThumbnailFromVideoUrl(video.sourceUrl) ? (
+                          <Image
+                            src={video.thumbnailUrl || getAutoThumbnailFromVideoUrl(video.sourceUrl)}
+                            alt={`Thumbnail ${video.title}`}
+                            width={420}
+                            height={236}
+                            className="aspect-video w-full object-cover transition group-hover:scale-[1.02]"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="flex aspect-video items-center justify-center bg-[#edf4ff] text-xs text-[#5f78a3]">
+                            Thumbnail belum tersedia
+                          </div>
+                        )}
+                        <div className="px-3 py-2">
+                          {video.pinnedToProfile ? (
+                            <span className="mb-1 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                              Pinned #{video.pinnedOrder || 1}
+                            </span>
+                          ) : null}
+                          <p className="line-clamp-2 text-sm font-semibold text-[#243a5f]">
+                            {video.title}
+                          </p>
+                        </div>
                       </div>
-                    )}
+                    </Link>
+                  ))}
+                </div>
+              )}
 
-                    <Link href={portfolioHref}>
-                      <Button variant="secondary" className="w-full sm:w-auto">
-                        Buka halaman portfolio
-                      </Button>
-                    </Link>
-                  </>
-                ) : (
-                  <div className="rounded-2xl border border-[#d4e2f8] bg-[#f8fbff] p-4">
-                    <p className="inline-flex items-center gap-1 rounded-full border border-[#d4e2f8] bg-white px-2.5 py-1 text-xs font-semibold text-[#2f73ff]">
-                      <Lock className="h-3.5 w-3.5" />
-                      Business Feature
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-[#4f658f]">
-                      Preview portfolio di halaman utama hanya tersedia untuk paket Business.
-                    </p>
-                    <Link href="/dashboard/billing" className="mt-3 inline-flex">
-                      <Button size="sm">Upgrade ke Business</Button>
-                    </Link>
-                  </div>
-                )}
-              </Card>
-            ) : null}
+              <Link href={portfolioHref}>
+                <Button variant="secondary" className="w-full sm:w-auto">
+                  Buka halaman portfolio
+                </Button>
+              </Link>
+            </Card>
 
             <Card className="space-y-4 rounded-[1.7rem] border-[#d4e2f8] bg-white/95 p-4 shadow-[0_12px_30px_rgba(36,74,145,0.08)] sm:p-5">
               <div>

@@ -149,6 +149,8 @@ export const videos = pgTable(
       .default("landscape"),
     outputType: text("output_type").notNull().default(""),
     durationLabel: text("duration_label").notNull().default(""),
+    pinnedToProfile: boolean("pinned_to_profile").notNull().default(false),
+    pinnedOrder: integer("pinned_order").notNull().default(0),
     publicSlug: text("public_slug").notNull().unique(),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
@@ -156,6 +158,7 @@ export const videos = pgTable(
   (table) => ({
     userIdIdx: index("videos_user_id_idx").on(table.userId),
     slugIdx: index("videos_public_slug_idx").on(table.publicSlug),
+    pinnedIdx: index("videos_user_pinned_idx").on(table.userId, table.pinnedToProfile, table.pinnedOrder),
     sourceVisibilityIdx: index("videos_user_source_visibility_idx").on(
       table.userId,
       table.source,

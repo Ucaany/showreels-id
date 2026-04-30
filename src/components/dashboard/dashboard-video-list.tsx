@@ -11,6 +11,8 @@ import {
   List,
   PencilLine,
   Search,
+  Pin,
+  PinOff,
   Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +34,8 @@ interface DashboardVideoListProps {
     sourceUrl: string;
     thumbnailUrl: string;
     visibility: VideoVisibility;
+    pinnedToProfile: boolean;
+    pinnedOrder: number;
     publicSlug: string;
     createdAt: string;
   }>;
@@ -45,6 +49,8 @@ const ITEMS_PER_PAGE = 6;
 export function DashboardVideoList({ videos }: DashboardVideoListProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pinningId, setPinningId] = useState<string | null>(null);
+  const [pinError, setPinError] = useState("");
   const [filter, setFilter] = useState<VideoFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,6 +86,27 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
     (video) => video.visibility === "private"
   ).length;
 
+  const pinnedCount = videos.filter((video) => video.pinnedToProfile).length;
+
+  const handleTogglePin = async (video: DashboardVideoListProps["videos"][number]) => {
+    setPinError("");
+    setPinningId(video.id);
+    const response = await fetch("/api/videos/pin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ videoId: video.id, pinned: !video.pinnedToProfile }),
+    });
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    setPinningId(null);
+
+    if (!response.ok) {
+      setPinError(payload?.error || "Gagal memperbarui pin video.");
+      return;
+    }
+
+    router.refresh();
+  };
+
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm(
       "Yakin ingin menghapus video ini? Tindakan ini tidak bisa dibatalkan."
@@ -103,7 +130,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-border bg-white/80 p-3 sm:p-4">
+      <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -115,7 +142,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               className={cn(
                 "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
                 filter === "all"
-                  ? "bg-brand-600 text-white"
+                  ? "bg-zinc-900 text-white shadow-sm shadow-slate-900/10"
                   : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
               )}
             >
@@ -130,7 +157,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               className={cn(
                 "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
                 filter === "draft"
-                  ? "bg-brand-600 text-white"
+                  ? "bg-zinc-900 text-white shadow-sm shadow-slate-900/10"
                   : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
               )}
             >
@@ -145,7 +172,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               className={cn(
                 "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
                 filter === "public"
-                  ? "bg-brand-600 text-white"
+                  ? "bg-zinc-900 text-white shadow-sm shadow-slate-900/10"
                   : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
               )}
             >
@@ -160,7 +187,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               className={cn(
                 "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
                 filter === "semi_private"
-                  ? "bg-brand-600 text-white"
+                  ? "bg-zinc-900 text-white shadow-sm shadow-slate-900/10"
                   : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
               )}
             >
@@ -175,7 +202,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               className={cn(
                 "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
                 filter === "private"
-                  ? "bg-brand-600 text-white"
+                  ? "bg-zinc-900 text-white shadow-sm shadow-slate-900/10"
                   : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
               )}
             >
@@ -183,7 +210,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
             </button>
           </div>
           <p className="text-xs font-medium text-slate-600">
-            Halaman {currentPage} / {totalPages}
+            Pin Bio Link {pinnedCount}/3 · Halaman {currentPage} / {totalPages}
           </p>
         </div>
 
@@ -197,7 +224,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 setPage(1);
               }}
               placeholder="Cari judul video"
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100"
             />
           </label>
           <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1">
@@ -210,7 +237,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition",
                 viewMode === "grid"
-                  ? "bg-brand-600 text-white"
+                  ? "bg-zinc-900 text-white shadow-sm shadow-slate-900/10"
                   : "text-slate-600 hover:bg-slate-100"
               )}
               aria-label="Mode grid"
@@ -227,7 +254,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition",
                 viewMode === "list"
-                  ? "bg-brand-600 text-white"
+                  ? "bg-zinc-900 text-white shadow-sm shadow-slate-900/10"
                   : "text-slate-600 hover:bg-slate-100"
               )}
               aria-label="Mode list"
@@ -238,6 +265,12 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
           </div>
         </div>
       </div>
+
+      {pinError ? (
+        <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
+          {pinError}
+        </p>
+      ) : null}
 
       {paginatedVideos.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-600">
@@ -259,7 +292,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               <article
                 key={video.id}
                 className={cn(
-                  "rounded-xl border border-border bg-white/85 p-3 transition hover:border-brand-200 hover:shadow-soft",
+                  "rounded-xl border border-slate-200 bg-white p-3 transition hover:border-zinc-300 hover:shadow-md hover:shadow-slate-900/5",
                   viewMode === "grid" ? "flex h-full min-h-[292px] flex-col" : ""
                 )}
                 >
@@ -309,6 +342,11 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                       >
                         {getVisibilityLabel(video.visibility)}
                       </Badge>
+                      {video.pinnedToProfile ? (
+                        <Badge className="bg-emerald-50 text-emerald-700">
+                          Pinned #{video.pinnedOrder || 1}
+                        </Badge>
+                      ) : null}
                     </div>
 
                     <p className="mt-1 text-sm text-slate-600">
@@ -346,6 +384,27 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                             : "Tersimpan private"}
                         </span>
                       )}
+
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={
+                          pinningId === video.id ||
+                          !(video.visibility === "public" || video.visibility === "semi_private") ||
+                          (!video.pinnedToProfile && pinnedCount >= 3)
+                        }
+                        onClick={() => handleTogglePin(video)}
+                        aria-label={video.pinnedToProfile ? "Lepas pin Bio Link" : "Pin ke Bio Link"}
+                        title={
+                          video.pinnedToProfile
+                            ? "Lepas pin Bio Link"
+                            : video.visibility === "public" || video.visibility === "semi_private"
+                              ? "Pin ke Bio Link"
+                              : "Hanya Public atau Semi Private yang bisa dipin"
+                        }
+                      >
+                        {video.pinnedToProfile ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                      </Button>
 
                       <Link href={`/dashboard/videos/${video.id}`}>
                         <Button
@@ -392,7 +451,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
       )}
 
       {totalPages > 1 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-white/70 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
           <Button
             variant="secondary"
             size="sm"
@@ -410,7 +469,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 className={cn(
                   "h-8 min-w-8 rounded-md px-2 text-sm font-semibold transition",
                   item === currentPage
-                    ? "bg-brand-600 text-white"
+                    ? "bg-zinc-900 text-white shadow-sm shadow-slate-900/10"
                     : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
                 )}
               >

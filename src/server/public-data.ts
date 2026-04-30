@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ne, notInArray } from "drizzle-orm";
+import { and, count, desc, eq, ne, notInArray, or } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions, creatorSettings, users, videos } from "@/db/schema";
@@ -483,13 +483,18 @@ export async function getPublicProfile(
     }
 
     const profileVideos = await db.query.videos.findMany({
-      where: and(eq(videos.userId, user.id), eq(videos.visibility, "public")),
+      where: and(
+        eq(videos.userId, user.id),
+        or(eq(videos.visibility, "public"), eq(videos.visibility, "semi_private"))
+      ),
       orderBy: desc(videos.createdAt),
       columns: {
         id: true,
         title: true,
         description: true,
         visibility: true,
+        pinnedToProfile: true,
+        pinnedOrder: true,
         thumbnailUrl: true,
         extraVideoUrls: true,
         imageUrls: true,
@@ -503,6 +508,11 @@ export async function getPublicProfile(
       },
     });
 
+    const pinnedVideos = profileVideos
+      .filter((video) => video.pinnedToProfile)
+      .sort((a, b) => (a.pinnedOrder || 999) - (b.pinnedOrder || 999))
+      .slice(0, 3);
+
     const [whitelabelEnabled, businessPlanActive] = await Promise.all([
       isWhitelabelActiveForUser(user.id),
       isBusinessPlanActiveForUser(user.id),
@@ -514,6 +524,7 @@ export async function getPublicProfile(
         customLinks: normalizeCustomLinks(user.customLinks),
       },
       videos: profileVideos,
+      pinnedVideos,
       whitelabelEnabled,
       businessPlanActive,
     };

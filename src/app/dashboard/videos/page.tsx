@@ -22,6 +22,8 @@ export default async function DashboardVideosPage() {
           sourceUrl: true,
           thumbnailUrl: true,
           visibility: true,
+          pinnedToProfile: true,
+          pinnedOrder: true,
           publicSlug: true,
           createdAt: true,
         },
@@ -34,50 +36,53 @@ export default async function DashboardVideosPage() {
 
   return (
     <div className="space-y-5">
-      <Card className="dashboard-clean-card overflow-hidden border-[#cfddf5] bg-white p-0">
-        <div className="grid gap-0 lg:grid-cols-[1fr_0.78fr]">
-          <div className="p-5 sm:p-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-              <UploadCloud className="h-3.5 w-3.5" />
-              Upload Video
-            </div>
-            <h1 className="mt-4 font-display text-3xl font-semibold tracking-[-0.04em] text-slate-900 sm:text-4xl">
-              Video portfolio creator
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#55709d] sm:text-base">
-              Upload, edit, dan atur status video. Video public dapat dipakai sebagai source portfolio di Build Link.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Link href="/dashboard/videos/new">
-                <Button>
-                  <Plus className="h-4 w-4" />
-                  Upload Video
-                </Button>
-              </Link>
-              <Link href="/dashboard/link-builder">
-                <Button variant="secondary">
-                  <Wand2 className="h-4 w-4" />
-                  Hubungkan ke Build Link
-                </Button>
-              </Link>
+      <Card className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-0 shadow-sm shadow-slate-900/5">
+        <div className="grid gap-0 lg:grid-cols-[1fr_0.72fr]">
+          <div className="relative overflow-hidden p-5 sm:p-7">
+            <div className="absolute -right-24 -top-24 h-56 w-56 rounded-full bg-emerald-100/70 blur-3xl" />
+            <div className="relative">
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
+                <UploadCloud className="h-3.5 w-3.5" />
+                Upload Video
+              </div>
+              <h1 className="mt-4 font-display text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl">
+                Kelola portfolio video
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+                Upload, filter, edit status, dan pin maksimal 3 video public atau semi-private ke Bio Link publik.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Link href="/dashboard/videos/new">
+                  <Button>
+                    <Plus className="h-4 w-4" />
+                    Upload Video
+                  </Button>
+                </Link>
+                <Link href="/dashboard/link-builder">
+                  <Button variant="secondary">
+                    <Wand2 className="h-4 w-4" />
+                    Buka Build Link
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-          <div className="border-t border-slate-200 bg-[radial-gradient(circle_at_top_right,#f1f5f9,transparent_36%),linear-gradient(180deg,#f8fbff,#f8fafc)] p-5 sm:p-7 lg:border-l lg:border-t-0">
+          <div className="border-t border-slate-200 bg-[linear-gradient(135deg,#fafafa,#f8fafc)] p-5 sm:p-7 lg:border-l lg:border-t-0">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
               <div className="rounded-[1.35rem] border border-slate-200 bg-white/90 p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Total Video</p>
-                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-900">{myVideos.length}</p>
+                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950">{myVideos.length}</p>
               </div>
-              <div className="rounded-[1.35rem] border border-slate-200 bg-white/90 p-4 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Public Ready</p>
-                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-900">{publicCount}</p>
+              <div className="rounded-[1.35rem] border border-emerald-200 bg-emerald-50/70 p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">Siap Bio Link</p>
+                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-emerald-900">{publicCount}</p>
               </div>
             </div>
           </div>
         </div>
       </Card>
 
-      <Card className="dashboard-clean-card border-[#cfddf5] bg-white p-4 sm:p-5">
+      <Card className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5 sm:p-5">
         {myVideos.length === 0 ? (
           <div className="rounded-[1.4rem] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
             <Film className="mx-auto h-9 w-9 text-slate-700" />
@@ -98,6 +103,8 @@ export default async function DashboardVideosPage() {
               sourceUrl: video.sourceUrl,
               thumbnailUrl: video.thumbnailUrl,
               visibility: video.visibility,
+              pinnedToProfile: video.pinnedToProfile,
+              pinnedOrder: video.pinnedOrder,
               publicSlug: video.publicSlug,
               createdAt: video.createdAt.toISOString(),
             }))}
