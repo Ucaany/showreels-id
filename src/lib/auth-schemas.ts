@@ -167,7 +167,7 @@ export const profileSchema = z.object({
   role: z.string().trim().max(120, "Role terlalu panjang.").default(""),
   avatarUrl: avatarUrlSchema.default(""),
   coverImageUrl: avatarUrlSchema.default(""),
-  bio: z.string().trim().max(240, "Bio maksimal 240 karakter.").default(""),
+  bio: z.string().trim().max(700, "Bio maksimal 700 karakter.").default(""),
   experience: z.string().trim().max(700, "Pengalaman maksimal 700 karakter.").default(""),
   birthDate: birthDateSchema.default(""),
   city: z.string().trim().max(120, "Kota terlalu panjang.").default(""),

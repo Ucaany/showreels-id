@@ -948,11 +948,20 @@ export function LinkBuilderEditor({
     if (!profileFields.role.trim() && experienceItems.length === 0) {
       await showFeedbackAlert({
         title: "Lengkapi role atau experience",
-        text: "Isi role/profesi atau experience dulu agar hasil bio lebih relevan.",
+        text: "Isi role/profesi atau experience dulu agar Gemini bisa membuat bio yang relevan.",
         icon: "info",
       });
       return;
     }
+
+    const socialLinks = [
+      profileFields.websiteUrl,
+      profileFields.instagramUrl,
+      profileFields.youtubeUrl,
+      profileFields.facebookUrl,
+      profileFields.threadsUrl,
+      profileFields.linkedinUrl,
+    ].filter(Boolean);
 
     setAiLoading(true);
     const response = await fetch("/api/ai/generate-bio", {
@@ -960,19 +969,24 @@ export function LinkBuilderEditor({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         display_name: profileFields.fullName,
+        displayName: profileFields.fullName,
         role: profileFields.role,
         experience: experienceItems.map((item) =>
           [item.title, item.organization, item.description].filter(Boolean).join(" - ")
         ),
+        existingBio: profileFields.bio,
+        tone: "professional",
+        maxLength: 700,
+        socialLinks,
         skills: user.skills || [],
       }),
     });
     const payload = (await response.json().catch(() => null)) as
-      | { suggestions?: string[]; error?: string }
+      | { bio?: string; suggestions?: string[]; error?: string; provider?: "gemini" | "fallback" }
       | null;
     setAiLoading(false);
 
-    if (!response.ok || !payload?.suggestions?.length) {
+    if (!response.ok || (!payload?.bio && !payload?.suggestions?.length)) {
       await showFeedbackAlert({
         title: "Gagal membuat bio",
         text: payload?.error || "Coba ulang beberapa saat.",
@@ -981,27 +995,30 @@ export function LinkBuilderEditor({
       return;
     }
 
-    setBioSuggestions(payload.suggestions);
+    setBioSuggestions(payload.suggestions?.length ? payload.suggestions : payload.bio ? [payload.bio] : []);
   };
 
   return (
-    <div className="space-y-4">
-      <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
-        <div className="flex flex-col items-center justify-center gap-3">
-          {/* Creator Info Section */}
-          <div className="flex flex-col items-center justify-center gap-2 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2f73ff]">
-              showreels.id
+    <div className="mx-auto max-w-[1440px] space-y-5">
+      <Card className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-0 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="p-5 sm:p-7 lg:p-8">
+            <p className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
+              <Link2 className="h-3.5 w-3.5" />
+              Build Link
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <h1 className="font-display text-2xl font-semibold text-[#201b18]">
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-3xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-4xl">
                 {profileFields.fullName || "Creator"}
               </h1>
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+              <span className="rounded-full bg-zinc-950 px-2.5 py-1 text-xs font-semibold text-white">
                 LIVE
               </span>
             </div>
-            <span className="inline-flex items-center rounded-full border border-[#d4e3fb] bg-[#edf4ff] px-3 py-1 text-xs font-semibold text-[#2f73ff]">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+              Atur profil, social link, custom link, dan preview bio link dalam layout Bento yang compact.
+            </p>
+            <span className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
               {publicPath}
             </span>
             {saveStatus === "saving" || saveStatus === "error" ? (
@@ -1011,14 +1028,16 @@ export function LinkBuilderEditor({
             ) : null}
           </div>
 
-          {/* Action Buttons - Responsive Grid */}
-          <div className="grid w-full max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="border-t border-slate-200 bg-slate-50 p-5 sm:p-7 lg:border-l lg:border-t-0 lg:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Workspace</p>
+            <p className="mt-2 text-sm text-slate-600">Pilih panel editor. Preview tetap tersedia dari tab Preview dan mobile bottom nav.</p>
+            <div className="mt-5 grid w-full grid-cols-2 gap-2">
             <button
               type="button"
-              className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
+              className={`flex h-11 items-center justify-center gap-1.5 rounded-2xl border text-xs font-semibold transition ${
                 activeSection === "edit"
-                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
-                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
+                  ? "border-zinc-950 bg-zinc-950 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
               }`}
               onClick={() => setActiveSection("edit")}
             >
@@ -1027,10 +1046,10 @@ export function LinkBuilderEditor({
             </button>
             <button
               type="button"
-              className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
+              className={`flex h-11 items-center justify-center gap-1.5 rounded-2xl border text-xs font-semibold transition ${
                 activeSection === "links"
-                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
-                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
+                  ? "border-zinc-950 bg-zinc-950 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
               }`}
               onClick={() => setActiveSection("links")}
             >
@@ -1039,10 +1058,10 @@ export function LinkBuilderEditor({
             </button>
             <button
               type="button"
-              className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
+              className={`flex h-11 items-center justify-center gap-1.5 rounded-2xl border text-xs font-semibold transition ${
                 activeSection === "design"
-                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
-                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
+                  ? "border-zinc-950 bg-zinc-950 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
               }`}
               onClick={() => setActiveSection("design")}
             >
@@ -1051,27 +1070,28 @@ export function LinkBuilderEditor({
             </button>
             <button
               type="button"
-              className={`flex h-10 items-center justify-center gap-1.5 rounded-xl border text-xs font-semibold transition ${
+              className={`flex h-11 items-center justify-center gap-1.5 rounded-2xl border text-xs font-semibold transition ${
                 activeSection === "preview"
-                  ? "border-[#2f73ff] bg-[#2f73ff] text-white"
-                  : "border-[#d6e2f7] bg-white text-[#5e514b] hover:bg-[#edf4ff]"
+                  ? "border-zinc-950 bg-zinc-950 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
               }`}
               onClick={() => setActiveSection("preview")}
             >
               <Eye className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Preview</span>
             </button>
+            </div>
           </div>
         </div>
       </Card>
 
       {activeSection === "edit" ? (
         <div className="space-y-4">
-          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
+          <Card className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)] sm:p-5">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
-                <PencilLine className="h-4 w-4 text-[#2f73ff]" />
-                <h2 className="text-lg font-semibold text-[#201b18]">Bio & Experience</h2>
+                <PencilLine className="h-4 w-4 text-slate-900" />
+                <h2 className="text-lg font-semibold text-slate-950">Bio & Experience</h2>
               </div>
               <Button
                 type="button"
@@ -1082,7 +1102,7 @@ export function LinkBuilderEditor({
                 className="w-full sm:w-auto"
               >
                 <Sparkles className="h-4 w-4" />
-                <span className="truncate">{aiLoading ? "Membuat bio..." : "Generate with AI"}</span>
+                <span className="truncate">{aiLoading ? "Generating..." : "Generate Bio with Gemini"}</span>
               </Button>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -1118,13 +1138,16 @@ export function LinkBuilderEditor({
             <div className="mt-3">
               <label className="mb-1 block text-xs font-semibold text-[#5f524b]">Bio</label>
               <Textarea
-                maxLength={240}
+                maxLength={700}
                 value={profileFields.bio}
                 onChange={(event) =>
                   setProfileFields((prev) => ({ ...prev, bio: event.target.value }))
                 }
-                placeholder="Ceritakan profil singkat kamu."
+                placeholder="Ceritakan profil singkat kamu. Maksimal 700 karakter."
               />
+              <p className="mt-1 text-right text-xs font-medium text-slate-500">
+                {profileFields.bio.length}/700
+              </p>
             </div>
             {bioSuggestions.length > 0 ? (
               <div className="mt-3 grid gap-2">
@@ -1135,10 +1158,10 @@ export function LinkBuilderEditor({
                     onClick={() =>
                       setProfileFields((prev) => ({
                         ...prev,
-                        bio: suggestion.slice(0, 240),
+                        bio: suggestion.slice(0, 700),
                       }))
                     }
-                    className="rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] px-3 py-2 text-left text-sm text-[#244064] transition hover:border-[#2f73ff]"
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 transition hover:border-slate-400 hover:bg-white"
                   >
                     {suggestion}
                   </button>
@@ -1373,7 +1396,7 @@ export function LinkBuilderEditor({
 
       {activeSection === "links" ? (
         <div className="space-y-4">
-          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
+          <Card className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)] sm:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f73ff]">
@@ -1385,7 +1408,7 @@ export function LinkBuilderEditor({
               </div>
               <Button
                 size="sm"
-                className="bg-[#2f73ff] hover:bg-[#225fe0]"
+                className="bg-zinc-950 text-white hover:bg-black"
                 onClick={() => (isLinkLimitReached ? void showFreeLimitModal() : openAddBlockModal())}
               >
                 <Plus className="h-4 w-4" />
@@ -1470,7 +1493,7 @@ export function LinkBuilderEditor({
       ) : null}
 
       {activeSection === "design" ? (
-        <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
+        <Card className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)] sm:p-5">
           <div className="mb-3 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[#2f73ff]" />
             <h2 className="text-lg font-semibold text-[#201b18]">Design</h2>
@@ -1486,7 +1509,7 @@ export function LinkBuilderEditor({
 
       {activeSection === "preview" ? (
         <div className="space-y-4">
-          <Card className="dashboard-clean-card border-[#d6e2f7] bg-white/90 p-4 sm:p-5">
+          <Card className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)] sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-[#201b18]">Live Preview</h2>
               <div className="flex flex-wrap items-center gap-2">
@@ -1496,8 +1519,8 @@ export function LinkBuilderEditor({
                     onClick={() => setDeviceMode("mobile")}
                     className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
                       deviceMode === "mobile"
-                        ? "bg-[#2f73ff] text-white"
-                        : "text-[#5e514b] hover:bg-[#edf4ff]"
+                        ? "bg-zinc-950 text-white"
+                        : "text-slate-700 hover:bg-slate-100"
                     }`}
                   >
                     <Smartphone className="h-3.5 w-3.5" />
@@ -1508,8 +1531,8 @@ export function LinkBuilderEditor({
                     onClick={() => setDeviceMode("desktop")}
                     className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
                       deviceMode === "desktop"
-                        ? "bg-[#2f73ff] text-white"
-                        : "text-[#5e514b] hover:bg-[#edf4ff]"
+                        ? "bg-zinc-950 text-white"
+                        : "text-slate-700 hover:bg-slate-100"
                     }`}
                   >
                     <Monitor className="h-3.5 w-3.5" />
