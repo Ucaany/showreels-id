@@ -8,10 +8,6 @@ import { getCurrentUser } from "@/server/current-user";
 import { getOrCreateCreatorSettings } from "@/server/creator-settings";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
-function isWhitelabelAvailable(planName: string) {
-  return planName === "business";
-}
-
 export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser?.id) {
@@ -33,7 +29,7 @@ export async function GET() {
   ]);
 
   const planName = entitlementState.effectivePlan.planName;
-  const available = isWhitelabelAvailable(planName);
+  const available = entitlementState.entitlements.whitelabelEnabled;
   return NextResponse.json({
     available,
     planName,
@@ -64,7 +60,7 @@ export async function PUT(request: Request) {
 
   const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
   const planName = entitlementState.effectivePlan.planName;
-  if (!isWhitelabelAvailable(planName)) {
+  if (!entitlementState.entitlements.whitelabelEnabled) {
     return NextResponse.json(
       {
         error: "Fitur whitelabel hanya tersedia untuk plan Business.",

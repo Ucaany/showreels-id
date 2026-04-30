@@ -1,11 +1,12 @@
 import { and, count, desc, eq, ne, notInArray, or } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
-import { billingSubscriptions, creatorSettings, users, videos } from "@/db/schema";
+import { creatorSettings, users, videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { isLinkedinSchemaError, isVideoPinSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
+import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 import { getThumbnailCandidates } from "@/lib/video-utils";
 
 export interface PublicShowcaseVideo {
@@ -25,24 +26,10 @@ export interface PublicShowcaseVideo {
   };
 }
 
-function isEntitledSubscriptionStatus(status: string | null | undefined) {
-  return status === "active" || status === "trial";
-}
-
 async function isBusinessPlanActiveForUser(userId: string) {
   try {
-    const subscription = await db.query.billingSubscriptions.findFirst({
-      where: eq(billingSubscriptions.userId, userId),
-      columns: {
-        planName: true,
-        status: true,
-      },
-    });
-
-    return Boolean(
-      subscription?.planName === "business" &&
-        isEntitledSubscriptionStatus(subscription?.status)
-    );
+    const entitlementState = await getCreatorEntitlementsForUser(userId);
+    return entitlementState.effectivePlan.planName === "business";
   } catch (error) {
     if (isMissingBillingSchemaError(error)) {
       return false;
@@ -53,26 +40,18 @@ async function isBusinessPlanActiveForUser(userId: string) {
 
 async function isWhitelabelActiveForUser(userId: string) {
   try {
-    const [settings, subscription] = await Promise.all([
+    const [settings, entitlementState] = await Promise.all([
       db.query.creatorSettings.findFirst({
         where: eq(creatorSettings.userId, userId),
         columns: {
           whitelabelEnabled: true,
         },
       }),
-      db.query.billingSubscriptions.findFirst({
-        where: eq(billingSubscriptions.userId, userId),
-        columns: {
-          planName: true,
-          status: true,
-        },
-      }),
+      getCreatorEntitlementsForUser(userId),
     ]);
 
     return Boolean(
-      settings?.whitelabelEnabled &&
-        subscription?.planName === "business" &&
-        isEntitledSubscriptionStatus(subscription?.status)
+      settings?.whitelabelEnabled && entitlementState.entitlements.whitelabelEnabled
     );
   } catch (error) {
     if (isMissingBillingSchemaError(error)) {

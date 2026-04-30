@@ -341,6 +341,27 @@ export async function getOrCreateSubscription(userId: string) {
       where: eq(billingSubscriptions.userId, userId),
     });
     if (existing) {
+      if (existing.status === "trial" && !existing.renewalDate) {
+        const trialEndDate = new Date(existing.createdAt);
+        trialEndDate.setDate(trialEndDate.getDate() + 30);
+
+        const [updated] = await db
+          .update(billingSubscriptions)
+          .set({
+            renewalDate: trialEndDate,
+            nextPlanName: "free",
+            updatedAt: new Date(),
+          })
+          .where(eq(billingSubscriptions.id, existing.id))
+          .returning();
+
+        return {
+          ...updated,
+          planName: normalizeBillingPlanName(updated.planName),
+          nextPlanName: normalizeBillingPlanName(updated.nextPlanName),
+        };
+      }
+
       return {
         ...existing,
         planName: normalizeBillingPlanName(existing.planName),

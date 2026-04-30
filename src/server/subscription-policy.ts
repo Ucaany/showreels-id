@@ -20,13 +20,17 @@ export interface CreatorPlanEntitlements {
   themeSwitchComingSoon: boolean;
 }
 
-type EffectivePlanSource = "active_subscription" | "fallback_free";
+type EffectivePlanSource = "active_subscription" | "active_trial" | "expired_trial" | "fallback_free";
 
 export interface EffectiveCreatorPlan {
   planName: CreatorPlanName;
   billingCycle: BillingCycle;
   status: string;
   source: EffectivePlanSource;
+  trialStartedAt?: Date | null;
+  trialEndsAt?: Date | null;
+  isTrialActive: boolean;
+  isTrialExpired: boolean;
 }
 
 const PLAN_LABELS: Record<CreatorPlanName, string> = {
@@ -92,7 +96,7 @@ const ENTITLEMENTS_BY_PLAN: Record<CreatorPlanName, CreatorPlanEntitlements> = {
   },
 };
 
-const ENTITLED_SUBSCRIPTION_STATUSES = new Set(["active", "trial"]);
+const ENTITLED_SUBSCRIPTION_STATUSES = new Set(["active"]);
 
 function normalizePlanName(value: string | null | undefined): CreatorPlanName {
   if (value === "pro" || value === "creator") {
@@ -125,14 +129,33 @@ export function getPlanEntitlements(planName: CreatorPlanName): CreatorPlanEntit
   return cloneEntitlements(ENTITLEMENTS_BY_PLAN[planName] || ENTITLEMENTS_BY_PLAN.free);
 }
 
+function isDateInFuture(value: Date | null | undefined, now = new Date()) {
+  return Boolean(value && value.getTime() > now.getTime());
+}
+
+function createFallbackFreePlan(input?: {
+  billingCycle?: BillingCycle;
+  status?: string;
+  source?: EffectivePlanSource;
+  trialStartedAt?: Date | null;
+  trialEndsAt?: Date | null;
+  isTrialExpired?: boolean;
+}): EffectiveCreatorPlan {
+  return {
+    planName: "free",
+    billingCycle: input?.billingCycle || "monthly",
+    status: input?.status || "missing",
+    source: input?.source || "fallback_free",
+    trialStartedAt: input?.trialStartedAt ?? null,
+    trialEndsAt: input?.trialEndsAt ?? null,
+    isTrialActive: false,
+    isTrialExpired: input?.isTrialExpired || false,
+  };
+}
+
 export async function getEffectiveCreatorPlan(userId: string): Promise<EffectiveCreatorPlan> {
   if (!isDatabaseConfigured) {
-    return {
-      planName: "free",
-      billingCycle: "monthly",
-      status: "active",
-      source: "fallback_free",
-    };
+    return createFallbackFreePlan({ status: "active" });
   }
 
   let subscription:
@@ -140,6 +163,8 @@ export async function getEffectiveCreatorPlan(userId: string): Promise<Effective
         planName: string;
         billingCycle: string;
         status: string;
+        renewalDate: Date | null;
+        createdAt: Date;
       }
     | null
     | undefined = null;
@@ -151,40 +176,58 @@ export async function getEffectiveCreatorPlan(userId: string): Promise<Effective
         planName: true,
         billingCycle: true,
         status: true,
+        renewalDate: true,
+        createdAt: true,
       },
     });
   } catch (error) {
     if (isRelationMissingError(error, "billing_subscriptions")) {
-      return {
-        planName: "free",
-        billingCycle: "monthly",
-        status: "missing",
-        source: "fallback_free",
-      };
+      return createFallbackFreePlan();
     }
     throw error;
   }
 
   if (!subscription) {
-    return {
-      planName: "free",
-      billingCycle: "monthly",
-      status: "missing",
-      source: "fallback_free",
-    };
+    return createFallbackFreePlan();
   }
 
   const normalizedStatus = subscription.status || "unknown";
   const normalizedPlan = normalizePlanName(subscription.planName);
   const normalizedCycle = normalizeCycle(subscription.billingCycle);
+  const trialStartedAt = subscription.createdAt ?? null;
+  const trialEndsAt = subscription.renewalDate ?? null;
+
+  if (normalizedStatus === "trial") {
+    const trialActive = isDateInFuture(trialEndsAt);
+
+    if (trialActive) {
+      return {
+        planName: normalizedPlan === "free" ? "creator" : normalizedPlan,
+        billingCycle: normalizedCycle,
+        status: normalizedStatus,
+        source: "active_trial",
+        trialStartedAt,
+        trialEndsAt,
+        isTrialActive: true,
+        isTrialExpired: false,
+      };
+    }
+
+    return createFallbackFreePlan({
+      billingCycle: normalizedCycle,
+      status: "expired",
+      source: "expired_trial",
+      trialStartedAt,
+      trialEndsAt,
+      isTrialExpired: true,
+    });
+  }
 
   if (!ENTITLED_SUBSCRIPTION_STATUSES.has(normalizedStatus)) {
-    return {
-      planName: "free",
+    return createFallbackFreePlan({
       billingCycle: normalizedCycle,
       status: normalizedStatus,
-      source: "fallback_free",
-    };
+    });
   }
 
   return {
@@ -192,6 +235,10 @@ export async function getEffectiveCreatorPlan(userId: string): Promise<Effective
     billingCycle: normalizedCycle,
     status: normalizedStatus,
     source: "active_subscription",
+    trialStartedAt,
+    trialEndsAt,
+    isTrialActive: false,
+    isTrialExpired: false,
   };
 }
 

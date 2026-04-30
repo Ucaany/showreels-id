@@ -54,6 +54,11 @@ export async function PATCH(
   const { id } = await context.params;
   const existingVideo = await db.query.videos.findFirst({
     where: and(eq(videos.id, id), eq(videos.userId, currentUser.id)),
+    columns: {
+      id: true,
+      title: true,
+      publicSlug: true,
+    },
   });
 
   if (!existingVideo) {
@@ -128,11 +133,6 @@ export async function PATCH(
           existingSlugs.map((item) => item.publicSlug)
         );
 
-  const shouldUnpinFromProfile =
-    existingVideo.pinnedToProfile &&
-    parsed.data.visibility !== "public" &&
-    parsed.data.visibility !== "semi_private";
-
   const [video] = await db
     .update(videos)
     .set({
@@ -154,13 +154,16 @@ export async function PATCH(
       aspectRatio: parsed.data.aspectRatio,
       outputType: parsed.data.outputType.trim(),
       durationLabel: parsed.data.durationLabel.trim(),
-      pinnedToProfile: shouldUnpinFromProfile ? false : existingVideo.pinnedToProfile,
-      pinnedOrder: shouldUnpinFromProfile ? 0 : existingVideo.pinnedOrder,
       publicSlug,
       updatedAt: new Date(),
     })
     .where(and(eq(videos.id, id), eq(videos.userId, currentUser.id)))
-    .returning();
+    .returning({
+      id: videos.id,
+      publicSlug: videos.publicSlug,
+      title: videos.title,
+      visibility: videos.visibility,
+    });
 
   return NextResponse.json({ video });
 }

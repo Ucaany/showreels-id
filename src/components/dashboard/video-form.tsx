@@ -377,46 +377,61 @@ export function VideoForm({
     setSubmitError("");
     setSuccess("");
 
-    const response = await fetch(
-      mode === "edit" && initialVideo ? `/api/videos/${initialVideo.id}` : "/api/videos",
-      {
-        method: mode === "edit" ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: values.title,
-          sourceUrl: values.sourceUrl,
-          aspectRatio: values.aspectRatio,
-          outputType: values.outputType?.trim() || "",
-          durationLabel: values.durationLabel?.trim() || "",
-          thumbnailUrl: normalizeAssetUrl(values.thumbnailUrl || ""),
-          extraVideoUrls: parseMultilineUrls(values.extraVideoUrls || ""),
-          imageUrls: parseMultilineUrls(values.imageUrls || ""),
-          tags: (values.tags || "")
-            .split(",")
-            .map((item) => item.trim())
-            .filter(Boolean),
-          visibility: values.visibility,
-          description: values.description,
-        }),
-      }
-    );
+    let response: Response;
+    try {
+      response = await fetch(
+        mode === "edit" && initialVideo ? `/api/videos/${initialVideo.id}` : "/api/videos",
+        {
+          method: mode === "edit" ? "PATCH" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: values.title,
+            sourceUrl: values.sourceUrl,
+            aspectRatio: values.aspectRatio,
+            outputType: values.outputType?.trim() || "",
+            durationLabel: values.durationLabel?.trim() || "",
+            thumbnailUrl: normalizeAssetUrl(values.thumbnailUrl || ""),
+            extraVideoUrls: parseMultilineUrls(values.extraVideoUrls || ""),
+            imageUrls: parseMultilineUrls(values.imageUrls || ""),
+            tags: (values.tags || "")
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean),
+            visibility: values.visibility,
+            description: values.description,
+          }),
+        }
+      );
+    } catch {
+      const message = "Koneksi gagal. Periksa internet lalu coba simpan ulang.";
+      setSubmitError(message);
+      await showFeedbackAlert({
+        title: "Gagal menyimpan video",
+        text: message,
+        icon: "error",
+      });
+      return;
+    }
 
     const payload = (await response.json().catch(() => null)) as
       | { error?: string; video?: { publicSlug: string } }
       | null;
 
     if (!response.ok) {
+      const message = payload?.error ?? `Server menolak penyimpanan video (HTTP ${response.status}).`;
+      setSubmitError(message);
       await showFeedbackAlert({
         title: "Gagal menyimpan video",
-        text: payload?.error ?? "Coba lagi dalam beberapa saat.",
+        text: message,
         icon: "error",
       });
       return;
     }
 
     if (mode === "edit") {
+      setSuccess("Video berhasil diperbarui.");
       await showFeedbackAlert({
         title: "Video berhasil diperbarui",
         icon: "success",
@@ -426,6 +441,7 @@ export function VideoForm({
       return;
     }
 
+    setSuccess("Video berhasil disimpan.");
     await showFeedbackAlert({
       title: "Video berhasil disimpan",
       icon: "success",

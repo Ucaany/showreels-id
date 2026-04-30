@@ -17,6 +17,21 @@ export default async function EditVideoPage({
 
   const video = await db.query.videos.findFirst({
     where: and(eq(videos.id, id), eq(videos.userId, user.id)),
+    columns: {
+      id: true,
+      title: true,
+      sourceUrl: true,
+      aspectRatio: true,
+      outputType: true,
+      durationLabel: true,
+      thumbnailUrl: true,
+      extraVideoUrls: true,
+      imageUrls: true,
+      tags: true,
+      visibility: true,
+      description: true,
+      publicSlug: true,
+    },
   });
 
   if (!video) {

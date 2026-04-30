@@ -132,7 +132,12 @@ export async function POST(request: Request) {
       durationLabel: parsed.data.durationLabel.trim(),
       publicSlug,
     })
-    .returning();
+    .returning({
+      id: videos.id,
+      publicSlug: videos.publicSlug,
+      title: videos.title,
+      visibility: videos.visibility,
+    });
 
   await markFirstVideoUploaded(currentUser.id).catch(() => null);
 
