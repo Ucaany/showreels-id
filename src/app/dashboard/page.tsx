@@ -11,6 +11,7 @@ import {
   Video,
   Wand2,
 } from "lucide-react";
+import { NotificationInboxPanel } from "@/components/dashboard/notification-inbox-panel";
 import { OnboardingReminderCard } from "@/components/dashboard/onboarding-reminder-card";
 import { PublicLinkCardCompact } from "@/components/dashboard/public-link-card-compact";
 import { OnboardingStepper } from "@/components/onboarding/onboarding-stepper";
@@ -404,6 +405,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <StatsGrid metricCards={metricCards} />
         <AnalyticsChartCard />
         <QuickActionCard actions={quickActions} />
+        <div className="md:col-span-2 lg:col-span-3">
+          <NotificationInboxPanel compact />
+        </div>
       </div>
     </div>
   );

@@ -5,11 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart3,
-  ChevronDown,
   CreditCard,
   Film,
   Home,
   LifeBuoy,
+  Bell,
   Link2,
   LogOut,
   Menu,
@@ -44,12 +44,12 @@ const routeLabels: Record<string, string> = {
   "/dashboard/billing": "Billing",
   "/dashboard/profile": "Profile",
   "/dashboard/settings": "Settings",
+  "/dashboard/notifications": "Notifications",
 };
 
 export function DashboardShell({
   children,
   user,
-  planName = "free",
   mode = "creator",
   hideChrome = false,
 }: {
@@ -67,8 +67,6 @@ export function DashboardShell({
   const { dictionary } = usePreferences();
   const supabase = createClient();
   const displayUsername = user.username ? `@${user.username}` : "@creator";
-  const planLabel =
-    planName === "business" ? "Business" : planName === "creator" ? "Creator" : "Free";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -87,6 +85,7 @@ export function DashboardShell({
           { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
           { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
           { href: "/dashboard/profile", label: "Profile", icon: UserRound },
+          { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
         ];
 
   const settingsNavItems: NavItem[] =
@@ -226,15 +225,6 @@ export function DashboardShell({
             <PanelLeftOpen className="h-4 w-4" />
           )}
         </button>
-      )}
-
-      {expanded && (
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-            Creator Mode
-          </p>
-          <p className="mt-1 text-sm font-medium text-slate-900">{planLabel} plan aktif</p>
-        </div>
       )}
 
       <div className="mt-6 flex min-h-0 flex-1 flex-col">

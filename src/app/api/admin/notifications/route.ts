@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { desc, eq, lte, or } from "drizzle-orm";
+import { and, desc, eq, lte, ne, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { adminNotificationSchedules, adminNotifications } from "@/db/schema";
+import { adminNotificationSchedules, adminNotifications, userNotifications, users } from "@/db/schema";
 import { requireAdminSession } from "@/server/admin-guard";
 
 const scheduleSchema = z.object({
@@ -25,6 +25,56 @@ function addRecurrenceDate(value: Date, recurrence: "once" | "daily" | "weekly" 
   if (recurrence === "monthly") next.setMonth(next.getMonth() + 1);
 
   return next;
+}
+
+async function getTargetUserIds(input: {
+  targetType: "all" | "active" | "blocked" | "public" | "private";
+  targetUserId?: string | null;
+}) {
+  if (input.targetUserId) return [input.targetUserId];
+
+  const filters = [];
+  if (input.targetType === "active") filters.push(eq(users.isBlocked, false));
+  if (input.targetType === "blocked") filters.push(eq(users.isBlocked, true));
+  if (input.targetType === "public") filters.push(eq(users.profileVisibility, "public"));
+  if (input.targetType === "private") filters.push(ne(users.profileVisibility, "public"));
+
+  const rows = await db.query.users.findMany({
+    where: filters.length ? and(...filters) : undefined,
+    columns: { id: true },
+    limit: 1000,
+  });
+
+  return rows.map((row) => row.id);
+}
+
+async function deliverNotification(input: {
+  scheduleId: string;
+  title: string;
+  message: string;
+  targetType: "all" | "active" | "blocked" | "public" | "private";
+  targetUserId?: string | null;
+}) {
+  const targetUserIds = await getTargetUserIds({
+    targetType: input.targetType,
+    targetUserId: input.targetUserId,
+  });
+
+  if (!targetUserIds.length) return 0;
+
+  await db.insert(userNotifications).values(
+    targetUserIds.map((userId) => ({
+      id: crypto.randomUUID(),
+      userId,
+      scheduleId: input.scheduleId,
+      title: input.title,
+      message: input.message,
+      status: "unread" as const,
+      metadata: { source: "admin_panel", targetType: input.targetType },
+    }))
+  );
+
+  return targetUserIds.length;
 }
 
 export async function GET() {
@@ -84,6 +134,8 @@ export async function POST(request: Request) {
       : addRecurrenceDate(now, payload.data.recurrence)
     : startsAt;
 
+  let deliveredCount = 0;
+
   await db.transaction(async (tx) => {
     await tx.insert(adminNotifications).values({
       id: notificationId,
@@ -113,10 +165,33 @@ export async function POST(request: Request) {
       metadata: {
         source: "admin_panel",
         immediate: shouldSendNow,
+        deliveredCount: 0,
       },
       createdBy: admin.id,
     });
   });
+
+  if (shouldSendNow) {
+    deliveredCount = await deliverNotification({
+      scheduleId,
+      title: payload.data.title,
+      message: payload.data.message,
+      targetType: payload.data.targetType,
+      targetUserId: payload.data.targetUserId,
+    });
+
+    await db
+      .update(adminNotificationSchedules)
+      .set({
+        metadata: {
+          source: "admin_panel",
+          immediate: shouldSendNow,
+          deliveredCount,
+        },
+        updatedAt: new Date(),
+      })
+      .where(eq(adminNotificationSchedules.id, scheduleId));
+  }
 
   return NextResponse.json({
     ok: true,
@@ -125,6 +200,7 @@ export async function POST(request: Request) {
       notificationId,
       status: shouldSendNow ? "sent" : "scheduled",
       nextRunAt: nextRunAt?.toISOString() ?? null,
+      deliveredCount,
     },
   });
 }
@@ -156,6 +232,13 @@ export async function PATCH() {
 
     const nextRunAt =
       schedule.recurrence === "once" ? null : addRecurrenceDate(now, schedule.recurrence);
+    const deliveredCount = await deliverNotification({
+      scheduleId: schedule.id,
+      title: schedule.title,
+      message: schedule.message,
+      targetType: schedule.targetType,
+      targetUserId: schedule.targetUserId,
+    });
 
     await db.transaction(async (tx) => {
       await tx.insert(adminNotifications).values({
@@ -174,6 +257,7 @@ export async function PATCH() {
           status: schedule.recurrence === "once" ? "sent" : "scheduled",
           lastSentAt: now,
           nextRunAt,
+          metadata: { ...(schedule.metadata || {}), lastDeliveredCount: deliveredCount },
           updatedAt: now,
         })
         .where(eq(adminNotificationSchedules.id, schedule.id));

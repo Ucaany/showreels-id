@@ -371,6 +371,39 @@ export const adminNotifications = pgTable(
   })
 );
 
+export const userNotifications = pgTable(
+  "user_notifications",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    scheduleId: text("schedule_id").references(() => adminNotificationSchedules.id, {
+      onDelete: "set null",
+    }),
+    title: text("title").notNull(),
+    message: text("message").notNull().default(""),
+    status: text("status")
+      .$type<"unread" | "read">()
+      .notNull()
+      .default("unread"),
+    deliveredAt: timestamp("delivered_at", { mode: "date" }).notNull().defaultNow(),
+    readAt: timestamp("read_at", { mode: "date" }),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+  },
+  (table) => ({
+    userIdIdx: index("user_notifications_user_id_idx").on(table.userId),
+    statusIdx: index("user_notifications_status_idx").on(table.status),
+    deliveredAtIdx: index("user_notifications_delivered_at_idx").on(table.deliveredAt),
+    scheduleIdx: index("user_notifications_schedule_id_idx").on(table.scheduleId),
+  })
+);
+
 export const adminNotificationSchedules = pgTable(
   "admin_notification_schedules",
   {
@@ -474,6 +507,7 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   videos: many(videos),
   billingTransactions: many(billingTransactions),
   onboarding: one(userOnboarding),
+  notifications: many(userNotifications),
 }));
 
 export const videosRelations = relations(videos, ({ one }) => ({
@@ -540,7 +574,7 @@ export const userOnboardingRelations = relations(userOnboarding, ({ one }) => ({
 
 export const adminNotificationSchedulesRelations = relations(
   adminNotificationSchedules,
-  ({ one }) => ({
+  ({ one, many }) => ({
     notification: one(adminNotifications, {
       fields: [adminNotificationSchedules.notificationId],
       references: [adminNotifications.id],
@@ -553,8 +587,20 @@ export const adminNotificationSchedulesRelations = relations(
       fields: [adminNotificationSchedules.createdBy],
       references: [users.id],
     }),
+    deliveries: many(userNotifications),
   })
 );
+
+export const userNotificationsRelations = relations(userNotifications, ({ one }) => ({
+  user: one(users, {
+    fields: [userNotifications.userId],
+    references: [users.id],
+  }),
+  schedule: one(adminNotificationSchedules, {
+    fields: [userNotifications.scheduleId],
+    references: [adminNotificationSchedules.id],
+  }),
+}));
 
 export type DbUser = typeof users.$inferSelect;
 export type NewDbUser = typeof users.$inferInsert;
@@ -580,5 +626,7 @@ export type DbAdminNotification = typeof adminNotifications.$inferSelect;
 export type NewDbAdminNotification = typeof adminNotifications.$inferInsert;
 export type DbAdminNotificationSchedule = typeof adminNotificationSchedules.$inferSelect;
 export type NewDbAdminNotificationSchedule = typeof adminNotificationSchedules.$inferInsert;
+export type DbUserNotification = typeof userNotifications.$inferSelect;
+export type NewDbUserNotification = typeof userNotifications.$inferInsert;
 export type DbUserOnboarding = typeof userOnboarding.$inferSelect;
 export type NewDbUserOnboarding = typeof userOnboarding.$inferInsert;
