@@ -73,6 +73,8 @@ type Props = {
   maxLinksLabel: string;
   planName: "free" | "creator" | "business";
   portfolioHref?: string;
+  /** When true the modal skips the API call and returns the built link directly via onCreated. Used by onboarding draft flow. */
+  draftMode?: boolean;
 };
 
 type FormState = {
@@ -226,7 +228,7 @@ function LimitReachedCard({ maxLinksLabel, onClose }: { maxLinksLabel: string; o
   );
 }
 
-export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLinksLabel, planName, portfolioHref = "" }: Props) {
+export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLinksLabel, planName, portfolioHref = "", draftMode = false }: Props) {
   const [activeCategory, setActiveCategory] = useState<AddLinkCategoryId>("suggested");
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<AddLinkItem | null>(null);
@@ -304,6 +306,41 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
     const error = validateBuiltLink(built);
     if (error) {
       setForm((prev) => ({ ...prev, error }));
+      return;
+    }
+
+    /* ── Draft mode: skip API, return built link directly ── */
+    if (draftMode) {
+      const draftLink: CustomLinkItem = {
+        id: crypto.randomUUID(),
+        type: built.type,
+        title: built.label,
+        url: built.finalUrl,
+        value: built.inputValue || built.finalUrl,
+        inputValue: built.inputValue,
+        finalUrl: built.finalUrl,
+        description: form.description,
+        platform: built.platform,
+        badge: form.badge || selectedItem.badge || "",
+        iconKey: built.iconKey,
+        metadata: {
+          show_icon: true,
+          open_new_tab: true,
+          source: "add_link_modal_draft",
+          subject: form.subject,
+          body: form.body,
+          message: form.message,
+        },
+        enabled: true,
+        order: 0,
+      };
+      trackAddLinkEvent("add_link_success", { platform: selectedItem.platform, mode: "draft" });
+      onCreated([draftLink]);
+      setForm((prev) => ({ ...prev, status: "success" }));
+      window.setTimeout(() => {
+        setSelectedItem(null);
+        setForm(initialForm);
+      }, 800);
       return;
     }
 
