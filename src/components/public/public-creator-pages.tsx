@@ -20,7 +20,7 @@ type ProfileVideo = PublicProfile["videos"][number];
 
 const pageShellClass = "min-h-screen overflow-x-hidden bg-[#F5F5F4] text-[#111111]";
 const cardClass = "border-[#E1E1DF] bg-white shadow-[0_18px_50px_rgba(17,17,17,0.06)]";
-const darkButtonClass = "bg-[#111111] text-white shadow-[0_14px_30px_rgba(17,17,17,0.16)] transition hover:bg-[#1E1E1E] focus:outline-none focus:ring-2 focus:ring-[#111111]/25 disabled:bg-[#3A3A3A] disabled:text-[#DADADA] [&_svg]:text-white";
+const darkButtonClass = "bg-[#111111] !text-white shadow-[0_14px_30px_rgba(17,17,17,0.16)] transition hover:bg-[#1E1E1E] focus:outline-none focus:ring-2 focus:ring-[#111111]/25 disabled:bg-[#3A3A3A] disabled:text-[#DADADA] [&_svg]:text-white";
 const monoButtonClass = "inline-flex min-h-[52px] w-full items-center justify-between gap-3 rounded-[1.25rem] border border-[#E1E1DF] bg-white px-4 text-left text-sm font-semibold text-[#111111] transition hover:-translate-y-0.5 hover:border-[#111111] hover:shadow-[0_12px_28px_rgba(17,17,17,0.08)] focus:outline-none focus:ring-2 focus:ring-[#111111]/20";
 
 function getVideoThumb(video: Pick<ProfileVideo, "thumbnailUrl" | "sourceUrl">) {
@@ -51,8 +51,7 @@ function CreatorCover({ profile, className = "h-36", soft = false }: { profile: 
           className={`absolute inset-0 ${soft ? "opacity-70 blur-[0.2px]" : ""}`}
           style={getBackgroundImageCropStyle(
             coverImage,
-            { x: profile.user.coverCropX, y: profile.user.coverCropY, zoom: profile.user.coverCropZoom },
-            "linear-gradient(135deg,#F5F5F4,#E7E5E0)"
+            { x: profile.user.coverCropX, y: profile.user.coverCropY, zoom: profile.user.coverCropZoom }
           )}
         />
       ) : null}

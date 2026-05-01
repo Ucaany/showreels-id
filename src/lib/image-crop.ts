@@ -24,7 +24,8 @@ export function getBackgroundImageCropStyle(
   overlay?: string
 ): CSSProperties {
   const crop = normalizeImageCrop(values);
-  const backgroundLayers = overlay ? `${overlay}, url(${imageUrl})` : `url(${imageUrl})`;
+  const quotedUrl = `'${imageUrl.replace(/'/g, "\\'")}'`;
+  const backgroundLayers = overlay ? `${overlay}, url(${quotedUrl})` : `url(${quotedUrl})`;
 
   const sizeValue = crop.zoom <= 100 ? "cover" : `${crop.zoom}%`;
 
