@@ -288,7 +288,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-3xl space-y-4">
+      <div className="mx-auto w-full max-w-5xl space-y-4">
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-slate-900">
@@ -299,9 +299,9 @@ export function ProfileForm({ user }: { user: DbUser }) {
           </span>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="grid gap-4 lg:grid-cols-2">
           {/* ── Cover & Avatar Card ── */}
-          <div className="bento-card p-0 overflow-hidden">
+          <div className="bento-card p-0 overflow-hidden lg:col-span-2">
             {/* Cover banner with inline controls */}
             <div className="group/cover relative w-full aspect-[3/1] bg-gradient-to-br from-slate-100 via-slate-50 to-white">
               {previewCover ? (
@@ -530,7 +530,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
           </div>
 
           {/* ── Build Link Redirect ── */}
-          <div className="bento-card-subtle flex flex-wrap items-center justify-between gap-3">
+          <div className="bento-card-subtle flex flex-wrap items-center justify-between gap-3 lg:col-span-2">
             <div className="flex items-center gap-2.5">
               <Link2 className="h-4 w-4 text-slate-400" />
               <p className="text-sm text-slate-600">
@@ -543,7 +543,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
           </div>
 
           {/* ── Actions ── */}
-          <div className="space-y-3 pt-1">
+          <div className="space-y-3 pt-1 lg:col-span-2">
             {message && <p className="rounded-xl bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">{message}</p>}
             {error && <p className="rounded-xl bg-rose-50 px-4 py-2.5 text-sm text-rose-700">{error}</p>}
             <div className="flex items-center gap-2.5">
