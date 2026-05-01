@@ -26,10 +26,12 @@ export function getBackgroundImageCropStyle(
   const crop = normalizeImageCrop(values);
   const backgroundLayers = overlay ? `${overlay}, url(${imageUrl})` : `url(${imageUrl})`;
 
+  const sizeValue = crop.zoom <= 100 ? "cover" : `${crop.zoom}%`;
+
   return {
     backgroundImage: backgroundLayers,
     backgroundPosition: `calc(50% + ${crop.x}%) calc(50% + ${crop.y}%)`,
     backgroundRepeat: "no-repeat",
-    backgroundSize: `${crop.zoom}%`,
+    backgroundSize: sizeValue,
   };
 }

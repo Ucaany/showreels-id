@@ -534,6 +534,7 @@ export async function getPublicProfile(
       pinnedVideos,
       whitelabelEnabled,
       businessPlanActive,
+      isOwner,
     };
   } catch (error) {
     console.error("Failed to load public profile", error);

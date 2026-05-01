@@ -3,13 +3,16 @@ import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, CalendarDays, Grid2X2, List, Search, Video } from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { MediaPreviewCarousel } from "@/components/media-preview-carousel";
+import { OwnerEditButton } from "@/components/owner-edit-button";
 import { PublicShareQrActions } from "@/components/public/public-share-qr-actions";
 import { SocialLinks } from "@/components/social-links";
 import { Card } from "@/components/ui/card";
 import { formatDateLabel } from "@/lib/helpers";
 import { getBackgroundImageCropStyle } from "@/lib/image-crop";
+import { isProfileVerified } from "@/lib/profile-utils";
 import { createTextExcerpt, getCreatorBioHref, getCreatorPortfolioHref, getSafeExternalUrl, getVideoDetailHref } from "@/lib/public-route-utils";
 import { getAutoThumbnailFromVideoUrl, getSourceLabel } from "@/lib/video-utils";
+import { VerifiedBadge } from "@/components/verified-badge";
 
 type PublicProfile = NonNullable<Awaited<ReturnType<typeof import("@/server/public-data").getPublicProfile>>>;
 type PublicVideo = NonNullable<Awaited<ReturnType<typeof import("@/server/public-data").getPublicVideo>>>;
@@ -76,6 +79,7 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
 
   return (
     <div className={pageShellClass}>
+      {profile.isOwner && <OwnerEditButton />}
       <main className="mx-auto flex min-h-screen w-full max-w-[460px] flex-col justify-center px-4 py-6 min-[481px]:max-w-[560px] sm:px-5 sm:py-10 lg:max-w-[640px]">
         <Card className={`${cardClass} overflow-hidden rounded-[1.75rem] p-4 sm:rounded-[2rem] sm:p-5 lg:p-6`}>
           <CreatorCover profile={profile} className="h-[132px] min-[375px]:h-[152px] min-[431px]:h-[176px] sm:h-[190px]" />
@@ -83,7 +87,10 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
             <div className="rounded-full border-4 border-white bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]">
               <CreatorAvatar profile={profile} />
             </div>
-            <h1 className="mt-5 max-w-full text-3xl font-bold tracking-[-0.04em] text-[#111111] sm:text-4xl">{profile.user.name || "Creator"}</h1>
+            <h1 className="mt-5 max-w-full text-3xl font-bold tracking-[-0.04em] text-[#111111] sm:text-4xl">
+              {profile.user.name || "Creator"}
+              {isProfileVerified(profile) && <VerifiedBadge className="ml-2 align-middle" />}
+            </h1>
             <p className="mt-1 text-sm font-semibold text-[#525252]">@{profile.user.username}</p>
             {profile.user.role ? <p className="mt-2 text-base font-medium text-[#111111]">{profile.user.role}</p> : null}
             <p className="mt-4 max-w-[32rem] text-[15px] leading-7 text-[#525252] sm:text-base">{bio || "Creator belum menambahkan bio singkat."}</p>
@@ -147,6 +154,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
 
   return (
     <div className={pageShellClass}>
+      {profile.isOwner && <OwnerEditButton />}
       <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:py-8">
         <div className="mb-5 flex items-center justify-between gap-3">
           <Link href={bioHref} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#DADADA] bg-white px-4 text-sm font-semibold text-[#111111]"><ArrowLeft className="h-4 w-4" />Kembali</Link>
@@ -161,7 +169,10 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
                 <div className="w-fit rounded-full border-4 border-white bg-white shadow-[0_12px_26px_rgba(17,17,17,0.12)]"><CreatorAvatar profile={profile} /></div>
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8A8A8A]">Portfolio Creator</p>
-                  <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] text-[#111111] sm:text-4xl">{profile.user.name || "Creator"}</h1>
+                  <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] text-[#111111] sm:text-4xl">
+                    {profile.user.name || "Creator"}
+                    {isProfileVerified(profile) && <VerifiedBadge className="ml-2 align-middle" />}
+                  </h1>
                   <p className="mt-1 text-sm font-semibold text-[#525252]">@{profile.user.username} {profile.user.role ? `• ${profile.user.role}` : ""}</p>
                   <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#525252]">{createTextExcerpt(profile.user.bio, 180) || "Bio singkat belum ditambahkan."}</p>
                 </div>

@@ -212,3 +212,13 @@ export function normalizeCustomLinks(
       order: index,
     }));
 }
+
+export function isProfileVerified(profile: {
+  user: { bio: string; skills: string[] };
+  videos: unknown[];
+}): boolean {
+  const hasBio = profile.user.bio.trim().length > 0;
+  const hasSkill = profile.user.skills.length > 0;
+  const hasVideo = profile.videos.length > 0;
+  return hasBio && hasSkill && hasVideo;
+}
