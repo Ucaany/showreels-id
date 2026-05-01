@@ -1039,48 +1039,62 @@ export function ProfileForm({ user }: { user: DbUser }) {
                     Kontak & social media
                   </h2>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Email Contact (publik)
-                    </label>
+
+                {/* Contact info row */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <label className="mb-1.5 block text-xs font-bold text-slate-600">Email Contact (publik)</label>
                     <Input
+                      className="h-9 border-slate-200 bg-white text-sm"
                       placeholder="halo@namakamu.com"
                       {...form.register("contactEmail")}
                     />
                   </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Nomor Telepon
-                    </label>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <label className="mb-1.5 block text-xs font-bold text-slate-600">Nomor Telepon</label>
                     <Input
+                      className="h-9 border-slate-200 bg-white text-sm"
                       placeholder="+62 812-xxxx-xxxx"
                       {...form.register("phoneNumber")}
                     />
                   </div>
-                  <div className="sm:col-span-2">
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Website
-                    </label>
-                    <Input
-                      placeholder="https://portfolio-kamu.com"
-                      {...form.register("websiteUrl")}
-                    />
+                </div>
+
+                {/* Website — full width bento card */}
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3 transition hover:border-sky-300 hover:shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600 ring-1 ring-sky-200">
+                      <Globe className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-slate-700">Website</p>
+                      <Input
+                        className="mt-1 h-9 border-slate-200 bg-slate-50 text-sm"
+                        placeholder="https://portfolio-kamu.com"
+                        {...form.register("websiteUrl")}
+                      />
+                    </div>
                   </div>
+                </div>
+
+                {/* Social platform bento grid */}
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {SOCIAL_PLATFORMS.map((platform) => {
                     const Icon = platform.icon;
                     return (
-                      <div key={platform.key}>
-                        <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                          <Icon className={`h-4 w-4 ${platform.iconColor}`} />
-                          {platform.label}
-                        </label>
-                        <div className="flex items-stretch">
-                          <span className="inline-flex items-center rounded-l-lg border border-r-0 border-slate-200 bg-slate-50 px-3 text-xs text-slate-500 select-none">
+                      <div key={platform.key} className="rounded-2xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:shadow-sm">
+                        <div className="flex items-center gap-2.5">
+                          <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200 ${platform.iconColor}`}>
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <p className="text-xs font-bold text-slate-700">{platform.label}</p>
+                        </div>
+                        <div className="mt-2.5 flex items-stretch overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                          <span className="inline-flex items-center border-r border-slate-200 bg-slate-100 px-2 text-[10px] font-medium text-slate-500 select-none whitespace-nowrap">
                             {platform.prefix}
                           </span>
-                          <Input
-                            className="rounded-l-none"
+                          <input
+                            className="min-w-0 flex-1 bg-transparent px-2.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none"
                             placeholder={platform.placeholder}
                             {...form.register(platform.key as keyof FormValues, {
                               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1096,15 +1110,16 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       </div>
                     );
                   })}
-                  <div className="sm:col-span-2">
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Skills
-                    </label>
-                    <Input
-                      placeholder="Video editor, drone, event recap, short form"
-                      {...form.register("skills")}
-                    />
-                  </div>
+                </div>
+
+                {/* Skills */}
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <label className="mb-1.5 block text-xs font-bold text-slate-600">Skills</label>
+                  <Input
+                    className="h-9 border-slate-200 bg-white text-sm"
+                    placeholder="Video editor, drone, event recap, short form"
+                    {...form.register("skills")}
+                  />
                 </div>
               </div>
 
