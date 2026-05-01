@@ -23,6 +23,15 @@
   --dashboard-sidebar-width: 248px;
   --dashboard-sidebar-collapsed-width: 80px;
   --dashboard-topbar-height: 72px;
+  /* Bento Profile tokens */
+  --bento-radius: 1.25rem;
+  --bento-radius-inner: 0.875rem;
+  --bento-gap: 1rem;
+  --bento-padding: 1.25rem;
+  --bento-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.03);
+  --bento-border: rgba(226, 232, 240, 0.8);
+  --bento-bg: rgba(255, 255, 255, 0.95);
+  --bento-bg-subtle: rgba(248, 250, 252, 0.8);
 }
 
 @theme inline {
@@ -376,6 +385,60 @@ select:-webkit-autofill:focus {
     --type-body-base: 0.93rem;
     --type-helper: 0.8rem;
     --type-eyebrow: 0.75rem;
+  }
+}
+
+/* Bento Profile Grid */
+.bento-profile-grid {
+  display: grid;
+  gap: var(--bento-gap);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .bento-profile-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.bento-card {
+  border: 1px solid var(--bento-border);
+  border-radius: var(--bento-radius);
+  background: var(--bento-bg);
+  box-shadow: var(--bento-shadow);
+  padding: var(--bento-padding);
+  min-width: 0;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.bento-card:hover {
+  border-color: rgba(203, 213, 225, 1);
+}
+
+.bento-card-full {
+  grid-column: 1 / -1;
+}
+
+.bento-card-subtle {
+  border: 1px solid var(--bento-border);
+  border-radius: var(--bento-radius);
+  background: var(--bento-bg-subtle);
+  box-shadow: none;
+  padding: var(--bento-padding);
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .bento-profile-grid {
+    gap: 0.75rem;
+  }
+
+  .bento-card,
+  .bento-card-subtle {
+    padding: 1rem;
+    border-radius: 1rem;
   }
 }
 
