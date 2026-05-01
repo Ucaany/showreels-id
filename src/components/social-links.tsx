@@ -23,6 +23,15 @@ interface SocialLinksProps {
 const baseLinkClass =
   "inline-flex items-center gap-2 rounded-full border border-[#E1E1DF] bg-white px-3.5 py-2 text-xs font-semibold text-[#525252] transition hover:border-[#111111] hover:text-[#111111] hover:shadow-sm";
 
+const SOCIAL_ICONS: Record<string, { icon: any; color: string }> = {
+  instagram: { icon: FaInstagram, color: "text-[#E1306C]" },
+  youtube: { icon: FaYoutube, color: "text-[#FF0000]" },
+  facebook: { icon: FaFacebookF, color: "text-[#1877F2]" },
+  threads: { icon: FaThreads, color: "text-[#000000]" },
+  linkedin: { icon: FaLinkedinIn, color: "text-[#0A66C2]" },
+  website: { icon: Globe2, color: "text-[#525252]" },
+};
+
 function PlatformIcon({
   platform,
   className,
@@ -30,23 +39,10 @@ function PlatformIcon({
   platform: "website" | "instagram" | "youtube" | "facebook" | "threads" | "linkedin";
   className: string;
 }) {
-  if (platform === "instagram") {
-    return <FaInstagram className={className} />;
-  }
-  if (platform === "youtube") {
-    return <FaYoutube className={className} />;
-  }
-  if (platform === "facebook") {
-    return <FaFacebookF className={className} />;
-  }
-  if (platform === "threads") {
-    return <FaThreads className={className} />;
-  }
-  if (platform === "linkedin") {
-    return <FaLinkedinIn className={className} />;
-  }
-
-  return <Globe2 className={className} />;
+  const IconConfig = SOCIAL_ICONS[platform] || SOCIAL_ICONS.website;
+  const IconComponent = IconConfig.icon;
+  
+  return <IconComponent className={`${className} ${IconConfig.color}`} />;
 }
 
 export function SocialLinks({

@@ -93,7 +93,7 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
             </h1>
             <p className="mt-1 text-sm font-semibold text-[#525252]">@{profile.user.username}</p>
             {profile.user.role ? <p className="mt-2 text-base font-medium text-[#111111]">{profile.user.role}</p> : null}
-            <p className="mt-4 max-w-[32rem] text-[15px] leading-7 text-[#525252] sm:text-base">{bio || "Creator belum menambahkan bio singkat."}</p>
+            <p className="mt-4 max-w-[32rem] text-[15px] leading-tight text-[#525252] sm:text-base">{bio || "Creator belum menambahkan bio singkat."}</p>
 
             <SocialLinks className="mt-5 justify-center" websiteUrl={profile.user.websiteUrl} instagramUrl={profile.user.instagramUrl} youtubeUrl={profile.user.youtubeUrl} facebookUrl={profile.user.facebookUrl} threadsUrl={profile.user.threadsUrl} linkedinUrl={profile.user.linkedinUrl} />
 
