@@ -443,20 +443,22 @@ export function ProfileForm({ user }: { user: DbUser }) {
           </div>
 
           {/* ── Identity Card ── */}
-          <div className="bento-card">
+          <div className="bento-card flex flex-col">
             <div className="mb-3 flex items-center gap-2">
               <UserRoundPen className="h-4 w-4 text-slate-500" />
               <h2 className="text-sm font-semibold text-slate-800">Identitas</h2>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500">Nama Lengkap</label>
-                <Input className="text-sm" {...form.register("fullName")} />
-                <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.fullName?.message}</p>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500">Role</label>
-                <Input className="text-sm" placeholder="Video Editor, Videografer" {...form.register("role")} />
+            <div className="grid flex-1 content-start gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-500">Nama Lengkap</label>
+                  <Input className="text-sm" {...form.register("fullName")} />
+                  <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.fullName?.message}</p>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-500">Role</label>
+                  <Input className="text-sm" placeholder="Video Editor, Videografer" {...form.register("role")} />
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-500">Username</label>
@@ -466,7 +468,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                   <p className="mt-0.5 text-[11px] text-amber-600">Sisa {usernameQuota.remaining} perubahan</p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-500">Lahir</label>
                   <Input className="text-sm" type="date" {...form.register("birthDate")} />
@@ -521,8 +523,8 @@ export function ProfileForm({ user }: { user: DbUser }) {
 
           {/* ── Skills & Build Link Row ── */}
           <div className="bento-card lg:col-span-2">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex-1">
+            <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+              <div>
                 <div className="mb-2 flex items-center gap-2">
                   <Tag className="h-4 w-4 text-slate-500" />
                   <h2 className="text-sm font-semibold text-slate-800">Skills</h2>
@@ -530,14 +532,11 @@ export function ProfileForm({ user }: { user: DbUser }) {
                 <Input className="text-sm" placeholder="Video editor, drone, event recap, short form" {...form.register("skills")} />
                 <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.skills?.message}</p>
               </div>
-              <div className="flex items-center gap-2.5 sm:pb-1">
-                <Link2 className="h-4 w-4 text-slate-400" />
-                <p className="text-sm text-slate-600">
-                  Kontak & link →{" "}
-                  <Link href="/dashboard/link-builder" className="font-medium text-slate-900 underline-offset-2 hover:underline">
-                    Build Link
-                  </Link>
-                </p>
+              <div className="flex items-end pb-0.5">
+                <Link href="/dashboard/link-builder" className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-900">
+                  <Link2 className="h-3.5 w-3.5" />
+                  Kontak & Link
+                </Link>
               </div>
             </div>
           </div>
