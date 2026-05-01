@@ -1634,19 +1634,25 @@ export function LinkBuilderEditor({
               >
                 <div className="relative rounded-[36px] border-[7px] border-[#0c121d] bg-[#111827] p-2 shadow-[0_24px_48px_rgba(16,29,55,0.3)]">
                   <div className="absolute left-1/2 top-1.5 h-4 w-24 -translate-x-1/2 rounded-full bg-[#05080d]" />
-                  <div className="h-[620px] overflow-y-auto rounded-[28px] bg-[#f8fbff] px-5 pb-6 pt-12 text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-[#2f73ff] to-[#5b8dff] text-2xl font-semibold text-white shadow">
+                  <div className="h-[620px] overflow-y-auto rounded-[28px] bg-[#F5F5F4] px-4 pb-6 pt-12 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-white bg-gradient-to-br from-[#6d64ff] to-[#8f45e9] text-xl font-semibold text-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]">
                       {(profileFields.fullName || "C").slice(0, 1).toUpperCase()}
                     </div>
-                    <p className="mt-4 text-[32px] font-semibold leading-none text-[#1f2a44]">
+                    <p className="mt-3 text-xl font-bold tracking-[-0.04em] text-[#111111]">
                       {profileFields.fullName || "Display Name"}
                     </p>
-                    <p className="mt-2 text-sm text-[#6a7da3]">
-                      {profileFields.role || "Deskripsi singkat tentang Anda"}
+                    {/* Role + Username — single line, consistent with bio page */}
+                    <p className="mt-1.5 text-xs font-semibold text-[#525252]">
+                      {profileFields.role ? <span className="text-sm font-medium text-[#111111]">{profileFields.role}</span> : null}
+                      {profileFields.role ? <span className="mx-1 text-[#DADADA]">•</span> : null}
+                      <span>@{profileFields.username || "creator"}</span>
                     </p>
-                    <div className="mt-5 space-y-2 text-left">
+                    <p className="mx-auto mt-3 max-w-[280px] text-xs leading-5 text-[#525252]">
+                      {profileFields.bio || "Bio kamu akan tampil di sini saat diisi."}
+                    </p>
+                    <div className="mt-4 space-y-2 text-left">
                       {previewLinks.length === 0 ? (
-                        <p className="rounded-xl border border-dashed border-[#cfe0fa] bg-white px-3 py-2 text-xs text-[#5b7198]">
+                        <p className="rounded-[1.25rem] border border-dashed border-[#DADADA] bg-[#FAFAF9] px-3 py-2 text-center text-xs text-[#525252]">
                           Belum ada link aktif.
                         </p>
                       ) : (
@@ -1654,7 +1660,7 @@ export function LinkBuilderEditor({
                           link.type === "divider" ? (
                             <div
                               key={link.id}
-                              className={`my-3 border-[#cfe0fa] ${
+                              className={`my-2 border-[#E1E1DF] ${
                                 link.style === "dashed"
                                   ? "border-t border-dashed"
                                   : link.style === "solid"
@@ -1665,10 +1671,13 @@ export function LinkBuilderEditor({
                           ) : (
                             <div
                               key={link.id}
-                              className="flex items-center gap-2 rounded-xl border border-[#dce7f8] bg-white px-3 py-2"
+                              className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-[1.25rem] border border-[#E1E1DF] bg-white px-3 text-left text-xs font-semibold text-[#111111]"
                             >
-                              <span className="h-4 w-4 rounded-[5px] bg-[#5f6cff]" />
-                              <p className="truncate text-sm font-medium text-[#1f2a44]">{link.title}</p>
+                              <span className="min-w-0">
+                                <span className="block truncate">{link.title}</span>
+                                {link.description ? <span className="mt-0.5 block truncate text-[10px] font-medium text-[#8A8A8A]">{link.description}</span> : null}
+                              </span>
+                              <ExternalLink className="h-3 w-3 shrink-0 text-[#525252]" />
                             </div>
                           )
                         )

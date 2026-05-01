@@ -103,9 +103,12 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
               {isProfileVerified(profile) && <VerifiedBadge className="ml-2 align-middle" />}
             </h1>
 
-            {/* Role and username */}
-            {profile.user.role ? <p className="mt-2 text-base font-medium text-[#111111]">{profile.user.role}</p> : null}
-            <p className="mt-1 text-sm font-semibold text-[#525252]">@{profile.user.username}</p>
+            {/* Role and username — single line */}
+            <p className="mt-2 text-sm font-semibold text-[#525252]">
+              {profile.user.role ? <span className="text-base font-medium text-[#111111]">{profile.user.role}</span> : null}
+              {profile.user.role ? <span className="mx-1.5 text-[#DADADA]">•</span> : null}
+              <span>@{profile.user.username}</span>
+            </p>
 
             {/* Bio */}
             <p className="mt-4 max-w-[32rem] text-[15px] leading-tight text-[#525252] sm:text-base">{bio || "Creator belum menambahkan bio singkat."}</p>
