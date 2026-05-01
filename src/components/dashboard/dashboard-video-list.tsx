@@ -17,6 +17,8 @@ import {
   Search,
   SlidersHorizontal,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,10 +69,10 @@ const filterItems: Array<{ value: VideoFilter; label: string }> = [
 ];
 
 function getStatusClass(visibility: VideoVisibility) {
-  if (visibility === "public") return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  if (visibility === "semi_private") return "border-slate-200 bg-slate-100 text-slate-800";
-  if (visibility === "private") return "border-amber-200 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-white text-slate-600";
+  if (visibility === "public") return "border-emerald-200/60 bg-emerald-50 text-emerald-700";
+  if (visibility === "semi_private") return "border-sky-200/60 bg-sky-50 text-sky-700";
+  if (visibility === "private") return "border-amber-200/60 bg-amber-50 text-amber-700";
+  return "border-slate-200/60 bg-slate-50 text-slate-600";
 }
 
 export function DashboardVideoList({ videos }: DashboardVideoListProps) {
@@ -81,7 +83,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
   const [filter, setFilter] = useState<VideoFilter>("all");
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [sortMode, setSortMode] = useState<SortMode>("newest");
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
 
@@ -171,11 +173,13 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-[1.5rem] border border-slate-200 bg-white p-3 shadow-sm shadow-slate-900/5 sm:p-4">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="min-w-0 flex-1 overflow-x-auto pb-1">
-            <div className="flex min-w-max items-center gap-2">
+    <div className="space-y-3">
+      {/* Filter & Controls Bento Card */}
+      <div className="space-y-3">
+        {/* Tab Filters */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1 overflow-x-auto scrollbar-none">
+            <div className="flex min-w-max items-center gap-1.5 pb-0.5">
               {filterItems.map((item) => (
                 <button
                   key={item.value}
@@ -185,10 +189,10 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                     setPage(1);
                   }}
                   className={cn(
-                    "rounded-full px-3.5 py-2 text-sm font-semibold transition",
+                    "rounded-xl px-3 py-2 text-xs font-semibold transition-all sm:text-sm",
                     filter === item.value
-                      ? "bg-zinc-950 text-white shadow-sm shadow-slate-900/10"
-                      : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      ? "bg-zinc-900 text-white shadow-sm"
+                      : "bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   )}
                 >
                   {item.label} ({counts[item.value]})
@@ -196,15 +200,24 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               ))}
             </div>
           </div>
-          <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-            Pinned to Bio Link {counts.pinned}/3 · {filteredVideos.length} hasil
-          </p>
         </div>
 
-        <div className="mt-3 grid gap-2 lg:grid-cols-[minmax(260px,1fr)_180px_170px_auto]">
+        {/* Pinned Info Badge */}
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-violet-50 px-2.5 py-1.5 text-[11px] font-semibold text-violet-700">
+            <Pin className="h-3 w-3" />
+            Pinned to Bio Link {counts.pinned}/3
+          </span>
+          <span className="text-xs text-slate-400">
+            · {filteredVideos.length} hasil
+          </span>
+        </div>
+
+        {/* Search & Sort Controls */}
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_160px_150px_auto]">
           <label className="relative block">
             <span className="sr-only">Cari judul video</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               value={searchQuery}
               onChange={(event) => {
@@ -212,20 +225,20 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 setPage(1);
               }}
               placeholder="Cari judul video..."
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-9 pr-3 text-sm text-slate-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100"
+              className="h-10 w-full rounded-xl border border-slate-200/80 bg-slate-50/50 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-zinc-300 focus:bg-white focus:ring-2 focus:ring-zinc-100"
             />
           </label>
 
           <label className="relative block">
             <span className="sr-only">Sort by</span>
-            <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             <select
               value={sortMode}
               onChange={(event) => {
                 setSortMode(event.target.value as SortMode);
                 setPage(1);
               }}
-              className="h-11 w-full appearance-none rounded-2xl border border-slate-200 bg-white pl-9 pr-8 text-sm font-medium text-slate-800 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100"
+              className="h-10 w-full appearance-none rounded-xl border border-slate-200/80 bg-slate-50/50 pl-9 pr-8 text-sm font-medium text-slate-700 outline-none transition focus:border-zinc-300 focus:bg-white focus:ring-2 focus:ring-zinc-100"
             >
               <option value="newest">Terbaru</option>
               <option value="oldest">Terlama</option>
@@ -242,7 +255,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               setSourceFilter(event.target.value);
               setPage(1);
             }}
-            className="h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100"
+            className="h-10 rounded-xl border border-slate-200/80 bg-slate-50/50 px-3 text-sm font-medium text-slate-700 outline-none transition focus:border-zinc-300 focus:bg-white focus:ring-2 focus:ring-zinc-100"
             aria-label="Filter source video"
           >
             <option value="all">Semua source</option>
@@ -253,7 +266,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
             ))}
           </select>
 
-          <div className="inline-flex h-11 items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1">
+          <div className="inline-flex h-10 items-center gap-0.5 rounded-xl border border-slate-200/80 bg-slate-50/50 p-1">
             <button
               type="button"
               onClick={() => {
@@ -261,13 +274,15 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 setPage(1);
               }}
               className={cn(
-                "inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold transition",
-                viewMode === "grid" ? "bg-zinc-950 text-white" : "text-slate-600 hover:bg-white"
+                "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-all",
+                viewMode === "grid"
+                  ? "bg-zinc-900 text-white shadow-sm"
+                  : "text-slate-500 hover:bg-white hover:text-slate-700"
               )}
               aria-label="Mode grid"
             >
-              <LayoutGrid className="h-4 w-4" />
-              Grid
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Grid</span>
             </button>
             <button
               type="button"
@@ -276,124 +291,283 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                 setPage(1);
               }}
               className={cn(
-                "inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold transition",
-                viewMode === "list" ? "bg-zinc-950 text-white" : "text-slate-600 hover:bg-white"
+                "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-all",
+                viewMode === "list"
+                  ? "bg-zinc-900 text-white shadow-sm"
+                  : "text-slate-500 hover:bg-white hover:text-slate-700"
               )}
               aria-label="Mode list"
             >
-              <List className="h-4 w-4" />
-              List
+              <List className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">List</span>
             </button>
           </div>
         </div>
       </div>
 
+      {/* Pin Error */}
       {pinError ? (
-        <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+        <div className="rounded-xl border border-rose-200/60 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
           {pinError}
-        </p>
+        </div>
       ) : null}
 
+      {/* Video Cards */}
       {paginatedVideos.length === 0 ? (
-        <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-600">
-          <Film className="mx-auto h-9 w-9 text-slate-700" />
-          <p className="mt-3 font-semibold text-slate-900">Tidak ada video yang cocok</p>
-          <p className="mt-1">Coba gunakan kata kunci lain atau ubah filter status.</p>
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center sm:p-12">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+            <Film className="h-5 w-5 text-slate-500" />
+          </div>
+          <p className="mt-3 text-sm font-semibold text-slate-900">Tidak ada video yang cocok</p>
+          <p className="mt-1 text-xs text-slate-500">Coba gunakan kata kunci lain atau ubah filter status.</p>
         </div>
       ) : (
-        <div className={cn(viewMode === "grid" ? "grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" : "space-y-3")}>
+        <div
+          className={cn(
+            viewMode === "grid"
+              ? "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+              : "space-y-2.5"
+          )}
+        >
           {paginatedVideos.map((video) => {
             const thumbnail = getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] || "";
             const isPinnable = video.visibility === "public" || video.visibility === "semi_private";
 
-            return (
-              <article
-                key={video.id}
-                className={cn(
-                  "rounded-[1.35rem] border border-slate-200 bg-white p-3 shadow-sm shadow-slate-900/5 transition hover:border-zinc-300 hover:shadow-md",
-                  viewMode === "grid" ? "flex h-full flex-col" : ""
-                )}
-              >
-                <div className={cn(viewMode === "list" ? "grid gap-3 sm:grid-cols-[112px_1fr_auto] sm:items-center" : "flex h-full flex-col gap-3")}>
-                  <div className={cn("relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100", viewMode === "list" ? "h-20 sm:h-16" : "aspect-video")}>
+            if (viewMode === "grid") {
+              return (
+                <article
+                  key={video.id}
+                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all hover:border-slate-200 hover:shadow-md"
+                >
+                  {/* Thumbnail */}
+                  <div className="relative aspect-video overflow-hidden bg-slate-100">
                     {thumbnail ? (
                       <Image
                         src={thumbnail}
                         alt={`Thumbnail ${video.title}`}
                         width={360}
                         height={202}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        unoptimized
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs font-medium text-slate-400">
+                        <Film className="mr-1.5 h-4 w-4" />
+                        No thumbnail
+                      </div>
+                    )}
+                    {/* Status Badge Overlay */}
+                    <div className="absolute left-2.5 top-2.5">
+                      <Badge className={cn("border text-[10px] font-semibold backdrop-blur-sm", getStatusClass(video.visibility))}>
+                        {getVisibilityLabel(video.visibility)}
+                      </Badge>
+                    </div>
+                    {video.pinnedToProfile && (
+                      <div className="absolute right-2.5 top-2.5">
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-violet-600/90 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-sm">
+                          <Pin className="h-2.5 w-2.5" />
+                          #{video.pinnedOrder || 1}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex flex-1 flex-col p-3.5">
+                    <div className="flex-1">
+                      <h3 className="line-clamp-2 text-sm font-semibold leading-snug tracking-tight text-slate-900">
+                        {video.title}
+                      </h3>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <Badge className="text-[10px]">{getSourceLabel(video.source as never)}</Badge>
+                        <span className="text-[11px] text-slate-400">{formatDateLabel(video.createdAt)}</span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-3 flex items-center gap-1.5 border-t border-slate-100 pt-3">
+                      {isPinnable && (
+                        <Link href={`/v/${video.publicSlug}`}>
+                          <button
+                            type="button"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                            title="Preview video"
+                          >
+                            <ArrowUpRight className="h-3.5 w-3.5" />
+                          </button>
+                        </Link>
+                      )}
+                      <Link href={`/dashboard/videos/${video.id}`}>
+                        <button
+                          type="button"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                          title="Edit video"
+                        >
+                          <PencilLine className="h-3.5 w-3.5" />
+                        </button>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(video)}
+                        disabled={!isPinnable}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40"
+                        title="Copy link video"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pinningId === video.id || !isPinnable || (!video.pinnedToProfile && counts.pinned >= 3)}
+                        onClick={() => handleTogglePin(video)}
+                        className={cn(
+                          "flex h-8 w-8 items-center justify-center rounded-lg transition disabled:opacity-40",
+                          video.pinnedToProfile
+                            ? "bg-violet-50 text-violet-600 hover:bg-violet-100"
+                            : "bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                        )}
+                        title={video.pinnedToProfile ? "Lepas pin Bio Link" : "Pin ke Bio Link"}
+                      >
+                        {video.pinnedToProfile ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+                      </button>
+                      <Link href="/dashboard/link-builder">
+                        <button
+                          type="button"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                          title="Hubungkan ke Build Link"
+                        >
+                          <Link2 className="h-3.5 w-3.5" />
+                        </button>
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={deletingId === video.id}
+                        onClick={() => handleDelete(video.id)}
+                        className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-500 transition hover:bg-rose-100 hover:text-rose-600 disabled:opacity-40"
+                        title="Hapus video"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            }
+
+            // List View
+            return (
+              <article
+                key={video.id}
+                className="group rounded-xl border border-slate-100 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all hover:border-slate-200 hover:shadow-md sm:rounded-2xl sm:p-4"
+              >
+                <div className="grid gap-3 sm:grid-cols-[100px_1fr_auto] sm:items-center">
+                  {/* Thumbnail */}
+                  <div className="relative h-16 overflow-hidden rounded-xl border border-slate-100 bg-slate-100 sm:h-14">
+                    {thumbnail ? (
+                      <Image
+                        src={thumbnail}
+                        alt={`Thumbnail ${video.title}`}
+                        width={160}
+                        height={90}
                         className="h-full w-full object-cover"
                         unoptimized
                         loading="lazy"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-xs font-medium text-slate-500">
-                        <Film className="mr-1.5 h-4 w-4" />
-                        No thumbnail
+                      <div className="flex h-full w-full items-center justify-center text-[10px] font-medium text-slate-400">
+                        <Film className="mr-1 h-3 w-3" />
+                        No thumb
                       </div>
                     )}
-                    {viewMode === "grid" ? (
-                      <Badge className={cn("absolute left-2 top-2 border", getStatusClass(video.visibility))}>
-                        {getVisibilityLabel(video.visibility)}
-                      </Badge>
-                    ) : null}
                   </div>
 
+                  {/* Info */}
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="line-clamp-2 text-base font-semibold tracking-[-0.02em] text-slate-950">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <h3 className="line-clamp-1 text-sm font-semibold tracking-tight text-slate-900">
                         {video.title}
                       </h3>
-                      <Badge>{getSourceLabel(video.source as never)}</Badge>
-                      {viewMode === "list" ? (
-                        <Badge className={cn("border", getStatusClass(video.visibility))}>
-                          {getVisibilityLabel(video.visibility)}
-                        </Badge>
-                      ) : null}
-                      {video.pinnedToProfile ? (
-                        <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700">
-                          Pinned #{video.pinnedOrder || 1}
-                        </Badge>
-                      ) : null}
+                      <Badge className={cn("border text-[10px]", getStatusClass(video.visibility))}>
+                        {getVisibilityLabel(video.visibility)}
+                      </Badge>
+                      {video.pinnedToProfile && (
+                        <span className="inline-flex items-center gap-0.5 rounded-md bg-violet-50 px-1.5 py-0.5 text-[10px] font-bold text-violet-600">
+                          <Pin className="h-2.5 w-2.5" />
+                          #{video.pinnedOrder || 1}
+                        </span>
+                      )}
                     </div>
-                    <p className="mt-1 text-sm text-slate-600">{formatDateLabel(video.createdAt)}</p>
-                    <p className="mt-1 text-xs text-slate-500">{getSourceLabel(video.source as never)} · {isPinnable ? "Siap dipin ke Build Link" : "Belum bisa dipin"}</p>
+                    <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+                      <Badge className="text-[10px]">{getSourceLabel(video.source as never)}</Badge>
+                      <span>{formatDateLabel(video.createdAt)}</span>
+                      <span className="hidden sm:inline">·</span>
+                      <span className="hidden sm:inline">{isPinnable ? "Siap dipin" : "Belum bisa dipin"}</span>
+                    </div>
                   </div>
 
-                  <div className={cn("flex flex-wrap items-center gap-2", viewMode === "grid" ? "mt-auto" : "sm:justify-end")}>
-                    {isPinnable ? (
+                  {/* Actions */}
+                  <div className="flex flex-wrap items-center gap-1.5 sm:justify-end">
+                    {isPinnable && (
                       <Link href={`/v/${video.publicSlug}`}>
-                        <Button variant="secondary" size="sm" aria-label="Preview video" title="Preview video">
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Button>
+                        <button
+                          type="button"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                          title="Preview video"
+                        >
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </button>
                       </Link>
-                    ) : null}
+                    )}
                     <Link href={`/dashboard/videos/${video.id}`}>
-                      <Button variant="secondary" size="sm" aria-label="Edit video" title="Edit video">
-                        <PencilLine className="h-4 w-4" />
-                      </Button>
+                      <button
+                        type="button"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        title="Edit video"
+                      >
+                        <PencilLine className="h-3.5 w-3.5" />
+                      </button>
                     </Link>
-                    <Button variant="secondary" size="sm" onClick={() => handleCopy(video)} aria-label="Copy link video" title="Copy link video" disabled={!isPinnable}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(video)}
+                      disabled={!isPinnable}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40"
+                      title="Copy link video"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
                       disabled={pinningId === video.id || !isPinnable || (!video.pinnedToProfile && counts.pinned >= 3)}
                       onClick={() => handleTogglePin(video)}
-                      aria-label={video.pinnedToProfile ? "Lepas pin Bio Link" : "Pin ke Bio Link"}
-                      title={video.pinnedToProfile ? "Lepas pin Bio Link" : isPinnable ? "Pin ke Bio Link" : "Hanya Public atau Semi Private yang bisa dipin"}
+                      className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-lg transition disabled:opacity-40",
+                        video.pinnedToProfile
+                          ? "bg-violet-50 text-violet-600 hover:bg-violet-100"
+                          : "bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                      )}
+                      title={video.pinnedToProfile ? "Lepas pin Bio Link" : "Pin ke Bio Link"}
                     >
-                      {video.pinnedToProfile ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-                    </Button>
+                      {video.pinnedToProfile ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+                    </button>
                     <Link href="/dashboard/link-builder">
-                      <Button variant="secondary" size="sm" aria-label="Hubungkan ke Build Link" title="Hubungkan ke Build Link">
-                        <Link2 className="h-4 w-4" />
-                      </Button>
+                      <button
+                        type="button"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        title="Hubungkan ke Build Link"
+                      >
+                        <Link2 className="h-3.5 w-3.5" />
+                      </button>
                     </Link>
-                    <Button variant="danger" size="sm" disabled={deletingId === video.id} onClick={() => handleDelete(video.id)} aria-label="Hapus video" title="Hapus video">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <button
+                      type="button"
+                      disabled={deletingId === video.id}
+                      onClick={() => handleDelete(video.id)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-500 transition hover:bg-rose-100 hover:text-rose-600 disabled:opacity-40"
+                      title="Hapus video"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
               </article>
@@ -402,15 +576,30 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
         </div>
       )}
 
+      {/* Pagination */}
       {totalPages > 1 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.35rem] border border-slate-200 bg-white p-3 shadow-sm shadow-slate-900/5">
-          <Button variant="secondary" size="sm" disabled={currentPage <= 1} onClick={() => setPage((prev) => Math.max(1, prev - 1))}>
+        <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <button
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-slate-50 px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:opacity-40"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
             Sebelumnya
-          </Button>
-          <p className="text-sm font-semibold text-slate-600">Halaman {currentPage} / {totalPages}</p>
-          <Button variant="secondary" size="sm" disabled={currentPage >= totalPages} onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}>
+          </button>
+          <p className="text-xs font-semibold text-slate-500">
+            {currentPage} / {totalPages}
+          </p>
+          <button
+            type="button"
+            disabled={currentPage >= totalPages}
+            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-slate-50 px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:opacity-40"
+          >
             Berikutnya
-          </Button>
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       ) : null}
     </div>
