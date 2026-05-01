@@ -98,11 +98,10 @@ export function SocialLinks({
     );
   }
 
+  /* Bento UI: icons only, evenly spaced in a centered row */
   return (
     <div
-      className={`${
-        balanced ? "grid grid-cols-2 gap-2.5" : "flex flex-wrap justify-center gap-2.5"
-      } ${className}`.trim()}
+      className={`flex items-center justify-center gap-3 ${className}`.trim()}
     >
       {items.map((item) => {
         return (
@@ -111,10 +110,10 @@ export function SocialLinks({
             href={item.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`${baseLinkClass} ${balanced ? "w-full justify-center" : ""}`.trim()}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#E1E1DF] bg-white shadow-[0_4px_12px_rgba(17,17,17,0.05)] transition hover:-translate-y-0.5 hover:border-[#111111] hover:shadow-[0_8px_20px_rgba(17,17,17,0.10)]"
+            title={item.label}
           >
-            <PlatformIcon platform={item.key} className="h-3.5 w-3.5" />
-            {item.label}
+            <PlatformIcon platform={item.key} className="h-[18px] w-[18px]" />
           </Link>
         );
       })}

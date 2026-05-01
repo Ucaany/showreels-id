@@ -40,7 +40,7 @@ function PublicFooter({ hidden }: { hidden?: boolean }) {
   );
 }
 
-function CreatorCover({ profile, className = "h-36", soft = false }: { profile: PublicProfile; className?: string; soft?: boolean }) {
+function CreatorCover({ profile, className = "h-36", soft = false, transparent = false }: { profile: PublicProfile; className?: string; soft?: boolean; transparent?: boolean }) {
   const autoCoverImage = getVideoThumb(profile.videos[0] || { thumbnailUrl: "", sourceUrl: "" });
   const coverImage = profile.user.coverImageUrl || autoCoverImage;
 
@@ -55,7 +55,11 @@ function CreatorCover({ profile, className = "h-36", soft = false }: { profile: 
           )}
         />
       ) : null}
-      <div className={soft ? "absolute inset-0 bg-white/65 backdrop-blur-[1px]" : "absolute inset-0 bg-[linear-gradient(180deg,rgba(245,245,244,0.18),rgba(17,17,17,0.16))]"} />
+      {transparent ? (
+        <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/20 to-white/60" />
+      ) : (
+        <div className={soft ? "absolute inset-0 bg-white/65 backdrop-blur-[1px]" : "absolute inset-0 bg-[linear-gradient(180deg,rgba(245,245,244,0.18),rgba(17,17,17,0.16))]"} />
+      )}
     </div>
   );
 }
@@ -81,21 +85,32 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
       {profile.isOwner && <OwnerEditButton />}
       <main className="mx-auto flex min-h-screen w-full max-w-[460px] flex-col justify-center px-4 py-6 min-[481px]:max-w-[560px] sm:px-5 sm:py-10 lg:max-w-[640px]">
         <Card className={`${cardClass} overflow-hidden rounded-[1.75rem] p-4 sm:rounded-[2rem] sm:p-5 lg:p-6`}>
-          <CreatorCover profile={profile} className="h-[132px] min-[375px]:h-[152px] min-[431px]:h-[176px] sm:h-[190px]" />
-          <div className="-mt-8 flex flex-col items-center px-1 pb-1 text-center sm:-mt-10 sm:px-3">
-            <div className="rounded-full border-4 border-white bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]">
+          {/* Cover with semi-transparent overlay */}
+          <CreatorCover profile={profile} transparent className="h-[132px] min-[375px]:h-[152px] min-[431px]:h-[176px] sm:h-[190px]" />
+
+          {/* Avatar overlapping cover */}
+          <div className="-mt-12 flex flex-col items-center text-center sm:-mt-14">
+            <div className="relative z-10 rounded-full border-4 border-white bg-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]">
               <CreatorAvatar profile={profile} />
             </div>
+
+            {/* Social media icons - bento style, centered */}
+            <SocialLinks className="mt-5 justify-center" balanced websiteUrl={profile.user.websiteUrl} instagramUrl={profile.user.instagramUrl} youtubeUrl={profile.user.youtubeUrl} facebookUrl={profile.user.facebookUrl} threadsUrl={profile.user.threadsUrl} linkedinUrl={profile.user.linkedinUrl} />
+
+            {/* Name with verified badge */}
             <h1 className="mt-5 max-w-full text-3xl font-bold tracking-[-0.04em] text-[#111111] sm:text-4xl">
               {profile.user.name || "Creator"}
               {isProfileVerified(profile) && <VerifiedBadge className="ml-2 align-middle" />}
             </h1>
-            <p className="mt-1 text-sm font-semibold text-[#525252]">@{profile.user.username}</p>
+
+            {/* Role and username */}
             {profile.user.role ? <p className="mt-2 text-base font-medium text-[#111111]">{profile.user.role}</p> : null}
+            <p className="mt-1 text-sm font-semibold text-[#525252]">@{profile.user.username}</p>
+
+            {/* Bio */}
             <p className="mt-4 max-w-[32rem] text-[15px] leading-tight text-[#525252] sm:text-base">{bio || "Creator belum menambahkan bio singkat."}</p>
 
-            <SocialLinks className="mt-5 justify-center" websiteUrl={profile.user.websiteUrl} instagramUrl={profile.user.instagramUrl} youtubeUrl={profile.user.youtubeUrl} facebookUrl={profile.user.facebookUrl} threadsUrl={profile.user.threadsUrl} linkedinUrl={profile.user.linkedinUrl} />
-
+            {/* Buttons / Links */}
             <div className="mt-7 w-full space-y-3 sm:space-y-4">
               {pinnedVideos.map((video) => {
                 const thumb = getVideoThumb(video);

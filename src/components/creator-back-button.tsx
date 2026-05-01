@@ -12,6 +12,7 @@ export function CreatorBackButton() {
       type="button"
       variant="secondary"
       size="sm"
+      className="!text-white [&_svg]:!text-white bg-[#111111] hover:bg-[#1E1E1E]"
       onClick={() => {
         if (window.history.length > 1) {
           router.back();
