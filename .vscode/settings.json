@@ -1,0 +1,4 @@
+{
+    "oaicopilot.baseUrl": "http://localhost:1430/v1",
+    "oaicopilot.commitMessagePrompt": "To the point"
+}

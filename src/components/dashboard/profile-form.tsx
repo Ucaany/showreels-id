@@ -7,11 +7,16 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import {
+  ChevronDown,
+  Crop,
+  ImageIcon,
   Link2,
   List,
   Pilcrow,
   Sparkles,
   Tag,
+  Trash2,
+  UserCircle,
   UserRoundPen,
 } from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
@@ -297,104 +302,143 @@ export function ProfileForm({ user }: { user: DbUser }) {
         <form onSubmit={onSubmit} className="space-y-4">
           {/* ── Cover & Avatar Card ── */}
           <div className="bento-card p-0 overflow-hidden">
-            {/* Cover */}
-            <div
-              className="relative w-full aspect-[3/1] bg-gradient-to-br from-slate-100 to-slate-50"
-              style={
-                previewCover
-                  ? getBackgroundImageCropStyle(previewCover, coverCrop, "linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.12))")
-                  : undefined
-              }
-            >
-              {/* Avatar overlay */}
-              <div className="absolute -bottom-8 left-5 sm:left-6">
-                <div className="rounded-full ring-4 ring-white">
-                  <AvatarBadge
-                    name={watchedName || user.name || "Creator"}
-                    avatarUrl={previewAvatar}
-                    crop={avatarCrop}
-                    size="lg"
-                  />
+            {/* Cover banner with inline controls */}
+            <div className="group/cover relative w-full aspect-[3/1] bg-gradient-to-br from-slate-100 via-slate-50 to-white">
+              {previewCover ? (
+                <div
+                  className="absolute inset-0 rounded-t-[var(--bento-radius)]"
+                  style={getBackgroundImageCropStyle(previewCover, coverCrop)}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <ImageIcon className="h-8 w-8 text-slate-200" />
+                </div>
+              )}
+
+              {/* Cover action buttons - appear on hover */}
+              {previewCover && (
+                <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-lg bg-black/40 p-1 opacity-0 backdrop-blur-sm transition-opacity group-hover/cover:opacity-100">
+                  <button
+                    type="button"
+                    onClick={() => setActiveCropTarget("cover")}
+                    className="rounded-md p-1.5 text-white/90 transition hover:bg-white/20 hover:text-white"
+                    title="Crop Cover"
+                  >
+                    <Crop className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      form.setValue("coverImageUrl", "", { shouldDirty: true, shouldValidate: true });
+                      form.setValue("coverCropX", 0, { shouldDirty: true });
+                      form.setValue("coverCropY", 0, { shouldDirty: true });
+                      form.setValue("coverCropZoom", 100, { shouldDirty: true });
+                    }}
+                    className="rounded-md p-1.5 text-white/90 transition hover:bg-red-500/60 hover:text-white"
+                    title="Hapus Cover"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Avatar overlay with action */}
+              <div className="group/avatar absolute -bottom-7 left-5 sm:-bottom-8 sm:left-6">
+                <div className="relative">
+                  <div className="rounded-full ring-[3px] ring-white shadow-sm">
+                    <AvatarBadge
+                      name={watchedName || user.name || "Creator"}
+                      avatarUrl={previewAvatar}
+                      crop={avatarCrop}
+                      size="lg"
+                    />
+                  </div>
+                  {/* Avatar action buttons */}
+                  {previewAvatar && (
+                    <div className="absolute -right-1 -top-1 flex items-center gap-0.5 rounded-full bg-black/50 p-0.5 opacity-0 backdrop-blur-sm transition-opacity group-hover/avatar:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => setActiveCropTarget("avatar")}
+                        className="rounded-full p-1 text-white/90 transition hover:bg-white/20 hover:text-white"
+                        title="Crop Avatar"
+                      >
+                        <Crop className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          form.setValue("avatarUrl", "", { shouldDirty: true, shouldValidate: true });
+                          form.setValue("avatarCropX", 0, { shouldDirty: true });
+                          form.setValue("avatarCropY", 0, { shouldDirty: true });
+                          form.setValue("avatarCropZoom", 100, { shouldDirty: true });
+                        }}
+                        className="rounded-full p-1 text-white/90 transition hover:bg-red-500/60 hover:text-white"
+                        title="Hapus Avatar"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Cover/Avatar controls */}
-            <div className="px-5 pt-12 pb-4 sm:px-6">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-500">Cover URL</label>
-                  <Input
-                    className="text-sm"
-                    placeholder="https://..."
-                    {...form.register("coverImageUrl", {
-                      onBlur: (event) => {
-                        const normalized = normalizeAvatarUrl(event.target.value);
-                        const hasChanged = normalized !== normalizeAvatarUrl(watchedCover || "");
-                        form.setValue("coverImageUrl", normalized, { shouldDirty: true, shouldValidate: true });
-                        if (hasChanged) {
-                          form.setValue("coverCropX", 0, { shouldDirty: true });
-                          form.setValue("coverCropY", 0, { shouldDirty: true });
-                          form.setValue("coverCropZoom", 100, { shouldDirty: true });
-                        }
-                      },
-                    })}
-                  />
-                  <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.coverImageUrl?.message}</p>
+            {/* Minimal URL inputs - collapsible */}
+            <div className="px-5 pb-4 pt-11 sm:px-6 sm:pt-12">
+              <details className="group/urls">
+                <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-slate-400 transition hover:text-slate-600 [&::-webkit-details-marker]:hidden">
+                  <ChevronDown className="h-3 w-3 transition-transform group-open/urls:rotate-180" />
+                  Ubah URL gambar
+                </summary>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <ImageIcon className="h-3 w-3 text-slate-400" />
+                      <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">Cover</label>
+                    </div>
+                    <Input
+                      className="text-sm h-9 bg-slate-50 border-slate-200 focus:bg-white"
+                      placeholder="https://..."
+                      {...form.register("coverImageUrl", {
+                        onBlur: (event) => {
+                          const normalized = normalizeAvatarUrl(event.target.value);
+                          const hasChanged = normalized !== normalizeAvatarUrl(watchedCover || "");
+                          form.setValue("coverImageUrl", normalized, { shouldDirty: true, shouldValidate: true });
+                          if (hasChanged) {
+                            form.setValue("coverCropX", 0, { shouldDirty: true });
+                            form.setValue("coverCropY", 0, { shouldDirty: true });
+                            form.setValue("coverCropZoom", 100, { shouldDirty: true });
+                          }
+                        },
+                      })}
+                    />
+                    <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.coverImageUrl?.message}</p>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <UserCircle className="h-3 w-3 text-slate-400" />
+                      <label className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">Avatar</label>
+                    </div>
+                    <Input
+                      className="text-sm h-9 bg-slate-50 border-slate-200 focus:bg-white"
+                      placeholder="https://..."
+                      {...form.register("avatarUrl", {
+                        onBlur: (event) => {
+                          const normalized = normalizeAvatarUrl(event.target.value);
+                          const hasChanged = normalized !== normalizeAvatarUrl(watchedAvatar || "");
+                          form.setValue("avatarUrl", normalized, { shouldDirty: true, shouldValidate: true });
+                          if (hasChanged) {
+                            form.setValue("avatarCropX", 0, { shouldDirty: true });
+                            form.setValue("avatarCropY", 0, { shouldDirty: true });
+                            form.setValue("avatarCropZoom", 100, { shouldDirty: true });
+                          }
+                        },
+                      })}
+                    />
+                    <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.avatarUrl?.message}</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-500">Avatar URL</label>
-                  <Input
-                    className="text-sm"
-                    placeholder="https://..."
-                    {...form.register("avatarUrl", {
-                      onBlur: (event) => {
-                        const normalized = normalizeAvatarUrl(event.target.value);
-                        const hasChanged = normalized !== normalizeAvatarUrl(watchedAvatar || "");
-                        form.setValue("avatarUrl", normalized, { shouldDirty: true, shouldValidate: true });
-                        if (hasChanged) {
-                          form.setValue("avatarCropX", 0, { shouldDirty: true });
-                          form.setValue("avatarCropY", 0, { shouldDirty: true });
-                          form.setValue("avatarCropZoom", 100, { shouldDirty: true });
-                        }
-                      },
-                    })}
-                  />
-                  <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.avatarUrl?.message}</p>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {previewCover ? (
-                  <Button type="button" variant="secondary" size="sm" onClick={() => setActiveCropTarget("cover")}>
-                    Crop Cover
-                  </Button>
-                ) : null}
-                {previewAvatar ? (
-                  <Button type="button" variant="secondary" size="sm" onClick={() => setActiveCropTarget("avatar")}>
-                    Crop Avatar
-                  </Button>
-                ) : null}
-                {previewCover ? (
-                  <Button type="button" variant="ghost" size="sm" onClick={() => {
-                    form.setValue("coverImageUrl", "", { shouldDirty: true, shouldValidate: true });
-                    form.setValue("coverCropX", 0, { shouldDirty: true });
-                    form.setValue("coverCropY", 0, { shouldDirty: true });
-                    form.setValue("coverCropZoom", 100, { shouldDirty: true });
-                  }}>
-                    Hapus Cover
-                  </Button>
-                ) : null}
-                {previewAvatar ? (
-                  <Button type="button" variant="ghost" size="sm" onClick={() => {
-                    form.setValue("avatarUrl", "", { shouldDirty: true, shouldValidate: true });
-                    form.setValue("avatarCropX", 0, { shouldDirty: true });
-                    form.setValue("avatarCropY", 0, { shouldDirty: true });
-                    form.setValue("avatarCropZoom", 100, { shouldDirty: true });
-                  }}>
-                    Hapus Avatar
-                  </Button>
-                ) : null}
-              </div>
+              </details>
             </div>
           </div>
 
@@ -499,15 +543,17 @@ export function ProfileForm({ user }: { user: DbUser }) {
           </div>
 
           {/* ── Actions ── */}
-          <div className="flex flex-wrap items-center gap-3 pt-1">
-            {message && <p className="w-full rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{message}</p>}
-            {error && <p className="w-full rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Menyimpan..." : "Simpan"}
-            </Button>
-            <Link href={publicProfileHref}>
-              <Button type="button" variant="secondary">Lihat Profil</Button>
-            </Link>
+          <div className="space-y-3 pt-1">
+            {message && <p className="rounded-xl bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">{message}</p>}
+            {error && <p className="rounded-xl bg-rose-50 px-4 py-2.5 text-sm text-rose-700">{error}</p>}
+            <div className="flex items-center gap-2.5">
+              <Button type="submit" disabled={form.formState.isSubmitting} className="rounded-xl px-5">
+                {form.formState.isSubmitting ? "Menyimpan..." : "Simpan Profil"}
+              </Button>
+              <Link href={publicProfileHref}>
+                <Button type="button" variant="secondary" className="rounded-xl px-5">Lihat Profil</Button>
+              </Link>
+            </div>
           </div>
         </form>
       </div>
