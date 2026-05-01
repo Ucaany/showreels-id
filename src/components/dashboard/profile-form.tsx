@@ -9,7 +9,6 @@ import { useForm, useWatch } from "react-hook-form";
 import {
   Link2,
   List,
-  MapPinHouse,
   Pilcrow,
   Sparkles,
   Tag,
@@ -17,7 +16,6 @@ import {
 } from "lucide-react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { ImageCropDialog } from "@/components/dashboard/image-crop-dialog";
-import { ProfileRichText } from "@/components/profile-rich-text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,10 +23,7 @@ import { usePreferences } from "@/hooks/use-preferences";
 import type { DbUser } from "@/db/schema";
 import { normalizeAvatarUrl } from "@/lib/avatar-utils";
 import { getBackgroundImageCropStyle, normalizeImageCrop } from "@/lib/image-crop";
-import {
-  getAgeFromBirthDate,
-  normalizeSocialUrl,
-} from "@/lib/profile-utils";
+import { getAgeFromBirthDate } from "@/lib/profile-utils";
 import { isReservedUsername, USERNAME_REGEX } from "@/lib/username-rules";
 
 /* ── Schema ── */
@@ -48,25 +43,24 @@ const schema = z.object({
     .string()
     .max(1200, "URL avatar terlalu panjang.")
     .refine((value) => !String(value || "").toLowerCase().startsWith("data:"), {
-      message: "Upload file langsung tidak didukung. Gunakan URL avatar.",
+      message: "Gunakan URL avatar, bukan file langsung.",
     })
     .refine((value) => value === "" || normalizeAvatarUrl(value).startsWith("http"), {
-      message: "Gunakan URL avatar http/https yang valid.",
+      message: "Gunakan URL http/https yang valid.",
     }),
   coverImageUrl: z
     .string()
     .max(1200, "URL cover terlalu panjang.")
     .refine((value) => !String(value || "").toLowerCase().startsWith("data:"), {
-      message: "Upload file langsung tidak didukung. Gunakan URL cover.",
+      message: "Gunakan URL cover, bukan file langsung.",
     })
     .refine((value) => value === "" || normalizeAvatarUrl(value).startsWith("http"), {
-      message: "Gunakan URL cover http/https yang valid.",
+      message: "Gunakan URL http/https yang valid.",
     }),
   bio: z.string().max(240, "Bio maksimal 240 karakter."),
   experience: z.string().max(700, "Pengalaman maksimal 700 karakter."),
   birthDate: z.string().optional(),
   city: z.string().max(120, "Kota terlalu panjang."),
-  address: z.string().max(240, "Alamat terlalu panjang."),
   skills: z.string().max(300, "Skills terlalu panjang."),
   avatarCropX: z.number().min(-100).max(100),
   avatarCropY: z.number().min(-100).max(100),
@@ -94,11 +88,7 @@ function getUsernameQuota(user: DbUser, nextUsername: string) {
         ? new Date(
             user.usernameChangeWindowStart.getTime() +
               USERNAME_WINDOW_DAYS * 24 * 60 * 60 * 1000
-          ).toLocaleDateString("id-ID", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          })
+          ).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })
         : null,
       willConsume: false,
     };
@@ -106,43 +96,19 @@ function getUsernameQuota(user: DbUser, nextUsername: string) {
 
   const windowStart = user.usernameChangeWindowStart;
   if (!windowStart) {
-    return {
-      remaining: USERNAME_MAX_CHANGES - 1,
-      used: 0,
-      resetLabel: null,
-      willConsume: true,
-    };
+    return { remaining: USERNAME_MAX_CHANGES - 1, used: 0, resetLabel: null, willConsume: true };
   }
 
   const now = Date.now();
-  const resetAt =
-    windowStart.getTime() + USERNAME_WINDOW_DAYS * 24 * 60 * 60 * 1000;
-  const resetLabel = new Date(resetAt).toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  const resetAt = windowStart.getTime() + USERNAME_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  const resetLabel = new Date(resetAt).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
 
   if (now >= resetAt) {
-    return {
-      remaining: USERNAME_MAX_CHANGES - 1,
-      used: 0,
-      resetLabel,
-      willConsume: true,
-    };
+    return { remaining: USERNAME_MAX_CHANGES - 1, used: 0, resetLabel, willConsume: true };
   }
 
   const used = user.usernameChangeCount || 0;
-  return {
-    remaining: Math.max(0, USERNAME_MAX_CHANGES - (used + 1)),
-    used,
-    resetLabel,
-    willConsume: true,
-  };
-}
-
-function FieldHint({ children }: { children: React.ReactNode }) {
-  return <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{children}</p>;
+  return { remaining: Math.max(0, USERNAME_MAX_CHANGES - (used + 1)), used, resetLabel, willConsume: true };
 }
 
 /* ── Main Component ── */
@@ -174,7 +140,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
       experience: user.experience || "",
       birthDate: user.birthDate || "",
       city: user.city || "",
-      address: user.address || "",
       skills: user.skills.join(", "),
     },
   });
@@ -188,7 +153,6 @@ export function ProfileForm({ user }: { user: DbUser }) {
   const watchedExperience = useWatch({ control: form.control, name: "experience" });
   const watchedBirthDate = useWatch({ control: form.control, name: "birthDate" });
   const watchedCity = useWatch({ control: form.control, name: "city" });
-  const watchedAddress = useWatch({ control: form.control, name: "address" });
   const watchedAvatarCropX = useWatch({ control: form.control, name: "avatarCropX" });
   const watchedAvatarCropY = useWatch({ control: form.control, name: "avatarCropY" });
   const watchedAvatarCropZoom = useWatch({ control: form.control, name: "avatarCropZoom" });
@@ -198,54 +162,26 @@ export function ProfileForm({ user }: { user: DbUser }) {
 
   const normalizedWatchedAvatar = normalizeAvatarUrl(watchedAvatar || "");
   const normalizedWatchedCover = normalizeAvatarUrl(watchedCover || "");
-  const avatarCrop = normalizeImageCrop({
-    x: watchedAvatarCropX,
-    y: watchedAvatarCropY,
-    zoom: watchedAvatarCropZoom,
-  });
-  const coverCrop = normalizeImageCrop({
-    x: watchedCoverCropX,
-    y: watchedCoverCropY,
-    zoom: watchedCoverCropZoom,
-  });
+  const avatarCrop = normalizeImageCrop({ x: watchedAvatarCropX, y: watchedAvatarCropY, zoom: watchedAvatarCropZoom });
+  const coverCrop = normalizeImageCrop({ x: watchedCoverCropX, y: watchedCoverCropY, zoom: watchedCoverCropZoom });
   const previewAvatar = normalizedWatchedAvatar;
   const previewCover = normalizedWatchedCover;
-  const age = getAgeFromBirthDate(watchedBirthDate || user.birthDate || "");
   const publicProfileHref = `/creator/${watchedUsername || user.username}`;
-  const usernameQuota = useMemo(
-    () => getUsernameQuota(user, watchedUsername || ""),
-    [user, watchedUsername]
-  );
+  const usernameQuota = useMemo(() => getUsernameQuota(user, watchedUsername || ""), [user, watchedUsername]);
 
-  const appendTextBlock = (
-    field: "bio" | "experience",
-    block: "bullet" | "paragraph"
-  ) => {
+  const appendTextBlock = (field: "bio" | "experience", block: "bullet" | "paragraph") => {
     const currentValue = form.getValues(field) || "";
     const normalizedValue = currentValue.replace(/\s+$/, "");
     const prefix = normalizedValue ? "\n\n" : "";
-    const nextValue =
-      block === "bullet"
-        ? `${normalizedValue}${prefix}- `
-        : `${normalizedValue}${prefix}Tulis paragraf baru di sini...`;
-
-    form.setValue(field, nextValue, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    const nextValue = block === "bullet"
+      ? `${normalizedValue}${prefix}- `
+      : `${normalizedValue}${prefix}Tulis paragraf baru di sini...`;
+    form.setValue(field, nextValue, { shouldDirty: true, shouldValidate: true });
   };
 
   const buildProfilePayload = useCallback((values: FormValues) => {
-    const avatarCropValues = normalizeImageCrop({
-      x: values.avatarCropX,
-      y: values.avatarCropY,
-      zoom: values.avatarCropZoom,
-    });
-    const coverCropValues = normalizeImageCrop({
-      x: values.coverCropX,
-      y: values.coverCropY,
-      zoom: values.coverCropZoom,
-    });
+    const avatarCropValues = normalizeImageCrop({ x: values.avatarCropX, y: values.avatarCropY, zoom: values.avatarCropZoom });
+    const coverCropValues = normalizeImageCrop({ x: values.coverCropX, y: values.coverCropY, zoom: values.coverCropZoom });
 
     return {
       fullName: values.fullName,
@@ -257,8 +193,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
       experience: values.experience,
       birthDate: values.birthDate?.trim() || "",
       city: values.city.trim(),
-      address: values.address.trim(),
-      // Pass through existing social/contact values (managed on Build Link page)
+      address: user.address || "",
       contactEmail: user.contactEmail || "",
       phoneNumber: user.phoneNumber || "",
       websiteUrl: user.websiteUrl || "",
@@ -273,10 +208,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
       coverCropX: coverCropValues.x,
       coverCropY: coverCropValues.y,
       coverCropZoom: coverCropValues.zoom,
-      skills: values.skills
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
+      skills: values.skills.split(",").map((item) => item.trim()).filter(Boolean),
       customLinks: user.customLinks || [],
     };
   }, [user]);
@@ -289,11 +221,9 @@ export function ProfileForm({ user }: { user: DbUser }) {
     const nextUsername = values.username.trim();
     if (nextUsername && nextUsername !== currentUsername) {
       const confirmed = window.confirm(
-        `Kamu akan mengganti username dari @${currentUsername || "creator"} menjadi @${nextUsername}. Username hanya bisa diubah maksimal ${USERNAME_MAX_CHANGES} kali per ${USERNAME_WINDOW_DAYS} hari. Lanjutkan?`
+        `Ganti username dari @${currentUsername || "creator"} ke @${nextUsername}? (Maks ${USERNAME_MAX_CHANGES}x per ${USERNAME_WINDOW_DAYS} hari)`
       );
-      if (!confirmed) {
-        return;
-      }
+      if (!confirmed) return;
     }
 
     const response = await fetch("/api/profile", {
@@ -302,9 +232,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
       body: JSON.stringify(buildProfilePayload(values)),
     });
 
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: string }
-      | null;
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
 
     if (!response.ok) {
       setError(payload?.error ?? "Gagal memperbarui profil.");
@@ -316,26 +244,17 @@ export function ProfileForm({ user }: { user: DbUser }) {
   });
 
   useEffect(() => {
-    if (!form.formState.isDirty || form.formState.isSubmitting) {
-      return;
-    }
+    if (!form.formState.isDirty || form.formState.isSubmitting) return;
 
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-    }
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
 
     autosaveTimerRef.current = setTimeout(async () => {
       const nextUsername = form.getValues("username").trim();
       const currentUsername = user.username || "";
-
-      if (nextUsername !== currentUsername) {
-        return;
-      }
+      if (nextUsername !== currentUsername) return;
 
       const valid = await form.trigger(undefined, { shouldFocus: false });
-      if (!valid) {
-        return;
-      }
+      if (!valid) return;
 
       setAutoSaveLabel("saving");
       const response = await fetch("/api/profile", {
@@ -354,130 +273,60 @@ export function ProfileForm({ user }: { user: DbUser }) {
       router.refresh();
     }, 1200);
 
-    return () => {
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current);
-      }
-    };
+    return () => { if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current); };
   }, [
-    form,
-    form.formState.isDirty,
-    form.formState.isSubmitting,
-    buildProfilePayload,
-    router,
-    user.username,
-    watchedAddress,
-    watchedAvatar,
-    watchedBio,
-    watchedBirthDate,
-    watchedCity,
-    watchedCover,
-    watchedExperience,
-    watchedName,
-    watchedRole,
-    watchedUsername,
+    form, form.formState.isDirty, form.formState.isSubmitting,
+    buildProfilePayload, router, user.username,
+    watchedAvatar, watchedBio, watchedBirthDate, watchedCity,
+    watchedCover, watchedExperience, watchedName, watchedRole, watchedUsername,
   ]);
 
   return (
     <>
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-        {/* ── Main Form Column ── */}
-        <div className="min-w-0 space-y-4">
-          {/* Page Header */}
-          <div className="bento-card bento-card-full">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h1 className="font-display text-xl font-semibold text-slate-900 sm:text-2xl">
-                  {dictionary.editProfile}
-                </h1>
-                <p className="mt-1 text-sm text-slate-500">
-                  Kelola identitas creator dari satu halaman yang rapi.
-                </p>
-              </div>
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
-                {autoSaveLabel === "saving"
-                  ? "⏳ Menyimpan..."
-                  : autoSaveLabel === "saved"
-                    ? "✓ Tersimpan"
-                    : autoSaveLabel === "error"
-                      ? "⚠ Gagal simpan"
-                      : "Auto-save aktif"}
-              </span>
-            </div>
-          </div>
+      <div className="mx-auto w-full max-w-3xl space-y-4">
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-slate-900">
+            {dictionary.editProfile}
+          </h1>
+          <span className="text-xs text-slate-400">
+            {autoSaveLabel === "saving" ? "Menyimpan..." : autoSaveLabel === "saved" ? "✓ Tersimpan" : autoSaveLabel === "error" ? "⚠ Error" : ""}
+          </span>
+        </div>
 
-          <form onSubmit={onSubmit} className="space-y-4">
-            {/* Bento Grid */}
-            <div className="bento-profile-grid">
-              {/* ── Visual Profile Card ── */}
-              <div className="bento-card">
-                <div className="mb-4 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-slate-600" />
-                  <h2 className="text-sm font-semibold text-slate-900">
-                    Visual Profile
-                  </h2>
+        <form onSubmit={onSubmit} className="space-y-4">
+          {/* ── Cover & Avatar Card ── */}
+          <div className="bento-card p-0 overflow-hidden">
+            {/* Cover */}
+            <div
+              className="relative w-full aspect-[3/1] bg-gradient-to-br from-slate-100 to-slate-50"
+              style={
+                previewCover
+                  ? getBackgroundImageCropStyle(previewCover, coverCrop, "linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.12))")
+                  : undefined
+              }
+            >
+              {/* Avatar overlay */}
+              <div className="absolute -bottom-8 left-5 sm:left-6">
+                <div className="rounded-full ring-4 ring-white">
+                  <AvatarBadge
+                    name={watchedName || user.name || "Creator"}
+                    avatarUrl={previewAvatar}
+                    crop={avatarCrop}
+                    size="lg"
+                  />
                 </div>
+              </div>
+            </div>
 
-                {/* Cover Preview */}
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Cover Creator
-                  </label>
-                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
-                    <div
-                      className="relative aspect-video w-full"
-                      style={
-                        previewCover
-                          ? getBackgroundImageCropStyle(
-                              previewCover,
-                              coverCrop,
-                              "linear-gradient(180deg, rgba(15,23,42,0.06), rgba(15,23,42,0.18))"
-                            )
-                          : undefined
-                      }
-                    >
-                      <div className="absolute inset-0 flex items-end justify-between gap-3 p-3">
-                        <p className="text-xs text-slate-600">
-                          {previewCover ? "Cover siap." : "Tempel URL cover."}
-                        </p>
-                        <AvatarBadge
-                          name={watchedName || user.name || "Creator"}
-                          avatarUrl={previewAvatar}
-                          crop={avatarCrop}
-                          size="lg"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {previewCover ? (
-                      <>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setActiveCropTarget("cover")}
-                        >
-                          Crop Cover
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            form.setValue("coverImageUrl", "", { shouldDirty: true, shouldValidate: true });
-                            form.setValue("coverCropX", 0, { shouldDirty: true });
-                            form.setValue("coverCropY", 0, { shouldDirty: true });
-                            form.setValue("coverCropZoom", 100, { shouldDirty: true });
-                          }}
-                        >
-                          Hapus
-                        </Button>
-                      </>
-                    ) : null}
-                  </div>
+            {/* Cover/Avatar controls */}
+            <div className="px-5 pt-12 pb-4 sm:px-6">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-500">Cover URL</label>
                   <Input
-                    placeholder="Tempel link cover image atau Google Drive..."
+                    className="text-sm"
+                    placeholder="https://..."
                     {...form.register("coverImageUrl", {
                       onBlur: (event) => {
                         const normalized = normalizeAvatarUrl(event.target.value);
@@ -491,45 +340,13 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       },
                     })}
                   />
-                  <p className="text-xs text-rose-600">
-                    {form.formState.errors.coverImageUrl?.message}
-                  </p>
+                  <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.coverImageUrl?.message}</p>
                 </div>
-
-                {/* Avatar */}
-                <div className="mt-5 space-y-3">
-                  <label className="block text-sm font-medium text-slate-700">
-                    Avatar Profil
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {previewAvatar ? (
-                      <>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setActiveCropTarget("avatar")}
-                        >
-                          Crop Avatar
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            form.setValue("avatarUrl", "", { shouldDirty: true, shouldValidate: true });
-                            form.setValue("avatarCropX", 0, { shouldDirty: true });
-                            form.setValue("avatarCropY", 0, { shouldDirty: true });
-                            form.setValue("avatarCropZoom", 100, { shouldDirty: true });
-                          }}
-                        >
-                          Hapus
-                        </Button>
-                      </>
-                    ) : null}
-                  </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-500">Avatar URL</label>
                   <Input
-                    placeholder="Tempel link gambar atau Google Drive..."
+                    className="text-sm"
+                    placeholder="https://..."
                     {...form.register("avatarUrl", {
                       onBlur: (event) => {
                         const normalized = normalizeAvatarUrl(event.target.value);
@@ -543,348 +360,156 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       },
                     })}
                   />
-                  <p className="text-xs text-rose-600">
-                    {form.formState.errors.avatarUrl?.message}
-                  </p>
-                  <FieldHint>
-                    Gunakan URL gambar publik (http/https atau Google Drive).
-                  </FieldHint>
+                  <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.avatarUrl?.message}</p>
                 </div>
               </div>
-
-              {/* ── Identity Card ── */}
-              <div className="bento-card">
-                <div className="mb-4 flex items-center gap-2">
-                  <UserRoundPen className="h-4 w-4 text-slate-600" />
-                  <h2 className="text-sm font-semibold text-slate-900">
-                    Identitas Utama
-                  </h2>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Nama Lengkap
-                    </label>
-                    <Input {...form.register("fullName")} />
-                    <p className="mt-1 text-xs text-rose-600">
-                      {form.formState.errors.fullName?.message}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Role Utama
-                    </label>
-                    <Input
-                      placeholder="Contoh: Video Editor, Videografer"
-                      {...form.register("role")}
-                    />
-                    <FieldHint>
-                      Role tampil di profile untuk membantu client memahami keahlian kamu.
-                    </FieldHint>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Username
-                    </label>
-                    <Input {...form.register("username")} />
-                    <p className="mt-1 text-xs text-rose-600">
-                      {form.formState.errors.username?.message}
-                    </p>
-                    <FieldHint>
-                      Maks {USERNAME_MAX_CHANGES}x ubah per {USERNAME_WINDOW_DAYS} hari.
-                      {usernameQuota.resetLabel
-                        ? ` Reset: ${usernameQuota.resetLabel}.`
-                        : ""}
-                    </FieldHint>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                        Tanggal Lahir
-                      </label>
-                      <Input type="date" {...form.register("birthDate")} />
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                        Kota Tinggal
-                      </label>
-                      <Input
-                        placeholder="Contoh: Yogyakarta"
-                        {...form.register("city")}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Bio & Experience Card (full width) ── */}
-              <div className="bento-card bento-card-full">
-                <div className="mb-4 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-slate-600" />
-                  <h2 className="text-sm font-semibold text-slate-900">
-                    Bio & Experience
-                  </h2>
-                </div>
-                <div className="grid gap-5 lg:grid-cols-2">
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Bio
-                    </label>
-                    <div className="mb-2 flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="h-8 w-8 rounded-full p-0"
-                        onClick={() => appendTextBlock("bio", "bullet")}
-                        aria-label="Tambah point ke bio"
-                        title="Tambah point"
-                      >
-                        <List className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 rounded-full p-0"
-                        onClick={() => appendTextBlock("bio", "paragraph")}
-                        aria-label="Tambah paragraf ke bio"
-                        title="Tambah paragraf"
-                      >
-                        <Pilcrow className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                    <Textarea className="min-h-28 resize-y" {...form.register("bio")} />
-                    <p className="mt-1 text-xs text-rose-600">
-                      {form.formState.errors.bio?.message}
-                    </p>
-                    <FieldHint>
-                      Mendukung emoji, bullet, dan paragraf pendek.
-                    </FieldHint>
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Experience
-                    </label>
-                    <div className="mb-2 flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="h-8 w-8 rounded-full p-0"
-                        onClick={() => appendTextBlock("experience", "bullet")}
-                        aria-label="Tambah point ke experience"
-                        title="Tambah point"
-                      >
-                        <List className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 rounded-full p-0"
-                        onClick={() => appendTextBlock("experience", "paragraph")}
-                        aria-label="Tambah paragraf ke experience"
-                        title="Tambah paragraf"
-                      >
-                        <Pilcrow className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                    <Textarea className="min-h-28 resize-y" {...form.register("experience")} />
-                    <p className="mt-1 text-xs text-rose-600">
-                      {form.formState.errors.experience?.message}
-                    </p>
-                    <FieldHint>
-                      Pengalaman mendukung emoji, bullet, dan paragraf.
-                    </FieldHint>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Skills Card ── */}
-              <div className="bento-card">
-                <div className="mb-4 flex items-center gap-2">
-                  <Tag className="h-4 w-4 text-slate-600" />
-                  <h2 className="text-sm font-semibold text-slate-900">
-                    Skills
-                  </h2>
-                </div>
-                <Input
-                  placeholder="Video editor, drone, event recap, short form"
-                  {...form.register("skills")}
-                />
-                <p className="mt-1 text-xs text-rose-600">
-                  {form.formState.errors.skills?.message}
-                </p>
-                <FieldHint>
-                  Pisahkan dengan koma. Tampil sebagai tag di profil publik.
-                </FieldHint>
-              </div>
-
-              {/* ── Internal Address Card ── */}
-              <div className="bento-card">
-                <div className="mb-4 flex items-center gap-2">
-                  <MapPinHouse className="h-4 w-4 text-slate-600" />
-                  <h2 className="text-sm font-semibold text-slate-900">
-                    Alamat Internal
-                  </h2>
-                  <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
-                    Dashboard only
-                  </span>
-                </div>
-                <Textarea
-                  className="min-h-20 resize-y"
-                  placeholder="Alamat ini hanya terlihat di dashboard, tidak tampil di profil publik."
-                  {...form.register("address")}
-                />
-                <p className="mt-1 text-xs text-rose-600">
-                  {form.formState.errors.address?.message}
-                </p>
-                <FieldHint>
-                  Cocok untuk menyimpan alamat internal, kebutuhan invoice, atau pengiriman alat.
-                </FieldHint>
-              </div>
-
-              {/* ── Build Link Redirect Card (full width) ── */}
-              <div className="bento-card-subtle bento-card-full">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200">
-                      <Link2 className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        Kontak, social media & link
-                      </p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
-                        Kelola tombol, social media, kontak publik, dan block dari halaman Build Link.
-                      </p>
-                    </div>
-                  </div>
-                  <Link href="/dashboard/link-builder">
-                    <Button type="button" variant="secondary" size="sm">
-                      Buka Build Link
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Actions ── */}
-            <div className="bento-card">
-              {message ? (
-                <p className="mb-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                  {message}
-                </p>
-              ) : null}
-              {error ? (
-                <p className="mb-3 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                  {error}
-                </p>
-              ) : null}
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
-                </Button>
-                <Link href={publicProfileHref}>
-                  <Button type="button" variant="secondary">
-                    Lihat Profil Publik
+              <div className="mt-3 flex flex-wrap gap-2">
+                {previewCover ? (
+                  <Button type="button" variant="secondary" size="sm" onClick={() => setActiveCropTarget("cover")}>
+                    Crop Cover
                   </Button>
+                ) : null}
+                {previewAvatar ? (
+                  <Button type="button" variant="secondary" size="sm" onClick={() => setActiveCropTarget("avatar")}>
+                    Crop Avatar
+                  </Button>
+                ) : null}
+                {previewCover ? (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => {
+                    form.setValue("coverImageUrl", "", { shouldDirty: true, shouldValidate: true });
+                    form.setValue("coverCropX", 0, { shouldDirty: true });
+                    form.setValue("coverCropY", 0, { shouldDirty: true });
+                    form.setValue("coverCropZoom", 100, { shouldDirty: true });
+                  }}>
+                    Hapus Cover
+                  </Button>
+                ) : null}
+                {previewAvatar ? (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => {
+                    form.setValue("avatarUrl", "", { shouldDirty: true, shouldValidate: true });
+                    form.setValue("avatarCropX", 0, { shouldDirty: true });
+                    form.setValue("avatarCropY", 0, { shouldDirty: true });
+                    form.setValue("avatarCropZoom", 100, { shouldDirty: true });
+                  }}>
+                    Hapus Avatar
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Identity Card ── */}
+          <div className="bento-card">
+            <div className="mb-3 flex items-center gap-2">
+              <UserRoundPen className="h-4 w-4 text-slate-500" />
+              <h2 className="text-sm font-semibold text-slate-800">Identitas</h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500">Nama Lengkap</label>
+                <Input className="text-sm" {...form.register("fullName")} />
+                <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.fullName?.message}</p>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500">Role</label>
+                <Input className="text-sm" placeholder="Video Editor, Videografer" {...form.register("role")} />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500">Username</label>
+                <Input className="text-sm" {...form.register("username")} />
+                <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.username?.message}</p>
+                {usernameQuota.willConsume && (
+                  <p className="mt-0.5 text-[11px] text-amber-600">Sisa {usernameQuota.remaining} perubahan</p>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-500">Lahir</label>
+                  <Input className="text-sm" type="date" {...form.register("birthDate")} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-500">Kota</label>
+                  <Input className="text-sm" placeholder="Yogyakarta" {...form.register("city")} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Bio & Experience Card ── */}
+          <div className="bento-card">
+            <div className="mb-3 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-slate-500" />
+              <h2 className="text-sm font-semibold text-slate-800">Bio & Experience</h2>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-xs font-medium text-slate-500">Bio</label>
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => appendTextBlock("bio", "bullet")} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600" title="Bullet">
+                      <List className="h-3.5 w-3.5" />
+                    </button>
+                    <button type="button" onClick={() => appendTextBlock("bio", "paragraph")} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600" title="Paragraf">
+                      <Pilcrow className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <Textarea className="min-h-24 resize-y text-sm" {...form.register("bio")} />
+                <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.bio?.message}</p>
+              </div>
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-xs font-medium text-slate-500">Experience</label>
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => appendTextBlock("experience", "bullet")} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600" title="Bullet">
+                      <List className="h-3.5 w-3.5" />
+                    </button>
+                    <button type="button" onClick={() => appendTextBlock("experience", "paragraph")} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600" title="Paragraf">
+                      <Pilcrow className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <Textarea className="min-h-24 resize-y text-sm" {...form.register("experience")} />
+                <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.experience?.message}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Skills Card ── */}
+          <div className="bento-card">
+            <div className="mb-3 flex items-center gap-2">
+              <Tag className="h-4 w-4 text-slate-500" />
+              <h2 className="text-sm font-semibold text-slate-800">Skills</h2>
+            </div>
+            <Input className="text-sm" placeholder="Video editor, drone, event recap, short form" {...form.register("skills")} />
+            <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.skills?.message}</p>
+          </div>
+
+          {/* ── Build Link Redirect ── */}
+          <div className="bento-card-subtle flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <Link2 className="h-4 w-4 text-slate-400" />
+              <p className="text-sm text-slate-600">
+                Kontak, social media & link →{" "}
+                <Link href="/dashboard/link-builder" className="font-medium text-slate-900 underline-offset-2 hover:underline">
+                  Build Link
                 </Link>
-              </div>
-            </div>
-          </form>
-        </div>
-
-        {/* ── Sidebar Preview ── */}
-        <div className="min-w-0 xl:sticky xl:top-24 xl:h-fit">
-          <div className="bento-card space-y-4">
-            <h2 className="text-sm font-semibold text-slate-900">
-              {dictionary.publicProfile}
-            </h2>
-
-            {/* Cover Preview */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
-              <div
-                className="aspect-video w-full"
-                style={
-                  previewCover
-                    ? {
-                        backgroundImage: `linear-gradient(180deg, rgba(15,23,42,0.06), rgba(15,23,42,0.18)), url(${previewCover})`,
-                        backgroundPosition: "center",
-                        backgroundRepeat: "no-repeat",
-                        backgroundSize: "cover",
-                      }
-                    : undefined
-                }
-              />
-            </div>
-
-            {/* Identity Preview */}
-            <div className="flex items-center gap-3">
-              <AvatarBadge
-                name={watchedName || user.name || "Creator"}
-                avatarUrl={previewAvatar}
-                size="lg"
-              />
-              <div className="min-w-0">
-                <p className="truncate font-semibold text-slate-900">
-                  {watchedName || user.name}
-                </p>
-                <p className="truncate text-sm font-medium text-slate-600">
-                  {watchedRole || user.role || "Role belum diisi"}
-                </p>
-                <p className="text-xs text-slate-500">
-                  @{watchedUsername || user.username}
-                </p>
-              </div>
-            </div>
-
-            {/* Summary */}
-            <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-sm text-slate-700">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Ringkasan
-              </p>
-              <div className="mt-2 space-y-1 text-xs text-slate-600">
-                <p>Umur: {age !== null ? `${age} tahun` : "Belum diatur"}</p>
-                <p>Kota: {watchedCity || user.city || "Belum diisi"}</p>
-              </div>
-            </div>
-
-            {/* Bio Preview */}
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Bio
-              </p>
-              <ProfileRichText
-                content={watchedBio}
-                emptyLabel="Bio akan tampil di sini saat diisi."
-              />
-            </div>
-
-            {/* Experience Preview */}
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Experience
-              </p>
-              <ProfileRichText
-                content={watchedExperience}
-                emptyLabel="Experience akan tampil di sini saat diisi."
-              />
-            </div>
-
-            {/* Internal Address */}
-            <div className="rounded-xl border border-amber-100 bg-amber-50/40 p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
-                Alamat internal (tidak publik)
-              </p>
-              <p className="mt-1 break-words text-xs text-slate-600">
-                {watchedAddress || user.address || "Belum diisi."}
               </p>
             </div>
           </div>
-        </div>
+
+          {/* ── Actions ── */}
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            {message && <p className="w-full rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{message}</p>}
+            {error && <p className="w-full rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Menyimpan..." : "Simpan"}
+            </Button>
+            <Link href={publicProfileHref}>
+              <Button type="button" variant="secondary">Lihat Profil</Button>
+            </Link>
+          </div>
+        </form>
       </div>
 
       {/* ── Crop Dialogs ── */}
@@ -893,7 +518,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
           key={`cover-${normalizedWatchedCover}-${coverCrop.x}-${coverCrop.y}-${coverCrop.zoom}`}
           open
           title="Crop Cover"
-          aspectRatio={16 / 9}
+          aspectRatio={3}
           imageSrc={normalizedWatchedCover}
           initialCrop={coverCrop}
           onCancel={() => setActiveCropTarget(null)}
