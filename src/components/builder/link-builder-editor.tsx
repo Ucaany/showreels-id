@@ -44,7 +44,6 @@ import {
   PlayCircle,
   PencilLine,
   Plus,
-  Rocket,
   Save,
   Search,
   Share2,
@@ -1003,37 +1002,7 @@ export function LinkBuilderEditor({
     });
   };
 
-  const handlePublish = async () => {
-    const profileSaved = await saveProfileNow();
-    if (profileSaved === false) return;
-    setIsSavingNow(true);
-    const response = await fetch("/api/link-page/publish", { method: "POST" });
-    const payload = (await response.json().catch(() => null)) as
-      | { links?: EditableLink[]; error?: string; code?: string; message?: string }
-      | null;
-    setIsSavingNow(false);
-
-    if (!response.ok || !payload?.links) {
-      if (payload?.code === "LINK_LIMIT_REACHED") {
-        await showFreeLimitModal();
-        return;
-      }
-      await showFeedbackAlert({
-        title: "Publish gagal",
-        text: payload?.error || payload?.message || "Coba ulang beberapa saat lagi.",
-        icon: "error",
-      });
-      return;
-    }
-
-    setLinks(payload.links.map((link) => ({ ...link, isDirty: false })));
-    await showFeedbackAlert({
-      title: "Build Link dipublish",
-      text: "Draft kamu sekarang tampil di halaman publik.",
-      icon: "success",
-      timer: 1400,
-    });
-  };
+  // No separate publish needed — all saves go live immediately
 
   const handleGenerateBio = async () => {
     if (!profileFields.role.trim() && experienceItems.length === 0) {
@@ -2003,11 +1972,10 @@ export function LinkBuilderEditor({
           <button
             type="button"
             className="inline-flex h-11 items-center justify-center rounded-xl bg-[#2f73ff] text-white disabled:opacity-50"
-            aria-label="Publish"
-            onClick={handlePublish}
-            disabled={isSavingNow}
+            aria-label="Copy Link"
+            onClick={handleCopyPublicLink}
           >
-            <Rocket className="h-5 w-5" />
+            <Copy className="h-5 w-5" />
           </button>
           <button
             type="button"

@@ -6,7 +6,7 @@ import { buildLinkLockedJsonResponse, requireBuildLinkAccess } from "@/server/li
 import {
   countActiveLinks,
   getEditableLinks,
-  saveLinkBuilderDraft,
+  publishLinkBuilderDraft,
   validateLinkLimit,
 } from "@/server/link-builder-storage";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
@@ -85,10 +85,10 @@ export async function PATCH(
     return NextResponse.json(limitState, { status: 403 });
   }
 
-  const savedLinks = await saveLinkBuilderDraft(currentUser.id, nextLinks);
+  const result = await publishLinkBuilderDraft(currentUser.id, nextLinks);
 
   return NextResponse.json({
-    links: savedLinks,
-    status: "draft_saved",
+    links: result.links,
+    status: "published",
   });
 }

@@ -3,7 +3,7 @@ import { linkDraftSchema, normalizeOrder } from "@/lib/link-builder";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 import { requireBuildLinkAccess } from "@/server/link-builder-access";
-import { saveLinkBuilderDraft, validateLinkLimit } from "@/server/link-builder-storage";
+import { publishLinkBuilderDraft, validateLinkLimit } from "@/server/link-builder-storage";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -41,6 +41,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json(limitState, { status: 403 });
   }
 
-  const links = await saveLinkBuilderDraft(currentUser.id, nextLinks);
-  return NextResponse.json({ links, status: "draft_saved" });
+  const result = await publishLinkBuilderDraft(currentUser.id, nextLinks);
+  return NextResponse.json({ links: result.links, status: "published" });
 }

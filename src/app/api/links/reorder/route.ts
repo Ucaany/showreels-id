@@ -6,7 +6,7 @@ import {
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 import { buildLinkLockedJsonResponse, requireBuildLinkAccess } from "@/server/link-builder-access";
-import { getEditableLinks, saveLinkBuilderDraft } from "@/server/link-builder-storage";
+import { getEditableLinks, publishLinkBuilderDraft } from "@/server/link-builder-storage";
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -62,11 +62,11 @@ export async function PATCH(request: Request) {
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
   );
 
-  const savedLinks = await saveLinkBuilderDraft(currentUser.id, nextLinks);
+  const result = await publishLinkBuilderDraft(currentUser.id, nextLinks);
 
   return NextResponse.json({
-    links: savedLinks,
-    status: "draft_saved",
+    links: result.links,
+    status: "published",
   });
 }
 

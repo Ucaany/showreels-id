@@ -10,7 +10,7 @@ import { buildLinkLockedJsonResponse, requireBuildLinkAccess } from "@/server/li
 import {
   getEditableLinks,
   isLinkLimitReached,
-  saveLinkBuilderDraft,
+  publishLinkBuilderDraft,
   validateLinkLimit,
 } from "@/server/link-builder-storage";
 import { markFirstLinkCreated } from "@/server/onboarding";
@@ -87,12 +87,12 @@ export async function POST(request: Request) {
     return NextResponse.json(limitState, { status: 403 });
   }
 
-  const savedLinks = await saveLinkBuilderDraft(currentUser.id, nextLinks);
+  const result = await publishLinkBuilderDraft(currentUser.id, nextLinks);
 
   await markFirstLinkCreated(currentUser.id).catch(() => null);
 
   return NextResponse.json({
-    links: savedLinks,
-    status: "draft_saved",
+    links: result.links,
+    status: "published",
   });
 }
