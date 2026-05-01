@@ -303,7 +303,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
           {/* ── Cover & Avatar Card ── */}
           <div className="bento-card p-0 overflow-hidden lg:col-span-2">
             {/* Cover banner with inline controls */}
-            <div className="group/cover relative w-full aspect-[3/1] bg-gradient-to-br from-slate-100 via-slate-50 to-white">
+            <div className="group/cover relative w-full aspect-[4/1] bg-gradient-to-br from-slate-100 via-slate-50 to-white">
               {previewCover ? (
                 <div
                   className="absolute inset-0 rounded-t-[var(--bento-radius)]"
@@ -480,12 +480,12 @@ export function ProfileForm({ user }: { user: DbUser }) {
           </div>
 
           {/* ── Bio & Experience Card ── */}
-          <div className="bento-card">
+          <div className="bento-card flex flex-col">
             <div className="mb-3 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-slate-500" />
               <h2 className="text-sm font-semibold text-slate-800">Bio & Experience</h2>
             </div>
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid flex-1 gap-3">
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <label className="text-xs font-medium text-slate-500">Bio</label>
@@ -498,7 +498,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
                     </button>
                   </div>
                 </div>
-                <Textarea className="min-h-24 resize-y text-sm" {...form.register("bio")} />
+                <Textarea className="min-h-[5.5rem] resize-y text-sm" {...form.register("bio")} />
                 <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.bio?.message}</p>
               </div>
               <div>
@@ -513,32 +513,32 @@ export function ProfileForm({ user }: { user: DbUser }) {
                     </button>
                   </div>
                 </div>
-                <Textarea className="min-h-24 resize-y text-sm" {...form.register("experience")} />
+                <Textarea className="min-h-[5.5rem] resize-y text-sm" {...form.register("experience")} />
                 <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.experience?.message}</p>
               </div>
             </div>
           </div>
 
-          {/* ── Skills Card ── */}
-          <div className="bento-card">
-            <div className="mb-3 flex items-center gap-2">
-              <Tag className="h-4 w-4 text-slate-500" />
-              <h2 className="text-sm font-semibold text-slate-800">Skills</h2>
-            </div>
-            <Input className="text-sm" placeholder="Video editor, drone, event recap, short form" {...form.register("skills")} />
-            <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.skills?.message}</p>
-          </div>
-
-          {/* ── Build Link Redirect ── */}
-          <div className="bento-card-subtle flex flex-wrap items-center justify-between gap-3 lg:col-span-2">
-            <div className="flex items-center gap-2.5">
-              <Link2 className="h-4 w-4 text-slate-400" />
-              <p className="text-sm text-slate-600">
-                Kontak, social media & link →{" "}
-                <Link href="/dashboard/link-builder" className="font-medium text-slate-900 underline-offset-2 hover:underline">
-                  Build Link
-                </Link>
-              </p>
+          {/* ── Skills & Build Link Row ── */}
+          <div className="bento-card lg:col-span-2">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex-1">
+                <div className="mb-2 flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-slate-500" />
+                  <h2 className="text-sm font-semibold text-slate-800">Skills</h2>
+                </div>
+                <Input className="text-sm" placeholder="Video editor, drone, event recap, short form" {...form.register("skills")} />
+                <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.skills?.message}</p>
+              </div>
+              <div className="flex items-center gap-2.5 sm:pb-1">
+                <Link2 className="h-4 w-4 text-slate-400" />
+                <p className="text-sm text-slate-600">
+                  Kontak & link →{" "}
+                  <Link href="/dashboard/link-builder" className="font-medium text-slate-900 underline-offset-2 hover:underline">
+                    Build Link
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
 
