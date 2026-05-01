@@ -9,6 +9,7 @@ import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import {
   ArrowDown,
   ArrowUp,
+  Globe,
   Link2,
   List,
   MapPinHouse,
@@ -18,6 +19,13 @@ import {
   Trash2,
   UserRoundPen,
 } from "lucide-react";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+  FaYoutube,
+} from "react-icons/fa6";
+import { SiThreads } from "react-icons/si";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { CustomLinksList } from "@/components/custom-links-list";
 import { ImageCropDialog } from "@/components/dashboard/image-crop-dialog";
@@ -135,6 +143,88 @@ function createCustomLinkId(seed: number) {
   return `custom-link-${Date.now()}-${seed}`;
 }
 
+/* ── Social media username ↔ URL helpers ── */
+
+type SocialPlatformConfig = {
+  key: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconColor: string;
+  prefix: string;
+  buildUrl: (username: string) => string;
+  extractUsername: (url: string) => string;
+  placeholder: string;
+};
+
+function extractFromUrl(url: string, hostnames: string[], pathPrefix = "") {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    if (!hostnames.some((h) => host === h || host.endsWith(`.${h}`))) return url;
+    let path = parsed.pathname.replace(/\/+$/, "");
+    if (pathPrefix && path.toLowerCase().startsWith(pathPrefix.toLowerCase())) {
+      path = path.slice(pathPrefix.length);
+    }
+    return path.replace(/^\/+/, "").replace(/^@/, "") || "";
+  } catch {
+    return url.replace(/^@/, "");
+  }
+}
+
+const SOCIAL_PLATFORMS: SocialPlatformConfig[] = [
+  {
+    key: "instagramUrl",
+    label: "Instagram",
+    icon: FaInstagram,
+    iconColor: "text-pink-600",
+    prefix: "instagram.com/",
+    buildUrl: (u) => (u ? `https://instagram.com/${u}` : ""),
+    extractUsername: (url) => extractFromUrl(url, ["instagram.com"]),
+    placeholder: "username",
+  },
+  {
+    key: "youtubeUrl",
+    label: "YouTube",
+    icon: FaYoutube,
+    iconColor: "text-red-600",
+    prefix: "youtube.com/@",
+    buildUrl: (u) => (u ? `https://www.youtube.com/@${u.replace(/^@/, "")}` : ""),
+    extractUsername: (url) => extractFromUrl(url, ["youtube.com", "youtu.be"]),
+    placeholder: "channel",
+  },
+  {
+    key: "facebookUrl",
+    label: "Facebook",
+    icon: FaFacebookF,
+    iconColor: "text-blue-600",
+    prefix: "facebook.com/",
+    buildUrl: (u) => (u ? `https://facebook.com/${u}` : ""),
+    extractUsername: (url) => extractFromUrl(url, ["facebook.com"]),
+    placeholder: "username",
+  },
+  {
+    key: "threadsUrl",
+    label: "Threads",
+    icon: SiThreads,
+    iconColor: "text-zinc-950",
+    prefix: "threads.net/@",
+    buildUrl: (u) => (u ? `https://www.threads.net/@${u.replace(/^@/, "")}` : ""),
+    extractUsername: (url) => extractFromUrl(url, ["threads.net"]),
+    placeholder: "username",
+  },
+  {
+    key: "linkedinUrl",
+    label: "LinkedIn",
+    icon: FaLinkedinIn,
+    iconColor: "text-sky-700",
+    prefix: "linkedin.com/in/",
+    buildUrl: (u) => (u ? `https://www.linkedin.com/in/${u}` : ""),
+    extractUsername: (url) => extractFromUrl(url, ["linkedin.com"], "/in"),
+    placeholder: "username",
+  },
+];
+
 function getUsernameQuota(user: DbUser, nextUsername: string) {
   const originalUsername = user.username || "";
   const normalizedNext = nextUsername.trim();
@@ -230,11 +320,11 @@ export function ProfileForm({ user }: { user: DbUser }) {
       contactEmail: user.contactEmail || "",
       phoneNumber: user.phoneNumber || "",
       websiteUrl: user.websiteUrl || "",
-      instagramUrl: user.instagramUrl || "",
-      youtubeUrl: user.youtubeUrl || "",
-      facebookUrl: user.facebookUrl || "",
-      threadsUrl: user.threadsUrl || "",
-      linkedinUrl: user.linkedinUrl || "",
+      instagramUrl: SOCIAL_PLATFORMS[0].extractUsername(user.instagramUrl || ""),
+      youtubeUrl: SOCIAL_PLATFORMS[1].extractUsername(user.youtubeUrl || ""),
+      facebookUrl: SOCIAL_PLATFORMS[2].extractUsername(user.facebookUrl || ""),
+      threadsUrl: SOCIAL_PLATFORMS[3].extractUsername(user.threadsUrl || ""),
+      linkedinUrl: SOCIAL_PLATFORMS[4].extractUsername(user.linkedinUrl || ""),
       customLinks: normalizeCustomLinks(user.customLinks).map((link) => ({
         id: link.id,
         title: link.title,
@@ -435,11 +525,11 @@ export function ProfileForm({ user }: { user: DbUser }) {
       contactEmail: values.contactEmail.trim().toLowerCase(),
       phoneNumber: values.phoneNumber.trim(),
       websiteUrl: normalizeSocialUrl(values.websiteUrl || ""),
-      instagramUrl: normalizeSocialUrl(values.instagramUrl || ""),
-      youtubeUrl: normalizeSocialUrl(values.youtubeUrl || ""),
-      facebookUrl: normalizeSocialUrl(values.facebookUrl || ""),
-      threadsUrl: normalizeSocialUrl(values.threadsUrl || ""),
-      linkedinUrl: normalizeSocialUrl(values.linkedinUrl || ""),
+      instagramUrl: SOCIAL_PLATFORMS[0].buildUrl(values.instagramUrl?.trim() || ""),
+      youtubeUrl: SOCIAL_PLATFORMS[1].buildUrl(values.youtubeUrl?.trim() || ""),
+      facebookUrl: SOCIAL_PLATFORMS[2].buildUrl(values.facebookUrl?.trim() || ""),
+      threadsUrl: SOCIAL_PLATFORMS[3].buildUrl(values.threadsUrl?.trim() || ""),
+      linkedinUrl: SOCIAL_PLATFORMS[4].buildUrl(values.linkedinUrl?.trim() || ""),
       avatarCropX: avatarCropValues.x,
       avatarCropY: avatarCropValues.y,
       avatarCropZoom: avatarCropValues.zoom,
@@ -977,51 +1067,35 @@ export function ProfileForm({ user }: { user: DbUser }) {
                       {...form.register("websiteUrl")}
                     />
                   </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Instagram
-                    </label>
-                    <Input
-                      placeholder="instagram.com/username"
-                      {...form.register("instagramUrl")}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      YouTube Channel
-                    </label>
-                    <Input
-                      placeholder="youtube.com/@channel"
-                      {...form.register("youtubeUrl")}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Facebook
-                    </label>
-                    <Input
-                      placeholder="facebook.com/username"
-                      {...form.register("facebookUrl")}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Threads
-                    </label>
-                    <Input
-                      placeholder="threads.net/@username"
-                      {...form.register("threadsUrl")}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      LinkedIn
-                    </label>
-                    <Input
-                      placeholder="linkedin.com/in/username"
-                      {...form.register("linkedinUrl")}
-                    />
-                  </div>
+                  {SOCIAL_PLATFORMS.map((platform) => {
+                    const Icon = platform.icon;
+                    return (
+                      <div key={platform.key}>
+                        <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+                          <Icon className={`h-4 w-4 ${platform.iconColor}`} />
+                          {platform.label}
+                        </label>
+                        <div className="flex items-stretch">
+                          <span className="inline-flex items-center rounded-l-lg border border-r-0 border-slate-200 bg-slate-50 px-3 text-xs text-slate-500 select-none">
+                            {platform.prefix}
+                          </span>
+                          <Input
+                            className="rounded-l-none"
+                            placeholder={platform.placeholder}
+                            {...form.register(platform.key as keyof FormValues, {
+                              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                                const raw = e.target.value;
+                                const cleaned = platform.extractUsername(raw);
+                                if (cleaned !== raw) {
+                                  form.setValue(platform.key as keyof FormValues, cleaned as never);
+                                }
+                              },
+                            })}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                   <div className="sm:col-span-2">
                     <label className="mb-2 block text-sm font-medium text-slate-700">
                       Skills
@@ -1325,21 +1399,11 @@ export function ProfileForm({ user }: { user: DbUser }) {
             </div>
             <SocialLinks
               websiteUrl={normalizeSocialUrl(watchedWebsiteUrl || user.websiteUrl || "")}
-              instagramUrl={normalizeSocialUrl(
-                watchedInstagram || user.instagramUrl || ""
-              )}
-              youtubeUrl={normalizeSocialUrl(
-                watchedYoutube || user.youtubeUrl || ""
-              )}
-              facebookUrl={normalizeSocialUrl(
-                watchedFacebook || user.facebookUrl || ""
-              )}
-              threadsUrl={normalizeSocialUrl(
-                watchedThreads || user.threadsUrl || ""
-              )}
-              linkedinUrl={normalizeSocialUrl(
-                watchedLinkedin || user.linkedinUrl || ""
-              )}
+              instagramUrl={SOCIAL_PLATFORMS[0].buildUrl(watchedInstagram?.trim() || SOCIAL_PLATFORMS[0].extractUsername(user.instagramUrl || ""))}
+              youtubeUrl={SOCIAL_PLATFORMS[1].buildUrl(watchedYoutube?.trim() || SOCIAL_PLATFORMS[1].extractUsername(user.youtubeUrl || ""))}
+              facebookUrl={SOCIAL_PLATFORMS[2].buildUrl(watchedFacebook?.trim() || SOCIAL_PLATFORMS[2].extractUsername(user.facebookUrl || ""))}
+              threadsUrl={SOCIAL_PLATFORMS[3].buildUrl(watchedThreads?.trim() || SOCIAL_PLATFORMS[3].extractUsername(user.threadsUrl || ""))}
+              linkedinUrl={SOCIAL_PLATFORMS[4].buildUrl(watchedLinkedin?.trim() || SOCIAL_PLATFORMS[4].extractUsername(user.linkedinUrl || ""))}
             />
           </Card>
         </div>

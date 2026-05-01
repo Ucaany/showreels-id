@@ -20,6 +20,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+  FaYoutube,
+} from "react-icons/fa6";
+import { SiThreads } from "react-icons/si";
+import {
   ArrowDown,
   ArrowUp,
   ChevronDown,
@@ -27,6 +34,7 @@ import {
   Download,
   Eye,
   ExternalLink,
+  Globe,
   GripVertical,
   ImageIcon,
   Link2,
@@ -71,6 +79,88 @@ import {
   parseExperiencePayload,
   serializeExperiencePayload,
 } from "@/lib/experience-items";
+
+/* ── Social media username ↔ URL helpers ── */
+
+type SocialPlatformConfig = {
+  key: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  iconColor: string;
+  prefix: string;
+  buildUrl: (username: string) => string;
+  extractUsername: (url: string) => string;
+  placeholder: string;
+};
+
+function extractFromUrl(url: string, hostnames: string[], pathPrefix = "") {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    if (!hostnames.some((h) => host === h || host.endsWith(`.${h}`))) return url;
+    let path = parsed.pathname.replace(/\/+$/, "");
+    if (pathPrefix && path.toLowerCase().startsWith(pathPrefix.toLowerCase())) {
+      path = path.slice(pathPrefix.length);
+    }
+    return path.replace(/^\/+/, "").replace(/^@/, "") || "";
+  } catch {
+    return url.replace(/^@/, "");
+  }
+}
+
+const SOCIAL_PLATFORMS: SocialPlatformConfig[] = [
+  {
+    key: "instagramUrl",
+    label: "Instagram",
+    icon: FaInstagram,
+    iconColor: "text-pink-600",
+    prefix: "instagram.com/",
+    buildUrl: (u) => (u ? `https://instagram.com/${u}` : ""),
+    extractUsername: (url) => extractFromUrl(url, ["instagram.com"]),
+    placeholder: "username",
+  },
+  {
+    key: "youtubeUrl",
+    label: "YouTube",
+    icon: FaYoutube,
+    iconColor: "text-red-600",
+    prefix: "youtube.com/@",
+    buildUrl: (u) => (u ? `https://www.youtube.com/@${u.replace(/^@/, "")}` : ""),
+    extractUsername: (url) => extractFromUrl(url, ["youtube.com", "youtu.be"]),
+    placeholder: "channel",
+  },
+  {
+    key: "facebookUrl",
+    label: "Facebook",
+    icon: FaFacebookF,
+    iconColor: "text-blue-600",
+    prefix: "facebook.com/",
+    buildUrl: (u) => (u ? `https://facebook.com/${u}` : ""),
+    extractUsername: (url) => extractFromUrl(url, ["facebook.com"]),
+    placeholder: "username",
+  },
+  {
+    key: "threadsUrl",
+    label: "Threads",
+    icon: SiThreads,
+    iconColor: "text-zinc-950",
+    prefix: "threads.net/@",
+    buildUrl: (u) => (u ? `https://www.threads.net/@${u.replace(/^@/, "")}` : ""),
+    extractUsername: (url) => extractFromUrl(url, ["threads.net"]),
+    placeholder: "username",
+  },
+  {
+    key: "linkedinUrl",
+    label: "LinkedIn",
+    icon: FaLinkedinIn,
+    iconColor: "text-sky-700",
+    prefix: "linkedin.com/in/",
+    buildUrl: (u) => (u ? `https://www.linkedin.com/in/${u}` : ""),
+    extractUsername: (url) => extractFromUrl(url, ["linkedin.com"], "/in"),
+    placeholder: "username",
+  },
+];
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 type BuilderSection = "edit" | "links" | "design" | "preview";
@@ -322,11 +412,11 @@ export function LinkBuilderEditor({
     role: user.role || "",
     bio: user.bio || "",
     websiteUrl: user.websiteUrl || "",
-    instagramUrl: user.instagramUrl || "",
-    youtubeUrl: user.youtubeUrl || "",
-    facebookUrl: user.facebookUrl || "",
-    threadsUrl: user.threadsUrl || "",
-    linkedinUrl: user.linkedinUrl || "",
+    instagramUrl: SOCIAL_PLATFORMS[0].extractUsername(user.instagramUrl || ""),
+    youtubeUrl: SOCIAL_PLATFORMS[1].extractUsername(user.youtubeUrl || ""),
+    facebookUrl: SOCIAL_PLATFORMS[2].extractUsername(user.facebookUrl || ""),
+    threadsUrl: SOCIAL_PLATFORMS[3].extractUsername(user.threadsUrl || ""),
+    linkedinUrl: SOCIAL_PLATFORMS[4].extractUsername(user.linkedinUrl || ""),
   });
   const [experienceItems, setExperienceItems] = useState<ExperienceItem[]>(() =>
     parseExperiencePayload(user.experience || "")
@@ -390,11 +480,11 @@ export function LinkBuilderEditor({
       contactEmail: user.contactEmail || "",
       phoneNumber: user.phoneNumber || "",
       websiteUrl: normalizeSocialUrl(profileFields.websiteUrl || ""),
-      instagramUrl: normalizeSocialUrl(profileFields.instagramUrl || ""),
-      youtubeUrl: normalizeSocialUrl(profileFields.youtubeUrl || ""),
-      facebookUrl: normalizeSocialUrl(profileFields.facebookUrl || ""),
-      threadsUrl: normalizeSocialUrl(profileFields.threadsUrl || ""),
-      linkedinUrl: normalizeSocialUrl(profileFields.linkedinUrl || ""),
+      instagramUrl: SOCIAL_PLATFORMS[0].buildUrl(profileFields.instagramUrl?.trim() || ""),
+      youtubeUrl: SOCIAL_PLATFORMS[1].buildUrl(profileFields.youtubeUrl?.trim() || ""),
+      facebookUrl: SOCIAL_PLATFORMS[2].buildUrl(profileFields.facebookUrl?.trim() || ""),
+      threadsUrl: SOCIAL_PLATFORMS[3].buildUrl(profileFields.threadsUrl?.trim() || ""),
+      linkedinUrl: SOCIAL_PLATFORMS[4].buildUrl(profileFields.linkedinUrl?.trim() || ""),
       skills: user.skills || [],
       avatarCropX: user.avatarCropX || 0,
       avatarCropY: user.avatarCropY || 0,
@@ -957,11 +1047,11 @@ export function LinkBuilderEditor({
 
     const socialLinks = [
       profileFields.websiteUrl,
-      profileFields.instagramUrl,
-      profileFields.youtubeUrl,
-      profileFields.facebookUrl,
-      profileFields.threadsUrl,
-      profileFields.linkedinUrl,
+      SOCIAL_PLATFORMS[0].buildUrl(profileFields.instagramUrl || ""),
+      SOCIAL_PLATFORMS[1].buildUrl(profileFields.youtubeUrl || ""),
+      SOCIAL_PLATFORMS[2].buildUrl(profileFields.facebookUrl || ""),
+      SOCIAL_PLATFORMS[3].buildUrl(profileFields.threadsUrl || ""),
+      SOCIAL_PLATFORMS[4].buildUrl(profileFields.linkedinUrl || ""),
     ].filter(Boolean);
 
     setAiLoading(true);
@@ -1323,72 +1413,55 @@ export function LinkBuilderEditor({
                 </span>
                 <ChevronDown className="h-3.5 w-3.5 text-[#5b7198]" />
               </summary>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <Input
-                value={profileFields.websiteUrl}
-                onBlur={(event) =>
-                  setProfileFields((prev) => ({
-                    ...prev,
-                    websiteUrl: normalizeSocialUrl(event.target.value),
-                  }))
-                }
-                onChange={(event) =>
-                  setProfileFields((prev) => ({ ...prev, websiteUrl: event.target.value }))
-                }
-                placeholder="Website"
-              />
-              <Input
-                value={profileFields.instagramUrl}
-                onBlur={(event) =>
-                  setProfileFields((prev) => ({
-                    ...prev,
-                    instagramUrl: normalizeSocialUrl(event.target.value),
-                  }))
-                }
-                onChange={(event) =>
-                  setProfileFields((prev) => ({ ...prev, instagramUrl: event.target.value }))
-                }
-                placeholder="Instagram"
-              />
-              <Input
-                value={profileFields.youtubeUrl}
-                onBlur={(event) =>
-                  setProfileFields((prev) => ({
-                    ...prev,
-                    youtubeUrl: normalizeSocialUrl(event.target.value),
-                  }))
-                }
-                onChange={(event) =>
-                  setProfileFields((prev) => ({ ...prev, youtubeUrl: event.target.value }))
-                }
-                placeholder="YouTube"
-              />
-              <Input
-                value={profileFields.threadsUrl}
-                onBlur={(event) =>
-                  setProfileFields((prev) => ({
-                    ...prev,
-                    threadsUrl: normalizeSocialUrl(event.target.value),
-                  }))
-                }
-                onChange={(event) =>
-                  setProfileFields((prev) => ({ ...prev, threadsUrl: event.target.value }))
-                }
-                placeholder="Threads"
-              />
-              <Input
-                value={profileFields.linkedinUrl}
-                onBlur={(event) =>
-                  setProfileFields((prev) => ({
-                    ...prev,
-                    linkedinUrl: normalizeSocialUrl(event.target.value),
-                  }))
-                }
-                onChange={(event) =>
-                  setProfileFields((prev) => ({ ...prev, linkedinUrl: event.target.value }))
-                }
-                placeholder="LinkedIn"
-              />
+              <div className="mt-3 grid gap-3">
+                <div>
+                  <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-[#3f5f93]">
+                    <Globe className="h-3.5 w-3.5 text-sky-600" />
+                    Website
+                  </label>
+                  <Input
+                    value={profileFields.websiteUrl}
+                    onBlur={(event) =>
+                      setProfileFields((prev) => ({
+                        ...prev,
+                        websiteUrl: normalizeSocialUrl(event.target.value),
+                      }))
+                    }
+                    onChange={(event) =>
+                      setProfileFields((prev) => ({ ...prev, websiteUrl: event.target.value }))
+                    }
+                    placeholder="https://portfolio-kamu.com"
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {SOCIAL_PLATFORMS.map((platform) => {
+                    const Icon = platform.icon;
+                    const fieldKey = platform.key as keyof typeof profileFields;
+                    return (
+                      <div key={platform.key}>
+                        <label className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-[#3f5f93]">
+                          <Icon className={`h-3.5 w-3.5 ${platform.iconColor}`} />
+                          {platform.label}
+                        </label>
+                        <div className="flex items-stretch">
+                          <span className="inline-flex items-center rounded-l-lg border border-r-0 border-[#d6e2f7] bg-[#eef4ff] px-2.5 text-[11px] text-[#5b7198] select-none">
+                            {platform.prefix}
+                          </span>
+                          <Input
+                            className="rounded-l-none"
+                            value={profileFields[fieldKey]}
+                            onChange={(event) => {
+                              const raw = event.target.value;
+                              const cleaned = platform.extractUsername(raw);
+                              setProfileFields((prev) => ({ ...prev, [fieldKey]: cleaned }));
+                            }}
+                            placeholder={platform.placeholder}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </details>
           </Card>
