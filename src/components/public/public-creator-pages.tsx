@@ -303,40 +303,42 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
         </section>
 
         {/* ── Section Title + View Toggle ── */}
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <h2 className="text-xl font-extrabold tracking-[-0.03em] text-[#111111] sm:text-2xl">
-              Karya Creator
-            </h2>
-            <p className="mt-0.5 text-[13px] text-[#8A8A8A]">
-              {profile.videos.length} project{profile.videos.length !== 1 ? "s" : ""} dipublikasikan
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#E7E5E4]/80 bg-white/80 p-1 shadow-sm backdrop-blur-sm">
-            <Link
-              href={`${getCreatorPortfolioHref(username)}?view=grid`}
-              className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition ${
-                !isList
-                  ? "bg-[#111111] shadow-[0_4px_12px_rgba(17,17,17,0.18)]"
-                  : "text-[#6B6B6B] hover:text-[#111111]"
-              }`}
-              {...(!isList ? { style: { color: '#ffffff' } } : {})}
-            >
-              <Grid2X2 className="h-3.5 w-3.5" />
-              Grid
-            </Link>
-            <Link
-              href={`${getCreatorPortfolioHref(username)}?view=list`}
-              className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition ${
-                isList
-                  ? "bg-[#111111] shadow-[0_4px_12px_rgba(17,17,17,0.18)]"
-                  : "text-[#6B6B6B] hover:text-[#111111]"
-              }`}
-              {...(isList ? { style: { color: '#ffffff' } } : {})}
-            >
-              <List className="h-3.5 w-3.5" />
-              List
-            </Link>
+        <div className="mb-5 rounded-2xl border border-[#E7E5E4]/50 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-sm sm:rounded-[1.25rem]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold tracking-[-0.02em] text-[#111111] sm:text-xl">
+                🎬 Karya Creator
+              </h2>
+              <p className="mt-0.5 text-[12px] font-medium text-[#9A9A9A] sm:text-[13px]">
+                {profile.videos.length} project{profile.videos.length !== 1 ? "s" : ""} dipublikasikan
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] p-0.5">
+              <Link
+                href={`${getCreatorPortfolioHref(username)}?view=grid`}
+                className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold transition sm:text-[13px] ${
+                  !isList
+                    ? "bg-[#111111] shadow-sm"
+                    : "text-[#6B6B6B] hover:text-[#111111]"
+                }`}
+                {...(!isList ? { style: { color: '#ffffff' } } : {})}
+              >
+                <Grid2X2 className="h-3.5 w-3.5" />
+                <span className="hidden min-[360px]:inline">Grid</span>
+              </Link>
+              <Link
+                href={`${getCreatorPortfolioHref(username)}?view=list`}
+                className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold transition sm:text-[13px] ${
+                  isList
+                    ? "bg-[#111111] shadow-sm"
+                    : "text-[#6B6B6B] hover:text-[#111111]"
+                }`}
+                {...(isList ? { style: { color: '#ffffff' } } : {})}
+              >
+                <List className="h-3.5 w-3.5" />
+                <span className="hidden min-[360px]:inline">List</span>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -354,7 +356,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
             </Link>
           </div>
         ) : (
-          <div className={isList ? "grid gap-5" : "grid gap-5 sm:grid-cols-2 xl:grid-cols-3"}>
+          <div className={isList ? "grid gap-4" : "grid gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3"}>
             {profile.videos.map((video) => (
               <PortfolioVideoCard key={video.id} video={video} list={isList} creatorName={creatorName} />
             ))}
@@ -379,11 +381,11 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
     <Link href={getVideoDetailHref(video.publicSlug)} className="group block min-w-0">
       <article
         className={`h-full overflow-hidden rounded-[1.5rem] border border-[#E7E5E4]/60 bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(17,17,17,0.04)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(17,17,17,0.08)] ${
-          list ? "sm:flex sm:gap-0" : ""
+          list ? "md:flex md:gap-0" : ""
         }`}
       >
         {/* Thumbnail with category badge overlay */}
-        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "sm:w-72 sm:shrink-0" : ""}`}>
+        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "md:w-80 md:shrink-0" : ""}`}>
           {thumb ? (
             <Image
               src={thumb}
@@ -407,7 +409,7 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
         </div>
 
         {/* Content */}
-        <div className={`p-4 sm:p-5 ${list ? "flex flex-1 flex-col justify-center" : ""}`}>
+        <div className={`p-4 sm:p-5 ${list ? "flex flex-1 flex-col justify-center md:py-6" : ""}`}>
           {/* Badges row */}
           <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
             <span className="inline-flex items-center rounded-full border border-[#EBEBEB] bg-[#F7F7F7] px-2.5 py-0.5 text-[10.5px] font-semibold text-[#6B6B6B]">
