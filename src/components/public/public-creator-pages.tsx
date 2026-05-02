@@ -119,9 +119,15 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
   const hasCover = Boolean(profile.user.coverImageUrl);
 
   return (
-    <div className={pageShellClass}>
+    <div className={`${pageShellClass} relative`}>
+      {/* Soft blue gradient background — opacity < 40% */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.35]"
+        style={{ background: "radial-gradient(ellipse 80% 60% at 15% 20%, #B8E4F0 0%, transparent 70%), radial-gradient(ellipse 70% 50% at 85% 15%, #C5E8F4 0%, transparent 65%), radial-gradient(ellipse 60% 70% at 50% 80%, #D0ECF6 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 80% 75%, #BDE5F2 0%, transparent 55%)" }}
+      />
       {profile.isOwner && <OwnerEditButton />}
-      <main className="mx-auto flex min-h-screen w-full max-w-[460px] flex-col justify-center px-4 py-6 min-[481px]:max-w-[560px] sm:px-5 sm:py-10 lg:max-w-[640px]">
+      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-[460px] flex-col justify-center px-4 py-6 min-[481px]:max-w-[560px] sm:px-5 sm:py-10 lg:max-w-[640px]">
         <Card className={`${cardClass} overflow-hidden rounded-[1.75rem] p-4 sm:rounded-[2rem] sm:p-5 lg:p-6`}>
           {/* Cover — only rendered if user uploaded a cover image */}
           {hasCover && (
@@ -201,7 +207,7 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
           </div>
         </Card>
       </main>
-      <PublicFooter hidden={profile.whitelabelEnabled} />
+      <div className="relative z-10"><PublicFooter hidden={profile.whitelabelEnabled} /></div>
     </div>
   );
 }
