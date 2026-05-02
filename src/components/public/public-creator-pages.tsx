@@ -292,7 +292,8 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
               {profile.isOwner && (
                 <Link
                   href="/dashboard"
-                  className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-[#111111] px-5 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(17,17,17,0.15)] transition hover:bg-[#1E1E1E] hover:shadow-[0_12px_28px_rgba(17,17,17,0.2)] [&_svg]:text-white"
+                  className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-[#111111] px-5 text-[13px] font-semibold shadow-[0_8px_20px_rgba(17,17,17,0.15)] transition hover:bg-[#1E1E1E] hover:shadow-[0_12px_28px_rgba(17,17,17,0.2)]"
+                  style={{ color: '#ffffff' }}
                 >
                   Kembali ke Dashboard
                 </Link>
@@ -302,23 +303,24 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
         </section>
 
         {/* ── Section Title + View Toggle ── */}
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-2xl font-extrabold tracking-[-0.03em] text-[#111111] sm:text-[1.75rem]">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-xl font-extrabold tracking-[-0.03em] text-[#111111] sm:text-2xl">
               Karya Creator
             </h2>
-            <p className="mt-1 text-sm text-[#8A8A8A]">
+            <p className="mt-0.5 text-[13px] text-[#8A8A8A]">
               {profile.videos.length} project{profile.videos.length !== 1 ? "s" : ""} dipublikasikan
             </p>
           </div>
-          <div className="flex items-center gap-1 rounded-full border border-[#E7E5E4]/80 bg-white/80 p-1 shadow-sm backdrop-blur-sm">
+          <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#E7E5E4]/80 bg-white/80 p-1 shadow-sm backdrop-blur-sm">
             <Link
               href={`${getCreatorPortfolioHref(username)}?view=grid`}
               className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition ${
                 !isList
-                  ? "bg-[#111111] text-white shadow-[0_4px_12px_rgba(17,17,17,0.18)] [&_svg]:text-white"
+                  ? "bg-[#111111] shadow-[0_4px_12px_rgba(17,17,17,0.18)]"
                   : "text-[#6B6B6B] hover:text-[#111111]"
               }`}
+              {...(!isList ? { style: { color: '#ffffff' } } : {})}
             >
               <Grid2X2 className="h-3.5 w-3.5" />
               Grid
@@ -327,9 +329,10 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
               href={`${getCreatorPortfolioHref(username)}?view=list`}
               className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition ${
                 isList
-                  ? "bg-[#111111] text-white shadow-[0_4px_12px_rgba(17,17,17,0.18)] [&_svg]:text-white"
+                  ? "bg-[#111111] shadow-[0_4px_12px_rgba(17,17,17,0.18)]"
                   : "text-[#6B6B6B] hover:text-[#111111]"
               }`}
+              {...(isList ? { style: { color: '#ffffff' } } : {})}
             >
               <List className="h-3.5 w-3.5" />
               List
@@ -344,7 +347,8 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
             <p className="mt-4 text-sm font-medium text-[#6B6B6B]">Belum ada portfolio yang dipublikasikan.</p>
             <Link
               href={bioHref}
-              className="mt-5 inline-flex min-h-[42px] items-center justify-center rounded-full bg-[#111111] px-6 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(17,17,17,0.15)] transition hover:bg-[#1E1E1E] [&_svg]:text-white"
+              className="mt-5 inline-flex min-h-[42px] items-center justify-center rounded-full bg-[#111111] px-6 text-[13px] font-semibold shadow-[0_8px_20px_rgba(17,17,17,0.15)] transition hover:bg-[#1E1E1E]"
+              style={{ color: '#ffffff' }}
             >
               Kembali ke Bio
             </Link>
