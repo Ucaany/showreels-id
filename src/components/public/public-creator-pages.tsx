@@ -356,7 +356,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
             </Link>
           </div>
         ) : (
-          <div className={isList ? "grid gap-4" : "grid gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3"}>
+          <div className={isList ? "grid gap-3 sm:gap-4" : "grid gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3"}>
             {profile.videos.map((video) => (
               <PortfolioVideoCard key={video.id} video={video} list={isList} creatorName={creatorName} />
             ))}
@@ -381,37 +381,37 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
     <Link href={getVideoDetailHref(video.publicSlug)} className="group block min-w-0">
       <article
         className={`h-full overflow-hidden rounded-[1.5rem] border border-[#E7E5E4]/60 bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(17,17,17,0.04)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(17,17,17,0.08)] ${
-          list ? "md:flex md:gap-0" : ""
+          list ? "flex" : ""
         }`}
       >
-        {/* Thumbnail with category badge overlay — portrait for consistent alignment */}
-        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "md:w-64 md:shrink-0" : ""}`}>
+        {/* Thumbnail — 16:9 landscape for both grid and list */}
+        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "w-[160px] min-[480px]:w-[220px] sm:w-[280px] lg:w-[320px] shrink-0" : ""}`}>
           {thumb ? (
             <Image
               src={thumb}
               alt={`Thumbnail ${video.title}`}
               width={405}
-              height={720}
+              height={228}
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-              className={`w-full object-cover transition duration-300 group-hover:scale-[1.03] ${list ? "aspect-[3/4] md:aspect-[9/16]" : "aspect-[3/4]"}`}
+              className={`w-full object-cover transition duration-300 group-hover:scale-[1.03] ${list ? "h-full" : "aspect-video"}`}
               loading="lazy"
               unoptimized
             />
           ) : (
-            <div className={`flex items-center justify-center text-[#C4C4C4] ${list ? "aspect-[3/4] md:aspect-[9/16]" : "aspect-[3/4]"}`}>
+            <div className={`flex items-center justify-center text-[#C4C4C4] ${list ? "h-full aspect-video" : "aspect-video"}`}>
               <Video className="h-7 w-7" />
             </div>
           )}
-          {/* Category badge on image — like Whenevr reference */}
-          <span className="absolute right-3 top-3 rounded-full bg-[#111111] px-3 py-1 text-[11px] font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+          {/* Category badge on image */}
+          <span className="absolute right-2 top-2 rounded-full bg-[#111111] px-2.5 py-0.5 text-[10px] font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] sm:right-3 sm:top-3 sm:px-3 sm:py-1 sm:text-[11px]">
             {categoryLabel}
           </span>
         </div>
 
         {/* Content */}
-        <div className={`p-4 sm:p-5 ${list ? "flex flex-1 flex-col justify-center md:py-6" : ""}`}>
+        <div className={`p-4 sm:p-5 ${list ? "flex flex-1 flex-col justify-center" : ""}`}>
           {/* Badges row */}
-          <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
             <span className="inline-flex items-center rounded-full border border-[#EBEBEB] bg-[#F7F7F7] px-2.5 py-0.5 text-[10.5px] font-semibold text-[#6B6B6B]">
               {sourceLabel}
             </span>
@@ -426,7 +426,7 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
           </h3>
 
           {/* Description */}
-          <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-[#6B6B6B]">
+          <p className={`mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-[#6B6B6B] ${list ? "" : "line-clamp-2"}`}>
             {createTextExcerpt(video.description, 120) || "Deskripsi pendek belum ditambahkan."}
           </p>
 
