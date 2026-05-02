@@ -91,7 +91,7 @@ export function MediaPreviewCarousel({
   const headingLabel = canSlide ? "Preview Media" : "Preview Utama";
   const frameClass =
     aspectRatio === "portrait"
-      ? "mx-auto aspect-[9/16] h-auto max-h-[70vh] w-full max-w-[360px] object-contain"
+      ? "mx-auto aspect-[9/16] h-auto max-h-[70vh] w-full max-w-[420px]"
       : "aspect-video w-full";
   const mediaWrapperClass =
     aspectRatio === "portrait"
@@ -155,7 +155,7 @@ export function MediaPreviewCarousel({
             height={720}
             sizes="(max-width: 1024px) 100vw, 820px"
             unoptimized
-            className={`rounded-2xl border border-slate-200 bg-[#F3F4F6] shadow-card ${aspectRatio === "portrait" ? "object-contain" : "object-cover"} ${frameClass}`}
+            className={`rounded-2xl border border-slate-200 bg-[#F3F4F6] shadow-card object-cover ${frameClass}`}
             loading="lazy"
           />
           {active.type === "cover" && showStatusBadge ? (

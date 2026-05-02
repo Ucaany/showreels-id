@@ -384,21 +384,21 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
           list ? "md:flex md:gap-0" : ""
         }`}
       >
-        {/* Thumbnail with category badge overlay */}
-        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "md:w-80 md:shrink-0" : ""}`}>
+        {/* Thumbnail with category badge overlay — portrait for consistent alignment */}
+        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "md:w-64 md:shrink-0" : ""}`}>
           {thumb ? (
             <Image
               src={thumb}
               alt={`Thumbnail ${video.title}`}
-              width={720}
-              height={405}
+              width={405}
+              height={720}
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-              className="aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+              className={`w-full object-cover transition duration-300 group-hover:scale-[1.03] ${list ? "aspect-[3/4] md:aspect-[9/16]" : "aspect-[3/4]"}`}
               loading="lazy"
               unoptimized
             />
           ) : (
-            <div className="flex aspect-video items-center justify-center text-[#C4C4C4]">
+            <div className={`flex items-center justify-center text-[#C4C4C4] ${list ? "aspect-[3/4] md:aspect-[9/16]" : "aspect-[3/4]"}`}>
               <Video className="h-7 w-7" />
             </div>
           )}
@@ -454,20 +454,56 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
   const portfolioHref = username ? getCreatorPortfolioHref(username) : "/videos";
   const sourceLabel = getSourceLabel(video.source as never);
 
+  const glassCard = "border-[#E7E5E4]/60 bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_12px_32px_rgba(17,17,17,0.05)] backdrop-blur-sm";
+
   return (
-    <div className={pageShellClass}>
-      <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:py-8">
+    <div className="min-h-screen overflow-x-hidden text-[#111111]">
+      {/* Soft blue gradient background — matching bio & portfolio pages */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 60% at 15% 20%, rgba(184,228,240,0.35) 0%, transparent 70%),
+            radial-gradient(ellipse 70% 50% at 85% 15%, rgba(197,232,244,0.30) 0%, transparent 65%),
+            radial-gradient(ellipse 60% 70% at 50% 85%, rgba(208,236,246,0.28) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 40% at 80% 75%, rgba(189,229,242,0.25) 0%, transparent 55%),
+            linear-gradient(180deg, #FAFCFE 0%, #F0F7FB 40%, #FAFCFE 100%)
+          `,
+        }}
+      />
+      {/* Animated gradient layers */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.30]">
+        <div className="absolute -left-[20%] -top-[30%] h-[70vh] w-[140%] bg-[radial-gradient(ellipse_80%_50%_at_30%_40%,#87CEEB_0%,transparent_70%)] animate-[portfolio-blob-move_20s_ease-in-out_infinite]" />
+        <div className="absolute -right-[20%] top-[20%] h-[60vh] w-[140%] bg-[radial-gradient(ellipse_70%_45%_at_70%_50%,#B8E4F0_0%,transparent_65%)] animate-[portfolio-blob-move_25s_ease-in-out_infinite_reverse]" />
+        <div className="absolute bottom-0 left-0 h-[50vh] w-full bg-[radial-gradient(ellipse_90%_40%_at_50%_80%,#D0ECF6_0%,transparent_60%)] animate-[portfolio-blob-move_30s_ease-in-out_infinite]" />
+      </div>
+
+      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:py-8">
+        {/* Navigation */}
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <Link href={portfolioHref} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#DADADA] bg-white px-4 text-sm font-semibold text-[#111111]"><ArrowLeft className="h-4 w-4" />Kembali ke Portfolio</Link>
-          <Link href={video.sourceUrl} target="_blank" rel="noopener noreferrer" className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold max-[420px]:w-full max-[420px]:justify-center ${darkButtonClass}`}>Buka Source <ArrowUpRight className="h-4 w-4" /></Link>
+          <Link href={portfolioHref} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#E7E5E4]/60 bg-white/90 px-4 text-sm font-semibold text-[#111111] shadow-sm backdrop-blur-sm transition hover:border-[#111111] hover:shadow-md">
+            <ArrowLeft className="h-4 w-4" />
+            Kembali ke Portfolio
+          </Link>
+          <Link href={video.sourceUrl} target="_blank" rel="noopener noreferrer" className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold max-[420px]:w-full max-[420px]:justify-center ${darkButtonClass}`}>
+            Buka Source <ArrowUpRight className="h-4 w-4" />
+          </Link>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="space-y-5">
-            <Card className={`${cardClass} overflow-hidden rounded-[1.75rem] p-3 sm:rounded-[2rem] sm:p-4`}>
-              <MediaPreviewCarousel manualThumbnailUrl={video.thumbnailUrl} fallbackThumbnailUrl={getAutoThumbnailFromVideoUrl(video.sourceUrl)} mainVideoUrl={video.sourceUrl} extraVideoUrls={video.extraVideoUrls} imageUrls={video.imageUrls} title={video.title} showHeading={false} showStatusBadge={Boolean(video.thumbnailUrl)} preferMainVideo aspectRatio={video.aspectRatio} />
+            {/* Video Preview — portrait thumbnail for consistent alignment */}
+            <Card className={`${glassCard} overflow-hidden rounded-[1.75rem] sm:rounded-[2rem]`}>
+              <div className="flex items-center justify-center p-3 sm:p-4">
+                <div className="w-full max-w-[440px]">
+                  <MediaPreviewCarousel manualThumbnailUrl={video.thumbnailUrl} fallbackThumbnailUrl={getAutoThumbnailFromVideoUrl(video.sourceUrl)} mainVideoUrl={video.sourceUrl} extraVideoUrls={video.extraVideoUrls} imageUrls={video.imageUrls} title={video.title} showHeading={false} showStatusBadge={Boolean(video.thumbnailUrl)} preferMainVideo aspectRatio="portrait" />
+                </div>
+              </div>
             </Card>
-            <Card className={`${cardClass} rounded-[1.75rem] p-5 sm:rounded-[2rem] sm:p-7`}>
+
+            {/* Project Description */}
+            <Card className={`${glassCard} rounded-[1.75rem] p-5 sm:rounded-[2rem] sm:p-7`}>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8A8A8A]">Project Description</p>
               <h1 className="mt-3 text-[2rem] font-bold leading-tight tracking-[-0.04em] text-[#111111] sm:text-5xl">{video.title}</h1>
               <p className="mt-5 whitespace-pre-line text-base leading-8 text-[#525252]">{video.description || "Deskripsi project belum ditambahkan."}</p>
@@ -475,7 +511,8 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
           </div>
 
           <aside className="space-y-5 lg:sticky lg:top-5 lg:self-start">
-            <Card className={`${cardClass} rounded-[1.75rem] p-5 sm:rounded-[2rem]`}>
+            {/* Project Info */}
+            <Card className={`${glassCard} rounded-[1.75rem] p-5 sm:rounded-[2rem]`}>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8A8A8A]">Project Info</p>
               <div className="mt-4 grid gap-2">
                 <InfoRow label="Output" value={video.outputType || "General"} />
@@ -487,8 +524,9 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
               {video.tags.length > 0 ? <div className="mt-4 flex flex-wrap gap-2">{video.tags.map((tag) => <PlatformBadge key={tag}>#{tag}</PlatformBadge>)}</div> : null}
             </Card>
 
+            {/* Creator */}
             {video.author ? (
-              <Card className={`${cardClass} rounded-[1.75rem] p-5 sm:rounded-[2rem]`}>
+              <Card className={`${glassCard} rounded-[1.75rem] p-5 sm:rounded-[2rem]`}>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8A8A8A]">Creator</p>
                 <div className="mt-4 flex items-start gap-3">
                   <AvatarBadge name={video.author.name || "Creator"} avatarUrl={video.author.image || ""} crop={{ x: video.author.avatarCropX, y: video.author.avatarCropY, zoom: video.author.avatarCropZoom }} size="lg" />
@@ -500,12 +538,13 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
                 </div>
                 <div className="mt-4 grid gap-2">
                   <Link href={creatorHref} className={`inline-flex min-h-12 items-center justify-center rounded-2xl px-4 text-sm font-bold ${darkButtonClass}`}>Lihat Bio</Link>
-                  <Link href={portfolioHref} className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#DADADA] bg-white px-4 text-sm font-bold text-[#111111]">Lihat Semua Portofolio</Link>
+                  <Link href={portfolioHref} className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#E7E5E4]/60 bg-white/90 px-4 text-sm font-bold text-[#111111] backdrop-blur-sm transition hover:border-[#111111]">Lihat Semua Portofolio</Link>
                 </div>
               </Card>
             ) : null}
 
-            <Card className={`${cardClass} rounded-[1.75rem] p-5 sm:rounded-[2rem]`}>
+            {/* Share */}
+            <Card className={`${glassCard} rounded-[1.75rem] p-5 sm:rounded-[2rem]`}>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8A8A8A]">Share</p>
               <h2 className="mt-2 text-2xl font-bold tracking-[-0.03em] text-[#111111]">Bagikan Project</h2>
               <div className="mt-4"><PublicShareQrActions title={video.title} pathname={detailHref} /></div>
@@ -513,6 +552,10 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
           </aside>
         </div>
       </main>
+
+      <div className="relative z-10">
+        <PublicFooter />
+      </div>
     </div>
   );
 }
