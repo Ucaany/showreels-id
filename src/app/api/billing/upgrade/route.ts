@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { isAdminEmail } from "@/server/admin-access";
 import { createUpgradeTransaction } from "@/server/billing";
 import { getCurrentUser } from "@/server/current-user";
+import { getSiteSettings } from "@/server/site-settings";
 
 const upgradeSchema = z.object({
   planName: z.enum(["creator", "business", "pro"]).optional(),
@@ -18,6 +19,15 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Akun owner tidak menggunakan billing creator." },
       { status: 403 }
+    );
+  }
+
+  // Block paid upgrade when billing is disabled by admin
+  const siteSettings = await getSiteSettings();
+  if (!siteSettings.billingEnabled) {
+    return NextResponse.json(
+      { error: "Pembayaran sedang tidak aktif. Fitur ini akan segera hadir (Coming Soon).", code: "billing_disabled" },
+      { status: 503 }
     );
   }
 

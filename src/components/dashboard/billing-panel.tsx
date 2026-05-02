@@ -97,6 +97,7 @@ export function BillingPanel({
   billingEmail,
   paymentMethod,
   midtransConfig,
+  billingEnabled = false,
 }: {
   initialPlan: PlanPayload;
   effectivePlan: PlanName;
@@ -112,6 +113,7 @@ export function BillingPanel({
   };
   creatorGroupLink: string;
   supportLink: string;
+  billingEnabled?: boolean;
 }) {
   const searchParams = useSearchParams();
   const [activePlan, setActivePlan] = useState(initialPlan);
@@ -224,9 +226,9 @@ export function BillingPanel({
               Ringkasan paket, masa aktif, perpanjang, dan stop paket dibuat sederhana agar mudah dipantau.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Button className="bg-zinc-900 text-white hover:bg-zinc-800" onClick={handleRenew} disabled={!midtransConfig.serverKeySet}>
+              <Button className="bg-zinc-900 text-white hover:bg-zinc-800" onClick={handleRenew} disabled={!billingEnabled}>
                 <Sparkles className="h-4 w-4" />
-                Perpanjang
+                {billingEnabled ? "Perpanjang" : "Coming Soon"}
               </Button>
               <Button variant="secondary" onClick={handleStopPlan} disabled={stopping || effectivePlanName === "free"}>
                 <XCircle className="h-4 w-4" />
@@ -288,12 +290,17 @@ export function BillingPanel({
         </Card>
       )}
 
-      {!midtransConfig.serverKeySet ? (
-        <Card className="dashboard-clean-card border-zinc-300 bg-zinc-100 p-4 shadow-sm shadow-zinc-200/70">
-          <p className="text-sm font-semibold text-zinc-900">Konfigurasi pembayaran belum lengkap</p>
-          <p className="mt-1 text-sm text-zinc-600">
-            Konfigurasi server pembayaran belum terdeteksi. Checkout berbayar dapat gagal sampai environment production diperbarui.
-          </p>
+      {!billingEnabled ? (
+        <Card className="dashboard-clean-card border-amber-200 bg-amber-50 p-4 shadow-sm shadow-zinc-200/70">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">🚧</span>
+            <div>
+              <p className="text-sm font-semibold text-amber-900">Pembayaran Segera Hadir (Coming Soon)</p>
+              <p className="mt-1 text-sm text-amber-700">
+                Fitur pembayaran sedang dalam persiapan. Trial gratis untuk user baru tetap aktif. Nantikan update selanjutnya!
+              </p>
+            </div>
+          </div>
         </Card>
       ) : null}
 

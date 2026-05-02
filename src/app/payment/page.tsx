@@ -1,6 +1,7 @@
 import { PricingSubscriptionPage } from "@/components/pricing/pricing-subscription-page";
 import { getMidtransRuntimeConfig, getPlanCatalog } from "@/server/billing";
 import { getCurrentUser } from "@/server/current-user";
+import { getSiteSettings } from "@/server/site-settings";
 
 type PaymentSearchParams = {
   plan?: string;
@@ -16,6 +17,7 @@ export default async function PaymentPage({
   const user = await getCurrentUser();
   const runtime = getMidtransRuntimeConfig();
   const catalog = getPlanCatalog();
+  const siteSettings = await getSiteSettings();
 
   const normalizedPlan = params.plan === "pro" ? "creator" : params.plan;
   const initialPlan =
@@ -44,6 +46,7 @@ export default async function PaymentPage({
       paymentConfig={{
         mode: runtime.mode,
         serverKeySet: runtime.serverKeySet,
+        billingEnabled: siteSettings.billingEnabled,
       }}
     />
   );

@@ -7,6 +7,7 @@ import {
   getPlanPrice,
 } from "@/server/billing";
 import { getCurrentUser } from "@/server/current-user";
+import { getSiteSettings } from "@/server/site-settings";
 
 const checkoutSchema = z
   .object({
@@ -38,6 +39,19 @@ export async function POST(request: Request) {
         message: "Akun owner tidak menggunakan billing creator.",
       },
       { status: 403 }
+    );
+  }
+
+  // Block paid checkout when billing is disabled by admin
+  const siteSettings = await getSiteSettings();
+  if (!siteSettings.billingEnabled) {
+    return NextResponse.json(
+      {
+        success: false,
+        code: "billing_disabled",
+        message: "Pembayaran sedang tidak aktif. Fitur ini akan segera hadir (Coming Soon).",
+      },
+      { status: 503 }
     );
   }
 

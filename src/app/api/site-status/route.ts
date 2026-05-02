@@ -8,5 +8,6 @@ export async function GET() {
     maintenanceEnabled: settings.maintenanceEnabled,
     pauseEnabled: settings.pauseEnabled,
     maintenanceMessage: settings.maintenanceMessage,
+    billingEnabled: settings.billingEnabled,
   });
 }

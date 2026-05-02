@@ -13,6 +13,7 @@ import {
   getCreatorGroupLink,
   getSupportLink,
 } from "@/server/subscription-policy";
+import { getSiteSettings } from "@/server/site-settings";
 
 type DashboardBillingPageProps = {
   searchParams?: Promise<{
@@ -41,7 +42,7 @@ export default async function DashboardBillingPage({
     }
   }
 
-  const [subscription, transactions, settings, entitlementState] = await Promise.all([
+  const [subscription, transactions, settings, entitlementState, siteSettings] = await Promise.all([
     getOrCreateSubscription(user.id),
     getBillingTransactions(user.id),
     getOrCreateCreatorSettings({
@@ -49,6 +50,7 @@ export default async function DashboardBillingPage({
       billingEmail: user.contactEmail || user.email,
     }),
     getCreatorEntitlementsForUser(user.id),
+    getSiteSettings(),
   ]);
 
   return (
@@ -79,6 +81,7 @@ export default async function DashboardBillingPage({
       }}
       creatorGroupLink={getCreatorGroupLink()}
       supportLink={getSupportLink()}
+      billingEnabled={siteSettings.billingEnabled}
     />
   );
 }

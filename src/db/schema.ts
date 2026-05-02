@@ -203,6 +203,7 @@ export const siteSettings = pgTable("site_settings", {
   maintenanceMessage: text("maintenance_message")
     .notNull()
     .default("Website sedang dalam maintenance sementara. Silakan kembali beberapa saat lagi."),
+  billingEnabled: boolean("billing_enabled").notNull().default(false),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
 

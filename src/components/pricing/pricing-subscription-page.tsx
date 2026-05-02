@@ -50,6 +50,7 @@ type PaymentSummary = {
 type PaymentRuntimeConfig = {
   mode: "sandbox" | "production";
   serverKeySet: boolean;
+  billingEnabled?: boolean;
 };
 
 type AccountPreview = {
@@ -137,7 +138,8 @@ export function PricingSubscriptionPage({
   const comingSoonLabel = getPlanFeatureComingSoonLabel(featureLocale);
   const businessBonus = getBusinessBonusCopy(featureLocale);
   const canUseCreatorBilling = isLoggedIn && !isOwner;
-  const paymentReady = paymentConfig.serverKeySet;
+  const billingEnabled = paymentConfig.billingEnabled ?? false;
+  const paymentReady = paymentConfig.serverKeySet && billingEnabled;
 
   const [selectedPlan, setSelectedPlan] = useState<PlanName>(initialPlan);
   const [flowStep, setFlowStep] = useState<FlowStep>("selection");
@@ -493,6 +495,24 @@ export function PricingSubscriptionPage({
             </Card>
           ) : null}
 
+          {!billingEnabled ? (
+            <Card className="mt-6 border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🚧</span>
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    {locale === "en" ? "Payment Coming Soon" : "Pembayaran Segera Hadir"}
+                  </p>
+                  <p className="mt-1 text-sm text-amber-700">
+                    {locale === "en"
+                      ? "Payment feature is currently being prepared. Free trial for new users is still active. Stay tuned!"
+                      : "Fitur pembayaran sedang dalam persiapan. Trial gratis untuk user baru tetap aktif. Nantikan update selanjutnya!"}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ) : null}
+
           <div className="mt-7 grid gap-3.5 lg:grid-cols-3">
             {plans.map((plan) => {
               const isSelected = selectedPlan === plan.id;
@@ -787,8 +807,8 @@ export function PricingSubscriptionPage({
                     const result = await Swal.fire({
                       title: locale === "en" ? "Confirm Payment" : "Konfirmasi Pembayaran",
                       html: locale === "en"
-                        ? `Proceed with <strong>${selectedPlanInfo.name}</strong> plan for <strong>${toIdr(selectedPlanInfo.price)}</strong>?<br><br><small>Redirecting to Midtrans in...</small>`
-                        : `Lanjutkan dengan plan <strong>${selectedPlanInfo.name}</strong> seharga <strong>${toIdr(selectedPlanInfo.price)}</strong>?<br><br><small>Mengalihkan ke Midtrans dalam...</small>`,
+                        ? `Proceed with <strong>${selectedPlanInfo.name}</strong> plan for <strong>${toIdr(selectedPlanInfo.price)}</strong>?<br><br><small>Redirecting to payment page...</small>`
+                        : `Lanjutkan dengan plan <strong>${selectedPlanInfo.name}</strong> seharga <strong>${toIdr(selectedPlanInfo.price)}</strong>?<br><br><small>Mengalihkan ke halaman pembayaran...</small>`,
                       icon: "question",
                       showCancelButton: true,
                       confirmButtonText: locale === "en" ? "Continue" : "Lanjutkan",

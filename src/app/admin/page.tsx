@@ -283,6 +283,7 @@ export default async function AdminPanelPage({
         maintenanceEnabled: settings.maintenanceEnabled,
         pauseEnabled: settings.pauseEnabled,
         maintenanceMessage: settings.maintenanceMessage,
+        billingEnabled: settings.billingEnabled,
       }}
       analytics={adminAnalytics}
       users={adminUsers}

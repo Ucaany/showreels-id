@@ -1,8 +1,23 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 import { siteSettings, type DbSiteSettings } from "@/db/schema";
 
 export const SITE_SETTINGS_ID = "global";
+
+let billingColumnEnsured = false;
+
+async function ensureBillingEnabledColumn() {
+  if (billingColumnEnsured) return;
+  try {
+    await db.execute(sql.raw(
+      `ALTER TABLE "site_settings" ADD COLUMN IF NOT EXISTS "billing_enabled" boolean NOT NULL DEFAULT false;`
+    ));
+    billingColumnEnsured = true;
+  } catch {
+    // Column likely already exists or table doesn't exist yet
+    billingColumnEnsured = true;
+  }
+}
 
 export async function getSiteSettings(): Promise<DbSiteSettings> {
   if (!isDatabaseConfigured) {
@@ -12,9 +27,12 @@ export async function getSiteSettings(): Promise<DbSiteSettings> {
       pauseEnabled: false,
       maintenanceMessage:
         "Website sedang dalam maintenance sementara. Silakan kembali beberapa saat lagi.",
+      billingEnabled: false,
       updatedAt: new Date(),
     };
   }
+
+  await ensureBillingEnabledColumn();
 
   const existing = await db.query.siteSettings.findFirst({
     where: eq(siteSettings.id, SITE_SETTINGS_ID),
@@ -49,6 +67,7 @@ export async function updateSiteSettings(input: {
   maintenanceEnabled?: boolean;
   pauseEnabled?: boolean;
   maintenanceMessage?: string;
+  billingEnabled?: boolean;
 }) {
   if (!isDatabaseConfigured) {
     return {
@@ -58,6 +77,7 @@ export async function updateSiteSettings(input: {
       maintenanceMessage:
         input.maintenanceMessage ||
         "Website sedang dalam maintenance sementara. Silakan kembali beberapa saat lagi.",
+      billingEnabled: input.billingEnabled ?? false,
       updatedAt: new Date(),
     };
   }

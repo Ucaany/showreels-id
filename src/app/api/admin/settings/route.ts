@@ -7,6 +7,7 @@ const settingsSchema = z.object({
   maintenanceEnabled: z.boolean().optional(),
   pauseEnabled: z.boolean().optional(),
   maintenanceMessage: z.string().trim().max(280).optional(),
+  billingEnabled: z.boolean().optional(),
 });
 
 export async function GET() {
