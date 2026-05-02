@@ -493,11 +493,11 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
           <div className="space-y-5">
-            {/* Video Preview — portrait thumbnail for consistent alignment */}
+            {/* Video Preview — uses the video's actual aspect ratio (portrait or landscape) */}
             <Card className={`${glassCard} overflow-hidden rounded-[1.75rem] sm:rounded-[2rem]`}>
               <div className="flex items-center justify-center p-3 sm:p-4">
-                <div className="w-full max-w-[440px]">
-                  <MediaPreviewCarousel manualThumbnailUrl={video.thumbnailUrl} fallbackThumbnailUrl={getAutoThumbnailFromVideoUrl(video.sourceUrl)} mainVideoUrl={video.sourceUrl} extraVideoUrls={video.extraVideoUrls} imageUrls={video.imageUrls} title={video.title} showHeading={false} showStatusBadge={Boolean(video.thumbnailUrl)} preferMainVideo aspectRatio="portrait" />
+                <div className={video.aspectRatio === "portrait" ? "w-full max-w-[440px]" : "w-full"}>
+                  <MediaPreviewCarousel manualThumbnailUrl={video.thumbnailUrl} fallbackThumbnailUrl={getAutoThumbnailFromVideoUrl(video.sourceUrl)} mainVideoUrl={video.sourceUrl} extraVideoUrls={video.extraVideoUrls} imageUrls={video.imageUrls} title={video.title} showHeading={false} showStatusBadge={Boolean(video.thumbnailUrl)} preferMainVideo aspectRatio={video.aspectRatio || "landscape"} />
                 </div>
               </div>
             </Card>
