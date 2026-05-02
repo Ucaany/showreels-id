@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, CalendarDays, Grid2X2, List, Search, Video } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Briefcase, CalendarDays, Grid2X2, Link2, List, Mail, MapPin, Phone, PlayCircle, Search, ShoppingBag, Video } from "lucide-react";
+import { FaInstagram, FaTiktok, FaYoutube, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaTelegram, FaDiscord, FaSpotify, FaBehance, FaDribbble, FaGithub, FaMedium, FaXTwitter } from "react-icons/fa6";
+import { SiThreads, SiTiktok, SiShopee, SiGoogledrive } from "react-icons/si";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { MediaPreviewCarousel } from "@/components/media-preview-carousel";
 import { OwnerEditButton } from "@/components/owner-edit-button";
@@ -21,7 +23,42 @@ type ProfileVideo = PublicProfile["videos"][number];
 const pageShellClass = "min-h-screen overflow-x-hidden bg-[#F5F5F4] text-[#111111]";
 const cardClass = "border-[#E1E1DF] bg-white shadow-[0_18px_50px_rgba(17,17,17,0.06)]";
 const darkButtonClass = "bg-[#111111] !text-white shadow-[0_14px_30px_rgba(17,17,17,0.16)] transition hover:bg-[#1E1E1E] focus:outline-none focus:ring-2 focus:ring-[#111111]/25 disabled:bg-[#3A3A3A] disabled:text-[#DADADA] [&_svg]:text-white";
-const monoButtonClass = "inline-flex min-h-[52px] w-full items-center justify-between gap-3 rounded-[1.25rem] border border-[#E1E1DF] bg-white px-4 text-left text-sm font-semibold text-[#111111] transition hover:-translate-y-0.5 hover:border-[#111111] hover:shadow-[0_12px_28px_rgba(17,17,17,0.08)] focus:outline-none focus:ring-2 focus:ring-[#111111]/20";
+const monoButtonClass = "inline-flex min-h-[52px] w-full items-center gap-3 rounded-[1.25rem] border border-[#E1E1DF] bg-white px-4 text-sm font-semibold text-[#111111] transition hover:-translate-y-0.5 hover:border-[#111111] hover:shadow-[0_12px_28px_rgba(17,17,17,0.08)] focus:outline-none focus:ring-2 focus:ring-[#111111]/20";
+
+const LINK_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  link: Link2,
+  website: Link2,
+  custom: Link2,
+  instagram: FaInstagram,
+  tiktok: FaTiktok,
+  tiktokshop: SiTiktok,
+  youtube: FaYoutube,
+  whatsapp: FaWhatsapp,
+  facebook: FaFacebookF,
+  x: FaXTwitter,
+  threads: SiThreads,
+  linkedin: FaLinkedinIn,
+  telegram: FaTelegram,
+  discord: FaDiscord,
+  spotify: FaSpotify,
+  gdrive: SiGoogledrive,
+  tokopedia: ShoppingBag,
+  shopee: SiShopee,
+  email: Mail,
+  phone: Phone,
+  maps: MapPin,
+  portfolio: Briefcase,
+  video: PlayCircle,
+  behance: FaBehance,
+  dribbble: FaDribbble,
+  github: FaGithub,
+  medium: FaMedium,
+};
+
+function getLinkIcon(link: { iconKey?: string; platform?: string }) {
+  const key = link.iconKey || link.platform || "link";
+  return LINK_ICON_MAP[key] || Link2;
+}
 
 function getVideoThumb(video: Pick<ProfileVideo, "thumbnailUrl" | "sourceUrl">) {
   return video.thumbnailUrl || getAutoThumbnailFromVideoUrl(video.sourceUrl) || "";
@@ -141,10 +178,12 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
               {profile.user.customLinks.filter((link) => link.enabled !== false && link.url).map((link) => {
                 const safeUrl = getSafeExternalUrl(link.url);
                 if (!safeUrl) return null;
+                const IconComp = getLinkIcon(link);
                 return (
                   <Link key={link.id} href={safeUrl} target="_blank" rel="noopener noreferrer" className={monoButtonClass}>
-                    <span className="min-w-0"><span className="block truncate">{link.title}</span>{link.description ? <span className="mt-0.5 block truncate text-xs font-medium text-[#8A8A8A]">{link.description}</span> : null}</span>
-                    <ArrowUpRight className="h-4 w-4 shrink-0" />
+                    <IconComp className="h-5 w-5 shrink-0 text-[#525252]" />
+                    <span className="min-w-0 flex-1 text-center"><span className="block truncate">{link.title}</span>{link.description ? <span className="mt-0.5 block truncate text-xs font-medium text-[#8A8A8A]">{link.description}</span> : null}</span>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-[#525252]" />
                   </Link>
                 );
               })}
