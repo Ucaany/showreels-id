@@ -384,8 +384,8 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
           list ? "flex" : ""
         }`}
       >
-        {/* Thumbnail — 16:9 landscape for both grid and list */}
-        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "w-[160px] min-[480px]:w-[220px] sm:w-[280px] lg:w-[320px] shrink-0" : ""}`}>
+        {/* Thumbnail — forced 16:9 landscape for both grid and list */}
+        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "w-[160px] min-[480px]:w-[220px] sm:w-[280px] lg:w-[320px] shrink-0 aspect-video" : ""}`}>
           {thumb ? (
             <Image
               src={thumb}
@@ -393,12 +393,12 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
               width={405}
               height={228}
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-              className={`w-full object-cover transition duration-300 group-hover:scale-[1.03] ${list ? "h-full" : "aspect-video"}`}
+              className={`h-full w-full object-cover transition duration-300 group-hover:scale-[1.03] ${list ? "" : "aspect-video"}`}
               loading="lazy"
               unoptimized
             />
           ) : (
-            <div className={`flex items-center justify-center text-[#C4C4C4] ${list ? "h-full aspect-video" : "aspect-video"}`}>
+            <div className={`flex items-center justify-center text-[#C4C4C4] aspect-video`}>
               <Video className="h-7 w-7" />
             </div>
           )}
