@@ -234,11 +234,11 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
           `,
         }}
       />
-      {/* Animated blobs — subtle movement, opacity ≤ 35% */}
+      {/* Animated gradient layers — flat, wide, not circular */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.30]">
-        <div className="absolute -left-[15%] -top-[15%] h-[50vh] w-[50vh] max-h-[500px] max-w-[500px] rounded-full bg-[radial-gradient(circle,#87CEEB_0%,transparent_70%)] animate-[portfolio-blob-move_20s_ease-in-out_infinite]" />
-        <div className="absolute -right-[10%] top-[30%] h-[40vh] w-[40vh] max-h-[400px] max-w-[400px] rounded-full bg-[radial-gradient(circle,#B8E4F0_0%,transparent_70%)] animate-[portfolio-blob-move_25s_ease-in-out_infinite_reverse]" />
-        <div className="absolute bottom-[5%] left-[25%] h-[35vh] w-[35vh] max-h-[350px] max-w-[350px] rounded-full bg-[radial-gradient(circle,#3B82F6_0%,#87CEEB_40%,transparent_70%)] animate-[portfolio-blob-move_30s_ease-in-out_infinite]" />
+        <div className="absolute -left-[20%] -top-[30%] h-[70vh] w-[140%] bg-[radial-gradient(ellipse_80%_50%_at_30%_40%,#87CEEB_0%,transparent_70%)] animate-[portfolio-blob-move_20s_ease-in-out_infinite]" />
+        <div className="absolute -right-[20%] top-[20%] h-[60vh] w-[140%] bg-[radial-gradient(ellipse_70%_45%_at_70%_50%,#B8E4F0_0%,transparent_65%)] animate-[portfolio-blob-move_25s_ease-in-out_infinite_reverse]" />
+        <div className="absolute bottom-0 left-0 h-[50vh] w-full bg-[radial-gradient(ellipse_90%_40%_at_50%_80%,#D0ECF6_0%,transparent_60%)] animate-[portfolio-blob-move_30s_ease-in-out_infinite]" />
       </div>
 
       <main className="relative z-10 mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
@@ -434,8 +434,9 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
               <CalendarDays className="h-3 w-3" />
               {postedLabel}
             </span>
-            <span className="font-semibold text-[#333333]">
-              by {creatorName}
+            <span className="inline-flex items-center gap-1 font-semibold text-[#3B82F6] transition group-hover:gap-1.5">
+              Lihat Detail
+              <ArrowUpRight className="h-3.5 w-3.5 text-[#3B82F6]" />
             </span>
           </div>
         </div>
