@@ -216,107 +216,223 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
   const isList = view === "list";
   const username = profile.user.username || "";
   const bioHref = getCreatorBioHref(username);
+  const creatorName = profile.user.name || "Creator";
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-transparent text-[#111111]">
-      {/* Animated gradient background blobs */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.35]">
-        <div className="absolute -left-1/4 -top-1/4 h-[60vh] w-[60vh] rounded-full bg-[radial-gradient(circle,#87CEEB_0%,transparent_70%)] animate-[portfolio-blob-move_20s_ease-in-out_infinite]" />
-        <div className="absolute -right-1/4 top-1/3 h-[50vh] w-[50vh] rounded-full bg-[radial-gradient(circle,#B8E4F0_0%,transparent_70%)] animate-[portfolio-blob-move_25s_ease-in-out_infinite_reverse]" />
-        <div className="absolute bottom-0 left-1/3 h-[45vh] w-[45vh] rounded-full bg-[radial-gradient(circle,#3B82F6_0%,#87CEEB_40%,transparent_70%)] animate-[portfolio-blob-move_30s_ease-in-out_infinite]" />
+    <div className="min-h-screen overflow-x-hidden text-[#111111]">
+      {/* CSS-only gradient background — responsive, no images */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 60% at 15% 20%, rgba(184,228,240,0.35) 0%, transparent 70%),
+            radial-gradient(ellipse 70% 50% at 85% 15%, rgba(197,232,244,0.30) 0%, transparent 65%),
+            radial-gradient(ellipse 60% 70% at 50% 85%, rgba(208,236,246,0.28) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 40% at 80% 75%, rgba(189,229,242,0.25) 0%, transparent 55%),
+            linear-gradient(180deg, #FAFCFE 0%, #F0F7FB 40%, #FAFCFE 100%)
+          `,
+        }}
+      />
+      {/* Animated blobs — subtle movement, opacity ≤ 35% */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.30]">
+        <div className="absolute -left-[15%] -top-[15%] h-[50vh] w-[50vh] max-h-[500px] max-w-[500px] rounded-full bg-[radial-gradient(circle,#87CEEB_0%,transparent_70%)] animate-[portfolio-blob-move_20s_ease-in-out_infinite]" />
+        <div className="absolute -right-[10%] top-[30%] h-[40vh] w-[40vh] max-h-[400px] max-w-[400px] rounded-full bg-[radial-gradient(circle,#B8E4F0_0%,transparent_70%)] animate-[portfolio-blob-move_25s_ease-in-out_infinite_reverse]" />
+        <div className="absolute bottom-[5%] left-[25%] h-[35vh] w-[35vh] max-h-[350px] max-w-[350px] rounded-full bg-[radial-gradient(circle,#3B82F6_0%,#87CEEB_40%,transparent_70%)] animate-[portfolio-blob-move_30s_ease-in-out_infinite]" />
       </div>
 
-      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:py-12">
-        {/* Profile Header — Bento card, centered layout */}
-        <Card className="mb-8 overflow-hidden rounded-3xl border border-[#E7E5E4] bg-white p-6 shadow-[0_18px_50px_rgba(17,17,17,0.06)] sm:p-8 lg:p-10">
+      <main className="relative z-10 mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
+        {/* ── Profile Header Card ── */}
+        <section className="mb-10 overflow-hidden rounded-[1.75rem] border border-[#E7E5E4]/60 bg-white/90 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_12px_32px_rgba(17,17,17,0.05)] backdrop-blur-sm sm:rounded-[2rem] sm:p-8 lg:p-10">
           <div className="flex flex-col items-center text-center">
             {/* (a) Avatar */}
-            <div className="rounded-full border-4 border-white bg-white shadow-[0_12px_26px_rgba(17,17,17,0.12)]">
+            <div className="rounded-full border-[3px] border-white bg-white shadow-[0_8px_24px_rgba(17,17,17,0.10)]">
               <CreatorAvatar profile={profile} />
             </div>
 
             {/* (b) Name + Verified Badge */}
-            <h1 className="mt-5 text-2xl font-bold tracking-[-0.04em] text-[#111111] sm:text-3xl lg:text-4xl">
-              {profile.user.name || "Creator"}
-              {isProfileVerified(profile) && <VerifiedBadge className="ml-2 align-middle" />}
+            <h1 className="mt-5 text-[1.65rem] font-extrabold tracking-[-0.03em] text-[#111111] sm:text-3xl lg:text-[2.1rem]">
+              {creatorName}
+              {isProfileVerified(profile) && <VerifiedBadge className="ml-2 inline-block align-middle" />}
             </h1>
 
             {/* (c) Role • @username */}
-            <p className="mt-2 text-sm font-semibold text-[#525252] sm:text-base">
-              {profile.user.role ? <span className="font-medium text-[#111111]">{profile.user.role}</span> : null}
-              {profile.user.role ? <span className="mx-1.5 text-[#DADADA]">•</span> : null}
-              <span>@{profile.user.username}</span>
+            <p className="mt-1.5 text-sm text-[#6B6B6B] sm:text-[15px]">
+              {profile.user.role ? <span className="font-semibold text-[#333333]">{profile.user.role}</span> : null}
+              {profile.user.role ? <span className="mx-1.5 text-[#D4D4D4]">·</span> : null}
+              <span className="font-medium">@{username}</span>
             </p>
 
-            {/* (d) Description */}
-            <p className="mt-4 max-w-lg text-center text-sm leading-relaxed text-[#525252] sm:text-[15px]">
-              {createTextExcerpt(profile.user.bio, 180) || "Bio singkat belum ditambahkan."}
+            {/* Social platform icons */}
+            <SocialLinks
+              className="mt-4 justify-center"
+              balanced
+              websiteUrl={profile.user.websiteUrl}
+              instagramUrl={profile.user.instagramUrl}
+              youtubeUrl={profile.user.youtubeUrl}
+              facebookUrl={profile.user.facebookUrl}
+              threadsUrl={profile.user.threadsUrl}
+              linkedinUrl={profile.user.linkedinUrl}
+            />
+
+            {/* (d) Description — centered, aligned neatly */}
+            <p className="mx-auto mt-4 max-w-md text-center text-[13.5px] leading-relaxed text-[#6B6B6B] sm:max-w-lg sm:text-sm">
+              {createTextExcerpt(profile.user.bio, 200) || "Creator belum menambahkan bio singkat."}
             </p>
 
             {/* (e) Buttons: Back to Bio + Dashboard (conditional) */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <Link href={bioHref} className={`inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-bold ${darkButtonClass}`}>
-                <ArrowLeft className="h-4 w-4" />
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+              <Link
+                href={bioHref}
+                className="inline-flex min-h-[42px] items-center gap-2 rounded-full border border-[#E7E5E4] bg-white px-5 text-[13px] font-semibold text-[#333333] shadow-sm transition hover:border-[#111111] hover:shadow-md"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
                 Back to Bio
               </Link>
               {profile.isOwner && (
-                <Link href="/dashboard" className={`inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-bold ${darkButtonClass}`}>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-[#111111] px-5 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(17,17,17,0.15)] transition hover:bg-[#1E1E1E] hover:shadow-[0_12px_28px_rgba(17,17,17,0.2)] [&_svg]:text-white"
+                >
                   Kembali ke Dashboard
                 </Link>
               )}
             </div>
           </div>
-        </Card>
+        </section>
 
-        {/* Filter / Toggle Bar */}
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-2xl font-bold tracking-[-0.03em] sm:text-3xl">Karya Creator</h2>
-          <div className="flex items-center gap-1.5 rounded-full border border-[#E7E5E4] bg-white p-1 shadow-sm">
-            <Link href={`${getCreatorPortfolioHref(username)}?view=grid`} className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition [&_svg]:text-current ${!isList ? "bg-[#111111] text-white shadow-[0_4px_12px_rgba(17,17,17,0.2)] [&_svg]:text-white" : "border border-[#E7E5E4] bg-white text-[#525252] hover:border-[#111111]"}`}><Grid2X2 className="h-4 w-4" />Grid</Link>
-            <Link href={`${getCreatorPortfolioHref(username)}?view=list`} className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition [&_svg]:text-current ${isList ? "bg-[#111111] text-white shadow-[0_4px_12px_rgba(17,17,17,0.2)] [&_svg]:text-white" : "border border-[#E7E5E4] bg-white text-[#525252] hover:border-[#111111]"}`}><List className="h-4 w-4" />List</Link>
+        {/* ── Section Title + View Toggle ── */}
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-extrabold tracking-[-0.03em] text-[#111111] sm:text-[1.75rem]">
+              Karya Creator
+            </h2>
+            <p className="mt-1 text-sm text-[#8A8A8A]">
+              {profile.videos.length} project{profile.videos.length !== 1 ? "s" : ""} dipublikasikan
+            </p>
+          </div>
+          <div className="flex items-center gap-1 rounded-full border border-[#E7E5E4]/80 bg-white/80 p-1 shadow-sm backdrop-blur-sm">
+            <Link
+              href={`${getCreatorPortfolioHref(username)}?view=grid`}
+              className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition ${
+                !isList
+                  ? "bg-[#111111] text-white shadow-[0_4px_12px_rgba(17,17,17,0.18)] [&_svg]:text-white"
+                  : "text-[#6B6B6B] hover:text-[#111111]"
+              }`}
+            >
+              <Grid2X2 className="h-3.5 w-3.5" />
+              Grid
+            </Link>
+            <Link
+              href={`${getCreatorPortfolioHref(username)}?view=list`}
+              className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition ${
+                isList
+                  ? "bg-[#111111] text-white shadow-[0_4px_12px_rgba(17,17,17,0.18)] [&_svg]:text-white"
+                  : "text-[#6B6B6B] hover:text-[#111111]"
+              }`}
+            >
+              <List className="h-3.5 w-3.5" />
+              List
+            </Link>
           </div>
         </div>
 
-        {/* Video Grid */}
+        {/* ── Video Grid / List ── */}
         {profile.videos.length === 0 ? (
-          <Card className="rounded-3xl border border-[#E7E5E4] bg-white p-8 text-center shadow-[0_18px_50px_rgba(17,17,17,0.06)]">
-            <Video className="mx-auto h-9 w-9 text-[#8A8A8A]" />
-            <p className="mt-3 text-sm font-medium text-[#525252]">Belum ada portfolio yang dipublikasikan.</p>
-            <Link href={bioHref} className={`mt-5 inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-bold ${darkButtonClass}`}>Kembali ke Bio</Link>
-          </Card>
+          <div className="rounded-[1.75rem] border border-[#E7E5E4]/60 bg-white/90 p-10 text-center shadow-sm backdrop-blur-sm">
+            <Video className="mx-auto h-10 w-10 text-[#C4C4C4]" />
+            <p className="mt-4 text-sm font-medium text-[#6B6B6B]">Belum ada portfolio yang dipublikasikan.</p>
+            <Link
+              href={bioHref}
+              className="mt-5 inline-flex min-h-[42px] items-center justify-center rounded-full bg-[#111111] px-6 text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(17,17,17,0.15)] transition hover:bg-[#1E1E1E] [&_svg]:text-white"
+            >
+              Kembali ke Bio
+            </Link>
+          </div>
         ) : (
-          <div className={isList ? "grid gap-4" : "grid gap-4 sm:grid-cols-2 xl:grid-cols-3"}>
-            {profile.videos.map((video) => <PortfolioVideoCard key={video.id} video={video} list={isList} />)}
+          <div className={isList ? "grid gap-5" : "grid gap-5 sm:grid-cols-2 xl:grid-cols-3"}>
+            {profile.videos.map((video) => (
+              <PortfolioVideoCard key={video.id} video={video} list={isList} creatorName={creatorName} />
+            ))}
           </div>
         )}
       </main>
-      <div className="relative z-10"><PublicFooter hidden={profile.whitelabelEnabled} /></div>
+
+      <div className="relative z-10">
+        <PublicFooter hidden={profile.whitelabelEnabled} />
+      </div>
     </div>
   );
 }
 
-function PortfolioVideoCard({ video, list }: { video: ProfileVideo; list?: boolean }) {
+function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo; list?: boolean; creatorName: string }) {
   const thumb = getVideoThumb(video);
   const sourceLabel = getSourceLabel(video.source as never);
   const postedLabel = formatDateLabel(video.createdAt.toISOString());
+  const categoryLabel = video.outputType || "General";
 
   return (
     <Link href={getVideoDetailHref(video.publicSlug)} className="group block min-w-0">
-      <article className={`h-full rounded-3xl border border-[#E7E5E4] bg-white p-3 shadow-[0_18px_50px_rgba(17,17,17,0.06)] transition hover:-translate-y-1 hover:border-[#111111] hover:shadow-[0_20px_40px_rgba(17,17,17,0.1)] sm:p-4 ${list ? "md:flex md:gap-4" : ""}`}>
-        <div className={`overflow-hidden rounded-xl bg-[#EFEDEA] ${list ? "md:w-72 md:shrink-0" : ""}`}>
-          {thumb ? <Image src={thumb} alt={`Thumbnail ${video.title}`} width={720} height={405} sizes="(max-width: 768px) 100vw, 33vw" className="aspect-video w-full object-cover transition group-hover:scale-[1.02]" loading="lazy" unoptimized /> : <div className="flex aspect-video items-center justify-center text-[#8A8A8A]"><Video className="h-6 w-6" /></div>}
+      <article
+        className={`h-full overflow-hidden rounded-[1.5rem] border border-[#E7E5E4]/60 bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(17,17,17,0.04)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(17,17,17,0.08)] ${
+          list ? "sm:flex sm:gap-0" : ""
+        }`}
+      >
+        {/* Thumbnail with category badge overlay */}
+        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "sm:w-72 sm:shrink-0" : ""}`}>
+          {thumb ? (
+            <Image
+              src={thumb}
+              alt={`Thumbnail ${video.title}`}
+              width={720}
+              height={405}
+              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+              className="aspect-video w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+              loading="lazy"
+              unoptimized
+            />
+          ) : (
+            <div className="flex aspect-video items-center justify-center text-[#C4C4C4]">
+              <Video className="h-7 w-7" />
+            </div>
+          )}
+          {/* Category badge on image — like Whenevr reference */}
+          <span className="absolute right-3 top-3 rounded-full bg-[#111111] px-3 py-1 text-[11px] font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+            {categoryLabel}
+          </span>
         </div>
-        <div className="mt-3 space-y-2.5 sm:mt-4">
-          <div className="flex flex-wrap gap-1.5">
-            <span className="inline-flex items-center rounded-full border border-[#E7E5E4] bg-[#F5F5F4] px-2.5 py-1 text-[11px] font-semibold text-[#525252]">{sourceLabel}</span>
-            <span className="inline-flex items-center rounded-full border border-[#E7E5E4] bg-[#F5F5F4] px-2.5 py-1 text-[11px] font-semibold text-[#525252]">{video.outputType || "General"}</span>
-            <span className="inline-flex items-center rounded-full border border-[#E7E5E4] bg-[#F5F5F4] px-2.5 py-1 text-[11px] font-semibold text-[#525252]">{video.durationLabel || "-"}</span>
+
+        {/* Content */}
+        <div className={`p-4 sm:p-5 ${list ? "flex flex-1 flex-col justify-center" : ""}`}>
+          {/* Badges row */}
+          <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
+            <span className="inline-flex items-center rounded-full border border-[#EBEBEB] bg-[#F7F7F7] px-2.5 py-0.5 text-[10.5px] font-semibold text-[#6B6B6B]">
+              {sourceLabel}
+            </span>
+            <span className="inline-flex items-center rounded-full border border-[#EBEBEB] bg-[#F7F7F7] px-2.5 py-0.5 text-[10.5px] font-semibold text-[#6B6B6B]">
+              {video.durationLabel || "—"}
+            </span>
           </div>
-          <h3 className="line-clamp-2 text-base font-bold leading-snug tracking-[-0.02em] text-[#111111]">{video.title}</h3>
-          <p className="line-clamp-2 text-sm leading-relaxed text-[#525252]">{createTextExcerpt(video.description, 140) || "Deskripsi pendek belum ditambahkan."}</p>
-          <div className="flex items-center justify-between gap-3 pt-1 text-xs font-semibold">
-            <span className="inline-flex items-center gap-1 text-[#8A8A8A]"><CalendarDays className="h-3.5 w-3.5" />{postedLabel}</span>
-            <span className="inline-flex items-center gap-1 text-[#111111] transition group-hover:gap-1.5">Lihat Detail <ArrowUpRight className="h-3.5 w-3.5" /></span>
+
+          {/* Title */}
+          <h3 className="line-clamp-2 text-[15px] font-bold leading-snug tracking-[-0.01em] text-[#111111] sm:text-base">
+            {video.title}
+          </h3>
+
+          {/* Description */}
+          <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-[#6B6B6B]">
+            {createTextExcerpt(video.description, 120) || "Deskripsi pendek belum ditambahkan."}
+          </p>
+
+          {/* Footer: date + attribution */}
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#F0F0F0] pt-3 text-[11.5px]">
+            <span className="inline-flex items-center gap-1 font-medium text-[#9A9A9A]">
+              <CalendarDays className="h-3 w-3" />
+              {postedLabel}
+            </span>
+            <span className="font-semibold text-[#333333]">
+              by {creatorName}
+            </span>
           </div>
         </div>
       </article>
