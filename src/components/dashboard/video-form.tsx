@@ -738,7 +738,7 @@ export function VideoForm({
                   Status Video
                 </label>
                 <Select {...form.register("visibility")}>
-                  <option value="draft">Draft - belum siap ditinjau klien</option>
+                  <option value="draft">Draft — masih dalam proses</option>
                   <option value="private">Private - hanya tersimpan di dashboard</option>
                   <option value="semi_private">Semi Private - hanya yang punya link</option>
                   <option value="public">Public - tampil di profil dan link publik</option>

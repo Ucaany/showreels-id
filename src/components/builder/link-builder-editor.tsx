@@ -351,7 +351,7 @@ function SortableLinkItem({
             maxLength={MAX_LINK_DESCRIPTION_LENGTH}
             onChange={(event) => onChange(link.id, { description: event.target.value, isDirty: true })}
             className="min-h-20"
-            placeholder="Opsional, jelaskan link ini untuk calon klien."
+            placeholder="Opsional, tambahkan deskripsi singkat untuk link ini."
           />
         </div>
 
@@ -1076,7 +1076,7 @@ export function LinkBuilderEditor({
               </span>
             </div>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-              Atur profil, social link, custom link, dan preview bio link dalam layout Bento yang compact.
+              Atur profil, social link, custom link, dan preview halaman bio kamu.
             </p>
             <span className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
               {publicPath}
@@ -1260,7 +1260,7 @@ export function LinkBuilderEditor({
                         organization: event.target.value,
                       }))
                     }
-                    placeholder="Project / perusahaan / klien"
+                    placeholder="Nama project atau perusahaan"
                   />
                   <Input
                     value={newExperience.period}
@@ -1383,7 +1383,7 @@ export function LinkBuilderEditor({
                 <ChevronDown className="h-3.5 w-3.5 text-[#5b7198]" />
               </summary>
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Website — full width bento card */}
+                {/* Website */}
                 <div className="sm:col-span-2 lg:col-span-3 rounded-2xl border border-[#d6e2f7] bg-white p-3 transition hover:border-sky-300 hover:shadow-sm">
                   <div className="flex items-center gap-2.5">
                     <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600 ring-1 ring-sky-200">
@@ -1408,7 +1408,7 @@ export function LinkBuilderEditor({
                     </div>
                   </div>
                 </div>
-                {/* Social platform bento cards */}
+                {/* Social platforms */}
                 {SOCIAL_PLATFORMS.map((platform) => {
                   const Icon = platform.icon;
                   const fieldKey = platform.key as keyof typeof profileFields;

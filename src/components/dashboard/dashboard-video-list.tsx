@@ -174,7 +174,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
 
   return (
     <div className="space-y-3">
-      {/* Filter & Controls Bento Card */}
+      {/* Filter & Controls */}
       <div className="space-y-3">
         {/* Tab Filters */}
         <div className="flex items-center justify-between gap-3">

@@ -67,7 +67,7 @@ export default async function DashboardVideosPage() {
 
   return (
     <div className="mx-auto max-w-[1440px] space-y-4 px-3 sm:px-0">
-      {/* Bento Grid Header Section */}
+      {/* Header Section */}
       <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-12">
         {/* Hero Card - spans 8 cols on desktop */}
         <div className="lg:col-span-8">
@@ -104,7 +104,7 @@ export default async function DashboardVideosPage() {
           </div>
         </div>
 
-        {/* Stats Bento Grid - spans 4 cols on desktop */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:col-span-4">
           <div className="group rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all hover:border-slate-200 hover:shadow-md sm:rounded-3xl sm:p-5">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors group-hover:bg-zinc-900 group-hover:text-white">

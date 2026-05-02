@@ -28,7 +28,7 @@ export const dictionaries = {
     landingHeroTitleLead: "Satu link.",
     landingHeroTitleAccent: "Karya videomu.",
     landingHeroDescription:
-      "Tampilkan identitas creator, keahlian utama, dan karya video terbaikmu dalam satu halaman publik yang bersih, profesional, dan siap dibagikan ke klien.",
+      "Tampilkan identitas, keahlian, dan karya video terbaikmu dalam satu halaman publik yang profesional dan siap dibagikan.",
     landingHeroInputHint: "Cek username kamu sekarang",
     landingHeroInputPlaceholder: "nama_kamu",
     landingHeroInputAction: "Ambil",
@@ -41,7 +41,7 @@ export const dictionaries = {
     landingThemesTitleLead: "Tema tampilan",
     landingThemesTitleAccent: "profil & video",
     landingThemesDescription:
-      "Section Tema menampilkan pola presentasi halaman creator dan halaman video Showreels yang bisa kamu adaptasi sesuai identitas.",
+      "Pilihan tampilan untuk halaman profil dan video kamu.",
     landingThemesCta: "Tema",
     landingThemesPresetStarter: "Creator Clean",
     landingThemesPresetCampaign: "Portfolio Warm",
@@ -58,17 +58,17 @@ export const dictionaries = {
     landingFeaturesTitleLead: "Fitur penting",
     landingFeaturesTitleAccent: "untuk creator video.",
     landingFeaturesDescription:
-      "Showreels fokus ke profil creator publik, halaman video publik, custom links, dan kontrol visibilitas karya dari dashboard.",
+      "Profil publik, halaman video, custom link, dan kontrol visibilitas — semua dikelola dari dashboard.",
     landingPlatformBadge: "Platform",
     landingPlatformTitleLead: "Sumber video yang",
     landingPlatformTitleAccent: "didukung Showreels",
     landingPlatformDescription:
-      "Hubungkan karya dari platform utama yang sudah dipakai creator sehari-hari, lalu tampilkan dalam halaman portfolio publikmu.",
+      "Hubungkan video dari platform yang sudah kamu gunakan, lalu tampilkan di halaman portfolio.",
     landingPricingBadge: "Harga",
     landingPricingTitleLead: "Paket simpel untuk",
     landingPricingTitleAccent: "creator hebat.",
     landingPricingDescription:
-      "Pilih paket Free, Creator, atau Business sesuai fase perkembanganmu, lalu lanjutkan checkout dengan alur pembayaran yang sederhana.",
+      "Pilih paket sesuai kebutuhanmu. Proses checkout cepat dan sederhana.",
     landingPricingMonthlyLabel: "Bulanan",
     landingPricingYearlyLabel: "Tahunan",
     landingPricingYearlySave: "Hemat 2 bulan",
@@ -79,18 +79,18 @@ export const dictionaries = {
     landingTestimonialsTitleLead: "Dari creator,",
     landingTestimonialsTitleAccent: "untuk creator.",
     landingTestimonialsDescription:
-      "Cerita creator yang memakai Showreels untuk menampilkan portfolio video secara profesional.",
+      "Pengalaman creator yang menggunakan Showreels untuk menampilkan karya terbaik mereka.",
     landingFaqBadge: "FAQ",
     landingFaqTitleLead: "Ada",
     landingFaqTitleAccent: "pertanyaan?",
     landingFaqDescription:
-      "Jawaban singkat soal profil publik, halaman video, custom links, dan visibilitas konten.",
+      "Jawaban singkat untuk pertanyaan yang sering diajukan.",
     landingFinalBadge: "Siap mulai?",
     landingFinalTitleLead: "Siap mengembangkan",
     landingFinalTitleAccent: "portfolio digital",
     landingFinalTitleTail: "kamu?",
     landingFinalDescription:
-      "Bangun halaman creator sekarang. Gratis, tanpa kartu kredit, dan tetap fokus ke karya video terbaikmu.",
+      "Mulai sekarang. Gratis, tanpa kartu kredit.",
     landingFinalPrimaryCta: "Mulai",
     landingFinalSecondaryCta: "Demo",
     landingFinalPointFast: "Setup 2 menit",
@@ -144,7 +144,7 @@ export const dictionaries = {
     landingHowItWorksStep2Description: "Hubungkan video dari YouTube, Drive, Instagram, Vimeo, atau Facebook ke portfolio kamu.",
     landingHowItWorksStep3Label: "Langkah 3",
     landingHowItWorksStep3Title: "Publikasikan & bagikan",
-    landingHowItWorksStep3Description: "Atur visibilitas, publikasikan karya, dan bagikan link profil kamu ke klien.",
+    landingHowItWorksStep3Description: "Atur visibilitas, publikasikan karya, dan bagikan link profil kamu.",
   },
   en: {
     language: "Language",
@@ -172,7 +172,7 @@ export const dictionaries = {
     landingHeroTitleLead: "One link.",
     landingHeroTitleAccent: "Your videos.",
     landingHeroDescription:
-      "Show your creator identity, key expertise, and best video work in one clean public page that looks professional and is easy to share with clients.",
+      "Show your creator identity, key expertise, and best video work in one clean public page that looks professional and is easy to share.",
     landingHeroInputHint: "Check your username now",
     landingHeroInputPlaceholder: "your_name",
     landingHeroInputAction: "Claim",
@@ -185,7 +185,7 @@ export const dictionaries = {
     landingThemesTitleLead: "Theme direction for",
     landingThemesTitleAccent: "profile & video",
     landingThemesDescription:
-      "The Theme section showcases visual patterns for Showreels creator pages and video pages, not a separate template builder.",
+      "Visual styles for your creator profile and video pages.",
     landingThemesCta: "Themes",
     landingThemesPresetStarter: "Creator Clean",
     landingThemesPresetCampaign: "Portfolio Warm",
@@ -223,7 +223,7 @@ export const dictionaries = {
     landingTestimonialsTitleLead: "From creators,",
     landingTestimonialsTitleAccent: "to creators.",
     landingTestimonialsDescription:
-      "Stories from creators using Showreels to present video portfolios in a cleaner, client-ready way.",
+      "Stories from creators using Showreels to present their best work.",
     landingFaqBadge: "FAQ",
     landingFaqTitleLead: "Any",
     landingFaqTitleAccent: "questions?",
@@ -289,7 +289,7 @@ export const dictionaries = {
     landingHowItWorksStep2Description: "Connect videos from YouTube, Drive, Instagram, Vimeo, or Facebook to your portfolio.",
     landingHowItWorksStep3Label: "Step 3",
     landingHowItWorksStep3Title: "Publish and share",
-    landingHowItWorksStep3Description: "Set visibility, publish your work, and share your profile link with clients.",
+    landingHowItWorksStep3Description: "Set visibility, publish your work, and share your profile link.",
   },
 } as const;
 

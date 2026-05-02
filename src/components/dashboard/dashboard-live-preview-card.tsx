@@ -93,7 +93,7 @@ export function DashboardLivePreviewCard({
             {profilePath}
           </p>
           <p className="mt-2 text-sm text-[#5d5048]">
-            Bagikan link ini ke Instagram bio, WhatsApp, atau email klien kamu.
+            Bagikan link ini ke Instagram bio, WhatsApp, atau email.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button size="sm" onClick={handleCopy}>

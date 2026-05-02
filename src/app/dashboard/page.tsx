@@ -88,7 +88,7 @@ function HeroCard({
             Selamat datang, {userName || "Kreator"}
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-            Kelola link publik, video portfolio, analytics, dan billing dari satu workspace Bento Grid yang bersih dan ramah mata.
+            Kelola link, video portfolio, analytics, dan billing dari satu tempat yang rapi.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">

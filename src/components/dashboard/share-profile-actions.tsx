@@ -88,7 +88,7 @@ export function ShareProfileActions({
       await navigator.clipboard.writeText(publicLink);
       await showFeedbackAlert({
         title: "Link berhasil disalin",
-        text: "Sekarang kamu bisa bagikan ke klien atau audiens.",
+        text: "Link berhasil disalin. Siap dibagikan.",
         icon: "success",
         timer: 1200,
       });

@@ -153,11 +153,11 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
               <span>@{profile.user.username}</span>
             </p>
 
-            {/* Social media icons - bento style, centered */}
+            {/* Social media icons */}
             <SocialLinks className="mt-5 justify-center" balanced websiteUrl={profile.user.websiteUrl} instagramUrl={profile.user.instagramUrl} youtubeUrl={profile.user.youtubeUrl} facebookUrl={profile.user.facebookUrl} threadsUrl={profile.user.threadsUrl} linkedinUrl={profile.user.linkedinUrl} />
 
             {/* Bio / Description */}
-            <p className="mt-4 max-w-[32rem] text-[15px] leading-tight text-[#525252] sm:text-base">{bio || "Creator belum menambahkan bio singkat."}</p>
+            <p className="mt-4 max-w-[32rem] text-[15px] leading-tight text-[#525252] sm:text-base">{bio || "Bio belum ditambahkan."}</p>
 
             {/* Buttons / Links */}
             <div className="mt-7 w-full space-y-3 sm:space-y-4">
@@ -167,7 +167,7 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
                   <Link key={video.id} href={getVideoDetailHref(video.publicSlug)} className="group block">
                     <article className="flex min-h-[104px] items-center gap-3 rounded-[1.5rem] border border-[#E1E1DF] bg-[#FAFAF9] p-2.5 text-left transition hover:border-[#111111] hover:bg-white max-[359px]:block">
                       <div className="h-24 w-28 shrink-0 overflow-hidden rounded-[1.15rem] bg-[#EFEDEA] max-[359px]:mb-3 max-[359px]:h-36 max-[359px]:w-full">
-                        {thumb ? <Image src={thumb} alt={`Thumbnail ${video.title}`} width={220} height={148} className="h-full w-full object-cover" unoptimized /> : <div className="flex h-full items-center justify-center text-[#8A8A8A]"><Video className="h-5 w-5" /></div>}
+                        {thumb ? <Image src={thumb} alt={`Thumbnail ${video.title}`} width={220} height={148} className="h-full w-full object-cover" priority={pinnedVideos.indexOf(video) === 0} /> : <div className="flex h-full items-center justify-center text-[#8A8A8A]"><Video className="h-5 w-5" /></div>}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 flex flex-wrap gap-1.5"><PlatformBadge>{video.outputType || "Portfolio"}</PlatformBadge><PlatformBadge>Public</PlatformBadge></div>
@@ -181,7 +181,7 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
               })}
 
               {profile.user.customLinks.length === 0 && pinnedVideos.length === 0 ? (
-                <p className="rounded-[1.25rem] border border-dashed border-[#DADADA] bg-[#FAFAF9] px-4 py-4 text-center text-sm text-[#525252]">Creator belum menambahkan link.</p>
+                <p className="rounded-[1.25rem] border border-dashed border-[#DADADA] bg-[#FAFAF9] px-4 py-4 text-center text-sm text-[#525252]">Belum ada link yang ditambahkan.</p>
               ) : null}
 
               {profile.user.customLinks.filter((link) => link.enabled !== false && link.url).map((link) => {
@@ -277,7 +277,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
 
             {/* (d) Description — centered, aligned neatly */}
             <p className="mx-auto mt-4 max-w-md text-center text-[13.5px] leading-relaxed text-[#6B6B6B] sm:max-w-lg sm:text-sm">
-              {createTextExcerpt(profile.user.bio, 200) || "Creator belum menambahkan bio singkat."}
+              {createTextExcerpt(profile.user.bio, 200) || "Bio belum ditambahkan."}
             </p>
 
             {/* (e) Buttons: Back to Bio + Dashboard (conditional) */}
@@ -307,10 +307,10 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-lg font-bold tracking-[-0.02em] text-[#111111] sm:text-xl">
-                🎬 Karya Creator
+                Portfolio
               </h2>
               <p className="mt-0.5 text-[12px] font-medium text-[#9A9A9A] sm:text-[13px]">
-                {profile.videos.length} project{profile.videos.length !== 1 ? "s" : ""} dipublikasikan
+                {profile.videos.length} project
               </p>
             </div>
             <div className="flex shrink-0 items-center rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] p-0.5">
@@ -346,7 +346,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
         {profile.videos.length === 0 ? (
           <div className="rounded-[1.75rem] border border-[#E7E5E4]/60 bg-white/90 p-10 text-center shadow-sm backdrop-blur-sm">
             <Video className="mx-auto h-10 w-10 text-[#C4C4C4]" />
-            <p className="mt-4 text-sm font-medium text-[#6B6B6B]">Belum ada portfolio yang dipublikasikan.</p>
+            <p className="mt-4 text-sm font-medium text-[#6B6B6B]">Belum ada karya yang dipublikasikan.</p>
             <Link
               href={bioHref}
               className="mt-5 inline-flex min-h-[42px] items-center justify-center rounded-full bg-[#111111] px-6 text-[13px] font-semibold shadow-[0_8px_20px_rgba(17,17,17,0.15)] transition hover:bg-[#1E1E1E]"
@@ -395,7 +395,6 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
               sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
               className={`h-full w-full object-cover transition duration-300 group-hover:scale-[1.03] ${list ? "" : "aspect-video"}`}
               loading="lazy"
-              unoptimized
             />
           ) : (
             <div className={`flex items-center justify-center text-[#C4C4C4] aspect-video`}>
@@ -427,7 +426,7 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
 
           {/* Description */}
           <p className={`mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-[#6B6B6B] ${list ? "" : "line-clamp-2"}`}>
-            {createTextExcerpt(video.description, 120) || "Deskripsi pendek belum ditambahkan."}
+            {createTextExcerpt(video.description, 120) || "Belum ada deskripsi."}
           </p>
 
           {/* Footer: date + attribution */}
@@ -506,7 +505,7 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
             <Card className={`${glassCard} rounded-[1.75rem] p-5 sm:rounded-[2rem] sm:p-7`}>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8A8A8A]">Project Description</p>
               <h1 className="mt-3 text-[2rem] font-bold leading-tight tracking-[-0.04em] text-[#111111] sm:text-5xl">{video.title}</h1>
-              <p className="mt-5 whitespace-pre-line text-base leading-8 text-[#525252]">{video.description || "Deskripsi project belum ditambahkan."}</p>
+              <p className="mt-5 whitespace-pre-line text-base leading-8 text-[#525252]">{video.description || "Belum ada deskripsi untuk project ini."}</p>
             </Card>
           </div>
 

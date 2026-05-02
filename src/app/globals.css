@@ -1,4 +1,3 @@
-@import "sweetalert2/dist/sweetalert2.min.css";
 @import "tailwindcss";
 
 :root {
@@ -23,7 +22,7 @@
   --dashboard-sidebar-width: 248px;
   --dashboard-sidebar-collapsed-width: 80px;
   --dashboard-topbar-height: 72px;
-  /* Bento Profile tokens */
+  /* Dashboard card tokens */
   --bento-radius: 1.25rem;
   --bento-radius-inner: 0.875rem;
   --bento-gap: 1rem;

@@ -2,11 +2,9 @@ import { and, count, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 import {
   adminNotifications,
-  analyticsEvents,
   billingSubscriptions,
   billingTransactions,
   users,
-  videoEngagementStats,
   videos,
   visitorDailyStats,
 } from "@/db/schema";
@@ -161,11 +159,7 @@ export async function getAdminAnalyticsOverview(): Promise<AdminAnalyticsOvervie
       .select({ value: count() })
       .from(billingSubscriptions)
       .where(gte(billingSubscriptions.createdAt, startAt)),
-    db
-      .select({ eventType: analyticsEvents.eventType, value: count() })
-      .from(analyticsEvents)
-      .where(gte(analyticsEvents.createdAt, startAt))
-      .groupBy(analyticsEvents.eventType),
+    Promise.resolve([]) as Promise<Array<{ eventType: string; value: number }>>,
     db
       .select({
         day: visitorDailyStats.day,
@@ -183,28 +177,8 @@ export async function getAdminAnalyticsOverview(): Promise<AdminAnalyticsOvervie
       .from(billingTransactions)
       .where(and(eq(billingTransactions.status, "paid"), gte(billingTransactions.createdAt, startAt)))
       .groupBy(sql`(timezone('Asia/Jakarta', ${billingTransactions.createdAt}))::date`),
-    db
-      .select({
-        path: analyticsEvents.path,
-        targetUrl: analyticsEvents.targetUrl,
-        clicks: count(),
-      })
-      .from(analyticsEvents)
-      .where(and(eq(analyticsEvents.eventType, "link_click"), gte(analyticsEvents.createdAt, startAt)))
-      .groupBy(analyticsEvents.path, analyticsEvents.targetUrl)
-      .orderBy(desc(count()))
-      .limit(8),
-    db
-      .select({
-        country: analyticsEvents.country,
-        city: analyticsEvents.city,
-        visitors: sql<number>`count(distinct ${analyticsEvents.visitorId})`.mapWith(Number),
-      })
-      .from(analyticsEvents)
-      .where(and(gte(analyticsEvents.createdAt, startAt), lte(analyticsEvents.createdAt, new Date())))
-      .groupBy(analyticsEvents.country, analyticsEvents.city)
-      .orderBy(desc(sql`count(distinct ${analyticsEvents.visitorId})`))
-      .limit(6),
+    Promise.resolve([]) as Promise<Array<{ path: string; targetUrl: string; clicks: number }>>,
+    Promise.resolve([]) as Promise<Array<{ country: string; city: string; visitors: number }>>,
     db
       .select({
         id: videos.id,
@@ -212,15 +186,10 @@ export async function getAdminAnalyticsOverview(): Promise<AdminAnalyticsOvervie
         slug: videos.publicSlug,
         author: users.name,
         username: users.username,
-        views: videoEngagementStats.views,
-        clicks: videoEngagementStats.clicks,
-        shares: videoEngagementStats.shares,
-        likes: videoEngagementStats.likes,
       })
       .from(videos)
       .innerJoin(users, eq(videos.userId, users.id))
-      .leftJoin(videoEngagementStats, eq(videoEngagementStats.videoId, videos.id))
-      .orderBy(desc(sql`coalesce(${videoEngagementStats.views}, 0) + coalesce(${videoEngagementStats.clicks}, 0) + coalesce(${videoEngagementStats.shares}, 0) + coalesce(${videoEngagementStats.likes}, 0)`))
+      .orderBy(desc(videos.createdAt))
       .limit(8),
     db
       .select({
@@ -293,10 +262,10 @@ export async function getAdminAnalyticsOverview(): Promise<AdminAnalyticsOvervie
       title: row.title,
       slug: row.slug,
       author: row.author || row.username || "Creator",
-      views: row.views || 0,
-      clicks: row.clicks || 0,
-      shares: row.shares || 0,
-      likes: row.likes || 0,
+      views: 0,
+      clicks: 0,
+      shares: 0,
+      likes: 0,
     })),
     transactions: transactionRows.map((row) => ({
       invoiceId: row.invoiceId,

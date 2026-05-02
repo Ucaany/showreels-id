@@ -17,7 +17,7 @@ export function CopyProfileLinkButton({ username }: { username: string }) {
       setTimeout(() => setCopied(false), 1400);
       await showFeedbackAlert({
         title: "Link berhasil disalin!",
-        text: "Sekarang kamu bisa bagikan Showreels kamu ke calon klien atau audiens.",
+        text: "Link profil berhasil disalin. Bagikan ke siapa saja.",
         icon: "success",
         timer: 1600,
       });

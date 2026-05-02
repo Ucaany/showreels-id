@@ -474,8 +474,8 @@ export function LandingPage({
             : "Halaman video publik per slug",
         description:
           locale === "en"
-            ? "Every published video has a clean public page for client review."
-            : "Setiap video punya halaman publik rapi untuk dibuka dan dinilai klien.",
+            ? "Every published video has its own clean public page, ready to share."
+            : "Setiap video memiliki halaman publik tersendiri yang siap dibagikan.",
       },
       {
         title:
@@ -503,8 +503,8 @@ export function LandingPage({
       {
         quote:
           locale === "en"
-            ? "Clients now open my showreels page to check profile, skills, and videos in one flow. It saves review time."
-            : "Sekarang klien cukup buka showreels page saya untuk lihat profil, skills, dan video dalam satu alur. Review jadi lebih cepat.",
+            ? "Now they just open one page to see my profile, skills, and videos. The review process is so much faster."
+            : "Sekarang cukup buka satu halaman untuk melihat profil, keahlian, dan video saya. Proses review jadi lebih cepat.",
         name: "Nadia Putri",
         role:
           locale === "en"
@@ -1123,7 +1123,7 @@ export function LandingPage({
                 </p>
               </div>
 
-              {/* Bento Grid */}
+              {/* Features Grid */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-stretch">
                 {/* Card 1: Profil Creator Publik (Hero) */}
                 <m.div
@@ -1253,7 +1253,7 @@ export function LandingPage({
                   {/* Header */}
                   <div className="mb-3">
                     <h3 className="text-base font-bold text-slate-800">Halaman Publik per Slug</h3>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-500">Sajikan karyamu dengan profesional untuk dinilai klien.</p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">Sajikan karyamu secara profesional dalam satu halaman.</p>
                   </div>
                   
                   {/* Browser Mockup */}
@@ -1855,8 +1855,8 @@ export function LandingPage({
               <AppLogo />
               <p className="text-body-base mt-3 max-w-md text-slate-600">
                 {locale === "en"
-                  ? "showreels.id helps creators present their best work with clean, client-ready public pages."
-                  : "showreels.id membantu creator menampilkan karya terbaik dengan halaman publik yang rapi dan siap dilihat klien."}
+                  ? "showreels.id helps creators present their best work with clean, professional public pages."
+                  : "showreels.id membantu creator menampilkan karya terbaik dengan halaman publik yang rapi dan profesional."}
               </p>
             </div>
 

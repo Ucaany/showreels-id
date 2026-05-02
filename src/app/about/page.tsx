@@ -20,7 +20,7 @@ const valueCards = [
   {
     title: "Nilai Utama",
     description:
-      "Simpel, cepat, dan fokus pada hasil presentasi karya yang membuat klien lebih mudah mengambil keputusan.",
+      "Simpel, cepat, dan fokus pada presentasi karya yang memudahkan pengambilan keputusan.",
     icon: Lightbulb,
   },
 ];
@@ -37,13 +37,13 @@ export default function AboutPage() {
               About showreels.id
             </p>
             <h1 className="mt-3 font-display text-[clamp(2rem,5vw,4rem)] font-extrabold leading-[1.05] tracking-[-0.04em] text-slate-950">
-              Platform portofolio kreator untuk tampil lebih meyakinkan di depan klien.
+              Platform portofolio kreator untuk tampil lebih profesional dan meyakinkan.
             </h1>
             <p className="mt-5 max-w-3xl text-body-lg text-slate-600">
               showreels.id dibuat untuk membantu content creator, editor, dan videographer
               mengelola karya dalam format yang lebih profesional. Fokus kami adalah
               membuat creator lebih mudah menyiapkan profil, submit video, dan membagikannya
-              ke klien lewat halaman publik yang clean.
+              lewat halaman publik yang bersih dan profesional.
             </p>
           </div>
         </Card>
@@ -75,7 +75,7 @@ export default function AboutPage() {
             Siap tampilkan portfolio terbaikmu?
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-white/75">
-            Mulai dari profil creator, lanjut submit video, dan bagikan link ke klien.
+            Mulai dari profil creator, submit video, dan bagikan link publik kamu.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href="/auth/signup">

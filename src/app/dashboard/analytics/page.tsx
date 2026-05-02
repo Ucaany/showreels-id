@@ -36,7 +36,7 @@ export default async function DashboardAnalyticsPage() {
               Trafik Halaman Creator
             </h1>
             <p className="mt-3 text-sm leading-6 text-slate-500 md:text-base">
-              Pantau kunjungan profil, performa video publik, dan peluang optimasi dalam satu dashboard Bento yang ringkas.
+              Pantau kunjungan profil, performa video, dan peluang optimasi secara real-time.
             </p>
           </div>
 

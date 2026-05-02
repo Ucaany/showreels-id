@@ -98,7 +98,7 @@ export function SocialLinks({
     );
   }
 
-  /* Bento UI: icons only, evenly spaced in a centered row */
+  /* Social icons row */
   return (
     <div
       className={`flex items-center justify-center gap-3 ${className}`.trim()}
