@@ -1,0 +1,76 @@
+import { z } from "zod";
+import { NextResponse } from "next/server";
+import { isAdminEmail } from "@/server/admin-access";
+import { createUpgradeTransaction } from "@/server/billing";
+import { getCurrentUser } from "@/server/current-user";
+import { getSiteSettings } from "@/server/site-settings";
+
+const upgradeSchema = z.object({
+  planName: z.enum(["creator", "business", "pro"]).optional(),
+  plan_id: z.enum(["creator", "business", "pro"]).optional(),
+}).strict();
+
+export async function POST(request: Request) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (isAdminEmail(currentUser.email)) {
+    return NextResponse.json(
+      { error: "Akun owner tidak menggunakan billing creator." },
+      { status: 403 }
+    );
+  }
+
+  // Block paid upgrade when billing is disabled by admin
+  const siteSettings = await getSiteSettings();
+  if (!siteSettings.billingEnabled) {
+    return NextResponse.json(
+      { error: "Pembayaran sedang tidak aktif. Fitur ini akan segera hadir (Coming Soon).", code: "billing_disabled" },
+      { status: 503 }
+    );
+  }
+
+  const body = await request.json().catch(() => null);
+  const parsed = upgradeSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Payload upgrade tidak valid." },
+      { status: 400 }
+    );
+  }
+  const targetPlanRaw = parsed.data.plan_id || parsed.data.planName || null;
+  if (!targetPlanRaw) {
+    return NextResponse.json(
+      { error: "Paket tidak valid." },
+      { status: 400 }
+    );
+  }
+
+  const targetPlan = targetPlanRaw === "pro" ? "creator" : targetPlanRaw;
+
+  const result = await createUpgradeTransaction({
+    userId: currentUser.id,
+    fullName: currentUser.name || "Creator",
+    email: currentUser.contactEmail || currentUser.email,
+    targetPlan,
+    billingCycle: "monthly",
+  });
+
+  if (!result.ok) {
+    const status =
+      result.code === "midtrans_not_configured"
+        ? 412
+        : result.code === "same_plan_active"
+          ? 409
+        : result.code === "invalid_billing_cycle"
+          ? 400
+        : result.code === "db_not_ready" || result.code === "billing_schema_missing"
+          ? 503
+          : 502;
+
+    return NextResponse.json({ error: result.message, code: result.code }, { status });
+  }
+
+  return NextResponse.json(result);
+}
