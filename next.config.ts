@@ -16,7 +16,14 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    optimizePackageImports: ["lucide-react", "react-icons", "framer-motion", "swr"],
+    optimizePackageImports: [
+      "lucide-react",
+      "react-icons",
+      "framer-motion",
+      "swr",
+      "@tanstack/react-query",
+      "react-loading-skeleton",
+    ],
   },
   compress: true,
   // Cache headers untuk static assets
@@ -28,6 +35,19 @@ const nextConfig: NextConfig = {
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        // Preconnect headers untuk external domains
+        source: "/:path*",
+        headers: [
+          {
+            key: "Link",
+            value: [
+              "<https://fonts.googleapis.com>; rel=preconnect",
+              "<https://accounts.google.com>; rel=preconnect",
+            ].join(", "),
           },
         ],
       },

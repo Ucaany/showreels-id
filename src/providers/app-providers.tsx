@@ -7,6 +7,7 @@ import { SiteMaintenanceGate } from "@/components/site-maintenance-gate";
 import { VisitorTracker } from "@/components/visitor-tracker";
 import { PreferencesProvider } from "@/providers/preferences-provider";
 import { SWRProvider } from "@/components/swr-provider";
+import { ReactQueryProvider } from "@/components/react-query-provider";
 
 export function AppProviders({
   children,
@@ -23,13 +24,15 @@ export function AppProviders({
   }, []);
 
   return (
-    <SWRProvider>
-      <PreferencesProvider initialLocale={initialLocale}>
-        <SessionActivityManager />
-        <VisitorTracker />
-        <SiteMaintenanceGate />
-        {children}
-      </PreferencesProvider>
-    </SWRProvider>
+    <ReactQueryProvider>
+      <SWRProvider>
+        <PreferencesProvider initialLocale={initialLocale}>
+          <SessionActivityManager />
+          <VisitorTracker />
+          <SiteMaintenanceGate />
+          {children}
+        </PreferencesProvider>
+      </SWRProvider>
+    </ReactQueryProvider>
   );
 }
