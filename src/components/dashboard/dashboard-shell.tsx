@@ -22,9 +22,11 @@ import {
 import { AppLogo } from "@/components/app-logo";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { BottomNavigation } from "@/components/dashboard/bottom-navigation";
+import { PrefetchLink } from "@/components/prefetch-link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
+import { CACHE_KEYS } from "@/lib/swr-config";
 import { createClient } from "@/lib/supabase/client";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { DbUser } from "@/db/schema";
@@ -154,14 +156,30 @@ export function DashboardShell({
     window.location.replace("/");
   };
 
+  // Mapping route -> API endpoints to prefetch on hover
+  const prefetchDataMap: Record<string, string | string[]> = {
+    "/dashboard": CACHE_KEYS.DASHBOARD_SUMMARY,
+    "/dashboard/videos": CACHE_KEYS.VIDEOS,
+    "/dashboard/analytics": CACHE_KEYS.ANALYTICS_SUMMARY("7d"),
+    "/dashboard/billing": CACHE_KEYS.BILLING_PLAN,
+    "/dashboard/profile": CACHE_KEYS.PROFILE,
+    "/dashboard/notifications": CACHE_KEYS.NOTIFICATIONS,
+    "/dashboard/settings": CACHE_KEYS.SETTINGS_LINK_PROFILE,
+    "/dashboard/link-builder": CACHE_KEYS.LINKS,
+  };
+
   const renderNavItem = (item: NavItem, mobile = false, expanded = sidebarOpen) => {
     const Icon = item.icon;
     const active = isNavItemActive(item);
+    const prefetchData = prefetchDataMap[item.href];
 
     return (
-      <Link
+      <PrefetchLink
         key={`${mobile ? "mobile" : "desktop"}-${item.href}`}
         href={item.href}
+        prefetchData={prefetchData}
+        prefetchDelay={150}
+        disablePrefetch={active}
         onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
         className={cn(
           "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
@@ -172,7 +190,7 @@ export function DashboardShell({
       >
         <Icon className={cn("h-4 w-4", active ? "!text-white" : "text-slate-500")} />
         {(expanded || mobile) && <span className={cn(active && "text-white")}>{item.label}</span>}
-      </Link>
+      </PrefetchLink>
     );
   };
 

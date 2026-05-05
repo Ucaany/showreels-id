@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import useSWR from "swr";
 import {
   Activity,
   ArrowUpRight,
@@ -18,6 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { TrafficLineChart } from "@/components/dashboard/traffic-line-chart";
 import { cn } from "@/lib/cn";
+import { fetcher } from "@/lib/fetcher";
+import { CACHE_TIMES } from "@/lib/swr-config";
 
 type PeriodValue = "today" | "7d" | "30d" | "custom";
 
@@ -167,9 +170,69 @@ export function CreatorTrafficPanel({
   const [period, setPeriod] = useState<PeriodValue>("7d");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [summary, setSummary] = useState<SummaryPayload>({
+
+  const effectivePeriod: PeriodValue =
+    periodMode === "dashboard" && (period === "today" || period === "custom") ? "7d" : period;
+
+  const query = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("period", effectivePeriod);
+
+    if (periodMode === "full" && effectivePeriod === "custom" && start && end) {
+      params.set("start", start);
+      params.set("end", end);
+    }
+
+    return params.toString();
+  }, [effectivePeriod, end, periodMode, start]);
+
+  // SWR hooks untuk analytics data - auto revalidate, dedupe, cache
+  const {
+    data: summaryData,
+    isLoading: summaryLoading,
+    error: summaryError,
+    mutate: mutateSummary,
+  } = useSWR<SummaryPayload>(
+    `/api/analytics/summary?${query}`,
+    fetcher,
+    {
+      dedupingInterval: CACHE_TIMES.REALTIME,
+      refreshInterval: 30000, // Auto refresh every 30s
+      revalidateOnFocus: true,
+      keepPreviousData: true,
+    }
+  );
+
+  const {
+    data: trafficData,
+    isLoading: trafficLoading,
+  } = useSWR<{ points: Point[] }>(
+    `/api/analytics/traffic?${query}`,
+    fetcher,
+    {
+      dedupingInterval: CACHE_TIMES.REALTIME,
+      refreshInterval: 30000,
+      revalidateOnFocus: true,
+      keepPreviousData: true,
+    }
+  );
+
+  const {
+    data: topPagesData,
+    isLoading: topPagesLoading,
+  } = useSWR<TopPagesPayload>(
+    `/api/analytics/top-pages?${query}`,
+    fetcher,
+    {
+      dedupingInterval: CACHE_TIMES.REALTIME,
+      refreshInterval: 30000,
+      revalidateOnFocus: true,
+      keepPreviousData: true,
+    }
+  );
+
+  // Derived state from SWR data
+  const summary: SummaryPayload = summaryData || {
     totalViews: 0,
     uniqueVisitors: 0,
     topPage: null,
@@ -177,29 +240,15 @@ export function CreatorTrafficPanel({
     requestedRangeDays: 0,
     appliedRangeDays: 0,
     planName: "free",
-  });
-  const [points, setPoints] = useState<Point[]>([]);
-  const [topPages, setTopPages] = useState<TopPage[]>([]);
-  const [recent, setRecent] = useState<RecentActivity[]>([]);
-  const [analyticsMaxDays, setAnalyticsMaxDays] = useState(30);
-  const [appliedPeriod, setAppliedPeriod] = useState<PeriodValue>("7d");
+  };
+  const points: Point[] = trafficData?.points || [];
+  const topPages: TopPage[] = topPagesData?.topPages || [];
+  const recent: RecentActivity[] = topPagesData?.recent || [];
+  const loading = summaryLoading || trafficLoading || topPagesLoading;
+  const error = summaryError ? "Gagal memuat analytics." : "";
 
-  const effectivePeriod: PeriodValue =
-    periodMode === "dashboard" && (period === "today" || period === "custom") ? "7d" : period;
-
-  const query = useMemo(() => {
-    const resolvedPeriod = analyticsMaxDays < 30 && effectivePeriod === "30d" ? "7d" : effectivePeriod;
-    const params = new URLSearchParams();
-    params.set("period", resolvedPeriod);
-
-    if (periodMode === "full" && resolvedPeriod === "custom" && start && end) {
-      params.set("start", start);
-      params.set("end", end);
-    }
-
-    return params.toString();
-  }, [analyticsMaxDays, effectivePeriod, end, periodMode, start]);
-
+  const analyticsMaxDays = summary.analyticsMaxDays || 30;
+  const appliedPeriod = summary.appliedPeriod || "7d";
   const isThirtyDayLocked = analyticsMaxDays < 30;
   const lockedCountdownDays = Math.max(0, 30 - analyticsMaxDays);
   const hasRangeClamp =
@@ -210,65 +259,6 @@ export function CreatorTrafficPanel({
   const averageViews = points.length > 0 ? Math.round(summary.totalViews / points.length) : 0;
   const engagementRate = summary.totalViews > 0 ? Math.round((summary.uniqueVisitors / summary.totalViews) * 100) : 0;
   const topPageShare = summary.totalViews > 0 ? Math.round((summary.topPageViews / summary.totalViews) * 100) : 0;
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const run = async () => {
-      setLoading(true);
-      setError("");
-
-      try {
-        const [summaryRes, trafficRes, topPagesRes] = await Promise.all([
-          fetch(`/api/analytics/summary?${query}`),
-          fetch(`/api/analytics/traffic?${query}`),
-          fetch(`/api/analytics/top-pages?${query}`),
-        ]);
-
-        if (!summaryRes.ok || !trafficRes.ok || !topPagesRes.ok) {
-          if (!isCancelled) {
-            setError("Gagal memuat analytics.");
-            setLoading(false);
-          }
-          return;
-        }
-
-        const [summaryPayload, trafficPayload, topPagesPayload] = await Promise.all([
-          summaryRes.json() as Promise<SummaryPayload>,
-          trafficRes.json() as Promise<{ points: Point[] }>,
-          topPagesRes.json() as Promise<TopPagesPayload>,
-        ]);
-
-        if (isCancelled) return;
-
-        setSummary({
-          totalViews: summaryPayload.totalViews || 0,
-          uniqueVisitors: summaryPayload.uniqueVisitors || 0,
-          topPage: summaryPayload.topPage || null,
-          topPageViews: summaryPayload.topPageViews || 0,
-          requestedRangeDays: summaryPayload.requestedRangeDays || 0,
-          appliedRangeDays: summaryPayload.appliedRangeDays || 0,
-          planName: summaryPayload.planName || "free",
-        });
-        setAppliedPeriod(summaryPayload.appliedPeriod || "7d");
-        setAnalyticsMaxDays(summaryPayload.analyticsMaxDays || 30);
-        setPoints(trafficPayload.points || []);
-        setTopPages(topPagesPayload.topPages || []);
-        setRecent(topPagesPayload.recent || []);
-        setLoading(false);
-      } catch {
-        if (!isCancelled) {
-          setError("Gagal memuat analytics.");
-          setLoading(false);
-        }
-      }
-    };
-
-    void run();
-    return () => {
-      isCancelled = true;
-    };
-  }, [query]);
 
   const metrics = [
     {
@@ -379,7 +369,7 @@ export function CreatorTrafficPanel({
         <div className="rounded-3xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p>{error}</p>
-            <Button size="sm" variant="secondary" onClick={() => window.location.reload()}>
+            <Button size="sm" variant="secondary" onClick={() => void mutateSummary()}>
               <RefreshCcw className="h-4 w-4" />
               Coba Lagi
             </Button>

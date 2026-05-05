@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
+import { useSWRConfig } from "swr";
+import { CACHE_KEYS } from "@/lib/swr-config";
 import {
   ChevronDown,
   Crop,
@@ -120,6 +122,7 @@ function getUsernameQuota(user: DbUser, nextUsername: string) {
 
 export function ProfileForm({ user }: { user: DbUser }) {
   const router = useRouter();
+  const { mutate: globalMutate } = useSWRConfig();
   const { dictionary } = usePreferences();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -245,6 +248,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
     }
 
     setMessage("Profil berhasil diperbarui.");
+    void globalMutate(CACHE_KEYS.PROFILE);
     router.refresh();
   });
 
@@ -275,6 +279,7 @@ export function ProfileForm({ user }: { user: DbUser }) {
 
       setAutoSaveLabel("saved");
       setTimeout(() => setAutoSaveLabel("idle"), 1800);
+      void globalMutate(CACHE_KEYS.PROFILE);
       router.refresh();
     }, 1200);
 

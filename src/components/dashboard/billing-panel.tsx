@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSWRConfig } from "swr";
 import Link from "next/link";
 import {
   CalendarClock,
@@ -16,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
+import { CACHE_KEYS } from "@/lib/swr-config";
 import type { PlanFeatureChecklistItem } from "@/lib/plan-feature-matrix";
 
 type PlanName = "free" | "creator" | "business";
@@ -116,6 +118,7 @@ export function BillingPanel({
   billingEnabled?: boolean;
 }) {
   const searchParams = useSearchParams();
+  const { mutate: globalMutate } = useSWRConfig();
   const [activePlan, setActivePlan] = useState(initialPlan);
   const [effectivePlanName, setEffectivePlanName] = useState<PlanName>(effectivePlan);
   const [transactions, setTransactions] = useState(initialTransactions);
@@ -149,6 +152,9 @@ export function BillingPanel({
       setTransactions(payload.transactions || []);
     }
     setRefreshing(false);
+    // Invalidate SWR cache agar halaman lain juga mendapat data terbaru
+    void globalMutate(CACHE_KEYS.BILLING_PLAN);
+    void globalMutate(CACHE_KEYS.BILLING_TRANSACTIONS);
   };
 
   const handleRenew = () => {
@@ -193,6 +199,8 @@ export function BillingPanel({
       icon: "success",
       timer: 1400,
     });
+    // Invalidate dashboard summary karena plan berubah
+    void globalMutate(CACHE_KEYS.DASHBOARD_SUMMARY);
     await handleRefresh();
   };
 
