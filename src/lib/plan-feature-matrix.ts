@@ -107,6 +107,24 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
     },
   },
   {
+    id: "verified-badge",
+    category: { id: "Centang Biru", en: "Verified Badge" },
+    values: {
+      free: {
+        text: { id: "Tidak tersedia", en: "Not available" },
+        status: "unavailable",
+      },
+      creator: {
+        text: { id: "Aktif selama plan berjalan", en: "Active while plan is active" },
+        status: "available",
+      },
+      business: {
+        text: { id: "Aktif selama plan berjalan", en: "Active while plan is active" },
+        status: "available",
+      },
+    },
+  },
+  {
     id: "creator-group",
     category: { id: "Creator Group", en: "Creator Group" },
     values: {

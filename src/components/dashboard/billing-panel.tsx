@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSWRConfig } from "swr";
 import Link from "next/link";
 import {
@@ -118,6 +118,7 @@ export function BillingPanel({
   billingEnabled?: boolean;
 }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { mutate: globalMutate } = useSWRConfig();
   const [activePlan, setActivePlan] = useState(initialPlan);
   const [effectivePlanName, setEffectivePlanName] = useState<PlanName>(effectivePlan);
@@ -158,7 +159,7 @@ export function BillingPanel({
   };
 
   const handleRenew = () => {
-    window.location.assign(`/payment?plan=${renewTarget}&intent=checkout`);
+    router.push(`/payment?plan=${renewTarget}&intent=checkout`);
   };
 
   const handleStopPlan = async () => {

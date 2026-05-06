@@ -96,7 +96,60 @@ const ENTITLEMENTS_BY_PLAN: Record<CreatorPlanName, CreatorPlanEntitlements> = {
   },
 };
 
-const ENTITLED_SUBSCRIPTION_STATUSES = new Set(["active"]);
+const ENTITLED_SUBSCRIPTION_STATUSES = new Set(["active", "trial"]);
+
+// --- Verified Badge Helpers ---
+
+export type PlanName = "free" | "creator" | "business";
+export type SubscriptionStatus = "active" | "trial" | "expired" | "failed" | "pending" | "cancelled";
+
+export function isPremiumPlan(planName: PlanName | string): boolean {
+  return planName === "creator" || planName === "business";
+}
+
+export function isSubscriptionUsable(status: SubscriptionStatus | string): boolean {
+  return status === "active" || status === "trial";
+}
+
+export function canShowVerifiedBadge(subscription?: {
+  planName: PlanName | string;
+  status: SubscriptionStatus | string;
+} | null): boolean {
+  if (!subscription) return false;
+  return isPremiumPlan(subscription.planName) && isSubscriptionUsable(subscription.status);
+}
+
+export type VerifiedBadgeInfo = {
+  active: boolean;
+  label: string;
+  reason: string;
+};
+
+export function getVerifiedBadgeInfo(subscription?: {
+  planName: PlanName | string;
+  status: SubscriptionStatus | string;
+} | null): VerifiedBadgeInfo {
+  if (!subscription || !canShowVerifiedBadge(subscription)) {
+    return {
+      active: false,
+      label: "Centang biru",
+      reason: subscription?.status === "expired"
+        ? "Centang biru nonaktif karena plan sudah berakhir."
+        : "Centang biru tersedia untuk plan Creator atau Business.",
+    };
+  }
+
+  const isTrial = subscription.status === "trial";
+  const planLabel = subscription.planName === "business" ? "Business" : "Creator";
+
+  return {
+    active: true,
+    label: "Terverifikasi",
+    reason: isTrial
+      ? "Terverifikasi selama masa trial Creator aktif."
+      : `Aktif selama plan ${planLabel} berjalan.`,
+  };
+}
 
 function normalizePlanName(value: string | null | undefined): CreatorPlanName {
   if (value === "pro" || value === "creator") {

@@ -22,7 +22,12 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: "showreels.id",
-  description: "Platform portfolio video sederhana, cepat, dan siap dibagikan.",
+  description: "Portfolio video profesional untuk creator.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default async function RootLayout({

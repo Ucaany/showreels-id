@@ -32,9 +32,8 @@ type UsernameAvailability = {
 
 const STEP_ITEMS = [
   { id: 1, title: "Identitas Creator" },
-  { id: 2, title: "Buat Link Pertama" },
-  { id: 3, title: "Preview Halaman" },
-  { id: 4, title: "Selesai" },
+  { id: 2, title: "Tambah Link" },
+  { id: 3, title: "Preview & Selesai" },
 ] as const;
 
 type OnboardingLinkDraft = {
@@ -113,7 +112,7 @@ export function OnboardingStepper({
       : {};
   const hasLinkDraft = payloadLinks.length > 0;
 
-  const [step, setStep] = useState(Math.min(4, Math.max(1, initialStatus.currentStep || 1)));
+  const [step, setStep] = useState(Math.min(3, Math.max(1, initialStatus.currentStep || 1)));
   const [fullName, setFullName] = useState(payloadProfile.fullName || initialUser.fullName);
   const [username, setUsername] = useState(payloadProfile.username || initialUser.username);
   const [role, setRole] = useState(payloadProfile.role || initialUser.role);
@@ -280,7 +279,7 @@ export function OnboardingStepper({
     const createFirstLink = step === 2 && wantsToAddFirstLink && onboardingLinks.length > 0;
     setBusy(true);
     const response = await saveProgress({
-      currentStep: Math.min(4, step + 1),
+      currentStep: Math.min(3, step + 1),
       createFirstLink,
     });
     const payloadResponse = (await response.json().catch(() => null)) as
@@ -301,7 +300,7 @@ export function OnboardingStepper({
       return;
     }
 
-    setStep((prev) => Math.min(4, prev + 1));
+    setStep((prev) => Math.min(3, prev + 1));
     setLastDraftLabel("Progress tersimpan.");
   };
 
@@ -311,7 +310,7 @@ export function OnboardingStepper({
   };
 
   const handleSkip = async () => {
-    if (busy || step >= 4) return;
+    if (busy || step >= 3) return;
 
     if (step === 2) {
       setWantsToAddFirstLink(false);
@@ -524,7 +523,7 @@ export function OnboardingStepper({
 
           <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:p-5 lg:p-6">
             <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
-              <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Langkah {step} dari 4</p><h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">{STEP_ITEMS[stepIndex]?.title}</h2></div>
+              <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Langkah {step} dari 3</p><h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">{STEP_ITEMS[stepIndex]?.title}</h2></div>
               <div className="h-2 overflow-hidden rounded-full bg-slate-100 sm:mt-3 sm:w-40"><div className="h-full rounded-full bg-zinc-900 transition-all" style={{ width: `${(step / STEP_ITEMS.length) * 100}%` }} /></div>
             </div>
 
@@ -572,9 +571,9 @@ export function OnboardingStepper({
               </div>
             ) : null}
 
-            {step === 4 ? <div className="mt-4 grid gap-4 lg:grid-cols-3"><div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 lg:col-span-2"><span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-white"><Check className="h-5 w-5" /></span><h3 className="mt-4 text-xl font-semibold text-slate-950">Halaman creator kamu siap</h3><p className="mt-2 text-sm leading-6 text-slate-600">Lanjut ke dashboard untuk mengatur link, upload video, dan membaca analytics.</p></div><div className="grid content-start gap-2"><Button onClick={() => void handleComplete()} disabled={busy} className="min-h-11">{busy ? "Memproses..." : "Masuk Dashboard"}</Button></div></div> : null}
+            {step < 3 ? <div className="sticky bottom-0 z-10 mt-5 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap items-center gap-2">{step > 1 ? <Button variant="secondary" onClick={handleBack} disabled={busy} className="min-h-10 px-3"><ChevronLeft className="h-4 w-4" />Back</Button> : null}<Button variant="ghost" onClick={() => void handleSkip()} disabled={busy} className="min-h-10 px-2 text-xs sm:text-sm">{step === 2 ? "Lewati langkah link" : "Saya mengisinya nanti"}</Button></div><Button onClick={() => void handleNext()} disabled={busy || draftSaving} className="min-h-11 w-full sm:w-auto">{busy ? "Menyimpan..." : "Next"}<ChevronRight className="h-4 w-4" /></Button></div></div> : null}
 
-            {step < 4 ? <div className="sticky bottom-0 z-10 mt-5 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap items-center gap-2">{step > 1 ? <Button variant="secondary" onClick={handleBack} disabled={busy} className="min-h-10 px-3"><ChevronLeft className="h-4 w-4" />Back</Button> : null}<Button variant="ghost" onClick={() => void handleSkip()} disabled={busy} className="min-h-10 px-2 text-xs sm:text-sm">{step === 2 ? "Lewati langkah link" : "Saya mengisinya nanti"}</Button></div><Button onClick={() => void handleNext()} disabled={busy || draftSaving} className="min-h-11 w-full sm:w-auto">{busy ? "Menyimpan..." : "Next"}<ChevronRight className="h-4 w-4" /></Button></div></div> : null}
+            {step === 3 ? <div className="sticky bottom-0 z-10 mt-5 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="flex flex-wrap items-center gap-2">{step > 1 ? <Button variant="secondary" onClick={handleBack} disabled={busy} className="min-h-10 px-3"><ChevronLeft className="h-4 w-4" />Back</Button> : null}</div><Button onClick={() => void handleComplete()} disabled={busy} className="min-h-11 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700">{busy ? "Memproses..." : "Selesai & Masuk Dashboard"}<Check className="h-4 w-4" /></Button></div></div> : null}
           </section>
         </div>
       </div>

@@ -440,10 +440,13 @@ export const billingTransactions = pgTable(
       .$type<"pending" | "paid" | "failed" | "cancelled" | "expired">()
       .notNull()
       .default("pending"),
-    provider: text("provider").notNull().default("midtrans"),
+    provider: text("provider").notNull().default("tripay"),
     providerReference: text("provider_reference").notNull().default(""),
-    snapToken: text("snap_token").notNull().default(""),
-    redirectUrl: text("redirect_url").notNull().default(""),
+    snapToken: text("snap_token").notNull().default(""), // deprecated — backward compat Midtrans
+    redirectUrl: text("redirect_url").notNull().default(""), // deprecated — use checkoutUrl
+    checkoutUrl: text("checkout_url").notNull().default(""),
+    qrUrl: text("qr_url").notNull().default(""),
+    payCode: text("pay_code").notNull().default(""),
     paymentMethod: text("payment_method").notNull().default(""),
     description: text("description").notNull().default(""),
     rawPayload: jsonb("raw_payload")
@@ -451,6 +454,7 @@ export const billingTransactions = pgTable(
       .notNull()
       .default(sql`'{}'::jsonb`),
     paidAt: timestamp("paid_at", { mode: "date" }),
+    expiredAt: timestamp("expired_at", { mode: "date" }),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },

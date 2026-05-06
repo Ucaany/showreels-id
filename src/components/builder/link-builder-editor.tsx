@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext,
@@ -378,6 +379,7 @@ export function LinkBuilderEditor({
   linkBuilderMax: number | null;
   planName: "free" | "creator" | "business";
 }) {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState<BuilderSection>("edit");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("mobile");
   const [isAddBlockOpen, setIsAddBlockOpen] = useState(false);
@@ -973,7 +975,7 @@ export function LinkBuilderEditor({
       cancelButtonText: "Nanti dulu",
     });
     if (confirmed) {
-      window.location.assign("/payment?plan=creator&intent=checkout");
+      router.push("/payment?plan=creator&intent=checkout");
     }
   }
 

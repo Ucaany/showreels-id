@@ -3,7 +3,7 @@ import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 import { getPlanCatalog, getOrCreateSubscription } from "@/server/billing";
 import { getOrCreateCreatorSettings } from "@/server/creator-settings";
-import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
+import { getCreatorEntitlementsForUser, getVerifiedBadgeInfo } from "@/server/subscription-policy";
 
 export async function GET() {
   const currentUser = await getCurrentUser();
@@ -26,10 +26,16 @@ export async function GET() {
     getCreatorEntitlementsForUser(currentUser.id),
   ]);
 
+  const verifiedBadge = getVerifiedBadgeInfo({
+    planName: entitlementState.effectivePlan.planName,
+    status: entitlementState.effectivePlan.status,
+  });
+
   return NextResponse.json({
     plan: subscription,
     effectivePlan: entitlementState.effectivePlan,
     entitlements: entitlementState.entitlements,
+    verifiedBadge,
     settings: {
       billingEmail: settings.billingEmail || currentUser.contactEmail || currentUser.email,
       paymentMethod: settings.paymentMethod,

@@ -76,19 +76,19 @@ export function DashboardShell({
     mode === "admin"
       ? [{ href: "/admin", label: "Owner Panel", icon: Home }]
       : [
-          { href: "/dashboard", label: "Dashboard", icon: Home },
-          { href: "/dashboard/link-builder", label: "Build Link", icon: Link2 },
-          {
-            href: "/dashboard/videos",
-            label: "Upload Video",
-            icon: Film,
-            matchPrefix: "/dashboard/videos",
-          },
-          { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
-          { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-          { href: "/dashboard/profile", label: "Profile", icon: UserRound },
-          { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
-        ];
+        { href: "/dashboard", label: "Dashboard", icon: Home },
+        { href: "/dashboard/link-builder", label: "Kelola Link", icon: Link2 },
+        {
+          href: "/dashboard/videos",
+          label: "Tambah Video",
+          icon: Film,
+          matchPrefix: "/dashboard/videos",
+        },
+        { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+        { href: "/dashboard/billing", label: "Plan & Billing", icon: CreditCard },
+        { href: "/dashboard/profile", label: "Profile", icon: UserRound },
+        { href: "/dashboard/notifications", label: "Notifikasi", icon: Bell },
+      ];
 
   const settingsNavItems: NavItem[] =
     mode === "admin"

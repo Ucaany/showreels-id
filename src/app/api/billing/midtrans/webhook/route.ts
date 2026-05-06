@@ -26,7 +26,16 @@ function verifySignature(payload: {
   return local === payload.signature_key;
 }
 
+/**
+ * @deprecated Midtrans webhook dipertahankan untuk backward-compatibility transaksi lama.
+ * Semua transaksi baru menggunakan Tripay callback di /api/billing/tripay/callback.
+ */
 export async function POST(request: Request) {
+  const deprecationHeaders = {
+    "X-Deprecated": "true",
+    "X-Deprecation-Notice": "Use /api/billing/tripay/callback for new transactions",
+  };
+
   const body = (await request.json().catch(() => null)) as
     | {
         order_id?: string;
@@ -41,17 +50,26 @@ export async function POST(request: Request) {
     | null;
 
   if (!body) {
-    return NextResponse.json({ error: "Payload webhook tidak valid." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Payload webhook tidak valid." },
+      { status: 400, headers: deprecationHeaders }
+    );
   }
 
   if (!verifySignature(body)) {
-    return NextResponse.json({ error: "Signature Midtrans tidak valid." }, { status: 401 });
+    return NextResponse.json(
+      { error: "Signature Midtrans tidak valid." },
+      { status: 401, headers: deprecationHeaders }
+    );
   }
 
   const result = await handleMidtransWebhook(body);
   if (!result.ok) {
-    return NextResponse.json({ error: result.message }, { status: 404 });
+    return NextResponse.json(
+      { error: result.message },
+      { status: 404, headers: deprecationHeaders }
+    );
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true }, { headers: deprecationHeaders });
 }

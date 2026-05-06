@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Briefcase,
   CalendarDays,
@@ -217,9 +219,9 @@ function LimitReachedCard({ maxLinksLabel, onClose }: { maxLinksLabel: string; o
         Kamu sudah menggunakan {maxLinksLabel} link aktif. Upgrade untuk menambahkan lebih banyak link.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button className="bg-white text-zinc-950 hover:bg-zinc-100 active:scale-[0.98]" onClick={() => window.location.assign("/payment?plan=creator&intent=checkout")}>
+        <Link href="/payment?plan=creator&intent=checkout" className="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium bg-white text-zinc-950 hover:bg-zinc-100 active:scale-[0.98]">
           Upgrade ke Creator
-        </Button>
+        </Link>
         <Button type="button" variant="ghost" className="text-white hover:bg-white/10 hover:text-white active:scale-[0.98]" onClick={onClose}>
           Nanti
         </Button>

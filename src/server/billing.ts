@@ -9,6 +9,7 @@ import {
 } from "@/lib/plan-feature-matrix";
 import { ensureBillingSchema } from "@/server/billing-schema-bootstrap";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
+import { isTripayConfigured, createTripayClosedPayment } from "@/server/tripay";
 
 export type BillingPlanName = "free" | "creator" | "business";
 export type BillingCycle = "monthly" | "yearly";
@@ -287,7 +288,7 @@ export function toBillingPaymentSummary(
   const tokenFromPayload = typeof payload.token === "string" ? payload.token : null;
   const redirectFromPayload =
     typeof payload.redirect_url === "string" ? payload.redirect_url : null;
-  const redirectUrl = transaction.redirectUrl || redirectFromPayload || null;
+  const redirectUrl = transaction.checkoutUrl || transaction.redirectUrl || redirectFromPayload || null;
   const paymentMethod =
     transaction.paymentMethod || paymentMethodFromWebhook || transaction.provider;
   const transactionStatus =
@@ -311,7 +312,7 @@ export function toBillingPaymentSummary(
     redirectUrl,
     expiresAt,
     qrActions: actions,
-    qrUrl: isQrisLikePayment ? getQrisActionUrl(actions, redirectUrl) : null,
+    qrUrl: transaction.qrUrl || (isQrisLikePayment ? getQrisActionUrl(actions, redirectUrl) : null),
   };
 }
 
@@ -548,72 +549,38 @@ export async function createUpgradeTransaction(input: {
       };
     }
 
-    if (!isMidtransConfigured()) {
+    if (!isTripayConfigured()) {
       return {
         ok: false as const,
-        code: "midtrans_not_configured",
+        code: "tripay_not_configured",
         message:
           "Layanan pembayaran belum dikonfigurasi. Hubungi admin untuk aktivasi pembayaran.",
       };
     }
 
-    const runtime = getMidtransRuntimeConfig();
-    const serverKey = getMidtransServerKey();
-    const callbacks = getMidtransCallbacks({
-      targetPlan: normalizedTargetPlan,
-      invoiceId,
-    });
-    const response = await fetch(`${runtime.snapApiBaseUrl}/snap/v1/transactions`, {
-      method: "POST",
-      headers: {
-        Authorization: getMidtransAuthorizationHeader(serverKey),
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        transaction_details: {
-          order_id: invoiceId,
-          gross_amount: amount,
-        },
-        item_details: [
-          {
-            id: `${normalizedTargetPlan}-${input.billingCycle}`,
-            price: amount,
-            quantity: 1,
-            name: `Showreels ${PLAN_CATALOG[normalizedTargetPlan].label} (${input.billingCycle})`,
-          },
-        ],
-        customer_details: {
-          first_name: input.fullName || "Creator",
-          email: input.email,
-        },
-        credit_card: {
-          secure: true,
-        },
-        enabled_payments: ["credit_card", "qris"],
-        custom_field1: normalizedTargetPlan,
-        custom_field2: input.billingCycle,
-        custom_field3: input.userId,
-        callbacks,
-      }),
+    const tripayResult = await createTripayClosedPayment({
+      merchantRef: invoiceId,
+      amount,
+      customerName: input.fullName || "Creator",
+      customerEmail: input.email,
+      paymentMethod: "QRIS",
+      orderItemName: `Showreels ${PLAN_CATALOG[normalizedTargetPlan].label} (${input.billingCycle})`,
+      callbackUrl: `${getAppOrigin()}/api/billing/tripay/callback`,
+      returnUrl: `${getAppOrigin()}/dashboard/billing?payment=success`,
     });
 
-    const payload = (await response.json().catch(() => null)) as
-      | MidtransSnapPayload
-      | null;
-
-    if (!response.ok || !payload?.token || !payload?.redirect_url) {
+    if (!tripayResult.ok) {
       return {
         ok: false as const,
-        code: "midtrans_error",
+        code: "tripay_error",
         message:
-          payload?.error_messages?.[0] ||
-          payload?.status_message ||
+          tripayResult.message ||
           "Gagal membuat transaksi pembayaran. Coba ulang beberapa saat lagi.",
       };
     }
 
-    const payloadRecord = payload as unknown as Record<string, unknown>;
+    const tripayData = tripayResult.data!;
+    const tripayRecord = tripayData as unknown as Record<string, unknown>;
 
     const [transaction] = await db
       .insert(billingTransactions)
@@ -624,15 +591,19 @@ export async function createUpgradeTransaction(input: {
         planName: normalizedTargetPlan,
         billingCycle: input.billingCycle,
         amount,
-        currency: payload.currency || "IDR",
+        currency: "IDR",
         status: "pending",
-        provider: "midtrans",
-        providerReference: invoiceId,
-        snapToken: payload.token,
-        redirectUrl: payload.redirect_url,
-        paymentMethod: "snap",
+        provider: "tripay",
+        providerReference: tripayData.reference || invoiceId,
+        checkoutUrl: tripayData.checkout_url || "",
+        qrUrl: tripayData.qr_url || "",
+        payCode: tripayData.pay_code || "",
+        expiredAt: tripayData.expired_time
+          ? new Date(tripayData.expired_time * 1000)
+          : null,
+        paymentMethod: tripayData.payment_method || "tripay",
         description: `Upgrade ke ${PLAN_CATALOG[normalizedTargetPlan].label}`,
-        rawPayload: payloadRecord,
+        rawPayload: tripayRecord,
       })
       .returning();
 
