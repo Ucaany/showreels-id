@@ -397,9 +397,9 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
   const inputPlaceholder = selectedItem?.placeholder || (formType === "social" ? "ucaanystore" : "https://...");
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-zinc-950/60 p-3 sm:p-5" role="dialog" aria-modal="true" aria-labelledby="add-link-modal-title">
+    <div className="fixed inset-0 z-[95] isolate flex items-center justify-center bg-zinc-950/60 p-3 sm:p-5" role="dialog" aria-modal="true" aria-labelledby="add-link-modal-title">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="Close add link modal backdrop" onClick={onClose} />
-      <div className="relative z-[96] flex h-[min(85dvh,700px)] w-full max-w-[900px] flex-col overflow-hidden rounded-[1.25rem] border border-zinc-200 bg-white shadow-2xl sm:h-[min(82vh,700px)] sm:rounded-[1.5rem] lg:max-w-[940px]">
+      <div className="relative z-[96] mx-auto flex h-[min(85dvh,700px)] w-full max-w-[900px] flex-col overflow-hidden rounded-[1.25rem] border border-zinc-200 bg-white shadow-2xl sm:h-[min(82vh,700px)] sm:rounded-[1.5rem] lg:max-w-[940px]">
         <div className="flex items-start justify-between gap-3 border-b border-zinc-200 p-3.5 sm:p-4">
           <div>
             <h3 id="add-link-modal-title" className="text-lg font-black tracking-tight text-zinc-950 sm:text-xl">Add Link</h3>

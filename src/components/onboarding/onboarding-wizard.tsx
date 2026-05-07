@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Link2, Sparkles, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Link2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,34 +18,25 @@ type Props = {
   };
 };
 
-type Step = "name" | "role" | "username" | "bio" | "links" | "done";
+type Step = "identity" | "bio" | "links" | "done";
 
-const STEPS: Step[] = ["name", "role", "username", "bio", "links", "done"];
+const STEPS: Step[] = ["identity", "bio", "links", "done"];
 
-const ROLE_OPTIONS = [
-  "Video Editor",
-  "Videografer",
-  "Content Creator",
-  "Motion Designer",
-  "Filmmaker",
-  "Animator",
-  "Photographer",
-  "Graphic Designer",
-  "UI/UX Designer",
-  "Social Media Manager",
-  "Lainnya",
-];
+const STEP_LABELS: Record<Step, string> = {
+  identity: "Identitas",
+  bio: "Bio",
+  links: "Link",
+  done: "Selesai",
+};
 
 export function OnboardingWizard({ initialData }: Props) {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<Step>("name");
+  const [currentStep, setCurrentStep] = useState<Step>("identity");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   // Form data
   const [name, setName] = useState(initialData.name);
-  const [role, setRole] = useState("");
-  const [customRole, setCustomRole] = useState("");
   const [username, setUsername] = useState(initialData.username);
   const [bio, setBio] = useState("");
   const [links, setLinks] = useState<CustomLinkItem[]>([]);
@@ -73,20 +64,30 @@ export function OnboardingWizard({ initialData }: Props) {
   const handleNext = async () => {
     setError("");
 
-    // Validation per step
-    if (currentStep === "name" && !name.trim()) {
-      setError("Nama tidak boleh kosong");
-      return;
-    }
-    if (currentStep === "username" && !username.trim()) {
-      setError("Username tidak boleh kosong");
-      return;
-    }
-    if (currentStep === "username" && !/^[a-z0-9_]+$/.test(username.trim())) {
-      setError("Username hanya boleh huruf kecil, angka, dan underscore");
-      return;
+    // Validation for identity step
+    if (currentStep === "identity") {
+      if (!name.trim()) {
+        setError("Nama tidak boleh kosong");
+        return;
+      }
+      if (!username.trim()) {
+        setError("Username tidak boleh kosong");
+        return;
+      }
+      if (!/^[a-z0-9_]+$/.test(username.trim())) {
+        setError("Username hanya boleh huruf kecil, angka, dan underscore");
+        return;
+      }
+      if (username.trim().length < 3) {
+        setError("Username minimal 3 karakter");
+        return;
+      }
     }
 
+    goNext();
+  };
+
+  const handleSkip = () => {
     goNext();
   };
 
@@ -95,24 +96,30 @@ export function OnboardingWizard({ initialData }: Props) {
     setError("");
 
     try {
-      const finalRole = role === "Lainnya" ? customRole : role;
       const response = await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fullName: name.trim(),
-          role: finalRole.trim(),
           username: username.trim().toLowerCase(),
           bio: bio.trim(),
         }),
       });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => null) as { error?: string } | null;
+        const data = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
         setError(data?.error || "Gagal menyimpan profil. Coba lagi.");
         setSaving(false);
         return;
       }
+
+      // Mark onboarding as complete
+      await fetch("/api/onboarding/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }).catch(() => {});
 
       // Redirect to dashboard
       router.push("/dashboard");
@@ -127,6 +134,10 @@ export function OnboardingWizard({ initialData }: Props) {
     setShowAddLink(false);
   };
 
+  const removeLink = (id: string) => {
+    setLinks((prev) => prev.filter((link) => link.id !== id));
+  };
+
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       {/* Progress Bar */}
@@ -137,140 +148,170 @@ export function OnboardingWizard({ initialData }: Props) {
         />
       </div>
 
-      {/* Step Counter */}
-      <div className="fixed left-1/2 top-5 z-50 -translate-x-1/2">
-        <p className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-600">
-          {stepIndex + 1} / {STEPS.length}
-        </p>
+      {/* Step Indicator */}
+      <div className="fixed inset-x-0 top-4 z-50 flex items-center justify-center">
+        <div className="flex items-center gap-2 rounded-full bg-zinc-100/90 px-4 py-1.5 backdrop-blur-sm">
+          {STEPS.map((step, i) => (
+            <div key={step} className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition-all",
+                  i < stepIndex
+                    ? "bg-zinc-900 text-white"
+                    : i === stepIndex
+                      ? "bg-zinc-900 text-white ring-2 ring-zinc-900/20"
+                      : "bg-zinc-200 text-zinc-500"
+                )}
+              >
+                {i < stepIndex ? (
+                  <Check className="h-3 w-3" />
+                ) : (
+                  i + 1
+                )}
+              </div>
+              {i < STEPS.length - 1 && (
+                <div
+                  className={cn(
+                    "h-0.5 w-4 rounded-full transition-all",
+                    i < stepIndex ? "bg-zinc-900" : "bg-zinc-200"
+                  )}
+                />
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Main Content */}
-      <main className="flex flex-1 items-center justify-center px-5 py-20">
+      <main className="flex flex-1 items-center justify-center px-5 py-24">
         <div className="w-full max-w-md">
-          {/* Step: Name */}
-          {currentStep === "name" && (
-            <div className="animate-in fade-in duration-200">
+          {/* Step 1: Identity (Name + Username) */}
+          {currentStep === "identity" && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="mb-8 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100">
                   <User className="h-6 w-6 text-zinc-700" />
                 </div>
-                <h1 className="text-2xl font-black tracking-tight text-zinc-950">Siapa nama kamu?</h1>
-                <p className="mt-2 text-sm text-zinc-500">Nama ini akan ditampilkan di profil publik kamu.</p>
+                <h1 className="text-2xl font-black tracking-tight text-zinc-950">
+                  Buat profil kamu
+                </h1>
+                <p className="mt-2 text-sm text-zinc-500">
+                  Isi nama dan pilih username untuk halaman publik kamu.
+                </p>
               </div>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Nama lengkap"
-                className="h-12 rounded-xl border-zinc-200 text-center text-lg font-semibold"
-                autoFocus
-              />
-            </div>
-          )}
 
-          {/* Step: Role */}
-          {currentStep === "role" && (
-            <div className="animate-in fade-in duration-200">
-              <div className="mb-8 text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100">
-                  <Sparkles className="h-6 w-6 text-zinc-700" />
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold text-zinc-600">
+                    Nama Lengkap
+                  </label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Nama lengkap kamu"
+                    className="h-12 rounded-xl border-zinc-200 text-base font-semibold"
+                    autoFocus
+                  />
                 </div>
-                <h1 className="text-2xl font-black tracking-tight text-zinc-950">Apa peran kamu?</h1>
-                <p className="mt-2 text-sm text-zinc-500">Pilih yang paling menggambarkan pekerjaan kamu.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {ROLE_OPTIONS.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => setRole(option)}
-                    className={cn(
-                      "rounded-xl border px-3 py-2.5 text-sm font-semibold transition active:scale-[0.98]",
-                      role === option
-                        ? "border-zinc-900 bg-zinc-900 text-white"
-                        : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50"
-                    )}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-              {role === "Lainnya" && (
-                <Input
-                  value={customRole}
-                  onChange={(e) => setCustomRole(e.target.value)}
-                  placeholder="Tulis peran kamu..."
-                  className="mt-3 h-11 rounded-xl"
-                  autoFocus
-                />
-              )}
-            </div>
-          )}
 
-          {/* Step: Username */}
-          {currentStep === "username" && (
-            <div className="animate-in fade-in duration-200">
-              <div className="mb-8 text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100">
-                  <span className="text-lg font-black text-zinc-700">@</span>
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold text-zinc-600">
+                    Username
+                  </label>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-zinc-400">
+                      @
+                    </span>
+                    <Input
+                      value={username}
+                      onChange={(e) =>
+                        setUsername(
+                          e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
+                        )
+                      }
+                      placeholder="username_kamu"
+                      className="h-12 rounded-xl border-zinc-200 pl-9 text-base font-semibold"
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-zinc-400">
+                    showreels.id/
+                    <span className="font-semibold text-zinc-600">
+                      {username || "username"}
+                    </span>
+                  </p>
                 </div>
-                <h1 className="text-2xl font-black tracking-tight text-zinc-950">Pilih username</h1>
-                <p className="mt-2 text-sm text-zinc-500">URL profil kamu: showreels.id/<span className="font-semibold">{username || "username"}</span></p>
-              </div>
-              <div className="relative">
-                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-zinc-400">@</span>
-                <Input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                  placeholder="username_kamu"
-                  className="h-12 rounded-xl border-zinc-200 pl-9 text-lg font-semibold"
-                  autoFocus
-                />
               </div>
             </div>
           )}
 
-          {/* Step: Bio */}
+          {/* Step 2: Bio */}
           {currentStep === "bio" && (
-            <div className="animate-in fade-in duration-200">
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="mb-8 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100">
-                  <Sparkles className="h-6 w-6 text-zinc-700" />
+                  <span className="text-xl">✍️</span>
                 </div>
-                <h1 className="text-2xl font-black tracking-tight text-zinc-950">Tulis bio singkat</h1>
-                <p className="mt-2 text-sm text-zinc-500">Ceritakan sedikit tentang diri kamu (opsional).</p>
+                <h1 className="text-2xl font-black tracking-tight text-zinc-950">
+                  Tulis bio singkat
+                </h1>
+                <p className="mt-2 text-sm text-zinc-500">
+                  Ceritakan sedikit tentang diri kamu. Bisa diubah nanti.
+                </p>
               </div>
+
               <Textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Contoh: Video editor profesional dengan 5 tahun pengalaman di bidang wedding dan commercial..."
-                className="min-h-32 rounded-xl border-zinc-200 text-sm"
+                className="min-h-36 rounded-xl border-zinc-200 text-sm leading-relaxed"
                 maxLength={300}
                 autoFocus
               />
-              <p className="mt-2 text-right text-xs text-zinc-400">{bio.length}/300</p>
+              <p className="mt-2 text-right text-xs text-zinc-400">
+                {bio.length}/300
+              </p>
             </div>
           )}
 
-          {/* Step: Links */}
+          {/* Step 3: Links */}
           {currentStep === "links" && (
-            <div className="animate-in fade-in duration-200">
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="mb-8 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100">
                   <Link2 className="h-6 w-6 text-zinc-700" />
                 </div>
-                <h1 className="text-2xl font-black tracking-tight text-zinc-950">Tambah link</h1>
-                <p className="mt-2 text-sm text-zinc-500">Tambahkan link sosial media atau website kamu (opsional).</p>
+                <h1 className="text-2xl font-black tracking-tight text-zinc-950">
+                  Tambah link
+                </h1>
+                <p className="mt-2 text-sm text-zinc-500">
+                  Tambahkan link sosial media atau website kamu.
+                </p>
               </div>
 
               {links.length > 0 && (
                 <div className="mb-4 space-y-2">
                   {links.map((link) => (
-                    <div key={link.id} className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+                    <div
+                      key={link.id}
+                      className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3"
+                    >
                       <Link2 className="h-4 w-4 shrink-0 text-zinc-500" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-zinc-900">{link.title}</p>
-                        <p className="truncate text-xs text-zinc-500">{link.url}</p>
+                        <p className="truncate text-sm font-semibold text-zinc-900">
+                          {link.title}
+                        </p>
+                        <p className="truncate text-xs text-zinc-500">
+                          {link.url}
+                        </p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => removeLink(link.id)}
+                        className="shrink-0 rounded-lg p-1.5 text-zinc-400 transition hover:bg-zinc-200 hover:text-zinc-700"
+                        aria-label="Hapus link"
+                      >
+                        <span className="text-xs">✕</span>
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -297,21 +338,37 @@ export function OnboardingWizard({ initialData }: Props) {
             </div>
           )}
 
-          {/* Step: Done */}
+          {/* Step 4: Done */}
           {currentStep === "done" && (
-            <div className="animate-in fade-in duration-200 text-center">
+            <div className="animate-in fade-in slide-in-from-right-4 duration-300 text-center">
               <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                 <Check className="h-7 w-7 text-emerald-600" />
               </div>
-              <h1 className="text-2xl font-black tracking-tight text-zinc-950">Semua siap! 🎉</h1>
+              <h1 className="text-2xl font-black tracking-tight text-zinc-950">
+                Semua siap! 🎉
+              </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-500">
-                Profil kamu sudah dibuat. Kamu bisa langsung mulai menggunakan dashboard untuk mengelola portfolio dan bio link.
+                Profil kamu sudah dibuat. Kamu bisa langsung mulai menggunakan
+                dashboard.
               </p>
-              <div className="mt-8 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-                <p className="text-xs font-semibold text-zinc-500">Profil kamu</p>
-                <p className="mt-1 text-lg font-black text-zinc-950">{name}</p>
-                <p className="text-sm text-zinc-600">{role === "Lainnya" ? customRole : role}</p>
-                <p className="mt-1 text-xs text-zinc-400">showreels.id/{username}</p>
+              <div className="mt-8 rounded-xl border border-zinc-200 bg-zinc-50 p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                  Profil kamu
+                </p>
+                <p className="mt-2 text-xl font-black text-zinc-950">{name}</p>
+                <p className="mt-0.5 text-sm text-zinc-500">
+                  showreels.id/{username}
+                </p>
+                {bio && (
+                  <p className="mt-3 text-xs leading-5 text-zinc-600 line-clamp-2">
+                    {bio}
+                  </p>
+                )}
+                {links.length > 0 && (
+                  <p className="mt-2 text-xs text-zinc-400">
+                    {links.length} link ditambahkan
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -345,12 +402,13 @@ export function OnboardingWizard({ initialData }: Props) {
 
           {/* Skip / Next / Finish */}
           <div className="flex items-center gap-2">
-            {currentStep !== "done" && currentStep !== "name" && currentStep !== "username" && (
+            {/* Skip button - only for bio and links steps */}
+            {(currentStep === "bio" || currentStep === "links") && (
               <Button
                 type="button"
                 variant="ghost"
                 className="text-zinc-500"
-                onClick={goNext}
+                onClick={handleSkip}
               >
                 Skip
               </Button>
