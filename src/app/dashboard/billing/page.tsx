@@ -93,17 +93,35 @@ export default async function DashboardBillingPage({
       createdAt: new Date(),
     };
     entitlementState = {
-      effectivePlan: { planName: "free" as const },
-      entitlements: {
-        maxVideos: 3,
-        maxLinks: 5,
-        customDomain: false,
-        analytics: false,
-        prioritySupport: false,
-        whitelabel: false,
-        removeWatermark: false,
+      effectivePlan: {
+        planName: "free" as const,
+        billingCycle: "monthly" as const,
+        status: "active",
+        source: "fallback_free" as const,
+        trialStartedAt: null,
+        trialEndsAt: null,
+        isTrialActive: false,
+        isTrialExpired: false,
       },
-    } as Awaited<ReturnType<typeof getCreatorEntitlementsForUser>>;
+      entitlements: {
+        planName: "free" as const,
+        linkBuilderMax: 5,
+        usernameChangesPer30Days: 2,
+        analyticsMaxDays: 7,
+        customThumbnailEnabled: false,
+        whitelabelEnabled: false,
+        sourceQuotaPerPlatform: {
+          youtube: 10,
+          gdrive: 10,
+          instagram: 10,
+          facebook: 10,
+          vimeo: 10,
+        },
+        creatorGroupEnabled: false,
+        supportEnabled: false,
+        themeSwitchComingSoon: false,
+      },
+    };
     siteSettings = {
       maintenanceEnabled: false,
       pauseEnabled: false,
