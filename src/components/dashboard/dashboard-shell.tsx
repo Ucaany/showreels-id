@@ -428,11 +428,11 @@ export function DashboardShell({
 
       <div
         className={cn(
-          "min-h-screen pt-16 transition-all duration-300 ease-in-out",
+          "min-h-screen pt-16 transition-[padding] duration-300 ease-in-out",
           sidebarOpen ? "md:pl-72" : "md:pl-20"
         )}
       >
-        <main key={pathname} className="p-4 pb-24 md:p-8 md:pb-8 animate-in fade-in duration-200">{children}</main>
+        <main key={pathname} className="p-4 pb-24 md:p-8 md:pb-8">{children}</main>
       </div>
 
       <BottomNavigation />

@@ -256,6 +256,12 @@ export async function getOrCreateSubscription(userId: string) {
   }
 
   try {
+    await ensureBillingSchema();
+  } catch {
+    // Will be caught below as isMissingBillingSchemaError if tables still missing
+  }
+
+  try {
     const existing = await db.query.billingSubscriptions.findFirst({
       where: eq(billingSubscriptions.userId, userId),
     });
@@ -407,6 +413,12 @@ export async function createUpgradeTransaction(input: {
       code: "db_not_ready",
       message: "Database belum siap untuk transaksi billing.",
     };
+  }
+
+  try {
+    await ensureBillingSchema();
+  } catch {
+    // Schema bootstrap failed — will be caught below as isMissingBillingSchemaError
   }
 
   try {
