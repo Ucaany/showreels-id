@@ -10,7 +10,11 @@ async function ensureBillingEnabledColumn() {
   if (billingColumnEnsured) return;
   try {
     await db.execute(sql.raw(
-      `ALTER TABLE "site_settings" ADD COLUMN IF NOT EXISTS "billing_enabled" boolean NOT NULL DEFAULT false;`
+      `ALTER TABLE "site_settings" ADD COLUMN IF NOT EXISTS "billing_enabled" boolean NOT NULL DEFAULT true;`
+    ));
+    // Ensure existing rows have billing enabled
+    await db.execute(sql.raw(
+      `UPDATE "site_settings" SET "billing_enabled" = true WHERE "id" = 'global' AND "billing_enabled" = false;`
     ));
     billingColumnEnsured = true;
   } catch {

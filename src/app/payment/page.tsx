@@ -1,7 +1,7 @@
 import { PricingSubscriptionPage } from "@/components/pricing/pricing-subscription-page";
 import { SiteNavbar } from "@/components/site-navbar";
 import { getPlanCatalog } from "@/server/billing";
-import { isTripayConfigured } from "@/server/tripay";
+import { isTripayConfigured, getTripayConfig } from "@/server/tripay";
 import { getCurrentUser } from "@/server/current-user";
 import { getSiteSettings } from "@/server/site-settings";
 
@@ -20,6 +20,7 @@ export default async function PaymentPage({
   const catalog = getPlanCatalog();
   const siteSettings = await getSiteSettings();
   const tripayConfigured = isTripayConfigured();
+  const tripayConfig = getTripayConfig();
 
   const normalizedPlan = params.plan === "pro" ? "creator" : params.plan;
   const initialPlan =
@@ -49,7 +50,7 @@ export default async function PaymentPage({
             business: catalog.business.monthly,
           }}
           paymentConfig={{
-            mode: tripayConfigured ? "production" : "sandbox",
+            mode: tripayConfig.isProduction ? "production" : "sandbox",
             serverKeySet: tripayConfigured,
             billingEnabled: siteSettings.billingEnabled,
           }}

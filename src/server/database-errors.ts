@@ -10,6 +10,20 @@ const BILLING_RELATIONS = [
   "creator_settings",
 ] as const;
 
+const BILLING_COLUMNS = [
+  "checkout_url",
+  "qr_url",
+  "pay_code",
+  "expired_at",
+  "provider_reference",
+  "snap_token",
+  "redirect_url",
+  "payment_method",
+  "description",
+  "raw_payload",
+  "paid_at",
+] as const;
+
 function toErrorLike(value: unknown): ErrorLike | null {
   if (!value || typeof value !== "object") {
     return null;
@@ -45,8 +59,41 @@ export function isRelationMissingError(error: unknown, relationName: string) {
   );
 }
 
+export function isColumnMissingError(error: unknown) {
+  const code = getErrorCode(error);
+  if (code === "42703") {
+    return true;
+  }
+
+  const message = getErrorMessage(error);
+  return (
+    message.includes("column") &&
+    message.includes("does not exist")
+  );
+}
+
 export function isMissingBillingSchemaError(error: unknown) {
-  return BILLING_RELATIONS.some((relationName) =>
+  // Check if any billing table is missing
+  const tableMissing = BILLING_RELATIONS.some((relationName) =>
     isRelationMissingError(error, relationName)
   );
+  if (tableMissing) return true;
+
+  // Check if a billing column is missing (e.g., Tripay columns not yet added)
+  if (isColumnMissingError(error)) {
+    const message = getErrorMessage(error);
+    // Only treat as billing schema error if it's a known billing column
+    const isKnownBillingColumn = BILLING_COLUMNS.some((col) =>
+      message.includes(col)
+    );
+    if (isKnownBillingColumn) return true;
+
+    // Also catch generic column errors on billing tables
+    const isBillingTable = BILLING_RELATIONS.some((rel) =>
+      message.includes(rel)
+    );
+    if (isBillingTable) return true;
+  }
+
+  return false;
 }

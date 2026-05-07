@@ -257,8 +257,10 @@ export async function getOrCreateSubscription(userId: string) {
 
   try {
     await ensureBillingSchema();
-  } catch {
-    // Will be caught below as isMissingBillingSchemaError if tables still missing
+  } catch (bootstrapError) {
+    // If bootstrap itself fails, return fallback instead of crashing
+    console.error("[billing] ensureBillingSchema failed in getOrCreateSubscription:", bootstrapError);
+    return buildFallbackSubscription(userId);
   }
 
   try {
@@ -417,8 +419,14 @@ export async function createUpgradeTransaction(input: {
 
   try {
     await ensureBillingSchema();
-  } catch {
-    // Schema bootstrap failed — will be caught below as isMissingBillingSchemaError
+  } catch (bootstrapError) {
+    console.error("[billing] ensureBillingSchema failed in createUpgradeTransaction:", bootstrapError);
+    return {
+      ok: false as const,
+      code: "billing_schema_missing",
+      message:
+        "Schema billing sedang disiapkan. Silakan coba lagi dalam beberapa detik.",
+    };
   }
 
   try {

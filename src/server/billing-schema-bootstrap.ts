@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS "creator_settings" (
   "show_public_stats" boolean DEFAULT false NOT NULL,
   "whitelabel_enabled" boolean DEFAULT false NOT NULL,
   "billing_email" text DEFAULT '' NOT NULL,
-  "payment_method" text DEFAULT 'midtrans' NOT NULL,
+  "payment_method" text DEFAULT 'tripay' NOT NULL,
   "tax_info" text DEFAULT '' NOT NULL,
   "invoice_notes" text DEFAULT '' NOT NULL,
   "updated_at" timestamp DEFAULT now() NOT NULL,
@@ -71,14 +71,18 @@ CREATE TABLE IF NOT EXISTS "billing_transactions" (
   "amount" integer DEFAULT 0 NOT NULL,
   "currency" text DEFAULT 'IDR' NOT NULL,
   "status" text DEFAULT 'pending' NOT NULL,
-  "provider" text DEFAULT 'midtrans' NOT NULL,
+  "provider" text DEFAULT 'tripay' NOT NULL,
   "provider_reference" text DEFAULT '' NOT NULL,
   "snap_token" text DEFAULT '' NOT NULL,
   "redirect_url" text DEFAULT '' NOT NULL,
+  "checkout_url" text DEFAULT '' NOT NULL,
+  "qr_url" text DEFAULT '' NOT NULL,
+  "pay_code" text DEFAULT '' NOT NULL,
   "payment_method" text DEFAULT '' NOT NULL,
   "description" text DEFAULT '' NOT NULL,
   "raw_payload" jsonb DEFAULT '{}'::jsonb NOT NULL,
   "paid_at" timestamp,
+  "expired_at" timestamp,
   "updated_at" timestamp DEFAULT now() NOT NULL,
   "created_at" timestamp DEFAULT now() NOT NULL,
   CONSTRAINT "billing_transactions_user_id_users_id_fk"
@@ -89,6 +93,35 @@ CREATE TABLE IF NOT EXISTS "billing_transactions" (
     ON DELETE set null ON UPDATE no action,
   CONSTRAINT "billing_transactions_invoice_id_unique" UNIQUE("invoice_id")
 );
+`));
+
+  // Ensure Tripay columns exist (for tables created before Tripay migration)
+  await db.execute(sql.raw(`
+ALTER TABLE "billing_transactions"
+  ADD COLUMN IF NOT EXISTS "checkout_url" text DEFAULT '' NOT NULL;
+`));
+  await db.execute(sql.raw(`
+ALTER TABLE "billing_transactions"
+  ADD COLUMN IF NOT EXISTS "qr_url" text DEFAULT '' NOT NULL;
+`));
+  await db.execute(sql.raw(`
+ALTER TABLE "billing_transactions"
+  ADD COLUMN IF NOT EXISTS "pay_code" text DEFAULT '' NOT NULL;
+`));
+  await db.execute(sql.raw(`
+ALTER TABLE "billing_transactions"
+  ADD COLUMN IF NOT EXISTS "expired_at" timestamp;
+`));
+
+  // Update default provider to tripay
+  await db.execute(sql.raw(`
+ALTER TABLE "billing_transactions"
+  ALTER COLUMN "provider" SET DEFAULT 'tripay';
+`));
+
+  await db.execute(sql.raw(`
+ALTER TABLE "creator_settings"
+  ALTER COLUMN "payment_method" SET DEFAULT 'tripay';
 `));
 
   await db.execute(sql.raw(`
