@@ -112,10 +112,19 @@ export default async function AdminPanelPage({
           billingEnabled: true,
         }}
         analytics={{
-          totalRevenue: 750000,
-          activeSubscriptions: 8,
-          trialUsers: 4,
-          churnRate: 5.2,
+          revenue: { totalPaid: 750000, monthlyPaid: 250000, paidTransactions: 5 },
+          subscriptions: { active: 8, trial: 4, last30Days: 3 },
+          engagement: { clicks: 320, shares: 45, likes: 128, videoViews: 1560 },
+          geography: [
+            { country: "Indonesia", city: "Jakarta", visitors: 89 },
+            { country: "Indonesia", city: "Yogyakarta", visitors: 42 },
+          ],
+          chart: [],
+          topClicks: [],
+          contentPerformance: [],
+          transactions: [],
+          notifications: [],
+          unreadNotifications: 0,
         }}
         users={[
           {
@@ -204,7 +213,7 @@ export default async function AdminPanelPage({
           },
         ]}
         schedules={[]}
-        filters={{ search: "", platform: "all", status: "all", sort: "newest", page: "1" }}
+        filters={{ search: "", platform: "all", status: "all", sort: "newest", page: 1 }}
         pagination={{ page: 1, pageSize: 9, totalItems: 2, totalPages: 1 }}
         ownerProfile={{ username: "admin_showreels", email: "admin@showreels.id" }}
       />
