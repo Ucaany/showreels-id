@@ -38,20 +38,79 @@ export default async function DashboardBillingPage({
         invoiceId,
       });
     } catch (error) {
-      console.error("Failed to refresh Midtrans payment status", error);
+      console.error("Failed to refresh payment status", error);
     }
   }
 
-  const [subscription, transactions, settings, entitlementState, siteSettings] = await Promise.all([
-    getOrCreateSubscription(user.id),
-    getBillingTransactions(user.id),
-    getOrCreateCreatorSettings({
+  // Wrap all DB calls in try-catch to prevent page crash
+  let subscription: Awaited<ReturnType<typeof getOrCreateSubscription>>;
+  let transactions: Awaited<ReturnType<typeof getBillingTransactions>>;
+  let settings: Awaited<ReturnType<typeof getOrCreateCreatorSettings>>;
+  let entitlementState: Awaited<ReturnType<typeof getCreatorEntitlementsForUser>>;
+  let siteSettings: Awaited<ReturnType<typeof getSiteSettings>>;
+
+  try {
+    [subscription, transactions, settings, entitlementState, siteSettings] = await Promise.all([
+      getOrCreateSubscription(user.id),
+      getBillingTransactions(user.id),
+      getOrCreateCreatorSettings({
+        userId: user.id,
+        billingEmail: user.contactEmail || user.email,
+      }),
+      getCreatorEntitlementsForUser(user.id),
+      getSiteSettings(),
+    ]);
+  } catch (error) {
+    console.error("billing_page_data_error", error);
+    // Fallback values so page doesn't crash
+    subscription = {
+      id: `fallback-${user.id}`,
       userId: user.id,
+      planName: "free" as const,
+      billingCycle: "monthly" as const,
+      status: "active" as const,
+      price: 0,
+      currency: "IDR",
+      renewalDate: null,
+      nextPlanName: "free" as const,
+      updatedAt: new Date(),
+      createdAt: new Date(),
+    };
+    transactions = [];
+    settings = {
+      userId: user.id,
+      publicProfile: true,
+      searchIndexing: true,
+      showPublicEmail: false,
+      showSocialLinks: true,
+      showPublicStats: false,
+      whitelabelEnabled: false,
       billingEmail: user.contactEmail || user.email,
-    }),
-    getCreatorEntitlementsForUser(user.id),
-    getSiteSettings(),
-  ]);
+      paymentMethod: "tripay",
+      taxInfo: "",
+      invoiceNotes: "",
+      updatedAt: new Date(),
+      createdAt: new Date(),
+    };
+    entitlementState = {
+      effectivePlan: { planName: "free" as const },
+      entitlements: {
+        maxVideos: 3,
+        maxLinks: 5,
+        customDomain: false,
+        analytics: false,
+        prioritySupport: false,
+        whitelabel: false,
+        removeWatermark: false,
+      },
+    } as Awaited<ReturnType<typeof getCreatorEntitlementsForUser>>;
+    siteSettings = {
+      maintenanceEnabled: false,
+      pauseEnabled: false,
+      maintenanceMessage: "",
+      billingEnabled: true,
+    } as Awaited<ReturnType<typeof getSiteSettings>>;
+  }
 
   return (
     <BillingPanel

@@ -128,14 +128,14 @@ export function DashboardShell({
       "/dashboard/notifications",
     ];
 
-    // Prefetch after a short delay to not block initial render
+    // Prefetch after a very short delay to not block initial render
     const timer = setTimeout(() => {
       routesToPrefetch.forEach((route) => {
         if (route !== pathname) {
           router.prefetch(route);
         }
       });
-    }, 300);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -205,7 +205,7 @@ export function DashboardShell({
         key={`${mobile ? "mobile" : "desktop"}-${item.href}`}
         href={item.href}
         prefetchData={prefetchData}
-        prefetchDelay={150}
+        prefetchDelay={50}
         disablePrefetch={active}
         onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
         className={cn(
