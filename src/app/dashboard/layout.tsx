@@ -34,18 +34,21 @@ export default async function DashboardLayout({
     }),
   ]);
 
+  // If user has no name/username AND onboarding not completed, redirect to onboarding page
   const shouldShowOnboarding =
-    !onboarding.onboardingCompleted && !onboarding.onboardingSkipped;
+    !onboarding.onboardingCompleted &&
+    !onboarding.onboardingSkipped &&
+    !user.name &&
+    !user.username;
 
-  if (shouldShowOnboarding && pathname !== "/dashboard") {
-    redirect("/dashboard");
+  if (shouldShowOnboarding) {
+    redirect("/onboarding");
   }
 
   return (
     <DashboardShell
       user={user}
       planName={effectivePlan.planName}
-      hideChrome={shouldShowOnboarding && pathname === "/dashboard"}
     >
       {children}
     </DashboardShell>

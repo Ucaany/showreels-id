@@ -266,8 +266,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     }),
   ]);
 
+  // Only show onboarding for users who truly haven't set up their profile
   const shouldShowOnboarding =
-    !onboarding.onboardingCompleted && (!onboarding.onboardingSkipped || forceOnboarding);
+    !onboarding.onboardingCompleted &&
+    (!onboarding.onboardingSkipped || forceOnboarding) &&
+    !user.name &&
+    !user.username;
 
   if (shouldShowOnboarding) {
     return (
