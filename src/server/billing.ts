@@ -84,6 +84,14 @@ function normalizeBillingPlanName(value: string | null | undefined): BillingPlan
 }
 
 // Midtrans functions removed - now using Tripay exclusively
+// Stub kept for backward-compatible routes that still reference it
+export function isMidtransConfigured(): boolean {
+  const serverKey = (process.env.MIDTRANS_SERVER_KEY || "").trim();
+  const clientKey = (process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "").trim();
+  if (!serverKey || !clientKey) return false;
+  if (hasPlaceholderEnvValue(serverKey) || hasPlaceholderEnvValue(clientKey)) return false;
+  return true;
+}
 
 function buildInvoiceId(userId: string) {
   const now = new Date();
