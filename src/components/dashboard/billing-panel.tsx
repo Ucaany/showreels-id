@@ -315,15 +315,11 @@ export function BillingPanel({
 
       <section className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
         <Card className="dashboard-clean-card border-zinc-200 bg-white p-4 shadow-sm shadow-zinc-200/70 sm:p-5">
-          <h2 className="text-lg font-semibold text-zinc-950">Rincian akun billing</h2>
-          <div className="mt-4 space-y-3">
+          <h2 className="text-lg font-semibold text-zinc-950">Info Akun</h2>
+          <div className="mt-4">
             <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Billing Email</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Email Billing</p>
               <p className="mt-1 truncate text-sm font-semibold text-zinc-950">{billingEmail}</p>
-            </div>
-            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Payment Method</p>
-              <p className="mt-1 text-sm font-semibold capitalize text-zinc-950">{paymentMethod}</p>
             </div>
           </div>
         </Card>

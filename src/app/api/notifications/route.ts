@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/db";
+import { db, isDatabaseConfigured } from "@/db";
 import { userNotifications } from "@/db/schema";
 import { requireCurrentUser } from "@/server/current-user";
 
@@ -12,6 +12,10 @@ const markReadSchema = z.object({
 
 export async function GET() {
   const user = await requireCurrentUser();
+
+  if (!isDatabaseConfigured) {
+    return NextResponse.json({ notifications: [], unreadCount: 0 });
+  }
 
   const notifications = await db.query.userNotifications.findMany({
     where: eq(userNotifications.userId, user.id),
@@ -36,6 +40,11 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   const user = await requireCurrentUser();
+
+  if (!isDatabaseConfigured) {
+    return NextResponse.json({ ok: true });
+  }
+
   const payload = markReadSchema.safeParse(await request.json().catch(() => null));
 
   if (!payload.success) {

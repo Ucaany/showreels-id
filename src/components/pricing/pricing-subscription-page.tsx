@@ -3,10 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   Check,
   CheckCircle2,
-  CreditCard,
   Loader2,
   ShieldCheck,
   X,
@@ -402,34 +400,17 @@ export function PricingSubscriptionPage({
     <div className="min-h-screen bg-[#f6f4f2] pb-14 pt-10 sm:pb-20 sm:pt-14">
       <div className="mx-auto w-full max-w-[1180px] px-4 sm:px-6 lg:px-8">
         <section className="rounded-[2rem] border border-[#dfd6d0] bg-white p-4 shadow-[0_24px_48px_-34px_rgba(26,38,63,0.34)] sm:p-7 lg:p-9">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <Link href="/" className="inline-flex">
-              <Button variant="secondary" size="sm">
-                <ArrowLeft className="h-4 w-4" />
-                {locale === "en" ? "Back to landing" : "Kembali ke landing"}
-              </Button>
-            </Link>
-            <Link href="/dashboard/billing" className="inline-flex">
-              <Button variant="secondary" size="sm">
-                {locale === "en" ? "Open billing" : "Buka billing"}
-              </Button>
-            </Link>
-          </div>
-
-          <div className="mt-6 text-center sm:mt-8">
+          <div className="text-center">
             <Badge className="rounded-full border border-[#d6deee] bg-[#edf3ff] px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[#2f73ff]">
               {dictionary.landingPricingBadge}
             </Badge>
-            <h1 className="mt-3 font-display text-3xl font-semibold tracking-[-0.03em] text-[#1f1a17] sm:text-4xl">
+            <h1 className="mt-2 font-display text-2xl font-semibold tracking-[-0.03em] text-[#1f1a17] sm:text-3xl">
               {dictionary.landingPricingTitleLead}{" "}
               <span className="text-[#2f73ff]">{dictionary.landingPricingTitleAccent}</span>
             </h1>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-[#5f534c] sm:text-base">
-              {dictionary.landingPricingDescription}
-            </p>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 text-xs sm:mt-7">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs sm:mt-5">
             {(["selection", "confirmation", "result"] as FlowStep[]).map((step, index) => {
               const active =
                 step === flowStep;
@@ -461,18 +442,18 @@ export function PricingSubscriptionPage({
             <Card className="mt-6 border-[#cfe0ff] bg-[#f4f8ff] p-4">
               <p className="text-sm text-[#35527f]">
                 {locale === "en"
-                  ? "Sign in is required before checkout. You can still compare all plans on this page."
-                  : "Login diperlukan sebelum checkout. Kamu tetap bisa membandingkan semua plan di halaman ini."}
+                  ? "Login required to checkout."
+                  : "Login diperlukan untuk checkout."}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link href={loginHref}>
                   <Button size="sm">
-                    {locale === "en" ? "Sign in to continue" : "Login untuk lanjut"}
+                    {locale === "en" ? "Sign in" : "Login"}
                   </Button>
                 </Link>
                 <Link href={`/auth/signup?next=${encodeURIComponent(`/payment?plan=${selectedPlan}`)}`}>
                   <Button size="sm" variant="secondary">
-                    {locale === "en" ? "Create account" : "Buat akun"}
+                    {locale === "en" ? "Sign up" : "Daftar"}
                   </Button>
                 </Link>
               </div>
@@ -483,8 +464,8 @@ export function PricingSubscriptionPage({
             <Card className="mt-6 border-amber-200 bg-amber-50 p-4">
               <p className="text-sm text-amber-800">
                 {locale === "en"
-                  ? "Owner account does not use creator billing plans."
-                  : "Akun owner tidak menggunakan paket billing creator."}
+                  ? "Owner account cannot use billing."
+                  : "Akun owner tidak bisa menggunakan billing."}
               </p>
             </Card>
           ) : null}
@@ -501,12 +482,12 @@ export function PricingSubscriptionPage({
                 <span className="text-2xl">🚧</span>
                 <div>
                   <p className="text-sm font-semibold text-amber-900">
-                    {locale === "en" ? "Payment Coming Soon" : "Pembayaran Segera Hadir"}
+                    {locale === "en" ? "Coming Soon" : "Segera Hadir"}
                   </p>
                   <p className="mt-1 text-sm text-amber-700">
                     {locale === "en"
-                      ? "Payment feature is currently being prepared. Free trial for new users is still active. Stay tuned!"
-                      : "Fitur pembayaran sedang dalam persiapan. Trial gratis untuk user baru tetap aktif. Nantikan update selanjutnya!"}
+                      ? "Payment feature is being prepared. Free trial is still active."
+                      : "Fitur pembayaran sedang disiapkan. Trial gratis tetap aktif."}
                   </p>
                 </div>
               </div>
@@ -546,9 +527,14 @@ export function PricingSubscriptionPage({
                   }}
                 >
                   {plan.featured ? (
-                    <span className="absolute right-4 top-4 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2f73ff]">
-                      {locale === "en" ? "Most popular" : "Paling populer"}
-                    </span>
+                    <div className="absolute right-4 top-4 flex items-center gap-1.5">
+                      <span className="inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2f73ff]">
+                        {locale === "en" ? "Popular" : "Populer"}
+                      </span>
+                      <span className="inline-flex rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-950">
+                        {locale === "en" ? "Free trial" : "Uji coba gratis"}
+                      </span>
+                    </div>
                   ) : null}
                   {isCurrent ? (
                     <span
@@ -577,44 +563,44 @@ export function PricingSubscriptionPage({
                   ) : null}
                   <p
                     className={cn(
-                      "mt-8 text-helper font-semibold uppercase tracking-[0.14em]",
+                      "mt-6 text-helper font-semibold uppercase tracking-[0.14em]",
                       plan.featured ? "text-[#dfeaff]" : "text-[#6d7890]"
                     )}
                   >
                     {plan.name}
                   </p>
-                  <p className="mt-2 text-[2rem] font-semibold tracking-[-0.04em] sm:text-[2.3rem]">
+                  <p className="mt-1.5 text-[1.8rem] font-semibold tracking-[-0.04em] sm:text-[2rem]">
                     {toIdr(plan.price)}
                     <span
                       className={cn(
-                        "ml-1 text-[0.84rem] font-medium tracking-[-0.006em]",
+                        "ml-1 text-[0.75rem] font-medium tracking-[-0.006em]",
                         plan.featured ? "text-white/80" : "text-[#776860]"
                       )}
                     >
                       {locale === "en" ? "/month" : "/bulan"}
                     </span>
                   </p>
-                  <p className={cn("mt-2 text-sm", plan.featured ? "text-white/85" : "text-[#5f534c]")}>
+                  <p className={cn("mt-1.5 text-sm", plan.featured ? "text-white/85" : "text-[#5f534c]")}>
                     {plan.description || getDefaultDescription(plan.id, featureLocale)}
                   </p>
                   {plan.id === "business" ? (
                     <div
                       className={cn(
-                        "mt-3 rounded-xl border px-3 py-2 text-xs",
+                        "mt-2.5 rounded-xl border px-2.5 py-1.5 text-xs",
                         plan.featured
                           ? "border-white/35 bg-white/10 text-white"
                           : "border-[#d6e4ff] bg-[#eef4ff] text-[#2a3b60]"
                       )}
                     >
                       <p className="font-semibold uppercase tracking-[0.08em]">{businessBonus.title}</p>
-                      <p className="mt-1">{businessBonus.primary}</p>
+                      <p className="mt-0.5">{businessBonus.primary}</p>
                       <p className={cn("font-semibold", plan.featured ? "text-white" : "text-[#1f3f84]")}>
                         {businessBonus.secondary}
                       </p>
                     </div>
                   ) : null}
-                  <ul className="mt-4 space-y-2.5 text-sm">
-                    {plan.points.slice(0, 5).map((point) => {
+                  <ul className="mt-3 space-y-2 text-sm">
+                    {plan.points.map((point) => {
                       const unavailable = point.status === "unavailable";
                       return (
                         <li key={`${plan.id}-${point.id}`} className="flex items-start gap-2">
@@ -655,7 +641,7 @@ export function PricingSubscriptionPage({
             })}
           </div>
 
-          <div className="mt-6 rounded-[1.4rem] border border-[#dfd6d0] bg-[#faf8f6] p-4 sm:p-5">
+          <div className="mt-5 rounded-[1.4rem] border border-[#dfd6d0] bg-[#faf8f6] p-3.5 sm:p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6f625a]">
@@ -708,94 +694,42 @@ export function PricingSubscriptionPage({
           </div>
 
           {flowStep === "confirmation" ? (
-            <Card className="mt-6 border-[#d9cec7] bg-white p-4 sm:p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6f625a]">
-                {locale === "en" ? "Payment confirmation" : "Konfirmasi pembayaran"}
-              </p>
-              <h2 className="mt-1 text-xl font-semibold text-[#201b18]">
+            <Card className="mt-5 border-[#d9cec7] bg-white p-4 sm:p-5">
+              <h2 className="text-lg font-semibold text-[#201b18]">
                 {locale === "en"
-                  ? `Proceed with ${selectedPlanInfo.name} plan?`
-                  : `Lanjutkan dengan plan ${selectedPlanInfo.name}?`}
+                  ? "Confirm Payment"
+                  : "Konfirmasi Pembayaran"}
               </h2>
-              <p className="mt-2 text-sm text-[#63564f]">
-                {locale === "en"
-                  ? "Please review account and plan details before continuing payment."
-                  : "Pastikan informasi akun dan paket sudah benar sebelum lanjut pembayaran."}
-              </p>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-[#dbe4f6] bg-[#f8fbff] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6078a2]">
-                    {locale === "en" ? "Account" : "Informasi akun"}
-                  </p>
-                  <div className="mt-3 space-y-2 text-sm text-[#2b3444]">
-                    <p>
-                      <span className="font-semibold">{locale === "en" ? "Name" : "Nama"}:</span>{" "}
-                      {account.name?.trim() || (locale === "en" ? "Creator account" : "Akun creator")}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Email:</span>{" "}
-                      {account.email?.trim() || "-"}
-                    </p>
-                    <p>
-                      <span className="font-semibold">{locale === "en" ? "Link" : "Link"}:</span>{" "}
-                      {account.username
-                        ? `showreels-id.vercel.app/creator/${account.username}`
-                        : "-"}
-                    </p>
+              <div className="mt-4 rounded-xl border border-[#dbe4f6] bg-[#f8fbff] p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-[#6078a2]">{locale === "en" ? "Plan" : "Paket"}</p>
+                    <p className="text-lg font-semibold text-[#201b18]">{selectedPlanInfo.name}</p>
                   </div>
-                </div>
-
-                <div className="rounded-2xl border border-[#dbe4f6] bg-[#f8fbff] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6078a2]">
-                    {locale === "en" ? "Plan details" : "Informasi paket"}
-                  </p>
-                  <div className="mt-3 space-y-2 text-sm text-[#2b3444]">
-                    <p>
-                      <span className="font-semibold">{locale === "en" ? "Plan" : "Paket"}:</span>{" "}
-                      {selectedPlanInfo.name}
-                    </p>
-                    <p>
-                      <span className="font-semibold">{locale === "en" ? "Price" : "Harga"}:</span>{" "}
+                  <div className="text-right">
+                    <p className="text-sm text-[#6078a2]">{locale === "en" ? "Price" : "Harga"}</p>
+                    <p className="text-lg font-semibold text-[#201b18]">
                       {toIdr(selectedPlanInfo.price)}
-                      {locale === "en" ? " / month" : " / bulan"}
-                    </p>
-                    <p>
-                      <span className="font-semibold">{locale === "en" ? "Period" : "Periode"}:</span>{" "}
-                      {locale === "en" ? "Monthly subscription" : "Langganan bulanan"}
+                      <span className="text-sm font-normal text-[#776860]">{locale === "en" ? "/mo" : "/bln"}</span>
                     </p>
                   </div>
                 </div>
+                {account.email && (
+                  <p className="mt-3 border-t border-[#e8edf5] pt-3 text-sm text-[#6078a2]">
+                    {locale === "en" ? "Billed to" : "Ditagihkan ke"}: <span className="font-medium text-[#2b3444]">{account.email}</span>
+                  </p>
+                )}
               </div>
 
-              <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-                {selectedPlanInfo.points.map((point) => {
-                  const unavailable = point.status === "unavailable";
-                  const comingSoon = point.status === "coming_soon";
-                  return (
-                    <li key={`confirm-${point.id}`} className="rounded-xl border border-[#e4dad4] bg-[#fbf9f7] px-3 py-2 text-sm">
-                      <span className={cn(unavailable ? "text-[#8f8179] line-through" : "text-[#322a25]")}>
-                        {point.label}
-                      </span>
-                      {comingSoon ? (
-                        <span className="ml-2 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-700">
-                          {comingSoonLabel}
-                        </span>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-
               {selectedPlan === "business" ? (
-                <div className="mt-4 rounded-xl border border-[#d3e2ff] bg-[#eef4ff] p-3 text-sm text-[#1f3f84]">
-                  <p className="font-semibold">{businessBonus.title}</p>
-                  <p>{businessBonus.primary}</p>
-                  <p className="font-semibold">{businessBonus.secondary}</p>
+                <div className="mt-3 rounded-xl border border-[#d3e2ff] bg-[#eef4ff] p-3 text-sm text-[#1f3f84]">
+                  <p className="font-semibold">{businessBonus.title}: {businessBonus.primary}</p>
+                  <p className="text-xs">{businessBonus.secondary}</p>
                 </div>
               ) : null}
 
-              <div className="mt-4 flex flex-wrap items-center gap-2">
+              <div className="mt-4 flex items-center gap-2">
                 <Button variant="secondary" onClick={() => setFlowStep("selection")}>
                   {locale === "en" ? "Back" : "Kembali"}
                 </Button>
@@ -824,7 +758,7 @@ export function PricingSubscriptionPage({
                     }
                   }
                 }} disabled={loadingAction}>
-                  {loadingAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                  {loadingAction ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
                   {selectedPlan === "free"
                     ? locale === "en"
                       ? "Confirm Free plan"

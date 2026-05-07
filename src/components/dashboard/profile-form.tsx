@@ -526,24 +526,14 @@ export function ProfileForm({ user }: { user: DbUser }) {
             </div>
           </div>
 
-          {/* ── Skills & Build Link Row ── */}
+          {/* ── Skills ── */}
           <div className="bento-card lg:col-span-2">
-            <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-              <div>
-                <div className="mb-2 flex items-center gap-2">
-                  <Tag className="h-4 w-4 text-slate-500" />
-                  <h2 className="text-sm font-semibold text-slate-800">Skills</h2>
-                </div>
-                <Input className="text-sm" placeholder="Video editor, drone, event recap, short form" {...form.register("skills")} />
-                <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.skills?.message}</p>
-              </div>
-              <div className="flex items-end pb-0.5">
-                <Link href="/dashboard/link-builder" className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-900">
-                  <Link2 className="h-3.5 w-3.5" />
-                  Kontak & Link
-                </Link>
-              </div>
+            <div className="mb-2 flex items-center gap-2">
+              <Tag className="h-4 w-4 text-slate-500" />
+              <h2 className="text-sm font-semibold text-slate-800">Skills</h2>
             </div>
+            <Input className="text-sm" placeholder="Video editor, drone, event recap, short form" {...form.register("skills")} />
+            <p className="mt-0.5 text-xs text-rose-600">{form.formState.errors.skills?.message}</p>
           </div>
 
           {/* ── Actions ── */}

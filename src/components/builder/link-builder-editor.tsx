@@ -1062,86 +1062,73 @@ export function LinkBuilderEditor({
 
   return (
     <div className="mx-auto max-w-[1440px] space-y-5">
-      <Card className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-0 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="p-5 sm:p-7 lg:p-8">
-            <p className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
-              <Link2 className="h-3.5 w-3.5" />
-              Build Link
-            </p>
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <h1 className="font-display text-3xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-4xl">
+      <Card className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-sm">
+        <div className="flex flex-col gap-0 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-0.5 px-4 py-3 sm:px-5">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
                 {profileFields.fullName || "Creator"}
               </h1>
-              <span className="rounded-full bg-zinc-950 px-2.5 py-1 text-xs font-semibold text-white">
+              <span className="rounded-full bg-zinc-950 px-2 py-0.5 text-[10px] font-semibold text-white">
                 LIVE
               </span>
+              {saveStatus === "saving" ? (
+                <Save className="h-3.5 w-3.5 animate-pulse text-slate-400" />
+              ) : null}
             </div>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-              Atur profil, social link, custom link, dan preview halaman bio kamu.
-            </p>
-            <span className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-              {publicPath}
-            </span>
-            {saveStatus === "saving" || saveStatus === "error" ? (
-              <p className="text-xs font-semibold text-[#5d5049]">
-                {saveStatus === "saving" ? "Menyimpan..." : "Gagal menyimpan"}
-              </p>
-            ) : null}
+            <p className="text-[11px] text-slate-500">Halaman link bio publik Anda</p>
           </div>
 
-          <div className="border-t border-slate-200 bg-slate-50 p-5 sm:p-7 lg:border-l lg:border-t-0 lg:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Workspace</p>
-            <p className="mt-2 text-sm text-slate-600">Pilih panel editor. Preview tetap tersedia dari tab Preview dan mobile bottom nav.</p>
-            <div className="mt-5 grid w-full grid-cols-2 gap-2">
-            <button
-              type="button"
-              className={`flex h-11 items-center justify-center gap-1.5 rounded-2xl border text-xs font-semibold transition ${
-                activeSection === "edit"
-                  ? "border-zinc-950 bg-zinc-950 text-white"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-              }`}
-              onClick={() => setActiveSection("edit")}
-            >
-              <PencilLine className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Edit</span>
-            </button>
-            <button
-              type="button"
-              className={`flex h-11 items-center justify-center gap-1.5 rounded-2xl border text-xs font-semibold transition ${
-                activeSection === "links"
-                  ? "border-zinc-950 bg-zinc-950 text-white"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-              }`}
-              onClick={() => setActiveSection("links")}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Tambah Link</span>
-            </button>
-            <button
-              type="button"
-              className={`flex h-11 items-center justify-center gap-1.5 rounded-2xl border text-xs font-semibold transition ${
-                activeSection === "design"
-                  ? "border-zinc-950 bg-zinc-950 text-white"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-              }`}
-              onClick={() => setActiveSection("design")}
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Design</span>
-            </button>
-            <button
-              type="button"
-              className={`flex h-11 items-center justify-center gap-1.5 rounded-2xl border text-xs font-semibold transition ${
-                activeSection === "preview"
-                  ? "border-zinc-950 bg-zinc-950 text-white"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-              }`}
-              onClick={() => setActiveSection("preview")}
-            >
-              <Eye className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Preview</span>
-            </button>
+          <div className="flex items-center justify-center overflow-x-auto border-t border-slate-100 px-3 py-2 sm:border-t-0 sm:justify-end sm:px-4">
+            <div className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 p-0.5">
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                  activeSection === "edit"
+                    ? "bg-zinc-900 text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+                onClick={() => setActiveSection("edit")}
+              >
+                <PencilLine className="h-3 w-3" />
+                Edit
+              </button>
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                  activeSection === "links"
+                    ? "bg-zinc-900 text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+                onClick={() => setActiveSection("links")}
+              >
+                <Plus className="h-3 w-3" />
+                Add Link
+              </button>
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                  activeSection === "design"
+                    ? "bg-zinc-900 text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+                onClick={() => setActiveSection("design")}
+              >
+                <Sparkles className="h-3 w-3" />
+                Design
+              </button>
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                  activeSection === "preview"
+                    ? "bg-zinc-900 text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+                onClick={() => setActiveSection("preview")}
+              >
+                <Eye className="h-3 w-3" />
+                Preview
+              </button>
             </div>
           </div>
         </div>
@@ -1212,28 +1199,50 @@ export function LinkBuilderEditor({
               </p>
             </div>
             {bioSuggestions.length > 0 ? (
-              <div className="mt-3 grid gap-2">
-                {bioSuggestions.map((suggestion) => (
+              <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Hasil Generate AI
+                  </p>
                   <button
-                    key={suggestion}
                     type="button"
-                    onClick={() =>
-                      setProfileFields((prev) => ({
-                        ...prev,
-                        bio: suggestion.slice(0, 700),
-                      }))
-                    }
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 transition hover:border-slate-400 hover:bg-white"
+                    onClick={() => setBioSuggestions([])}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-emerald-600 transition hover:bg-emerald-100"
+                    aria-label="Tutup hasil generate"
                   >
-                    {suggestion}
+                    <X className="h-4 w-4" />
                   </button>
-                ))}
+                </div>
+                <div className="grid gap-2">
+                  {bioSuggestions.map((suggestion) => (
+                    <div
+                      key={suggestion}
+                      className="rounded-xl border border-emerald-200 bg-white p-3 transition hover:border-emerald-400 hover:shadow-sm"
+                    >
+                      <p className="text-sm leading-relaxed text-slate-700">{suggestion}</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileFields((prev) => ({
+                            ...prev,
+                            bio: suggestion.slice(0, 700),
+                          }));
+                          setBioSuggestions([]);
+                        }}
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                      >
+                        <Save className="h-3 w-3" />
+                        Gunakan Bio Ini
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : null}
 
             <details
               className="mt-3 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3"
-              open={experienceItems.length === 0}
             >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#3f5f93]">
@@ -1377,7 +1386,7 @@ export function LinkBuilderEditor({
               </div>
             </details>
 
-            <details className="mt-4 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3" open>
+            <details className="mt-4 rounded-2xl border border-[#d6e2f7] bg-[#f7fbff] p-3">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#3f5f93]">
                   Social Links
@@ -1448,56 +1457,42 @@ export function LinkBuilderEditor({
 
       {activeSection === "links" ? (
         <div className="space-y-4">
-          <Card className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)] sm:p-5">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#2f73ff]">
-                  Custom Link
-                </p>
-                <h2 className="text-lg font-semibold text-[#201b18]">
-                  Tambah Link (maks {maxLinksLabel})
-                </h2>
-              </div>
+          <Card className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-slate-900">
+                Links <span className="text-slate-400">({links.length}/{maxLinksLabel})</span>
+              </h2>
               <Button
                 size="sm"
-                className="bg-zinc-950 text-white hover:bg-black"
+                className="h-8 bg-zinc-950 px-3 text-xs text-white hover:bg-black"
                 onClick={() => (isLinkLimitReached ? void showFreeLimitModal() : openAddBlockModal())}
               >
-                <Plus className="h-4 w-4" />
-                Tambah Link
+                <Plus className="h-3.5 w-3.5" />
+                Tambah
               </Button>
             </div>
 
-            <p className="mb-4 rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-3 py-2 text-xs text-[#5b7198]">
-              Tambahkan block dari popup agar tampilan editor lebih ringkas dan fokus.
-            </p>
-
-            <div className="mt-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5b7198]">
-                  {links.length} Blocks
-                </p>
-                <span className="rounded-full border border-[#e0d4ce] bg-white px-2.5 py-1 text-xs font-semibold text-[#5b7198]">
-                  {previewLinks.length} active - Plan {planName.toUpperCase()}
-                </span>
-              </div>
+            {links.length > 3 ? (
               <div className="mb-3">
                 <Input
                   value={linkSearch}
                   onChange={(event) => setLinkSearch(event.target.value)}
-                  placeholder="Cari block..."
+                  placeholder="Cari link..."
+                  className="h-9 text-sm"
                 />
               </div>
+            ) : null}
 
+            <div>
               {links.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-4 py-3 text-sm text-[#5b7198]">
-                  Belum ada link. Tambahkan link pertama untuk mulai membangun halaman Showreels kamu.
+                <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                  Belum ada link. Klik tombol Tambah untuk memulai.
                 </p>
               ) : null}
 
               {links.length > 0 && filteredLinks.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-[#d6e2f7] bg-[#f7fbff] px-4 py-3 text-sm text-[#5b7198]">
-                  Tidak ada block yang cocok dengan kata kunci pencarian.
+                <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm text-slate-500">
+                  Tidak ditemukan.
                 </p>
               ) : null}
 
@@ -1561,117 +1556,197 @@ export function LinkBuilderEditor({
 
       {activeSection === "preview" ? (
         <div className="space-y-4">
-          <Card className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)] sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-lg font-semibold text-[#201b18]">Live Preview</h2>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex rounded-full border border-[#d7cec7] bg-white p-1">
+          <Card className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-slate-900">Preview</h2>
+              <div className="inline-flex items-center gap-2">
+                <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5">
                   <button
                     type="button"
                     onClick={() => setDeviceMode("mobile")}
-                    className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
                       deviceMode === "mobile"
-                        ? "bg-zinc-950 text-white"
-                        : "text-slate-700 hover:bg-slate-100"
+                        ? "bg-zinc-900 text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-900"
                     }`}
                   >
-                    <Smartphone className="h-3.5 w-3.5" />
                     Mobile
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeviceMode("desktop")}
-                    className={`dashboard-tap-target inline-flex items-center gap-1 rounded-full px-3 text-xs font-semibold transition ${
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
                       deviceMode === "desktop"
-                        ? "bg-zinc-950 text-white"
-                        : "text-slate-700 hover:bg-slate-100"
+                        ? "bg-zinc-900 text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-900"
                     }`}
                   >
-                    <Monitor className="h-3.5 w-3.5" />
                     Desktop
                   </button>
                 </div>
-                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                  Live
-                </span>
+                <span className="h-2 w-2 rounded-full bg-emerald-500" title="Live" />
               </div>
             </div>
 
-            <div className="mt-4 rounded-[26px] border border-[#e2d7d1] bg-[radial-gradient(circle_at_1px_1px,#eadfd8_1px,transparent_0)] [background-size:16px_16px] p-4">
-              <div
-                className={`mx-auto transition-all ${
-                  deviceMode === "desktop" ? "max-w-[380px]" : "max-w-[340px]"
-                }`}
-              >
-                <div className="relative rounded-[36px] border-[7px] border-[#0c121d] bg-[#111827] p-2 shadow-[0_24px_48px_rgba(16,29,55,0.3)]">
-                  <div className="absolute left-1/2 top-1.5 h-4 w-24 -translate-x-1/2 rounded-full bg-[#05080d]" />
-                  <div className="h-[620px] overflow-y-auto rounded-[28px] bg-[#F5F5F4] px-4 pb-6 pt-12 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-white bg-gradient-to-br from-[#6d64ff] to-[#8f45e9] text-xl font-semibold text-white shadow-[0_14px_34px_rgba(17,17,17,0.12)]">
-                      {(profileFields.fullName || "C").slice(0, 1).toUpperCase()}
+            <div className="mt-4 flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-6">
+              {deviceMode === "desktop" ? (
+                /* MacBook-style laptop mockup */
+                <div className="w-full max-w-[600px]">
+                  {/* Screen with notch */}
+                  <div className="relative rounded-t-[12px] border-[4px] border-b-0 border-[#1a1a1a] bg-[#0a0a0a] px-2 pt-1 shadow-[0_-2px_10px_rgba(0,0,0,0.3)]">
+                    {/* Notch */}
+                    <div className="absolute left-1/2 top-0 h-5 w-32 -translate-x-1/2 rounded-b-2xl bg-[#0a0a0a]" />
+                    
+                    {/* Browser chrome */}
+                    <div className="relative z-10 mb-1.5 flex items-center gap-1.5 rounded-t-lg bg-[#1a1a1a] px-2.5 py-2">
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+                      <span className="ml-2 flex-1 rounded-md bg-[#2d2d2d] px-3 py-1 text-center text-[10px] text-[#999]">
+                        showreels.id/creator/{profileFields.username || "creator"}
+                      </span>
                     </div>
-                    <p className="mt-3 text-xl font-bold tracking-[-0.04em] text-[#111111]">
-                      {profileFields.fullName || "Display Name"}
-                    </p>
-                    {/* Role + Username — single line, consistent with bio page */}
-                    <p className="mt-1.5 text-xs font-semibold text-[#525252]">
-                      {profileFields.role ? <span className="text-sm font-medium text-[#111111]">{profileFields.role}</span> : null}
-                      {profileFields.role ? <span className="mx-1 text-[#DADADA]">•</span> : null}
-                      <span>@{profileFields.username || "creator"}</span>
-                    </p>
-                    <p className="mx-auto mt-3 max-w-[280px] text-xs leading-5 text-[#525252]">
-                      {profileFields.bio || "Bio kamu akan tampil di sini saat diisi."}
-                    </p>
-                    <div className="mt-4 space-y-2 text-left">
-                      {previewLinks.length === 0 ? (
-                        <p className="rounded-[1.25rem] border border-dashed border-[#DADADA] bg-[#FAFAF9] px-3 py-2 text-center text-xs text-[#525252]">
-                          Belum ada link aktif.
+                    
+                    {/* Content area */}
+                    <div className="h-[300px] overflow-y-auto rounded-t-md bg-[#F5F5F4] px-6 pb-5 pt-8 text-center">
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-[#6d64ff] to-[#8f45e9] text-lg font-semibold text-white shadow-[0_10px_24px_rgba(17,17,17,0.10)]">
+                        {(profileFields.fullName || "C").slice(0, 1).toUpperCase()}
+                      </div>
+                      <p className="mt-2.5 text-base font-bold tracking-[-0.03em] text-[#111111]">
+                        {profileFields.fullName || "Display Name"}
+                      </p>
+                      <p className="mt-1 text-[11px] font-medium text-[#525252]">
+                        {profileFields.role ? <span className="text-[11px] font-medium text-[#111111]">{profileFields.role}</span> : null}
+                        {profileFields.role ? <span className="mx-1 text-[#DADADA]">•</span> : null}
+                        <span>@{profileFields.username || "creator"}</span>
+                      </p>
+                      {profileFields.bio ? (
+                        <p className="mx-auto mt-2 max-w-[320px] text-xs leading-5 text-[#525252] line-clamp-3">
+                          {profileFields.bio}
                         </p>
                       ) : (
-                        previewLinks.map((link) =>
-                          link.type === "divider" ? (
-                            <div
-                              key={link.id}
-                              className={`my-2 border-[#E1E1DF] ${
-                                link.style === "dashed"
-                                  ? "border-t border-dashed"
-                                  : link.style === "solid"
-                                    ? "border-t-2"
-                                    : "border-t"
-                              }`}
-                            />
-                          ) : (
-                            <div
-                              key={link.id}
-                              className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-[1.25rem] border border-[#E1E1DF] bg-white px-3 text-left text-xs font-semibold text-[#111111]"
-                            >
-                              <span className="min-w-0">
-                                <span className="block truncate">{link.title}</span>
-                                {link.description ? <span className="mt-0.5 block truncate text-[10px] font-medium text-[#8A8A8A]">{link.description}</span> : null}
-                              </span>
-                              <ExternalLink className="h-3 w-3 shrink-0 text-[#525252]" />
-                            </div>
-                          )
-                        )
+                        <p className="mx-auto mt-2 max-w-[320px] text-xs leading-5 text-[#8A8A8A] italic">
+                          Bio belum diisi
+                        </p>
                       )}
+                      <div className="mt-4 space-y-2 text-left">
+                        {previewLinks.length === 0 ? (
+                          <p className="rounded-xl border border-dashed border-[#DADADA] bg-[#FAFAF9] px-3 py-2 text-center text-xs text-[#525252]">
+                            Belum ada link aktif
+                          </p>
+                        ) : (
+                          previewLinks.map((link) =>
+                            link.type === "divider" ? (
+                              <div
+                                key={link.id}
+                                className={`my-2 border-[#E1E1DF] ${
+                                  link.style === "dashed"
+                                    ? "border-t border-dashed"
+                                    : link.style === "solid"
+                                      ? "border-t-2"
+                                      : "border-t"
+                                }`}
+                              />
+                            ) : (
+                              <div
+                                key={link.id}
+                                className="flex min-h-[42px] w-full items-center justify-between gap-2 rounded-xl border border-[#E1E1DF] bg-white px-3 text-left text-xs font-semibold text-[#111111]"
+                              >
+                                <span className="min-w-0">
+                                  <span className="block truncate">{link.title}</span>
+                                  {link.description ? <span className="mt-0.5 block truncate text-[10px] font-medium text-[#8A8A8A]">{link.description}</span> : null}
+                                </span>
+                                <ExternalLink className="h-3 w-3 shrink-0 text-[#525252]" />
+                              </div>
+                            )
+                          )
+                        )}
+                      </div>
+                      {previewExperiences.length > 0 ? (
+                        <p className="mt-3 text-left text-[10px] text-[#6b7ca1]">
+                          {previewExperiences[0]?.title}
+                          {previewExperiences[0]?.organization
+                            ? ` — ${previewExperiences[0].organization}`
+                            : ""}
+                        </p>
+                      ) : null}
                     </div>
-                    {previewExperiences.length > 0 ? (
-                      <p className="mt-4 text-left text-xs text-[#6b7ca1]">
-                        {previewExperiences[0]?.title}
-                        {previewExperiences[0]?.organization
-                          ? ` - ${previewExperiences[0].organization}`
-                          : ""}
+                  </div>
+                  {/* Laptop base - more realistic proportions */}
+                  <div className="mx-auto h-2 w-[65%] rounded-b-xl bg-gradient-to-b from-[#2d2d2d] to-[#1a1a1a] shadow-[0_2px_8px_rgba(0,0,0,0.2)]" />
+                  <div className="mx-auto h-1.5 w-[75%] rounded-b-lg bg-[#0a0a0a]" />
+                </div>
+              ) : (
+                /* Phone mockup */
+                <div className="max-w-[320px]">
+                  <div className="relative rounded-[36px] border-[7px] border-[#0c121d] bg-[#111827] p-2 shadow-[0_24px_48px_rgba(16,29,55,0.3)]">
+                    <div className="absolute left-1/2 top-1.5 h-4 w-24 -translate-x-1/2 rounded-full bg-[#05080d]" />
+                    <div className="h-[580px] overflow-y-auto rounded-[28px] bg-[#F5F5F4] px-3 pb-5 pt-10 text-center">
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-[#6d64ff] to-[#8f45e9] text-lg font-semibold text-white shadow-[0_10px_24px_rgba(17,17,17,0.10)]">
+                        {(profileFields.fullName || "C").slice(0, 1).toUpperCase()}
+                      </div>
+                      <p className="mt-2.5 text-base font-bold tracking-[-0.03em] text-[#111111]">
+                        {profileFields.fullName || "Display Name"}
                       </p>
-                    ) : null}
+                      <p className="mt-1 text-[11px] font-medium text-[#525252]">
+                        {profileFields.role ? <span className="text-[11px] font-medium text-[#111111]">{profileFields.role}</span> : null}
+                        {profileFields.role ? <span className="mx-1 text-[#DADADA]">•</span> : null}
+                        <span>@{profileFields.username || "creator"}</span>
+                      </p>
+                      {profileFields.bio ? (
+                        <p className="mx-auto mt-2 max-w-[240px] text-[10px] leading-4 text-[#525252] line-clamp-3">
+                          {profileFields.bio}
+                        </p>
+                      ) : (
+                        <p className="mx-auto mt-2 max-w-[240px] text-[10px] leading-4 text-[#8A8A8A] italic">
+                          Bio belum diisi
+                        </p>
+                      )}
+                      <div className="mt-3 space-y-1.5 text-left">
+                        {previewLinks.length === 0 ? (
+                          <p className="rounded-xl border border-dashed border-[#DADADA] bg-[#FAFAF9] px-2.5 py-2 text-center text-[10px] text-[#525252]">
+                            Belum ada link aktif
+                          </p>
+                        ) : (
+                          previewLinks.map((link) =>
+                            link.type === "divider" ? (
+                              <div
+                                key={link.id}
+                                className={`my-1.5 border-[#E1E1DF] ${
+                                  link.style === "dashed"
+                                    ? "border-t border-dashed"
+                                    : link.style === "solid"
+                                      ? "border-t-2"
+                                      : "border-t"
+                                }`}
+                              />
+                            ) : (
+                              <div
+                                key={link.id}
+                                className="flex min-h-[38px] w-full items-center justify-between gap-1.5 rounded-xl border border-[#E1E1DF] bg-white px-2.5 text-left text-[11px] font-semibold text-[#111111]"
+                              >
+                                <span className="min-w-0">
+                                  <span className="block truncate text-[11px]">{link.title}</span>
+                                  {link.description ? <span className="block truncate text-[9px] font-medium text-[#8A8A8A]">{link.description}</span> : null}
+                                </span>
+                                <ExternalLink className="h-2.5 w-2.5 shrink-0 text-[#525252]" />
+                              </div>
+                            )
+                          )
+                        )}
+                      </div>
+                      {previewExperiences.length > 0 ? (
+                        <p className="mt-3 text-left text-[10px] text-[#6b7ca1]">
+                          {previewExperiences[0]?.title}
+                          {previewExperiences[0]?.organization
+                            ? ` — ${previewExperiences[0].organization}`
+                            : ""}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-[#e0d5ce] bg-white px-3 py-1.5 text-xs font-semibold text-[#5e514b]">
-                <Link2 className="mr-1.5 h-3.5 w-3.5" />
-                {publicPath}
-              </span>
+              )}
             </div>
           </Card>
         </div>

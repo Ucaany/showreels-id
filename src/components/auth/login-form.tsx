@@ -18,6 +18,7 @@ import { getAuthRedirectUrl } from "@/lib/auth-redirect-url";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 import { getSafeNextPath } from "@/lib/safe-next-path";
 import { cn } from "@/lib/cn";
+import { DEMO_MODE } from "@/lib/demo-mode";
 
 const loginSchema = z.object({
   email: z.email("Format email belum valid."),
@@ -109,7 +110,7 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const authLock = useAuthAttemptLock();
   const supabase = createClient();
-  const authUnavailable = !supabase;
+  const authUnavailable = DEMO_MODE ? false : !supabase;
   const authUnavailableMessage = "Layanan autentikasi belum siap. Coba refresh halaman.";
   const visibleSubmitError = authUnavailable ? authUnavailableMessage : submitError;
   const oauthErrorMessage = getOauthErrorMessage(oauthError);
@@ -145,6 +146,38 @@ export function LoginForm({
   };
 
   const onSubmit = async (values: LoginValues) => {
+    // Demo mode: use demo login API
+    if (DEMO_MODE) {
+      setSubmitError("");
+      try {
+        const res = await fetch("/api/auth/demo-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: values.email, password: values.password }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setSubmitError(data.error || "Login gagal.");
+          void showFeedbackAlert({
+            title: "Login gagal",
+            text: data.error || "Email atau password tidak cocok.",
+            icon: "error",
+          });
+          return;
+        }
+        await showFeedbackAlert({
+          title: "Berhasil Login (Demo)",
+          text: `Selamat datang, ${data.user?.name || "User"}!`,
+          icon: "success",
+          confirmButtonText: "Lanjut",
+        });
+        window.location.replace(data.redirectTo || "/dashboard");
+      } catch {
+        setSubmitError("Login gagal. Coba lagi.");
+      }
+      return;
+    }
+
     if (!supabase) {
       setSubmitError(authUnavailableMessage);
       void showFeedbackAlert({
@@ -244,6 +277,16 @@ export function LoginForm({
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
+        {DEMO_MODE ? (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <p className="font-semibold mb-1">🧪 Demo Mode Aktif</p>
+            <p className="text-xs leading-relaxed">
+              <strong>Admin:</strong> admin@showreels.id / admin123<br />
+              <strong>Creator:</strong> creator@showreels.id / creator123
+            </p>
+          </div>
+        ) : null}
+
         {oauthErrorMessage ? (
           <p className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
             {oauthErrorMessage}

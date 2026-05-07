@@ -240,7 +240,7 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
   useEffect(() => {
     if (!open) return;
     trackAddLinkEvent("add_link_modal_opened");
-    const timer = window.setTimeout(() => searchRef.current?.focus(), 120);
+    // Removed autofocus to prevent keyboard popup on mobile
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (selectedItem) setSelectedItem(null);
@@ -249,7 +249,6 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
-      window.clearTimeout(timer);
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [open, onClose, selectedItem]);
@@ -258,13 +257,13 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
     const keyword = search.trim().toLowerCase();
     const detected = detectPlatformFromUrl(search);
     if (detected?.platform) {
-      return ADD_LINK_ITEMS.filter((item) => item.platform === detected.platform);
+      return ADD_LINK_ITEMS.filter((item) => item.platform === detected.platform && item.category !== "utility" && item.category !== "portfolio");
     }
-    const base = getItemsForCategory(activeCategory);
+    const base = getItemsForCategory(activeCategory).filter((item) => item.category !== "utility" && item.category !== "portfolio");
     if (!keyword) return base;
     trackAddLinkEvent("add_link_search_used", { keyword });
     return ADD_LINK_ITEMS.filter((item) =>
-      `${item.label} ${item.platform} ${item.category} ${item.description}`.toLowerCase().includes(keyword)
+      item.category !== "utility" && item.category !== "portfolio" && `${item.label} ${item.platform} ${item.category} ${item.description}`.toLowerCase().includes(keyword)
     );
   }, [activeCategory, search]);
 
@@ -422,7 +421,7 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
         <div className="grid min-h-0 flex-1 overflow-hidden md:grid-cols-[180px_minmax(0,1fr)] lg:grid-cols-[196px_minmax(0,1fr)]">
           <aside className="hidden border-r border-zinc-200 p-2.5 md:block lg:p-3">
             <div className="grid gap-1">
-              {ADD_LINK_CATEGORIES.map((category) => {
+              {ADD_LINK_CATEGORIES.filter((cat) => cat.id !== "utility" && cat.id !== "portfolio").map((category) => {
                 const Icon = categoryIcons[category.id];
                 const active = activeCategory === category.id;
                 return (
@@ -437,7 +436,7 @@ export function AddLinkModal({ open, onClose, onCreated, isLimitReached, maxLink
 
           <main className="min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-3.5 lg:p-4">
             <div className="mb-4 flex gap-2 overflow-x-auto pb-1 md:hidden">
-              {ADD_LINK_CATEGORIES.map((category) => (
+              {ADD_LINK_CATEGORIES.filter((cat) => cat.id !== "utility" && cat.id !== "portfolio").map((category) => (
                 <button key={category.id} type="button" onClick={() => setActiveCategory(category.id)} className={cn("min-h-9 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-zinc-950/15", activeCategory === category.id ? "border-zinc-950 bg-zinc-950 text-white" : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50")}>{category.label}</button>
               ))}
             </div>

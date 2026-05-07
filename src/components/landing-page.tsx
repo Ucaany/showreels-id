@@ -725,12 +725,6 @@ export function LandingPage({
                 {dictionary.landingNavFeatures}
               </a>
               <a
-                href="#themes"
-                className="inline-flex min-h-11 items-center transition hover:text-slate-950"
-              >
-                {dictionary.landingNavThemes}
-              </a>
-              <a
                 href="#pricing"
                 className="inline-flex min-h-11 items-center transition hover:text-slate-950"
               >
@@ -803,15 +797,25 @@ export function LandingPage({
               )}
             </div>
 
-            <button
-              type="button"
-              className="inline-flex h-12 w-12 items-center justify-center rounded-[1.15rem] border border-slate-200 bg-white text-slate-700 lg:hidden"
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              aria-label="Open menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+            <div className="flex items-center gap-2 lg:hidden">
+              {!currentUser && (
+                <Link
+                  href="/auth/login"
+                  className="inline-flex h-10 items-center rounded-full border border-slate-200 bg-white px-4 text-[0.85rem] font-semibold text-slate-900 transition hover:bg-slate-50"
+                >
+                  {loginLabel}
+                </Link>
+              )}
+              <button
+                type="button"
+                className="inline-flex h-12 w-12 items-center justify-center rounded-[1.15rem] border border-slate-200 bg-white text-slate-700"
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                aria-label="Open menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </div>
           </div>
         </header>
 
@@ -842,13 +846,6 @@ export function LandingPage({
                   className="block px-1 py-2 text-[0.95rem] font-semibold tracking-[-0.01em] text-black transition hover:text-slate-950"
                 >
                   {dictionary.landingNavFeatures}
-                </a>
-                <a
-                  href="#themes"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-1 py-2 text-[0.95rem] font-semibold tracking-[-0.01em] text-black transition hover:text-slate-950"
-                >
-                  {dictionary.landingNavThemes}
                 </a>
                 <a
                   href="#pricing"
@@ -1484,6 +1481,7 @@ export function LandingPage({
             </div>
           </section>
 
+
           <section
             id="themes"
             className="scroll-mt-28 overflow-x-clip border-y border-slate-200 bg-slate-50 py-12 sm:py-16 lg:py-20"
@@ -1523,18 +1521,6 @@ export function LandingPage({
                     </div>
                   ))}
                 </div>
-              </div>
-
-              <div className="mt-6 flex justify-center">
-                <a href="#pricing">
-                  <Button
-                    variant="secondary"
-                    className="border-slate-200 text-slate-700 hover:bg-slate-100"
-                  >
-                    {dictionary.landingThemesCta}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </a>
               </div>
             </div>
           </section>
@@ -1584,13 +1570,19 @@ export function LandingPage({
                       )}
                     >
                       {plan.featured ? (
-                        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-[#dbe5ff] bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#1a46c9]">
-                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#1a46c9]" />
-                          {locale === "en" ? "Most popular" : "Paling populer"}
-                        </span>
+                        <div className="absolute right-4 top-4 flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-[#dbe5ff] bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#1a46c9]">
+                            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#1a46c9]" />
+                            {locale === "en" ? "Popular" : "Populer"}
+                          </span>
+                          <span className="inline-flex rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-950">
+                            {locale === "en" ? "1 month free" : "Uji coba 1 bulan"}
+                          </span>
+                        </div>
                       ) : null}
 
                       <p className="text-helper font-semibold uppercase tracking-[0.14em] text-slate-500">
+                        <span className="mr-1.5">{plan.id === "free" ? "🎯" : plan.id === "creator" ? "⚡" : "🚀"}</span>
                         {plan.name}
                       </p>
                       <p className="mt-2.5 text-[2.05rem] font-semibold tracking-[-0.04em] text-slate-950 sm:text-[2.3rem]">

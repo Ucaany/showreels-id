@@ -520,3 +520,37 @@ select:-webkit-autofill:focus {
   50% { transform: translate(-20px, 30px) scale(0.95); }
   75% { transform: translate(20px, 20px) scale(1.02); }
 }
+
+/* ─── Zero-Loading Page Transitions ─────────────────────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.animate-in.fade-in {
+  animation-name: fadeIn;
+}
+
+.animate-in.fade-in.duration-150 {
+  animation-duration: 150ms;
+}
+
+.animate-in.fade-in.duration-200 {
+  animation-duration: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    animation: none !important;
+  }
+}

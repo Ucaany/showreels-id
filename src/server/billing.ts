@@ -23,48 +23,11 @@ type PlanConfig = {
   benefitItems: PlanFeatureChecklistItem[];
 };
 
-type MidtransAction = {
+// Legacy types kept for backward compatibility with old transactions
+type LegacyAction = {
   name: string;
   method: string;
   url: string;
-};
-
-type MidtransChargePayload = {
-  order_id?: string;
-  transaction_id?: string;
-  transaction_status?: string;
-  payment_type?: string;
-  gross_amount?: string | number;
-  currency?: string;
-  expiry_time?: string;
-  actions?: Array<{
-    name?: string;
-    method?: string;
-    url?: string;
-  }>;
-  status_code?: string;
-  status_message?: string;
-  error_messages?: string[];
-  fraud_status?: string;
-};
-
-type MidtransSnapPayload = {
-  token?: string;
-  redirect_url?: string;
-  currency?: string;
-  status_code?: string;
-  status_message?: string;
-  error_messages?: string[];
-};
-
-export type MidtransRuntimeConfig = {
-  mode: "sandbox" | "production";
-  isProduction: boolean;
-  serverKeySet: boolean;
-  clientKeySet: boolean;
-  coreApiBaseUrl: string;
-  snapApiBaseUrl: string;
-  snapScriptUrl: string;
 };
 
 type BillingTransactionRow = typeof billingTransactions.$inferSelect;
@@ -80,7 +43,7 @@ export type BillingPaymentSummary = {
   redirectUrl: string | null;
   expiresAt: string | null;
   qrUrl: string | null;
-  qrActions: MidtransAction[];
+  qrActions: LegacyAction[];
 };
 
 const PLAN_CATALOG: Record<BillingPlanName, PlanConfig> = {
@@ -120,45 +83,7 @@ function normalizeBillingPlanName(value: string | null | undefined): BillingPlan
   return "free";
 }
 
-function getMidtransServerKey() {
-  return normalizeEnvValue(process.env.MIDTRANS_SERVER_KEY);
-}
-
-export function getMidtransClientKey() {
-  return normalizeEnvValue(process.env.MIDTRANS_CLIENT_KEY);
-}
-
-export function getMidtransRuntimeConfig(): MidtransRuntimeConfig {
-  const isProduction =
-    normalizeEnvValue(process.env.MIDTRANS_IS_PRODUCTION).toLowerCase() === "true";
-  const mode = isProduction ? "production" : "sandbox";
-  const serverKey = getMidtransServerKey();
-  const clientKey = getMidtransClientKey();
-
-  return {
-    mode,
-    isProduction,
-    serverKeySet: !hasPlaceholderEnvValue(serverKey),
-    clientKeySet: !hasPlaceholderEnvValue(clientKey),
-    coreApiBaseUrl: isProduction
-      ? "https://api.midtrans.com"
-      : "https://api.sandbox.midtrans.com",
-    snapApiBaseUrl: isProduction
-      ? "https://app.midtrans.com"
-      : "https://app.sandbox.midtrans.com",
-    snapScriptUrl: isProduction
-      ? "https://app.midtrans.com/snap/snap.js"
-      : "https://app.sandbox.midtrans.com/snap/snap.js",
-  };
-}
-
-export function getMidtransCoreApiBaseUrl() {
-  return getMidtransRuntimeConfig().coreApiBaseUrl;
-}
-
-function getMidtransAuthorizationHeader(serverKey: string) {
-  return `Basic ${Buffer.from(`${serverKey}:`).toString("base64")}`;
-}
+// Midtrans functions removed - now using Tripay exclusively
 
 function buildInvoiceId(userId: string) {
   const now = new Date();
@@ -207,22 +132,13 @@ function getAppOrigin() {
   return "https://showreels-id.vercel.app";
 }
 
-function getMidtransCallbacks(input: { targetPlan: BillingPlanName; invoiceId: string }) {
-  const origin = getAppOrigin();
-  const invoice = encodeURIComponent(input.invoiceId);
-  const plan = encodeURIComponent(input.targetPlan);
 
-  return {
-    finish: `${origin}/dashboard/billing?payment=success&invoice=${invoice}&plan=${plan}`,
-    unfinish: `${origin}/payment?plan=${plan}&payment=pending&invoice=${invoice}`,
-    error: `${origin}/payment?plan=${plan}&payment=error&invoice=${invoice}`,
-  };
-}
 
-function toMidtransActions(payload: Record<string, unknown>) {
+// Legacy helper functions for old Midtrans transactions
+function toLegacyActions(payload: Record<string, unknown>) {
   const rawActions = payload.actions;
   if (!Array.isArray(rawActions)) {
-    return [] as MidtransAction[];
+    return [] as LegacyAction[];
   }
 
   return rawActions
@@ -236,17 +152,13 @@ function toMidtransActions(payload: Record<string, unknown>) {
         return null;
       }
 
-      return {
-        name,
-        method,
-        url,
-      };
+      return { name, method, url };
     })
-    .filter((action): action is MidtransAction => Boolean(action));
+    .filter((action): action is LegacyAction => Boolean(action));
 }
 
 function getQrisActionUrl(
-  actions: MidtransAction[],
+  actions: LegacyAction[],
   fallback: string | null | undefined
 ) {
   const directQrAction =
@@ -257,9 +169,7 @@ function getQrisActionUrl(
   return directQrAction?.url || fallback || null;
 }
 
-export function isMidtransConfigured() {
-  return getMidtransRuntimeConfig().serverKeySet;
-}
+
 
 export function getPlanCatalog() {
   return PLAN_CATALOG;
@@ -278,7 +188,7 @@ export function toBillingPaymentSummary(
     payload.webhook && typeof payload.webhook === "object"
       ? (payload.webhook as Record<string, unknown>)
       : null;
-  const actions = toMidtransActions(payload);
+  const actions = toLegacyActions(payload);
   const transactionStatusFromWebhook =
     webhook && typeof webhook.transaction_status === "string"
       ? webhook.transaction_status
@@ -637,6 +547,10 @@ export async function createUpgradeTransaction(input: {
   }
 }
 
+/**
+ * @deprecated Legacy function for old Midtrans transactions only.
+ * New transactions use Tripay status mapping.
+ */
 function mapMidtransStatus(transactionStatus: string) {
   switch (transactionStatus) {
     case "settlement":
@@ -654,6 +568,9 @@ function mapMidtransStatus(transactionStatus: string) {
   }
 }
 
+/**
+ * @deprecated Legacy function for old Midtrans transactions only.
+ */
 function mapSubscriptionStatus(transactionStatus: string) {
   switch (transactionStatus) {
     case "settlement":
@@ -670,6 +587,10 @@ function mapSubscriptionStatus(transactionStatus: string) {
   }
 }
 
+/**
+ * @deprecated Kept for backward compatibility with old Midtrans transactions.
+ * New transactions use Tripay callback at /api/billing/tripay/callback.
+ */
 export async function handleMidtransWebhook(payload: {
   order_id?: string;
   transaction_status?: string;
@@ -785,6 +706,10 @@ export async function handleMidtransWebhook(payload: {
   }
 }
 
+/**
+ * @deprecated This function is kept for backward compatibility with old Midtrans transactions.
+ * It will return the transaction as-is for non-Midtrans providers.
+ */
 export async function refreshBillingTransactionStatusFromMidtrans(input: {
   userId: string;
   invoiceId: string;
@@ -797,47 +722,13 @@ export async function refreshBillingTransactionStatusFromMidtrans(input: {
     return null;
   }
 
-  if (!isMidtransConfigured() || transaction.provider !== "midtrans") {
+  // Only process Midtrans transactions
+  if (transaction.provider !== "midtrans") {
     return transaction;
   }
 
-  const serverKey = (process.env.MIDTRANS_SERVER_KEY || "").trim();
-  const response = await fetch(
-    `${getMidtransCoreApiBaseUrl()}/v2/${encodeURIComponent(input.invoiceId)}/status`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: getMidtransAuthorizationHeader(serverKey),
-        Accept: "application/json",
-      },
-    }
-  );
-
-  if (!response.ok) {
-    return transaction;
-  }
-
-  const payload = (await response.json().catch(() => null)) as
-    | MidtransChargePayload
-    | null;
-
-  if (!payload?.order_id || !payload.transaction_status) {
-    return transaction;
-  }
-
-  await handleMidtransWebhook({
-    order_id: payload.order_id,
-    transaction_status: payload.transaction_status,
-    payment_type: payload.payment_type,
-    gross_amount: payload.gross_amount,
-    currency: payload.currency,
-    fraud_status: payload.fraud_status,
-  });
-
-  const latest = await getBillingTransactionByInvoiceForUser(
-    input.userId,
-    input.invoiceId
-  );
-
-  return latest || transaction;
+  // For old Midtrans transactions, just return as-is
+  // (Midtrans integration has been removed)
+  console.warn("[Deprecated] Midtrans transaction refresh attempted:", input.invoiceId);
+  return transaction;
 }

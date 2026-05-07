@@ -77,7 +77,7 @@ function HeroCard({
             Selamat datang, {userName || 'Kreator'}
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-            Kelola link, video portfolio, analytics, dan billing dari satu tempat yang rapi.
+            Kelola profil, link bio, portfolio video, dan analytics dalam satu dashboard.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -87,7 +87,7 @@ function HeroCard({
           >
             <Button className="inline-flex h-10 items-center gap-2 rounded-xl bg-zinc-800 px-3.5 text-sm font-medium text-white hover:bg-zinc-700">
               {canUseBuildLink ? <Wand2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-              {canUseBuildLink ? 'Mulai Build Link' : 'Unlock Build Link'}
+              {canUseBuildLink ? 'Buat Bio' : 'Unlock Build Link'}
             </Button>
           </PrefetchLink>
         </div>

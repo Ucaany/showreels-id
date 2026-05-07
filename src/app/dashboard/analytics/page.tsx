@@ -27,28 +27,16 @@ export default async function DashboardAnalyticsPage() {
   return (
     <div className="space-y-5 bg-slate-50">
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-              Analytics
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-              Trafik Halaman Creator
-            </h1>
-            <p className="mt-3 text-sm leading-6 text-slate-500 md:text-base">
-              Pantau kunjungan profil, performa video, dan peluang optimasi secara real-time.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2 sm:flex-nowrap lg:justify-end">
-            <CopyProfileLinkButton username={username} />
-            <Link href={`/creator/${username}`} target="_blank" className="min-w-0 flex-1 sm:flex-none">
-              <Button variant="secondary" className="w-full">
-                <PlayCircle className="h-4 w-4" />
-                Preview Halaman
-              </Button>
-            </Link>
-          </div>
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+            Analytics
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 md:text-4xl">
+            Trafik Halaman Creator
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-slate-500 md:text-base">
+            Pantau kunjungan profil, performa video, dan peluang optimasi secara real-time.
+          </p>
         </div>
       </section>
 

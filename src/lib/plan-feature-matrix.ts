@@ -52,24 +52,7 @@ const PLAN_FEATURE_ROWS: PlanFeatureRow[] = [
       },
     },
   },
-  {
-    id: "username-changes",
-    category: { id: "Username Changes", en: "Username Changes" },
-    values: {
-      free: {
-        text: { id: "2x / 30 hari", en: "2 changes / 30 days" },
-        status: "available",
-      },
-      creator: {
-        text: { id: "3x / 30 hari", en: "3 changes / 30 days" },
-        status: "available",
-      },
-      business: {
-        text: { id: "3x / 30 hari", en: "3 changes / 30 days" },
-        status: "available",
-      },
-    },
-  },
+
   {
     id: "custom-thumbnail",
     category: { id: "Custom Thumbnail", en: "Custom Thumbnail" },

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { isAdminEmail } from "@/server/admin-access";
 import { requireCurrentUser } from "@/server/current-user";
+import { DEMO_MODE, isDemoAdmin } from "@/lib/demo-mode";
 
 export default async function AdminLayout({
   children,
@@ -9,7 +10,12 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = await requireCurrentUser();
-  if (!isAdminEmail(user.email)) {
+
+  const hasAdminAccess = DEMO_MODE
+    ? isDemoAdmin(user.email)
+    : isAdminEmail(user.email);
+
+  if (!hasAdminAccess) {
     redirect("/dashboard");
   }
 

@@ -6,6 +6,7 @@ import {
   type DbOnboardingProgressPayload,
   type DbUserOnboarding,
 } from "@/db/schema";
+import { DEMO_MODE } from "@/lib/demo-mode";
 import { normalizeStoredLinks } from "@/lib/link-builder";
 import { isRelationMissingError } from "@/server/database-errors";
 import { ensureOnboardingSchema } from "@/server/onboarding-schema-bootstrap";
@@ -78,6 +79,16 @@ export async function getOrCreateUserOnboarding(input: {
     hasPublicProfile: fallbackHasPublicProfile,
   } satisfies Partial<DbUserOnboarding>;
 
+  // In demo mode, always mark onboarding as completed to skip it
+  if (DEMO_MODE) {
+    return buildFallbackOnboarding(input.userId, {
+      ...fallbackPatch,
+      onboardingCompleted: true,
+      hasPublicProfile: true,
+      currentStep: 4,
+    });
+  }
+
   if (!isDatabaseConfigured) {
     return buildFallbackOnboarding(input.userId, fallbackPatch);
   }
@@ -140,7 +151,7 @@ export async function updateUserOnboardingProgress(input: {
   hasPublicProfile?: boolean;
   progressPayload?: DbOnboardingProgressPayload;
 }) {
-  if (!isDatabaseConfigured) {
+  if (DEMO_MODE || !isDatabaseConfigured) {
     return buildFallbackOnboarding(input.userId, {
       currentStep: input.currentStep,
       onboardingCompleted: input.onboardingCompleted,

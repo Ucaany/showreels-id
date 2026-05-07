@@ -81,6 +81,135 @@ export default async function AdminPanelPage({
   searchParams: Promise<AdminSearchParams>;
 }) {
   const params = await searchParams;
+
+  // Demo mode: return static dummy data without database queries
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    return (
+      <AdminPanelClient
+        stats={{
+          totalUsers: 12,
+          totalVideos: 48,
+          publicVideos: 32,
+          semiPrivateVideos: 8,
+          draftVideos: 5,
+          privateVideos: 3,
+          visitorToday: 156,
+          visitorYesterday: 203,
+          visitorLast7Days: 1247,
+          scheduledNotifications: 2,
+          activeCampaigns: 1,
+        }}
+        dbHealth={{
+          ok: true,
+          message: "Demo mode — database tidak terhubung",
+          latencyMs: 0,
+          storage: null,
+        }}
+        settings={{
+          maintenanceEnabled: false,
+          pauseEnabled: false,
+          maintenanceMessage: "",
+          billingEnabled: true,
+        }}
+        analytics={{
+          totalRevenue: 750000,
+          activeSubscriptions: 8,
+          trialUsers: 4,
+          churnRate: 5.2,
+        }}
+        users={[
+          {
+            id: "demo-user-001",
+            name: "Raka Mahendra",
+            email: "creator@showreels.id",
+            username: "raka_creator",
+            role: "Video Editor",
+            bio: "Editor konten edukasi dan teknologi.",
+            city: "Yogyakarta",
+            contactEmail: "creator@showreels.id",
+            phoneNumber: "+628120000001",
+            websiteUrl: "https://rakacreator.com",
+            isBlocked: false,
+            blockedReason: "",
+            createdAt: "2026-01-15T10:00:00.000Z",
+            videoCount: 4,
+          },
+          {
+            id: "demo-user-002",
+            name: "Nadia Pratiwi",
+            email: "nadia@dummy.showreels.id",
+            username: "nadia",
+            role: "Videografer",
+            bio: "Videografer wedding dan event.",
+            city: "Bandung",
+            contactEmail: "nadia@dummy.showreels.id",
+            phoneNumber: "+628120000002",
+            websiteUrl: "",
+            isBlocked: false,
+            blockedReason: "",
+            createdAt: "2026-02-01T08:30:00.000Z",
+            videoCount: 3,
+          },
+          {
+            id: "demo-user-003",
+            name: "Dimas Pratama",
+            email: "dimas@dummy.showreels.id",
+            username: "dimas",
+            role: "Content Creator",
+            bio: "Creator travel dan lifestyle.",
+            city: "Jakarta",
+            contactEmail: "dimas@dummy.showreels.id",
+            phoneNumber: "+628120000003",
+            websiteUrl: "",
+            isBlocked: true,
+            blockedReason: "Konten melanggar ToS",
+            createdAt: "2026-03-10T14:00:00.000Z",
+            videoCount: 2,
+          },
+        ]}
+        videos={[
+          {
+            id: "vid-001",
+            title: "Showreel Brand Campaign 2026",
+            description: "Kompilasi project campaign terbaru.",
+            visibility: "public",
+            source: "youtube",
+            sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            thumbnailUrl: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+            outputType: "Showreel",
+            durationLabel: "01:25",
+            aspectRatio: "landscape",
+            publicSlug: "raka-showreel-2026",
+            createdAt: "2026-03-04T10:15:00.000Z",
+            authorName: "Raka Mahendra",
+            authorUsername: "raka_creator",
+            authorEmail: "creator@showreels.id",
+          },
+          {
+            id: "vid-002",
+            title: "Wedding Highlight Nadia",
+            description: "Highlight video wedding cinematic.",
+            visibility: "public",
+            source: "vimeo",
+            sourceUrl: "https://vimeo.com/76979871",
+            thumbnailUrl: "https://vumbnail.com/76979871.jpg",
+            outputType: "Wedding",
+            durationLabel: "03:45",
+            aspectRatio: "landscape",
+            publicSlug: "nadia-wedding-highlight",
+            createdAt: "2026-02-20T09:00:00.000Z",
+            authorName: "Nadia Pratiwi",
+            authorUsername: "nadia",
+            authorEmail: "nadia@dummy.showreels.id",
+          },
+        ]}
+        schedules={[]}
+        filters={{ search: "", platform: "all", status: "all", sort: "newest", page: "1" }}
+        pagination={{ page: 1, pageSize: 9, totalItems: 2, totalPages: 1 }}
+        ownerProfile={{ username: "admin_showreels", email: "admin@showreels.id" }}
+      />
+    );
+  }
   const search = (params.search || params.videoSearch || params.userSearch || "").trim();
   const platform = PLATFORM_VALUES.includes((params.platform || "").toLowerCase())
     ? (params.platform || "").toLowerCase()

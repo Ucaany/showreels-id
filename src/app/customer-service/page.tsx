@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Mail, MessageCircleMore, PhoneCall } from "lucide-react";
-import { PublicMobileHeader } from "@/components/public-mobile-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -13,13 +12,13 @@ const supportChannels = [
   },
   {
     title: "Telepon",
-    value: "+62 812-3456-7890",
+    value: "+62 898-3704-013",
     helper: "Senin - Jumat, 09:00 - 17:00 WIB.",
     icon: PhoneCall,
   },
   {
     title: "WhatsApp",
-    value: "+62 812-3456-7890",
+    value: "+62 898-3704-013",
     helper: "Untuk bantuan cepat dan konsultasi awal.",
     icon: MessageCircleMore,
   },
@@ -27,8 +26,7 @@ const supportChannels = [
 
 export default function CustomerServicePage() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
-      <PublicMobileHeader ctaHref="/auth/signup" ctaLabel="Buat Profilmu" />
+    <div className="space-y-6 bg-slate-50">
       <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6 sm:py-10 lg:py-12">
         <Card className="relative overflow-hidden border-slate-200 bg-white p-6 shadow-sm shadow-slate-900/5 sm:p-8 lg:p-10">
           <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-[#dbe5ff] blur-3xl" />

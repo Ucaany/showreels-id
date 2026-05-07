@@ -444,7 +444,7 @@ export function CreatorTrafficPanel({
         </aside>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-2">
         <InsightListCard title="Top Performing Pages" description="Halaman atau video dengan kunjungan tertinggi.">
           {loading ? (
             <div className="space-y-3"><SkeletonBlock className="h-12" /><SkeletonBlock className="h-12" /><SkeletonBlock className="h-12" /></div>
@@ -483,19 +483,6 @@ export function CreatorTrafficPanel({
           ) : (
             <p className="rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-500">Belum ada aktivitas terbaru yang tercatat.</p>
           )}
-        </InsightListCard>
-
-        <InsightListCard title="Audience Snapshot" description="Snapshot sederhana berdasarkan data yang tersedia saat ini.">
-          <div className="grid gap-3">
-            <div className="rounded-xl bg-slate-50 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Sumber Traffic</p>
-              <p className="mt-2 text-sm text-slate-600">Direct / Social belum dipisahkan oleh tracking saat ini.</p>
-            </div>
-            <div className="rounded-xl bg-slate-50 p-4">
-              <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-400">Device & Lokasi</p>
-              <p className="mt-2 text-sm text-slate-600">Detail audience tersedia sebagai area pengembangan berikutnya.</p>
-            </div>
-          </div>
         </InsightListCard>
       </div>
 

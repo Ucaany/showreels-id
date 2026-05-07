@@ -48,9 +48,9 @@ export function PublicLinkCardCompact({
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
             Public Link
           </p>
-          <h3 className="mt-3 text-xl font-semibold text-slate-950">{profilePath}</h3>
+          <h3 className="mt-3 text-xl font-semibold text-slate-950">showreels.id{profilePath}</h3>
           <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
-            Bagikan profil creator, link penting, bio, dan portfolio video ke client.
+            Bagikan halaman bio Anda yang berisi profil, link penting, dan portfolio video.
           </p>
         </div>
         <button

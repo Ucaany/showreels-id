@@ -40,8 +40,8 @@ type NavItem = {
 
 const routeLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
-  "/dashboard/link-builder": "Build Link",
-  "/dashboard/videos": "Upload Video",
+  "/dashboard/link-builder": "Link Bio",
+  "/dashboard/videos": "Portofolio",
   "/dashboard/analytics": "Analytics",
   "/dashboard/billing": "Billing",
   "/dashboard/profile": "Profile",
@@ -52,6 +52,7 @@ const routeLabels: Record<string, string> = {
 export function DashboardShell({
   children,
   user,
+  planName = "free",
   mode = "creator",
   hideChrome = false,
 }: {
@@ -77,10 +78,10 @@ export function DashboardShell({
       ? [{ href: "/admin", label: "Owner Panel", icon: Home }]
       : [
         { href: "/dashboard", label: "Dashboard", icon: Home },
-        { href: "/dashboard/link-builder", label: "Kelola Link", icon: Link2 },
+        { href: "/dashboard/link-builder", label: "Link Bio", icon: Link2 },
         {
           href: "/dashboard/videos",
-          label: "Tambah Video",
+          label: "Portofolio",
           icon: Film,
           matchPrefix: "/dashboard/videos",
         },
@@ -112,6 +113,32 @@ export function DashboardShell({
     if (item.href === "/dashboard" || item.href === "/admin") return pathname === item.href;
     return pathname === item.href || pathname.startsWith(`${item.href}/`);
   };
+
+  // ─── Aggressive Route Prefetching ─────────────────────────────────────────
+  // Prefetch all dashboard routes on mount so navigation is near-instant
+  useEffect(() => {
+    const routesToPrefetch = [
+      "/dashboard",
+      "/dashboard/profile",
+      "/dashboard/link-builder",
+      "/dashboard/videos",
+      "/dashboard/analytics",
+      "/dashboard/billing",
+      "/dashboard/settings",
+      "/dashboard/notifications",
+    ];
+
+    // Prefetch after a short delay to not block initial render
+    const timer = setTimeout(() => {
+      routesToPrefetch.forEach((route) => {
+        if (route !== pathname) {
+          router.prefetch(route);
+        }
+      });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (authStatus !== "login") return;
@@ -196,33 +223,45 @@ export function DashboardShell({
 
   const renderSidebarContent = (expanded = sidebarOpen, mobile = false) => (
     <div className="flex h-full flex-col bg-white px-4 py-5">
-      {/* Logo Showreels.id */}
-      <div className={cn(
-        "flex items-center gap-3",
-        !expanded && !mobile && "justify-center"
-      )}>
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.png"
-            alt="Showreels.id"
-            className="h-10 w-10 object-contain"
-            onError={(event) => {
-              const target = event.currentTarget;
-              target.style.display = "none";
-              const fallback = target.nextElementSibling as HTMLElement | null;
-              fallback?.classList.remove("hidden");
-            }}
-          />
-          <Link2 className="hidden h-6 w-6 text-slate-900" />
-        </div>
-        {(expanded || mobile) && (
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-bold text-slate-900">showreels.id</p>
-            <p className="text-xs text-slate-500">Creator Dashboard</p>
+      {/* Logo / Plan Info */}
+      {mobile ? (
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+            <CreditCard className="h-5 w-5 text-slate-600" />
           </div>
-        )}
-      </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold capitalize text-slate-900">Plan {planName}</p>
+            <p className="text-xs text-slate-500">Aktif</p>
+          </div>
+        </div>
+      ) : (
+        <div className={cn(
+          "flex items-center gap-3",
+          !expanded && "justify-center"
+        )}>
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="Showreels.id"
+              className="h-10 w-10 object-contain"
+              onError={(event) => {
+                const target = event.currentTarget;
+                target.style.display = "none";
+                const fallback = target.nextElementSibling as HTMLElement | null;
+                fallback?.classList.remove("hidden");
+              }}
+            />
+            <Link2 className="hidden h-6 w-6 text-slate-900" />
+          </div>
+          {expanded && (
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-base font-bold text-slate-900">showreels.id</p>
+              <p className="text-xs text-slate-500">Creator Dashboard</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {!mobile && (
         <button
@@ -294,7 +333,15 @@ export function DashboardShell({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="relative min-h-screen bg-slate-50 font-sans text-slate-900">
+      {/* Gradient background - light blue/white, behind all content */}
+      <div
+        className="pointer-events-none fixed inset-0 -z-10 opacity-[0.35]"
+        style={{
+          background: "linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 25%, #ffffff 50%, #e0f7fa 75%, #f0f9ff 100%)",
+        }}
+        aria-hidden="true"
+      />
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 hidden border-r border-slate-200 bg-white transition-all duration-300 ease-in-out md:block",
@@ -321,20 +368,21 @@ export function DashboardShell({
               <Menu className="h-5 w-5" />
             </button>
             <div className="text-sm text-slate-500">
-              Dashboard <span className="mx-2 text-slate-300">/</span>
-              <span className="font-medium text-slate-900">{breadcrumbLabel}</span>
+              <Link href="/dashboard" className="transition hover:text-slate-900">Dashboard</Link>
+              <span className="mx-2 text-slate-300">/</span>
+              <Link href={pathname} className="font-medium text-slate-900 transition hover:text-slate-700">{breadcrumbLabel}</Link>
             </div>
           </div>
 
           <div className="flex min-w-0 items-center gap-2.5">
             <Link
-              href={authProfileHref}
-              target="_blank"
-              className="hidden rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:inline-flex"
+              href="/dashboard/billing"
+              className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:inline-flex"
             >
-              {displayUsername}
+              <CreditCard className="h-3.5 w-3.5 text-slate-500" />
+              <span className="font-semibold capitalize">{planName}</span>
             </Link>
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 shadow-sm md:px-3">
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-0.5 shadow-sm md:px-3 md:py-1.5">
               <AvatarBadge
                 name={user.name || "Creator"}
                 avatarUrl={user.image || ""}
@@ -346,7 +394,7 @@ export function DashboardShell({
                 size="sm"
               />
               <p className="hidden max-w-[180px] truncate text-sm font-semibold text-slate-800 sm:block">
-                {user.email}
+                {user.name || "Creator"}
               </p>
             </div>
           </div>
@@ -384,7 +432,7 @@ export function DashboardShell({
           sidebarOpen ? "md:pl-72" : "md:pl-20"
         )}
       >
-        <main className="p-4 pb-24 md:p-8 md:pb-8">{children}</main>
+        <main key={pathname} className="p-4 pb-24 md:p-8 md:pb-8 animate-in fade-in duration-200">{children}</main>
       </div>
 
       <BottomNavigation />
