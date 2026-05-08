@@ -278,128 +278,138 @@ async function fetchCompletePublicVideos(
   const safeLimit = Math.max(1, limit);
   const queryLimit = Math.min(Math.max(safeLimit * 4, 40), 220);
 
-  const latestVideos = await db.query.videos.findMany({
-    where: eq(videos.visibility, "public"),
-    orderBy: desc(videos.createdAt),
-    limit: queryLimit,
-    columns: {
-      id: true,
-      title: true,
-      publicSlug: true,
-      description: true,
-      createdAt: true,
-      sourceUrl: true,
-      thumbnailUrl: true,
-      outputType: true,
-      durationLabel: true,
-    },
-    with: {
-      author: {
-        columns: {
-          username: true,
-          name: true,
-          image: true,
-          email: true,
-          role: true,
-          profileVisibility: true,
+  try {
+    const latestVideos = await db.query.videos.findMany({
+      where: eq(videos.visibility, "public"),
+      orderBy: desc(videos.createdAt),
+      limit: queryLimit,
+      columns: {
+        id: true,
+        title: true,
+        publicSlug: true,
+        description: true,
+        createdAt: true,
+        sourceUrl: true,
+        thumbnailUrl: true,
+        outputType: true,
+        durationLabel: true,
+      },
+      with: {
+        author: {
+          columns: {
+            username: true,
+            name: true,
+            image: true,
+            email: true,
+            role: true,
+            profileVisibility: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  return latestVideos
-    .filter((video) => {
-      if (!video.author) {
-        return false;
-      }
+    return latestVideos
+      .filter((video) => {
+        if (!video.author) {
+          return false;
+        }
 
-      if (video.author.role === "owner" || isAdminEmail(video.author.email)) {
-        return false;
-      }
-      if (video.author.profileVisibility !== "public") {
-        return false;
-      }
+        if (video.author.role === "owner" || isAdminEmail(video.author.email)) {
+          return false;
+        }
+        if (video.author.profileVisibility !== "public") {
+          return false;
+        }
 
-      const hasTitle = Boolean(video.title.trim());
-      const hasDescription = Boolean(video.description.trim());
-      const hasSlug = Boolean(video.publicSlug.trim());
-      const hasSourceUrl = Boolean(video.sourceUrl.trim());
-      const hasAuthorIdentity = Boolean(
-        (video.author.name || "").trim() || (video.author.username || "").trim()
-      );
-      const hasThumbnailCandidate = getThumbnailCandidates(
-        video.sourceUrl,
-        video.thumbnailUrl
-      ).length > 0;
+        const hasTitle = Boolean(video.title.trim());
+        const hasDescription = Boolean(video.description.trim());
+        const hasSlug = Boolean(video.publicSlug.trim());
+        const hasSourceUrl = Boolean(video.sourceUrl.trim());
+        const hasAuthorIdentity = Boolean(
+          (video.author.name || "").trim() || (video.author.username || "").trim()
+        );
+        const hasThumbnailCandidate = getThumbnailCandidates(
+          video.sourceUrl,
+          video.thumbnailUrl
+        ).length > 0;
 
-      return (
-        hasTitle &&
-        hasDescription &&
-        hasSlug &&
-        hasSourceUrl &&
-        hasAuthorIdentity &&
-        hasThumbnailCandidate
-      );
-    })
-    .slice(0, safeLimit)
-    .map((video) => ({
-      id: video.id,
-      title: video.title,
-      publicSlug: video.publicSlug,
-      description: video.description,
-      createdAt: video.createdAt,
-      sourceUrl: video.sourceUrl,
-      thumbnailUrl: sanitizeMediaUrl(video.thumbnailUrl) || "",
-      outputType: video.outputType,
-      durationLabel: video.durationLabel,
-      author: {
-        username: video.author?.username || null,
-        name: video.author?.name || null,
-        image: sanitizeMediaUrl(video.author?.image || null) || null,
-      },
-    }));
+        return (
+          hasTitle &&
+          hasDescription &&
+          hasSlug &&
+          hasSourceUrl &&
+          hasAuthorIdentity &&
+          hasThumbnailCandidate
+        );
+      })
+      .slice(0, safeLimit)
+      .map((video) => ({
+        id: video.id,
+        title: video.title,
+        publicSlug: video.publicSlug,
+        description: video.description,
+        createdAt: video.createdAt,
+        sourceUrl: video.sourceUrl,
+        thumbnailUrl: sanitizeMediaUrl(video.thumbnailUrl) || "",
+        outputType: video.outputType,
+        durationLabel: video.durationLabel,
+        author: {
+          username: video.author?.username || null,
+          name: video.author?.name || null,
+          image: sanitizeMediaUrl(video.author?.image || null) || null,
+        },
+      }));
+  } catch (error) {
+    console.error("[fetchCompletePublicVideos] DB query failed:", error);
+    return [];
+  }
 }
 
 const landingStatsCache = unstable_cache(
   async (adminEmailsCsv: string) => {
-    const adminEmails = parseAdminEmails(adminEmailsCsv);
-    const creatorFilter = buildCreatorFilter(adminEmails);
+    try {
+      const adminEmails = parseAdminEmails(adminEmailsCsv);
+      const creatorFilter = buildCreatorFilter(adminEmails);
 
-    const [creatorCount] = await db
-      .select({ value: count() })
-      .from(users)
-      .where(creatorFilter);
-    const [videoCount] = await db
-      .select({ value: count() })
-      .from(videos)
-      .innerJoin(users, eq(videos.userId, users.id))
-      .where(
-        and(eq(videos.visibility, "public"), creatorFilter)
-      );
+      const [creatorCount] = await db
+        .select({ value: count() })
+        .from(users)
+        .where(creatorFilter);
+      const [videoCount] = await db
+        .select({ value: count() })
+        .from(videos)
+        .innerJoin(users, eq(videos.userId, users.id))
+        .where(
+          and(eq(videos.visibility, "public"), creatorFilter)
+        );
 
-    const featuredCreators = await db.query.users.findMany({
-      where: creatorFilter,
-      orderBy: desc(users.createdAt),
-      limit: 3,
-      columns: {
-        id: true,
-        name: true,
-        username: true,
-        image: true,
-        bio: true,
-        city: true,
-        createdAt: true,
-      },
-    });
+      const featuredCreators = await db.query.users.findMany({
+        where: creatorFilter,
+        orderBy: desc(users.createdAt),
+        limit: 3,
+        columns: {
+          id: true,
+          name: true,
+          username: true,
+          image: true,
+          bio: true,
+          city: true,
+          createdAt: true,
+        },
+      });
 
-    return {
-      creatorCount: creatorCount?.value ?? 0,
-      videoCount: videoCount?.value ?? 0,
-      featuredCreators: featuredCreators.map((creator) => ({
-        ...creator,
-        image: sanitizeMediaUrl(creator.image) || null,
-      })),
-    };
+      return {
+        creatorCount: creatorCount?.value ?? 0,
+        videoCount: videoCount?.value ?? 0,
+        featuredCreators: featuredCreators.map((creator) => ({
+          ...creator,
+          image: sanitizeMediaUrl(creator.image) || null,
+        })),
+      };
+    } catch (error) {
+      console.error("[landingStatsCache] DB query failed:", error);
+      return { creatorCount: 0, videoCount: 0, featuredCreators: [] as Array<{ id: string; name: string | null; username: string | null; image: string | null; bio: string | null; city: string | null; createdAt: Date }> };
+    }
   },
   ["landing-stats-v3"],
   { revalidate: 60 }
