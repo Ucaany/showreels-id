@@ -123,6 +123,7 @@ export default async function DashboardBillingPage({
           instagram: 10,
           facebook: 10,
           vimeo: 10,
+          tiktok: 10,
         },
         creatorGroupEnabled: false,
         supportEnabled: false,

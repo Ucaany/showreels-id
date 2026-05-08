@@ -39,6 +39,12 @@ export function getVideoSourceBadgeMeta(sourceUrl: string): SourceBadgeMeta {
       className: "bg-blue-100 text-blue-700 ring-1 ring-blue-200",
     };
   }
+  if (source === "tiktok") {
+    return {
+      label: "TikTok",
+      className: "bg-zinc-900 text-white ring-1 ring-zinc-700/30",
+    };
+  }
 
   return {
     label: "Video",

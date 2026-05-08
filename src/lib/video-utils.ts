@@ -148,6 +148,37 @@ function extractFacebookId(url: string): string | null {
   return null;
 }
 
+function extractTiktokId(url: string): string | null {
+  const parsed = toUrl(url);
+  if (!parsed) {
+    return null;
+  }
+
+  const host = normalizeHost(parsed.hostname);
+
+  // Handle vm.tiktok.com short links — we can't resolve them server-side,
+  // but we store the full path segment as the id for embed purposes.
+  if (host === "vm.tiktok.com") {
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    return segments[0] || null;
+  }
+
+  if (host !== "tiktok.com") {
+    return null;
+  }
+
+  const segments = parsed.pathname.split("/").filter(Boolean);
+
+  // Format: /@username/video/1234567890123456789
+  const videoIndex = segments.findIndex((s) => s === "video");
+  if (videoIndex >= 0 && segments[videoIndex + 1]) {
+    const id = segments[videoIndex + 1];
+    return /^[0-9]{10,}$/.test(id) ? id : null;
+  }
+
+  return null;
+}
+
 export function getEmbedReadyVideoUrl(url: string): EmbedReadyVideoUrl | null {
   const normalized = normalizeHttpUrl(url);
   if (!normalized) {
@@ -207,6 +238,16 @@ export function getEmbedReadyVideoUrl(url: string): EmbedReadyVideoUrl | null {
     };
   }
 
+  const tiktokId = extractTiktokId(normalized);
+  if (tiktokId) {
+    return {
+      source: "tiktok",
+      id: tiktokId,
+      canonicalUrl: `https://www.tiktok.com/video/${tiktokId}`,
+      embedUrl: `https://www.tiktok.com/embed/v2/${tiktokId}`,
+    };
+  }
+
   return null;
 }
 
@@ -222,7 +263,7 @@ export function validateEmbedReadyVideoUrl(url: string): {
     return {
       ok: false,
       error:
-        "URL video belum embed-ready. Gunakan link YouTube, Google Drive, Instagram, Facebook, atau Vimeo yang langsung mengarah ke konten video.",
+        "URL video belum embed-ready. Gunakan link YouTube, Google Drive, Instagram, Facebook, Vimeo, atau TikTok yang langsung mengarah ke konten video.",
     };
   }
 
@@ -282,6 +323,7 @@ export function getSourceLabel(source: VideoSource): string {
   if (source === "gdrive") return "Google Drive";
   if (source === "instagram") return "Instagram";
   if (source === "facebook") return "Facebook";
+  if (source === "tiktok") return "TikTok";
   return "Vimeo";
 }
 
@@ -445,6 +487,8 @@ export function buildAiDescription({
           ? "Format konten ini cocok untuk distribusi sosial media dengan durasi yang ringkas dan visual yang cepat ditangkap."
       : source === "facebook"
         ? "Konten ini disiapkan agar tetap nyaman diputar langsung dari Facebook saat dibuka client."
+      : source === "tiktok"
+        ? "Konten ini dioptimalkan untuk format vertikal TikTok dengan ritme cepat dan visual yang engaging."
           : "Video ini disusun dengan format presentasi yang tetap nyaman saat dibuka lintas perangkat.";
 
   return `Project "${title}" menampilkan pendekatan editing yang fokus pada alur cerita yang jelas, ritme visual yang bersih, dan hasil akhir yang siap dipresentasikan. ${sourceSummary} ${tagSummary}`;

@@ -289,7 +289,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         analyticsMaxDays: 7,
         customThumbnailEnabled: false,
         whitelabelEnabled: false,
-        sourceQuotaPerPlatform: { youtube: 10, gdrive: 10, instagram: 10, facebook: 10, vimeo: 10 },
+        sourceQuotaPerPlatform: { youtube: 10, gdrive: 10, instagram: 10, facebook: 10, vimeo: 10, tiktok: 10 },
         creatorGroupEnabled: false,
         supportEnabled: false,
         themeSwitchComingSoon: false,
