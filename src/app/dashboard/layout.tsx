@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -46,11 +47,13 @@ export default async function DashboardLayout({
   }
 
   return (
-    <DashboardShell
-      user={user}
-      planName={effectivePlan.planName}
-    >
-      {children}
-    </DashboardShell>
+    <Suspense>
+      <DashboardShell
+        user={user}
+        planName={effectivePlan.planName}
+      >
+        {children}
+      </DashboardShell>
+    </Suspense>
   );
 }

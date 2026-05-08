@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { isAdminEmail } from "@/server/admin-access";
@@ -20,8 +21,10 @@ export default async function AdminLayout({
   }
 
   return (
-    <DashboardShell user={user} mode="admin">
-      {children}
-    </DashboardShell>
+    <Suspense>
+      <DashboardShell user={user} mode="admin">
+        {children}
+      </DashboardShell>
+    </Suspense>
   );
 }
