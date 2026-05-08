@@ -137,7 +137,8 @@ export async function getOrCreateUserOnboarding(input: {
     if (isRelationMissingError(error, "user_onboarding")) {
       return buildFallbackOnboarding(input.userId, fallbackPatch);
     }
-    throw error;
+    console.error("getOrCreateUserOnboarding_db_error", error);
+    return buildFallbackOnboarding(input.userId, fallbackPatch);
   }
 }
 

@@ -50,6 +50,7 @@ export async function getOrCreateCreatorSettings(input: {
     if (isRelationMissingError(error, "creator_settings")) {
       return getFallbackCreatorSettings(input);
     }
-    throw error;
+    console.error("getOrCreateCreatorSettings_db_error", error);
+    return getFallbackCreatorSettings(input);
   }
 }

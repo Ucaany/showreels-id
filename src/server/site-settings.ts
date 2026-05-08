@@ -37,50 +37,58 @@ async function ensureEmailEnabledColumn() {
   }
 }
 
+const SITE_SETTINGS_DEFAULTS: DbSiteSettings = {
+  id: SITE_SETTINGS_ID,
+  maintenanceEnabled: false,
+  pauseEnabled: false,
+  maintenanceMessage:
+    "Website sedang dalam maintenance sementara. Silakan kembali beberapa saat lagi.",
+  billingEnabled: false,
+  emailEnabled: true,
+  updatedAt: new Date(),
+};
+
 export async function getSiteSettings(): Promise<DbSiteSettings> {
   if (!isDatabaseConfigured) {
-    return {
-      id: SITE_SETTINGS_ID,
-      maintenanceEnabled: false,
-      pauseEnabled: false,
-      maintenanceMessage:
-        "Website sedang dalam maintenance sementara. Silakan kembali beberapa saat lagi.",
-      billingEnabled: false,
-      emailEnabled: true,
-      updatedAt: new Date(),
-    };
+    return { ...SITE_SETTINGS_DEFAULTS };
   }
 
-  await ensureBillingEnabledColumn();
-  await ensureEmailEnabledColumn();
+  try {
+    await ensureBillingEnabledColumn();
+    await ensureEmailEnabledColumn();
 
-  const existing = await db.query.siteSettings.findFirst({
-    where: eq(siteSettings.id, SITE_SETTINGS_ID),
-  });
+    const existing = await db.query.siteSettings.findFirst({
+      where: eq(siteSettings.id, SITE_SETTINGS_ID),
+    });
 
-  if (existing) {
-    return existing;
+    if (existing) {
+      return existing;
+    }
+
+    const [created] = await db
+      .insert(siteSettings)
+      .values({ id: SITE_SETTINGS_ID })
+      .onConflictDoNothing()
+      .returning();
+
+    if (created) {
+      return created;
+    }
+
+    const fallback = await db.query.siteSettings.findFirst({
+      where: eq(siteSettings.id, SITE_SETTINGS_ID),
+    });
+
+    if (!fallback) {
+      console.error("site_settings_init_failed: returning defaults");
+      return { ...SITE_SETTINGS_DEFAULTS };
+    }
+
+    return fallback;
+  } catch (error) {
+    console.error("getSiteSettings_db_error", error);
+    return { ...SITE_SETTINGS_DEFAULTS };
   }
-
-  const [created] = await db
-    .insert(siteSettings)
-    .values({ id: SITE_SETTINGS_ID })
-    .onConflictDoNothing()
-    .returning();
-
-  if (created) {
-    return created;
-  }
-
-  const fallback = await db.query.siteSettings.findFirst({
-    where: eq(siteSettings.id, SITE_SETTINGS_ID),
-  });
-
-  if (!fallback) {
-    throw new Error("Site settings could not be initialized.");
-  }
-
-  return fallback;
 }
 
 export async function updateSiteSettings(input: {

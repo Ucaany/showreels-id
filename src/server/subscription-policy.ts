@@ -237,7 +237,8 @@ export async function getEffectiveCreatorPlan(userId: string): Promise<Effective
     if (isRelationMissingError(error, "billing_subscriptions")) {
       return createFallbackFreePlan();
     }
-    throw error;
+    console.error("getEffectiveCreatorPlan_db_error", error);
+    return createFallbackFreePlan({ status: "active" });
   }
 
   if (!subscription) {

@@ -318,7 +318,8 @@ export async function getOrCreateSubscription(userId: string) {
     if (isMissingBillingSchemaError(error)) {
       return buildFallbackSubscription(userId);
     }
-    throw error;
+    console.error("getOrCreateSubscription_db_error", error);
+    return buildFallbackSubscription(userId);
   }
 }
 
@@ -354,7 +355,8 @@ export async function getBillingTransactions(userId: string) {
     if (isMissingBillingSchemaError(error)) {
       return [];
     }
-    throw error;
+    console.error("getBillingTransactions_db_error", error);
+    return [];
   }
 }
 
@@ -384,7 +386,8 @@ export async function getBillingTransactionByInvoiceForUser(
     if (isMissingBillingSchemaError(error)) {
       return null;
     }
-    throw error;
+    console.error("getBillingTransactionByInvoice_db_error", error);
+    return null;
   }
 }
 
