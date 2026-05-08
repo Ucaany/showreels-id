@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
@@ -23,6 +24,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/auth/login",
   },
   providers: [
+    // Google OAuth provider (aktif jika env vars tersedia)
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            allowDangerousEmailAccountLinking: true,
+          }),
+        ]
+      : []),
+    // Credentials (email/password)
     Credentials({
       name: "credentials",
       credentials: {
@@ -39,8 +51,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!db) return null;
 
+        // Select hanya kolom yang diperlukan untuk performa
         const user = await db.query.users.findFirst({
           where: eq(users.email, email),
+          columns: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            passwordHash: true,
+          },
         });
 
         if (!user || !user.passwordHash) {
