@@ -20,6 +20,8 @@ type DashboardBillingPageProps = {
     invoice?: string;
     payment?: string;
     plan?: string;
+    tripay_reference?: string;
+    tripay_merchant_ref?: string;
   }>;
 };
 
@@ -29,7 +31,12 @@ export default async function DashboardBillingPage({
   const user = await requireCurrentUser();
   const tripayConfigured = isTripayConfigured();
   const params = searchParams ? await searchParams : {};
-  const invoiceId = typeof params.invoice === "string" ? params.invoice.trim() : "";
+  // Support both legacy ?invoice= param and Tripay return ?tripay_merchant_ref= param
+  const invoiceId = typeof params.tripay_merchant_ref === "string"
+    ? params.tripay_merchant_ref.trim()
+    : typeof params.invoice === "string"
+      ? params.invoice.trim()
+      : "";
 
   if (invoiceId) {
     try {
@@ -148,6 +155,8 @@ export default async function DashboardBillingPage({
         billingCycle: transaction.billingCycle as "monthly" | "yearly",
         status: transaction.status as "pending" | "paid" | "failed" | "cancelled" | "expired",
         createdAt: transaction.createdAt.toISOString(),
+        checkoutUrl: transaction.checkoutUrl || null,
+        expiredAt: transaction.expiredAt?.toISOString() || null,
       }))}
       billingEmail={settings.billingEmail || user.contactEmail || user.email}
       paymentMethod={settings.paymentMethod}

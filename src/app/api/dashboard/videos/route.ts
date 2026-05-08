@@ -39,6 +39,7 @@ export async function GET() {
       publicSlug: true,
       tags: true,
     },
+    limit: 50,
   });
 
   return NextResponse.json({ videos: myVideos });

@@ -84,15 +84,17 @@ export function useVideos(config?: SWRConfiguration) {
 
 /**
  * Hook untuk fetch analytics summary
- * Auto refresh every 30 seconds untuk real-time data
+ * Auto refresh every 120 seconds — analytics tidak perlu real-time,
+ * mengurangi database reads sebesar 75%
  */
 export function useAnalyticsSummary(range: string = '7d', config?: SWRConfiguration) {
   return useSWR<AnalyticsSummary>(
     CACHE_KEYS.ANALYTICS_SUMMARY(range),
     fetcher,
     {
-      dedupingInterval: CACHE_TIMES.REALTIME,
-      refreshInterval: 30000, // Auto refresh every 30s
+      dedupingInterval: CACHE_TIMES.DYNAMIC,
+      refreshInterval: 120000, // Auto refresh every 2 minutes (hemat 75% DB reads)
+      revalidateOnFocus: false, // Tidak perlu refetch saat tab focus
       ...config,
     }
   )
@@ -100,13 +102,15 @@ export function useAnalyticsSummary(range: string = '7d', config?: SWRConfigurat
 
 /**
  * Hook untuk fetch analytics traffic
+ * Revalidate hanya saat mount atau manual trigger
  */
 export function useAnalyticsTraffic(range: string = '7d', config?: SWRConfiguration) {
   return useSWR(
     CACHE_KEYS.ANALYTICS_TRAFFIC(range),
     fetcher,
     {
-      dedupingInterval: CACHE_TIMES.REALTIME,
+      dedupingInterval: CACHE_TIMES.DYNAMIC,
+      revalidateOnFocus: false,
       ...config,
     }
   )
@@ -114,13 +118,15 @@ export function useAnalyticsTraffic(range: string = '7d', config?: SWRConfigurat
 
 /**
  * Hook untuk fetch analytics top pages
+ * Revalidate hanya saat mount atau manual trigger
  */
 export function useAnalyticsTopPages(range: string = '7d', config?: SWRConfiguration) {
   return useSWR(
     CACHE_KEYS.ANALYTICS_TOP_PAGES(range),
     fetcher,
     {
-      dedupingInterval: CACHE_TIMES.REALTIME,
+      dedupingInterval: CACHE_TIMES.DYNAMIC,
+      revalidateOnFocus: false,
       ...config,
     }
   )

@@ -5,10 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSWRConfig } from "swr";
 import Link from "next/link";
 import {
+  AlertTriangle,
   CalendarClock,
   CheckCircle2,
+  Clock,
   CreditCard,
   Download,
+  ExternalLink,
   RefreshCw,
   ShieldCheck,
   Sparkles,
@@ -63,6 +66,8 @@ type TransactionPayload = {
   currency: string;
   status: "pending" | "paid" | "failed" | "cancelled" | "expired";
   createdAt: string;
+  checkoutUrl: string | null;
+  expiredAt: string | null;
 };
 
 function toIdr(value: number) {
@@ -89,6 +94,26 @@ function getRemainingDays(value: string | null) {
   const end = new Date(value).getTime();
   if (Number.isNaN(end)) return 0;
   return Math.max(0, Math.ceil((end - Date.now()) / (1000 * 60 * 60 * 24)));
+}
+
+/**
+ * Menghitung sisa waktu pembayaran sebelum expired.
+ * Returns null jika sudah expired atau tidak ada expiredAt.
+ */
+function getPaymentTimeRemaining(expiredAt: string | null): string | null {
+  if (!expiredAt) return null;
+  const end = new Date(expiredAt).getTime();
+  if (Number.isNaN(end)) return null;
+  const diff = end - Date.now();
+  if (diff <= 0) return null;
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours > 0) {
+    return `${hours} jam ${minutes} menit`;
+  }
+  return `${minutes} menit`;
 }
 
 export function BillingPanel({
@@ -131,6 +156,16 @@ export function BillingPanel({
   const remainingDays = getRemainingDays(activePlan.renewalDate);
   const renewTarget: PlanName = effectivePlanName === "free" ? "creator" : effectivePlanName;
   const recentTransactions = useMemo(() => transactions.slice(0, 4), [transactions]);
+
+  // Cari transaksi pending yang masih bisa dibayar (belum expired)
+  const pendingTransaction = useMemo(() => {
+    return transactions.find((tx) => {
+      if (tx.status !== "pending") return false;
+      if (!tx.checkoutUrl) return false;
+      if (!tx.expiredAt) return true; // Jika tidak ada expiredAt, anggap masih valid
+      return new Date(tx.expiredAt).getTime() > Date.now();
+    }) || null;
+  }, [transactions]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -205,22 +240,136 @@ export function BillingPanel({
     await handleRefresh();
   };
 
+  // Handle payment=success: tampilkan notifikasi lalu redirect ke dashboard
   useEffect(() => {
     if (searchParams.get("payment") !== "success") return;
-    void showFeedbackAlert({
-      title: "Terima kasih sudah berlangganan",
-      text: "Paket kamu sudah aktif. Sekarang kamu bisa menggunakan fitur Showreels.id sesuai paket yang dipilih.",
-      icon: "success",
-      confirmButtonText: "Masuk Dashboard",
-    });
-    const refreshTimer = window.setTimeout(() => {
-      void handleRefresh();
-    }, 0);
-    return () => window.clearTimeout(refreshTimer);
+
+    const handleSuccess = async () => {
+      // Refresh data dulu agar plan terupdate
+      await handleRefresh();
+
+      await showFeedbackAlert({
+        title: "Pembayaran berhasil! 🎉",
+        text: "Paket kamu sudah aktif. Sekarang kamu bisa menggunakan fitur Showreels.id sesuai paket yang dipilih.",
+        icon: "success",
+        confirmButtonText: "Masuk Dashboard",
+      });
+
+      // Invalidate dashboard summary karena plan berubah
+      void globalMutate(CACHE_KEYS.DASHBOARD_SUMMARY);
+
+      // Redirect ke dashboard setelah user klik "Masuk Dashboard"
+      router.replace("/dashboard");
+    };
+
+    void handleSuccess();
+  }, [searchParams]);
+
+  // Handle payment=cancel: tampilkan notifikasi pembatalan
+  useEffect(() => {
+    if (searchParams.get("payment") !== "cancel") return;
+
+    const handleCancel = async () => {
+      // Refresh data untuk mendapatkan status terbaru
+      await handleRefresh();
+
+      await showFeedbackAlert({
+        title: "Pembayaran dibatalkan",
+        text: pendingTransaction
+          ? "Kamu masih bisa melanjutkan pembayaran selama waktu pembayaran belum habis."
+          : "Silakan coba lagi jika ingin berlangganan.",
+        icon: "info",
+        confirmButtonText: "OK",
+      });
+
+      // Bersihkan query params
+      router.replace("/dashboard/billing");
+    };
+
+    void handleCancel();
   }, [searchParams]);
 
   return (
     <div className="space-y-5 text-zinc-900">
+      {/* Warning banner: sisa hari < 7 (non-trial, non-free) */}
+      {effectivePlanName !== "free" && activePlan.status === "active" && remainingDays > 0 && remainingDays <= 7 && (
+        <Card className={`dashboard-clean-card p-4 shadow-sm shadow-zinc-200/70 ${
+          remainingDays <= 3
+            ? "border-red-300 bg-red-50"
+            : "border-amber-200 bg-amber-50"
+        }`}>
+          <div className="flex items-start gap-3">
+            <AlertTriangle className={`h-5 w-5 shrink-0 ${
+              remainingDays <= 3 ? "text-red-600" : "text-amber-600"
+            }`} />
+            <div>
+              <p className={`text-sm font-semibold ${
+                remainingDays <= 3 ? "text-red-900" : "text-amber-900"
+              }`}>
+                {remainingDays <= 3
+                  ? `⚠️ Paket akan berakhir dalam ${remainingDays} hari!`
+                  : `Paket akan berakhir dalam ${remainingDays} hari`}
+              </p>
+              <p className={`mt-1 text-sm ${
+                remainingDays <= 3 ? "text-red-700" : "text-amber-700"
+              }`}>
+                Perpanjang sekarang agar fitur {activePlanLabel} tetap aktif dan tidak terganggu.
+              </p>
+              <Button
+                size="sm"
+                className="mt-2 bg-zinc-800 hover:bg-zinc-700"
+                onClick={handleRenew}
+                disabled={!billingEnabled}
+              >
+                <Sparkles className="h-4 w-4" />
+                Perpanjang Sekarang
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Pending transaction card: user bisa bayar ulang */}
+      {pendingTransaction && (
+        <Card className="dashboard-clean-card border-blue-200 bg-blue-50 p-4 shadow-sm shadow-zinc-200/70">
+          <div className="flex items-start gap-3">
+            <Clock className="h-5 w-5 shrink-0 text-blue-600" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-blue-900">
+                Menunggu Pembayaran
+              </p>
+              <p className="mt-1 text-sm text-blue-700">
+                Transaksi <span className="font-mono font-semibold">{pendingTransaction.invoiceId}</span> untuk paket{" "}
+                <span className="font-semibold">{catalog[pendingTransaction.planName]?.label || pendingTransaction.planName}</span>{" "}
+                sebesar <span className="font-semibold">{toIdr(pendingTransaction.amount)}</span> menunggu pembayaran.
+              </p>
+              {pendingTransaction.expiredAt && (
+                <p className="mt-1 text-xs text-blue-600">
+                  <Clock className="mr-1 inline h-3 w-3" />
+                  Sisa waktu: {getPaymentTimeRemaining(pendingTransaction.expiredAt) || "Segera berakhir"}
+                </p>
+              )}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <a
+                  href={pendingTransaction.checkoutUrl!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <ExternalLink className="h-4 w-4" />
+                    Bayar Sekarang
+                  </Button>
+                </a>
+                <Button size="sm" variant="secondary" onClick={handleRefresh} disabled={refreshing}>
+                  <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                  Cek Status
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <Card className="dashboard-clean-card overflow-hidden border-zinc-200 bg-white p-0 shadow-sm shadow-zinc-200/70">
         <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="bg-[radial-gradient(circle_at_top_left,#f4f4f5,transparent_34%)] p-5 sm:p-7">
@@ -353,10 +502,26 @@ export function BillingPanel({
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold capitalize text-zinc-500">
-                      {item.status === "paid" ? <CheckCircle2 className="h-3.5 w-3.5 text-zinc-900" /> : null}
+                    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${
+                      item.status === "paid"
+                        ? "border-green-200 bg-green-50 text-green-700"
+                        : item.status === "pending"
+                          ? "border-blue-200 bg-blue-50 text-blue-700"
+                          : item.status === "expired" || item.status === "failed"
+                            ? "border-red-200 bg-red-50 text-red-700"
+                            : "border-zinc-200 bg-white text-zinc-500"
+                    }`}>
+                      {item.status === "paid" ? <CheckCircle2 className="h-3.5 w-3.5" /> : null}
+                      {item.status === "pending" ? <Clock className="h-3.5 w-3.5" /> : null}
                       {item.status}
                     </span>
+                    {item.status === "pending" && item.checkoutUrl && item.expiredAt && new Date(item.expiredAt).getTime() > Date.now() && (
+                      <a href={item.checkoutUrl} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="secondary" aria-label="Bayar sekarang">
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </a>
+                    )}
                     <Link href={`/api/billing/invoice/${item.invoiceId}?download=1`} target="_blank">
                       <Button size="sm" variant="secondary" aria-label="Download invoice">
                         <Download className="h-4 w-4" />
@@ -372,4 +537,3 @@ export function BillingPanel({
     </div>
   );
 }
-

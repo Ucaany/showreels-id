@@ -5,6 +5,9 @@ import { db, isDatabaseConfigured } from "@/db";
 import { videos } from "@/db/schema";
 import { requireCurrentUser } from "@/server/current-user";
 
+/** Maximum videos to load per page to reduce DB cost */
+const VIDEOS_PAGE_LIMIT = 50;
+
 export default async function DashboardVideosPage() {
   const user = await requireCurrentUser();
 
@@ -27,6 +30,7 @@ export default async function DashboardVideosPage() {
           where: eq(videos.userId, user.id),
           orderBy: desc(videos.createdAt),
           columns: videoColumns,
+          limit: VIDEOS_PAGE_LIMIT,
         })
         .catch(async (error) => {
           if (!isVideoPinSchemaError(error)) {
@@ -46,6 +50,7 @@ export default async function DashboardVideosPage() {
               pinnedToProfile: false,
               pinnedOrder: false,
             },
+            limit: VIDEOS_PAGE_LIMIT,
           });
 
           return fallbackVideos.map((video) => ({

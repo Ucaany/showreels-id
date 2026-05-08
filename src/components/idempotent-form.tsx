@@ -29,7 +29,6 @@ export function IdempotentForm({ onSubmit, children, className }: IdempotentForm
     e.preventDefault()
     
     if (isSubmitting) {
-      console.log('Form already submitting')
       return
     }
 

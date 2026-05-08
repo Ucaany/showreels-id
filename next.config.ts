@@ -21,7 +21,6 @@ const nextConfig: NextConfig = {
       "react-icons",
       "framer-motion",
       "swr",
-      "@tanstack/react-query",
       "react-loading-skeleton",
     ],
   },

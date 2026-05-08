@@ -2,6 +2,31 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { handleMidtransWebhook, isMidtransConfigured } from "@/server/billing";
 
+/**
+ * Simple in-memory rate limiter untuk legacy endpoint.
+ * Membatasi 10 request per menit per IP.
+ */
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  entry.count++;
+  if (entry.count > RATE_LIMIT_MAX) {
+    return true;
+  }
+
+  return false;
+}
+
 function verifySignature(payload: {
   order_id?: string;
   status_code?: string;
@@ -35,6 +60,19 @@ export async function POST(request: Request) {
     "X-Deprecated": "true",
     "X-Deprecation-Notice": "Use /api/billing/tripay/callback for new transactions",
   };
+
+  // Rate limiting
+  const clientIp =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
+
+  if (isRateLimited(clientIp)) {
+    return NextResponse.json(
+      { error: "Too many requests." },
+      { status: 429, headers: { ...deprecationHeaders, "Retry-After": "60" } }
+    );
+  }
 
   const body = (await request.json().catch(() => null)) as
     | {

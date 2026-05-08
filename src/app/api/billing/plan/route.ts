@@ -31,18 +31,25 @@ export async function GET() {
     status: entitlementState.effectivePlan.status,
   });
 
-  return NextResponse.json({
-    plan: subscription,
-    effectivePlan: entitlementState.effectivePlan,
-    entitlements: entitlementState.entitlements,
-    verifiedBadge,
-    settings: {
-      billingEmail: settings.billingEmail || currentUser.contactEmail || currentUser.email,
-      paymentMethod: settings.paymentMethod,
-      taxInfo: settings.taxInfo,
-      invoiceNotes: settings.invoiceNotes,
+  return NextResponse.json(
+    {
+      plan: subscription,
+      effectivePlan: entitlementState.effectivePlan,
+      entitlements: entitlementState.entitlements,
+      verifiedBadge,
+      settings: {
+        billingEmail: settings.billingEmail || currentUser.contactEmail || currentUser.email,
+        paymentMethod: settings.paymentMethod,
+        taxInfo: settings.taxInfo,
+        invoiceNotes: settings.invoiceNotes,
+      },
+      billingCycle: "monthly",
+      catalog: getPlanCatalog(),
     },
-    billingCycle: "monthly",
-    catalog: getPlanCatalog(),
-  });
+    {
+      headers: {
+        "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+      },
+    }
+  );
 }

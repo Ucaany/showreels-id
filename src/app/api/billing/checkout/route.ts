@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     currentUser.name?.trim() || currentUser.username || "Creator";
   const accountEmail = currentUser.contactEmail || currentUser.email;
   const creatorLink = currentUser.username
-    ? `showreels-id.vercel.app/creator/${currentUser.username}`
+    ? `showreels.id/creator/${currentUser.username}`
     : null;
 
   const planPayload = {

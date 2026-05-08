@@ -156,9 +156,5 @@ export async function POST(request: Request) {
     }
   }
 
-  console.log(
-    `[Tripay Callback] Processed: invoice=${invoiceId}, status=${tripayStatus} → ${internalStatus}`
-  );
-
   return NextResponse.json({ success: true });
 }

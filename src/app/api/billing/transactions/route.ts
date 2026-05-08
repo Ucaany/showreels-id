@@ -18,6 +18,13 @@ export async function GET() {
   const transactions = await getBillingTransactions(currentUser.id);
 
   return NextResponse.json({
-    transactions,
+    transactions: transactions.map((tx) => ({
+      ...tx,
+      createdAt: tx.createdAt instanceof Date ? tx.createdAt.toISOString() : tx.createdAt,
+      expiredAt: tx.expiredAt instanceof Date ? tx.expiredAt.toISOString() : (tx.expiredAt || null),
+      paidAt: tx.paidAt instanceof Date ? tx.paidAt.toISOString() : (tx.paidAt || null),
+      updatedAt: tx.updatedAt instanceof Date ? tx.updatedAt.toISOString() : tx.updatedAt,
+      checkoutUrl: tx.checkoutUrl || null,
+    })),
   });
 }

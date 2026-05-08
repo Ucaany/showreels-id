@@ -1,10 +1,24 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { BioCreatorPublicPage, VideoDetailPublicPage } from "@/components/public/public-creator-pages";
 import { createTextExcerpt, getCreatorBioHref, getVideoDetailHref, isReservedPublicSlug } from "@/lib/public-route-utils";
 import { getAutoThumbnailFromVideoUrl } from "@/lib/video-utils";
 import { getCurrentUser } from "@/server/current-user";
 import { getPublicProfile, getPublicVideo } from "@/server/public-data";
+
+/**
+ * React.cache() deduplicate calls within the same request.
+ * generateMetadata dan page render akan share hasil query yang sama,
+ * mengurangi DB reads dari 2x menjadi 1x per request.
+ */
+const getCachedPublicProfile = cache(
+  (slug: string, viewerUserId?: string | null) => getPublicProfile(slug, viewerUserId)
+);
+
+const getCachedPublicVideo = cache(
+  (slug: string, viewerUserId?: string | null) => getPublicVideo(slug, viewerUserId)
+);
 
 export async function generateMetadata({
   params,
@@ -17,7 +31,8 @@ export async function generateMetadata({
     return {};
   }
 
-  const profile = await getPublicProfile(slug);
+  // Menggunakan cached version — akan di-reuse oleh page render
+  const profile = await getCachedPublicProfile(slug);
   if (profile) {
     const title = `${profile.user.name || profile.user.username || "Creator"} — Showreels.id`;
     const description = createTextExcerpt(profile.user.bio, 155) || "Bio creator Showreels.id.";
@@ -44,7 +59,7 @@ export async function generateMetadata({
     };
   }
 
-  const video = await getPublicVideo(slug);
+  const video = await getCachedPublicVideo(slug);
   if (!video || !video.author) {
     return {};
   }
@@ -86,12 +101,14 @@ export default async function PublicSlugPage({
   }
 
   const currentUser = await getCurrentUser();
-  const profile = await getPublicProfile(slug, currentUser?.id);
+
+  // Menggunakan cached version — deduplicate dengan generateMetadata
+  const profile = await getCachedPublicProfile(slug, currentUser?.id);
   if (profile) {
     return <BioCreatorPublicPage profile={profile} />;
   }
 
-  const video = await getPublicVideo(slug, currentUser?.id);
+  const video = await getCachedPublicVideo(slug, currentUser?.id);
   if (video && video.author) {
     return <VideoDetailPublicPage video={video} />;
   }

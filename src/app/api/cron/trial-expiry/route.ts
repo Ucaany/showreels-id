@@ -9,7 +9,14 @@ import { handleExpiredTrials } from "@/server/trial-expiry-handler";
 export async function GET(request: Request) {
   // Verifikasi cron secret untuk keamanan
   const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET || "your-secret-key";
+  const cronSecret = (process.env.CRON_SECRET || "").trim();
+
+  if (!cronSecret) {
+    return NextResponse.json(
+      { error: "CRON_SECRET not configured" },
+      { status: 500 }
+    );
+  }
 
   if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

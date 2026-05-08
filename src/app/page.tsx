@@ -1,7 +1,22 @@
-import { LandingPage } from "@/components/landing-page";
+import dynamic from "next/dynamic";
 import { getLandingStats } from "@/server/public-data";
 import { getCurrentUser } from "@/server/current-user";
 import { redirect } from "next/navigation";
+
+/**
+ * Dynamic import untuk landing page — mengurangi initial JS bundle.
+ * Landing page (1935 baris + framer-motion) hanya dimuat client-side.
+ */
+const LandingPage = dynamic(
+  () => import("@/components/landing-page").then((mod) => mod.LandingPage),
+  {
+    loading: () => (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
+      </div>
+    ),
+  }
+);
 
 type HomeSearchParams = {
   code?: string;
@@ -45,3 +60,4 @@ export default async function HomePage({
     />
   );
 }
+

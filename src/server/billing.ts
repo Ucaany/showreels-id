@@ -116,11 +116,13 @@ function normalizeOrigin(value: string | undefined) {
 }
 
 function getAppOrigin() {
+  // 1. Explicit app URL (recommended - set in Vercel env)
   const explicitOrigin = normalizeOrigin(process.env.NEXT_PUBLIC_APP_URL);
   if (explicitOrigin) {
     return explicitOrigin;
   }
 
+  // 2. Vercel production URL (stable across deployments)
   const projectProductionOrigin = normalizeOrigin(
     process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
@@ -130,14 +132,9 @@ function getAppOrigin() {
     return projectProductionOrigin;
   }
 
-  const deploymentOrigin = normalizeOrigin(
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined
-  );
-  if (deploymentOrigin) {
-    return deploymentOrigin;
-  }
-
-  return "https://showreels-id.vercel.app";
+  // NOTE: Jangan gunakan VERCEL_URL karena bersifat per-deployment dan bisa expired.
+  // Langsung fallback ke production domain yang stabil.
+  return "https://showreels.id";
 }
 
 
@@ -338,6 +335,10 @@ export async function getBillingTransactions(userId: string) {
       createdAt: Date;
       planName: string;
       billingCycle: string;
+      checkoutUrl: string;
+      expiredAt: Date | null;
+      paidAt: Date | null;
+      updatedAt: Date;
     }>;
   }
 

@@ -136,7 +136,7 @@ const publicVideoAuthorColumns = {
   profileVisibility: true,
 } as const;
 
-async function findPublicUserByUsername(username: string) {
+async function findPublicUserByUsernameRaw(username: string) {
   try {
     return await db.query.users.findFirst({
       where: eq(users.username, username),
@@ -170,6 +170,16 @@ async function findPublicUserByUsername(username: string) {
     };
   }
 }
+
+/**
+ * Cached version of findPublicUserByUsername
+ * Revalidate setiap 60 detik — menghemat DB reads untuk profil populer
+ */
+const findPublicUserByUsername = unstable_cache(
+  findPublicUserByUsernameRaw,
+  ["public-user-by-username"],
+  { revalidate: 60 }
+);
 
 async function findPublicVideoBySlug(slug: string) {
   try {

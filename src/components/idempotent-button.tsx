@@ -40,12 +40,10 @@ export function IdempotentButton({
     
     // Check cooldown
     if (now - lastClickTime < cooldown) {
-      console.log('Button in cooldown period')
       return
     }
     
     if (isProcessing) {
-      console.log('Request already in progress')
       return
     }
 

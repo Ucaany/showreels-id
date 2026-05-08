@@ -1,9 +1,18 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { PortfolioCreatorPublicPage } from "@/components/public/public-creator-pages";
 import { createTextExcerpt, getCreatorPortfolioHref, isReservedPublicSlug } from "@/lib/public-route-utils";
 import { getCurrentUser } from "@/server/current-user";
 import { getPublicProfile } from "@/server/public-data";
+
+/**
+ * React.cache() deduplicate calls within the same request.
+ * generateMetadata dan page render akan share hasil query yang sama.
+ */
+const getCachedPublicProfile = cache(
+  (slug: string, viewerUserId?: string | null) => getPublicProfile(slug, viewerUserId)
+);
 
 export async function generateMetadata({
   params,
@@ -16,7 +25,7 @@ export async function generateMetadata({
     return {};
   }
 
-  const profile = await getPublicProfile(slug);
+  const profile = await getCachedPublicProfile(slug);
   if (!profile) {
     return {};
   }
@@ -63,7 +72,7 @@ export default async function PublicPortfolioPage({
   }
 
   const currentUser = await getCurrentUser();
-  const profile = await getPublicProfile(slug, currentUser?.id);
+  const profile = await getCachedPublicProfile(slug, currentUser?.id);
 
   if (!profile) {
     notFound();

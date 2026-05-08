@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { count, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { Suspense } from "react";
 import {
   BarChart3,
   CreditCard,
@@ -16,11 +16,10 @@ import { OnboardingReminderCard } from "@/components/dashboard/onboarding-remind
 import { PublicLinkCardCompact } from "@/components/dashboard/public-link-card-compact";
 import { OnboardingStepper } from "@/components/onboarding/onboarding-stepper";
 import { Button } from "@/components/ui/button";
-import { db, isDatabaseConfigured } from "@/db";
-import { videos, visitorEvents } from "@/db/schema";
 import { cn } from "@/lib/cn";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { requireCurrentUser } from "@/server/current-user";
+import { getDashboardMetrics } from "@/server/dashboard-data";
 import { getOrCreateUserOnboarding } from "@/server/onboarding";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
@@ -295,46 +294,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const canUseBuildLink = true;
 
-  const myVideos = isDatabaseConfigured
-    ? await db.query.videos.findMany({
-        where: eq(videos.userId, user.id),
-        orderBy: desc(videos.createdAt),
-        columns: {
-          id: true,
-          title: true,
-          visibility: true,
-          publicSlug: true,
-        },
-      })
-    : [];
+  // Use cached dashboard metrics (videos cached 30s, visitor count cached 60s)
+  const metrics = await getDashboardMetrics({
+    userId: user.id,
+    username: user.username || "creator",
+  });
 
   const normalizedLinks = normalizeCustomLinks(user.customLinks);
   const activeLinks = normalizedLinks.filter((link) => link.enabled !== false);
-  const publicVideos = myVideos.filter((video) => video.visibility === "public");
   const profilePath = `/creator/${user.username || "creator"}`;
-
-  const totalViews = isDatabaseConfigured
-    ? await (async () => {
-        const publicVideoPaths = publicVideos
-          .map((video) => video.publicSlug?.trim())
-          .filter((value): value is string => Boolean(value))
-          .map((slug) => `/v/${slug}`);
-        const creatorPathPattern = `${profilePath}%`;
-
-        const [row] = await db
-          .select({ value: count() })
-          .from(visitorEvents)
-          .where(
-            publicVideoPaths.length > 0
-              ? or(
-                  sql`${visitorEvents.path} LIKE ${creatorPathPattern}`,
-                  inArray(visitorEvents.path, publicVideoPaths)
-                )
-              : sql`${visitorEvents.path} LIKE ${creatorPathPattern}`
-          );
-        return Number(row?.value || 0);
-      })()
-    : 0;
 
   const metricCards: MetricCard[] = [
     {
@@ -345,19 +313,19 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     },
     {
       label: "Total Video",
-      value: myVideos.length,
+      value: metrics.totalVideos,
       helper: "Semua video portfolio",
       icon: Video,
     },
     {
       label: "Video Public",
-      value: publicVideos.length,
+      value: metrics.publicVideos,
       helper: "Siap dilihat client",
       icon: UploadCloud,
     },
     {
       label: "Total Click",
-      value: totalViews,
+      value: metrics.totalViews,
       helper: "Event analytics profil dan video",
       icon: MousePointerClick,
     },
@@ -407,10 +375,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <HeroCard userName={user.name} canUseBuildLink={canUseBuildLink} />
         <PublicLinkCardCompact profilePath={profilePath} username={user.username || "creator"} />
         <StatsGrid metricCards={metricCards} />
-        <AnalyticsChartCard />
+        <Suspense fallback={<div className="lg:col-span-2 animate-pulse rounded-3xl border border-slate-200 bg-white h-72" />}>
+          <AnalyticsChartCard />
+        </Suspense>
         <QuickActionCard actions={quickActions} />
         <div className="md:col-span-2 lg:col-span-3">
-          <NotificationInboxPanel compact />
+          <Suspense fallback={<div className="animate-pulse rounded-3xl border border-slate-200 bg-white h-32" />}>
+            <NotificationInboxPanel compact />
+          </Suspense>
         </div>
       </div>
     </div>
