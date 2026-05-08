@@ -31,7 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/cn";
-import { createClient } from "@/lib/supabase/client";
+import { signOut } from "next-auth/react";
 
 const THEME_PREVIEWS = [
   {
@@ -902,8 +902,7 @@ export function LandingPage({
                         type="button"
                         className="inline-flex items-center gap-1.5 py-2 text-[0.95rem] font-semibold text-black transition hover:text-slate-950"
                         onClick={async () => {
-                          const supabase = createClient();
-                          await supabase?.auth.signOut();
+                          await signOut({ redirect: false });
                           window.location.replace("/");
                         }}
                       >

@@ -162,7 +162,8 @@ export async function POST(request: Request) {
       "visibility"
   `);
 
-  const video = insertedVideo[0];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const video = ((insertedVideo as any).rows ?? insertedVideo)?.[0];
 
   await markFirstVideoUploaded(currentUser.id).catch(() => null);
 

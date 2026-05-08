@@ -1,9 +1,5 @@
-import { createId, simulateDelay } from "@/lib/helpers";
-import type {
-  AuthSession,
-  ServiceResult,
-  UserProfile,
-} from "@/lib/types";
+import { signIn, signOut } from "next-auth/react";
+import type { ServiceResult } from "@/lib/types";
 
 export interface LoginInput {
   email: string;
@@ -17,150 +13,172 @@ export interface SignupInput {
   password: string;
 }
 
-const DEMO_PASSWORD = "demo12345";
-
 export const authService = {
-  async login(
-    input: LoginInput,
-    users: UserProfile[]
-  ): Promise<ServiceResult<AuthSession>> {
-    await simulateDelay(550);
+  /**
+   * Login menggunakan Auth.js Credentials provider.
+   * Memanggil signIn dari next-auth/react (client-side).
+   */
+  async login(input: LoginInput): Promise<ServiceResult<{ redirectTo: string }>> {
+    try {
+      const result = await signIn("credentials", {
+        email: input.email.trim().toLowerCase(),
+        password: input.password,
+        redirect: false,
+      });
 
-    const email = input.email.trim().toLowerCase();
-    const user = users.find((item) => item.email.toLowerCase() === email);
-    if (!user) {
-      return { ok: false, error: "Email belum terdaftar." };
-    }
-    if (input.password !== DEMO_PASSWORD) {
+      if (result?.error) {
+        return {
+          ok: false,
+          error: "Email atau password salah.",
+        };
+      }
+
+      return {
+        ok: true,
+        data: { redirectTo: "/dashboard" },
+      };
+    } catch (error) {
+      console.error("[AuthService] Login error:", error);
       return {
         ok: false,
-        error: "Password mock tidak valid. Gunakan demo12345 untuk tahap MVP.",
+        error: "Terjadi kesalahan saat login. Silakan coba lagi.",
       };
     }
-
-    return {
-      ok: true,
-      data: {
-        token: `mock_${createId("token")}`,
-        userId: user.id,
-        email: user.email,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-      },
-    };
   },
 
+  /**
+   * Signup: POST ke /api/auth/register, lalu auto-login.
+   */
   async signup(
-    input: SignupInput,
-    users: UserProfile[]
-  ): Promise<
-    ServiceResult<{ user: UserProfile; session: AuthSession; notice: string }>
-  > {
-    await simulateDelay(650);
+    input: SignupInput
+  ): Promise<ServiceResult<{ notice: string; redirectTo: string }>> {
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: input.email.trim().toLowerCase(),
+          password: input.password,
+          name: input.fullName.trim(),
+        }),
+      });
 
-    const normalizedEmail = input.email.trim().toLowerCase();
-    const normalizedUsername = input.username.trim().toLowerCase();
+      const data = await res.json();
 
-    const emailExists = users.some(
-      (item) => item.email.toLowerCase() === normalizedEmail
-    );
-    if (emailExists) {
-      return { ok: false, error: "Email sudah digunakan." };
+      if (!res.ok) {
+        return {
+          ok: false,
+          error: data.error || "Gagal mendaftar.",
+        };
+      }
+
+      // Auto-login after successful registration
+      const loginResult = await signIn("credentials", {
+        email: input.email.trim().toLowerCase(),
+        password: input.password,
+        redirect: false,
+      });
+
+      if (loginResult?.error) {
+        return {
+          ok: true,
+          data: {
+            notice: "Akun berhasil dibuat. Silakan login.",
+            redirectTo: "/auth/login",
+          },
+        };
+      }
+
+      return {
+        ok: true,
+        data: {
+          notice: "Akun berhasil dibuat!",
+          redirectTo: "/onboarding",
+        },
+      };
+    } catch (error) {
+      console.error("[AuthService] Signup error:", error);
+      return {
+        ok: false,
+        error: "Terjadi kesalahan saat mendaftar.",
+      };
     }
-
-    const usernameExists = users.some(
-      (item) => item.username.toLowerCase() === normalizedUsername
-    );
-    if (usernameExists) {
-      return { ok: false, error: "Username sudah dipakai." };
-    }
-
-    if (input.password.length < 8) {
-      return { ok: false, error: "Password minimal 8 karakter." };
-    }
-
-    const user: UserProfile = {
-      id: createId("usr"),
-      email: normalizedEmail,
-      username: normalizedUsername,
-      fullName: input.fullName.trim(),
-      role: "",
-      avatarUrl: "",
-      bio: "",
-      experience: "",
-      birthDate: "",
-      city: "",
-      contactEmail: "",
-      phoneNumber: "",
-      websiteUrl: "",
-      instagramUrl: "",
-      youtubeUrl: "",
-      facebookUrl: "",
-      threadsUrl: "",
-      linkedinUrl: "",
-      skills: [],
-      profileVisibility: "public",
-      createdAt: new Date().toISOString(),
-    };
-
-    const session: AuthSession = {
-      token: `mock_${createId("token")}`,
-      userId: user.id,
-      email: user.email,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-    };
-
-    return {
-      ok: true,
-      data: {
-        user,
-        session,
-        notice:
-          "Akun berhasil dibuat. Verifikasi email masih opsional dan belum diaktifkan pada MVP frontend ini.",
-      },
-    };
   },
 
+  /**
+   * Request password reset - kirim email reset.
+   */
   async requestPasswordReset(
-    email: string,
-    users: UserProfile[]
+    email: string
   ): Promise<ServiceResult<{ notice: string }>> {
-    await simulateDelay(450);
-    const normalizedEmail = email.trim().toLowerCase();
-    const exists = users.some(
-      (item) => item.email.toLowerCase() === normalizedEmail
-    );
+    try {
+      const res = await fetch("/api/auth/password-recovery/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
 
-    if (!exists) {
+      // Always return success to prevent email enumeration
       return {
         ok: true,
         data: {
           notice:
-            "Jika email terdaftar, kami akan kirim tautan reset (simulasi frontend).",
+            "Jika email terdaftar, kami akan mengirim tautan reset password.",
+        },
+      };
+    } catch {
+      return {
+        ok: true,
+        data: {
+          notice:
+            "Jika email terdaftar, kami akan mengirim tautan reset password.",
         },
       };
     }
-
-    return {
-      ok: true,
-      data: {
-        notice:
-          "Tautan reset password mock berhasil dikirim. Gunakan halaman reset untuk menyelesaikan proses.",
-      },
-    };
   },
 
-  async resetPassword(password: string): Promise<ServiceResult<{ notice: string }>> {
-    await simulateDelay(450);
-    if (password.length < 8) {
-      return { ok: false, error: "Password baru minimal 8 karakter." };
-    }
+  /**
+   * Reset password with token.
+   */
+  async resetPassword(
+    password: string,
+    token?: string
+  ): Promise<ServiceResult<{ notice: string }>> {
+    try {
+      if (password.length < 6) {
+        return { ok: false, error: "Password minimal 6 karakter." };
+      }
 
-    return {
-      ok: true,
-      data: {
-        notice:
-          "Password berhasil direset (simulasi). Untuk login gunakan password demo: demo12345.",
-      },
-    };
+      const res = await fetch("/api/auth/password-recovery/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password, token }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { ok: false, error: data.error || "Gagal mereset password." };
+      }
+
+      return {
+        ok: true,
+        data: {
+          notice: "Password berhasil direset. Silakan login dengan password baru.",
+        },
+      };
+    } catch {
+      return {
+        ok: false,
+        error: "Terjadi kesalahan saat mereset password.",
+      };
+    }
+  },
+
+  /**
+   * Logout - clear session.
+   */
+  async logout(): Promise<void> {
+    await signOut({ redirect: false });
   },
 };

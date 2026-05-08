@@ -1,34 +1,11 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSafeNextPath } from "@/lib/safe-next-path";
-import { createClient } from "@/lib/supabase/server";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { auth } from "@/auth";
 import { createFallbackAuthProfile, syncUserProfile } from "@/server/auth-profile";
 import { DEMO_MODE } from "@/lib/demo-mode";
 import { getDemoSessionUser } from "@/lib/demo-session";
 import type { DbUser } from "@/db/schema";
-
-function isMissingAuthSessionError(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-
-  const message =
-    error instanceof Error
-      ? error.message
-      : typeof (error as { message?: unknown }).message === "string"
-        ? (error as { message: string }).message
-        : "";
-  const name =
-    typeof (error as { name?: unknown }).name === "string"
-      ? (error as { name: string }).name
-      : "";
-
-  return (
-    name === "AuthSessionMissingError" ||
-    message.toLowerCase().includes("auth session missing")
-  );
-}
 
 export async function getCurrentAuthUser() {
   if (DEMO_MODE) {
@@ -46,24 +23,20 @@ export async function getCurrentAuthUser() {
     return null;
   }
 
-  if (!isSupabaseConfigured()) {
+  const session = await auth();
+  if (!session?.user) {
     return null;
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error) {
-    if (!isMissingAuthSessionError(error)) {
-      console.error("Failed to load authenticated Supabase user", error);
-    }
-    return null;
-  }
-
-  return user ?? null;
+  // Return in AuthProfileUserLike format for compatibility with syncUserProfile
+  return {
+    id: session.user.id!,
+    email: session.user.email,
+    user_metadata: {
+      full_name: session.user.name,
+      avatar_url: session.user.image,
+    },
+  };
 }
 
 function buildDemoDbUser(demoAccount: NonNullable<Awaited<ReturnType<typeof getDemoSessionUser>>>): DbUser {

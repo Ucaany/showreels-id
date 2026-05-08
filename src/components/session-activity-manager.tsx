@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
 
 const WARNING_TIMEOUT_MS = 10 * 60 * 1000;
 const LOGOUT_TIMEOUT_MS = 15 * 60 * 1000;
@@ -46,7 +46,7 @@ async function logoutRequest() {
 
 export function SessionActivityManager() {
   const pathname = usePathname();
-  const supabase = createClient();
+  const { status } = useSession();
   const signingOutRef = useRef(false);
   const authenticatedRef = useRef(false);
   const [warningVisible, setWarningVisible] = useState(false);
@@ -57,7 +57,7 @@ export function SessionActivityManager() {
   }, [pathname]);
 
   useEffect(() => {
-    if (!isProtectedArea || !supabase || typeof window === "undefined") {
+    if (!isProtectedArea || typeof window === "undefined") {
       return;
     }
 
@@ -70,37 +70,29 @@ export function SessionActivityManager() {
       setWarningVisible(false);
       clearLastActivity();
       await logoutRequest().catch(() => null);
-      await supabase.auth.signOut().catch(() => null);
+      await signOut({ redirect: false }).catch(() => null);
       window.location.replace("/auth/login");
     };
 
-    const ensureActiveSession = async (isAuthenticated: boolean) => {
-      authenticatedRef.current = isAuthenticated;
-      if (!isAuthenticated) {
-        clearLastActivity();
-        setWarningVisible(false);
-        signingOutRef.current = false;
-        return;
-      }
+    // Update authenticated state based on session status
+    if (status === "authenticated") {
+      authenticatedRef.current = true;
+      writeLastActivity();
+    } else if (status === "unauthenticated") {
+      authenticatedRef.current = false;
+      clearLastActivity();
+      setWarningVisible(false);
+      signingOutRef.current = false;
+    }
 
+    // Check idle on mount if authenticated
+    if (status === "authenticated") {
       const idleDuration = Date.now() - readLastActivity();
       if (idleDuration >= LOGOUT_TIMEOUT_MS) {
-        await forceSignOut();
+        void forceSignOut();
         return;
       }
-
-      writeLastActivity();
-    };
-
-    void supabase.auth.getUser().then(({ data }) => {
-      void ensureActiveSession(Boolean(data.user));
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      void ensureActiveSession(Boolean(session?.user));
-    });
+    }
 
     const registerActivity = () => {
       if (!authenticatedRef.current) return;
@@ -160,7 +152,6 @@ export function SessionActivityManager() {
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      subscription.unsubscribe();
       window.clearInterval(interval);
       events.forEach((eventName) => {
         window.removeEventListener(eventName, registerActivity);
@@ -168,7 +159,7 @@ export function SessionActivityManager() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.fetch = originalFetch;
     };
-  }, [isProtectedArea, supabase]);
+  }, [isProtectedArea, status]);
 
   if (!isProtectedArea || !warningVisible) {
     return null;
@@ -206,7 +197,7 @@ export function SessionActivityManager() {
               onClick={async () => {
                 clearLastActivity();
                 await logoutRequest().catch(() => null);
-                await supabase?.auth.signOut().catch(() => null);
+                await signOut({ redirect: false }).catch(() => null);
                 window.location.replace("/auth/login");
               }}
             >

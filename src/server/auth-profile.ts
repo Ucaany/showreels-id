@@ -322,7 +322,8 @@ export async function syncUserProfile(authUser: AuthProfileUserLike) {
 }
 
 export async function deleteUserAccount(userId: string) {
+  // Videos have ON DELETE CASCADE from users FK, but explicit delete for safety
   await db.delete(videos).where(eq(videos.userId, userId));
+  // Delete user (accounts, sessions cascade automatically via FK)
   await db.delete(users).where(eq(users.id, userId));
-  await db.execute(sql`delete from auth.users where id = ${userId}::uuid`);
 }

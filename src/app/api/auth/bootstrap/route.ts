@@ -5,7 +5,7 @@ import {
   summarizeError,
 } from "@/lib/db-schema-mismatch";
 import { getSafeNextPath } from "@/lib/safe-next-path";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/auth";
 import { isAdminEmail } from "@/server/admin-access";
 import { syncUserProfile } from "@/server/auth-profile";
 import { getOrCreateUserOnboarding } from "@/server/onboarding";
@@ -26,21 +26,25 @@ export async function POST(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const next = getSafeNextPath(searchParams.get("next"));
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
 
-  if (error || !user) {
+  const session = await auth();
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const user = {
+    id: session.user.id,
+    email: session.user.email ?? null,
+    user_metadata: {
+      full_name: session.user.name ?? undefined,
+      avatar_url: session.user.image ?? undefined,
+    },
+  };
 
   try {
     const profile = await syncUserProfile(user);
 
     if (profile.isBlocked) {
-      await supabase.auth.signOut();
       return NextResponse.json(
         {
           code: "account_blocked",
@@ -55,8 +59,9 @@ export async function POST(request: Request) {
       profile.createdAt &&
       Date.now() - new Date(profile.createdAt).getTime() < 60_000;
 
-    // Fire-and-forget welcome email for new users
-    if (isNewUser && profile.email) {
+    // Fire-and-forget welcome email for new CREATOR users only (not admin/owner)
+    const isAdmin = profile.role === "owner" || profile.role === "admin";
+    if (isNewUser && profile.email && !isAdmin) {
       const appOrigin = process.env.NEXT_PUBLIC_APP_URL || "https://showreels.id";
       void queueEmail({
         userId: profile.id,

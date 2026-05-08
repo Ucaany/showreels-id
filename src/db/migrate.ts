@@ -1,26 +1,30 @@
 import { config } from "dotenv";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { migrate } from "drizzle-orm/neon-http/migrator";
 
 config({ path: ".env.local" });
 config();
 
-if (!process.env.DATABASE_URL_MIGRATION && !process.env.DATABASE_URL) {
+const connectionString =
+  process.env.DATABASE_URL_MIGRATION || process.env.DATABASE_URL;
+
+if (!connectionString) {
   throw new Error(
     "DATABASE_URL_MIGRATION or DATABASE_URL must be set before running migrations."
   );
 }
 
 async function main() {
-  const { db, sql } = await import("@/db");
+  const sql = neon(connectionString!);
+  const db = drizzle(sql);
   await migrate(db, {
     migrationsFolder: "./drizzle",
   });
-  await sql.end();
+  console.log("Migration completed successfully.");
 }
 
-main().catch(async (error) => {
+main().catch((error) => {
   console.error("Migration failed", error);
-  const { sql } = await import("@/db");
-  await sql.end();
   process.exit(1);
 });

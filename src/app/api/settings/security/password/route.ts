@@ -1,7 +1,9 @@
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
+import { users } from "@/db/schema";
 import { securityPasswordSchema } from "@/lib/settings-schemas";
+import { hashPassword, verifyPassword } from "@/lib/password";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 
@@ -26,33 +28,33 @@ export async function PUT(request: Request) {
     );
   }
 
-  const currentPasswordCheck = await db.execute<{ is_match: boolean }>(
-    sql`
-      select crypt(${parsed.data.currentPassword}, encrypted_password) = encrypted_password as is_match
-      from auth.users
-      where id = ${currentUser.id}::uuid
-      limit 1
-    `
-  );
+  // Get current password hash from users table
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, currentUser.id),
+    columns: { passwordHash: true },
+  });
 
-  if (!currentPasswordCheck[0]?.is_match) {
+  if (!user?.passwordHash) {
+    return NextResponse.json(
+      { error: "Akun tidak memiliki password yang tersimpan." },
+      { status: 400 }
+    );
+  }
+
+  // Verify current password
+  const isMatch = await verifyPassword(parsed.data.currentPassword, user.passwordHash);
+  if (!isMatch) {
     return NextResponse.json({ error: "Password lama tidak sesuai." }, { status: 400 });
   }
 
-  await db.execute(
-    sql`
-      update auth.users
-      set encrypted_password = crypt(${parsed.data.newPassword}, gen_salt('bf')),
-          updated_at = now()
-      where id = ${currentUser.id}::uuid
-    `
-  );
+  // Hash and update new password
+  const newHash = await hashPassword(parsed.data.newPassword);
+  await db
+    .update(users)
+    .set({ passwordHash: newHash, updatedAt: new Date() })
+    .where(eq(users.id, currentUser.id));
 
-  if (parsed.data.logoutAll) {
-    await db.execute(
-      sql`delete from auth.sessions where user_id = ${currentUser.id}::uuid`
-    );
-  }
+  // logoutAll is handled client-side via signOut() - no server sessions to clear with JWT strategy
 
   return NextResponse.json({
     ok: true,

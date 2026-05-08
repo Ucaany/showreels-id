@@ -1,6 +1,6 @@
-import type { NextRequest } from "next/server";
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
-import { updateSession } from "@/lib/supabase/proxy";
+import type { NextRequest } from "next/server";
 
 const PRODUCTION_HOST = "showreels.id";
 const LEGACY_HOSTS = new Set([
@@ -18,38 +18,40 @@ const WEBHOOK_ROUTES = new Set([
   "/api/billing/midtrans/webhook",
 ]);
 
-export async function middleware(request: NextRequest) {
-  const url = request.nextUrl.clone();
+export default auth((req) => {
+  const url = req.nextUrl.clone();
 
   // Skip middleware sepenuhnya untuk webhook/callback routes
-  // Webhook dari payment gateway tidak membawa cookies dan tidak boleh di-redirect
   if (WEBHOOK_ROUTES.has(url.pathname)) {
     return NextResponse.next();
   }
 
-  const hasOauthCode = url.searchParams.has("code");
-  const forwardedHeaders = new Headers(request.headers);
+  // Forward headers for downstream usage
+  const response = NextResponse.next();
+  response.headers.set("x-pathname", req.nextUrl.pathname);
+  response.headers.set("x-search", req.nextUrl.search);
 
-  forwardedHeaders.set("x-pathname", request.nextUrl.pathname);
-  forwardedHeaders.set("x-search", request.nextUrl.search);
-
+  // Legacy host redirect
   if (LEGACY_HOSTS.has(url.hostname)) {
     url.hostname = PRODUCTION_HOST;
-
-    if (url.pathname === "/" && hasOauthCode) {
-      url.pathname = "/auth/callback";
-    }
-
     return NextResponse.redirect(url);
   }
 
-  if (url.pathname === "/" && hasOauthCode) {
-    url.pathname = "/auth/callback";
-    return NextResponse.redirect(url);
+  // Protected route check - redirect to login if not authenticated
+  const isAuthenticated = !!req.auth?.user;
+  const protectedPrefixes = ["/dashboard", "/admin", "/onboarding"];
+  const isProtectedRoute = protectedPrefixes.some((prefix) =>
+    url.pathname.startsWith(prefix)
+  );
+
+  if (isProtectedRoute && !isAuthenticated) {
+    const loginUrl = new URL("/auth/login", req.url);
+    loginUrl.searchParams.set("next", url.pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  return updateSession(request, forwardedHeaders);
-}
+  return response;
+});
 
 export const config = {
   matcher: [

@@ -1,6 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { users } from "@/db/schema";
+import { hashPassword } from "@/lib/password";
+import { v4 as uuidv4 } from "uuid";
 
 export const DEFAULT_OWNER_EMAIL = "hello@ucan.com";
 export const DEFAULT_OWNER_PASSWORD = "masuk123";
@@ -23,25 +24,6 @@ export function getOwnerConfig() {
   return { email, password, name, username };
 }
 
-function createSupabaseAuthClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (!url || !key) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are required."
-    );
-  }
-
-  return createClient(url, key, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
-    },
-  });
-}
-
 export async function ensureAuthUser(input: {
   email: string;
   password: string;
@@ -49,34 +31,34 @@ export async function ensureAuthUser(input: {
   username: string;
 }) {
   const { db } = await import("@/db");
-  const existing = await db.execute<{ id: string }>(
-    sql`select id::text as id from auth.users where email = ${input.email} limit 1`
-  );
 
-  const existingId = existing[0]?.id;
-  if (existingId) {
-    return { id: existingId, created: false };
-  }
-
-  const supabase = createSupabaseAuthClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: input.email,
-    password: input.password,
-    options: {
-      data: {
-        full_name: input.name,
-        username: input.username,
-      },
-      emailRedirectTo:
-        process.env.NEXT_PUBLIC_APP_URL || "https://showreels.id",
-    },
+  // Check if user already exists by email
+  const existing = await db.query.users.findFirst({
+    where: eq(users.email, input.email),
+    columns: { id: true },
   });
 
-  if (error || !data.user) {
-    throw new Error(error?.message || "Failed to create Supabase auth user.");
+  if (existing) {
+    return { id: existing.id, created: false };
   }
 
-  return { id: data.user.id, created: true };
+  // Create new user with hashed password
+  const passwordHash = await hashPassword(input.password);
+  const id = uuidv4();
+
+  const [created] = await db
+    .insert(users)
+    .values({
+      id,
+      email: input.email,
+      name: input.name,
+      username: input.username,
+      passwordHash,
+      role: "owner",
+    })
+    .returning({ id: users.id });
+
+  return { id: created.id, created: true };
 }
 
 export async function upsertOwnerAccount() {
@@ -109,6 +91,7 @@ export async function upsertOwnerAccount() {
   }
 
   const uniqueUsername = await ensureUniqueUsername(username);
+  const passwordHash = await hashPassword(password);
   const [created] = await db
     .insert(users)
     .values({
@@ -116,6 +99,7 @@ export async function upsertOwnerAccount() {
       email,
       name,
       username: uniqueUsername,
+      passwordHash,
       role: "owner",
     })
     .returning({ id: users.id });

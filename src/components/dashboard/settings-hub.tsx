@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
-import { createClient } from "@/lib/supabase/client";
+import { signOut } from "next-auth/react";
 
 type SettingsHubEntitlements = {
   usernameChangesPer30Days: number;
@@ -89,7 +89,6 @@ export function SettingsHub({
   creatorGroupLink: string;
   supportLink: string;
 }) {
-  const supabase = createClient();
   const [deleteText, setDeleteText] = useState("");
   const [deleting, setDeleting] = useState(false);
   const planLabel =
@@ -147,7 +146,7 @@ export function SettingsHub({
       icon: "success",
       timer: 1000,
     });
-    await supabase?.auth.signOut();
+    await signOut({ redirect: false });
     window.location.replace("/auth/login");
   };
 

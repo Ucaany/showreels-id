@@ -59,6 +59,8 @@ export const users = pgTable(
       .notNull(),
     name: text("name"),
     email: text("email").notNull().unique(),
+    emailVerified: timestamp("email_verified", { mode: "date" }),
+    passwordHash: text("password_hash"),
     image: text("image"),
     coverImageUrl: text("cover_image_url").notNull().default(""),
     avatarCropX: integer("avatar_crop_x").notNull().default(0),
@@ -595,6 +597,64 @@ export const emailQueueJobs = pgTable(
     nextRetryIdx: index("email_queue_jobs_next_retry_idx").on(table.status, table.nextRetryAt),
   })
 );
+
+// ─── Auth.js Tables ─────────────────────────────────────────────────────────
+
+export const accounts = pgTable(
+  "accounts",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("provider_account_id").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (account) => ({
+    compoundKey: primaryKey({
+      columns: [account.provider, account.providerAccountId],
+    }),
+  })
+);
+
+export const sessions = pgTable("sessions", {
+  sessionToken: text("session_token").primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
+});
+
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (verificationToken) => ({
+    compoundKey: primaryKey({
+      columns: [verificationToken.identifier, verificationToken.token],
+    }),
+  })
+);
+
+// ─── Auth.js Relations ──────────────────────────────────────────────────────
+
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, { fields: [accounts.userId], references: [users.id] }),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, { fields: [sessions.userId], references: [users.id] }),
+}));
 
 // ─── Type Exports ───────────────────────────────────────────────────────────
 

@@ -286,9 +286,6 @@ async function resetAndSeedDummy() {
 
   await db.delete(videos);
   await db.delete(users).where(ne(users.id, owner.id));
-  await db.execute(
-    sql`delete from auth.users where email like '%@dummy.showreels.id' and id <> ${owner.id}::uuid`
-  );
 
   for (const [index, creator] of dummyCreators.entries()) {
     const email = `${creator.username}@dummy.showreels.id`;
@@ -375,8 +372,4 @@ resetAndSeedDummy()
   .catch((error) => {
     console.error("Failed to reset and seed dummy data", error);
     process.exitCode = 1;
-  })
-  .finally(async () => {
-    const { sql } = await import("@/db");
-    await sql.end();
   });

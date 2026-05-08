@@ -2,16 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import { LockKeyhole } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createClient } from "@/lib/supabase/client";
 
 const schema = z
   .object({
@@ -27,13 +27,12 @@ type FormValues = z.infer<typeof schema>;
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const supabase = createClient();
-  const authUnavailable = !supabase;
-  const authUnavailableMessage = "Layanan autentikasi belum siap. Coba refresh halaman.";
-  const [ready, setReady] = useState(authUnavailable);
-  const visibleError = error || (authUnavailable ? authUnavailableMessage : "");
+  const [ready, setReady] = useState(false);
+
+  const token = searchParams.get("token") || "";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -44,51 +43,44 @@ export default function ResetPasswordPage() {
   });
 
   useEffect(() => {
-    if (!supabase) {
-      return;
+    if (!token) {
+      setError("Token reset password tidak ditemukan atau sudah berakhir.");
     }
-
-    let active = true;
-
-    void supabase.auth.getUser().then(({ data }) => {
-      if (!active) {
-        return;
-      }
-
-      if (!data.user) {
-        setError("Sesi reset password tidak valid atau sudah berakhir.");
-      }
-
-      setReady(true);
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [supabase]);
+    setReady(true);
+  }, [token]);
 
   const onSubmit = form.handleSubmit(async ({ password }) => {
     setError("");
     setMessage("");
 
-    if (!supabase) {
-      setError(authUnavailableMessage);
+    if (!token) {
+      setError("Token reset password tidak valid.");
       return;
     }
 
-    const { error: updateError } = await supabase.auth.updateUser({
-      password,
-    });
+    try {
+      const res = await fetch("/api/auth/password-recovery/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
 
-    if (updateError) {
-      setError(updateError.message || "Gagal reset password.");
-      return;
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+
+      if (!res.ok) {
+        setError(data?.error || "Gagal reset password.");
+        return;
+      }
+
+      setMessage("Password berhasil diperbarui. Silakan login kembali.");
+      form.reset();
+      await signOut({ redirect: false }).catch(() => null);
+      setTimeout(() => router.replace("/auth/login"), 900);
+    } catch {
+      setError("Gagal menghubungi server. Coba lagi.");
     }
-
-    setMessage("Password berhasil diperbarui. Silakan login kembali.");
-    form.reset();
-    await supabase.auth.signOut();
-    setTimeout(() => router.replace("/auth/login"), 900);
   });
 
   return (
@@ -109,9 +101,9 @@ export default function ResetPasswordPage() {
           </p>
         ) : null}
 
-        {ready && visibleError && !message ? (
+        {ready && error && !message ? (
           <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
-            {visibleError}
+            {error}
           </p>
         ) : null}
 
@@ -146,9 +138,9 @@ export default function ResetPasswordPage() {
             {message}
           </p>
         ) : null}
-        {visibleError && !message ? (
+        {error && !message ? (
           <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
-            {visibleError}
+            {error}
           </p>
         ) : null}
 
@@ -156,7 +148,7 @@ export default function ResetPasswordPage() {
           className="w-full"
           type="submit"
           disabled={
-            form.formState.isSubmitting || !ready || Boolean(visibleError && !message)
+            form.formState.isSubmitting || !ready || (!token && !message)
           }
         >
           {form.formState.isSubmitting ? "Menyimpan..." : "Simpan Password Baru"}

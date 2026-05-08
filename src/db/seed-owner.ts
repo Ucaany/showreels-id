@@ -15,8 +15,4 @@ seedOwner()
   .catch((error) => {
     console.error("Failed to seed owner account", error);
     process.exitCode = 1;
-  })
-  .finally(async () => {
-    const { sql } = await import("@/db");
-    await sql.end();
   });

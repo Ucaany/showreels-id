@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
-import { createClient } from "@/lib/supabase/client";
+import { signOut } from "next-auth/react";
 import type { ProfileVisibility } from "@/lib/types";
 
 interface SettingsPanelProps {
@@ -21,7 +21,6 @@ export function SettingsPanel({ username, profileVisibility }: SettingsPanelProp
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [savedVisibility, setSavedVisibility] = useState<ProfileVisibility>(profileVisibility);
   const [visibility, setVisibility] = useState<ProfileVisibility>(profileVisibility);
-  const supabase = createClient();
 
   const visibilityDescription =
     visibility === "public"
@@ -106,7 +105,7 @@ export function SettingsPanel({ username, profileVisibility }: SettingsPanelProp
       icon: "success",
       timer: 1000,
     });
-    await supabase?.auth.signOut();
+    await signOut({ redirect: false });
     window.location.replace("/");
   };
 

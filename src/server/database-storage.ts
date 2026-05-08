@@ -31,13 +31,24 @@ function getStorageStatus(usedPercent: number): DatabaseStorageStatus {
 }
 
 export async function getDatabaseStorageInfo(): Promise<DatabaseStorageInfo> {
-  const rows = await db.execute(
-    sql<{ usedBytes: string | number }>`
-      select pg_database_size(current_database())::bigint as "usedBytes"
-    `
-  );
-  const firstRow = rows[0];
-  const usedBytes = Number(firstRow?.usedBytes ?? 0);
+  let usedBytes = 0;
+
+  try {
+    const rows = await db.execute(
+      sql<{ usedBytes: string | number }>`
+        select pg_database_size(current_database())::bigint as "usedBytes"
+      `
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const firstRow = ((rows as any).rows ?? rows)?.[0];
+    usedBytes = Number(firstRow?.usedBytes ?? 0);
+  } catch (error) {
+    // pg_database_size() requires elevated privileges that some hosted
+    // PostgreSQL providers don't grant. Fall back to 0 if unavailable.
+    console.warn("[database-storage] pg_database_size query failed:", error instanceof Error ? error.message : error);
+    usedBytes = 0;
+  }
+
   const limitBytes = getDatabaseLimitBytes();
   const remainingBytes = Math.max(limitBytes - usedBytes, 0);
   const usedPercent = limitBytes > 0 ? Math.min((usedBytes / limitBytes) * 100, 100) : 0;

@@ -1,27 +1,18 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/auth";
 
 export async function POST() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  // With Auth.js JWT strategy, sessions don't need manual refresh.
+  // The JWT is automatically refreshed on each request by the Auth.js middleware.
+  // This endpoint validates the current session is still active.
+  const session = await auth();
 
-  if (userError || !user) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { data, error } = await supabase.auth.refreshSession();
-  if (error) {
-    return NextResponse.json(
-      { error: "Failed to refresh session" },
-      { status: 401 }
-    );
   }
 
   return NextResponse.json({
     ok: true,
-    expiresAt: data.session?.expires_at || null,
+    expiresAt: session.expires ? new Date(session.expires).getTime() / 1000 : null,
   });
 }

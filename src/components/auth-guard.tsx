@@ -2,18 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useMockApp } from "@/hooks/use-mock-app";
-import { createClient } from "@/lib/supabase/client";
 import { DEMO_MODE } from "@/lib/demo-mode";
 
 /**
  * AuthGuard — Melindungi halaman yang memerlukan autentikasi.
- * Di production (non-demo), menggunakan Supabase session.
+ * Di production (non-demo), menggunakan Auth.js session via useSession().
  * Di demo mode, menggunakan mock session dari MockAppProvider.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { ready: mockReady, session: mockSession } = useMockApp();
+  const { data: session, status } = useSession();
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -27,29 +28,18 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Production mode: cek Supabase session
-    const supabase = createClient();
-    if (!supabase) {
-      // Supabase tidak dikonfigurasi — fallback ke mock
-      if (mockReady && !mockSession) {
-        router.replace("/auth/login");
-      } else if (mockReady && mockSession) {
-        setAuthenticated(true);
-      }
-      return;
-    }
+    // Production mode: cek Auth.js session
+    if (status === "loading") return;
 
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        setAuthenticated(true);
-      } else {
-        router.replace("/auth/login");
-      }
-    });
-  }, [mockReady, mockSession, router]);
+    if (status === "authenticated" && session?.user) {
+      setAuthenticated(true);
+    } else if (status === "unauthenticated") {
+      router.replace("/auth/login");
+    }
+  }, [mockReady, mockSession, router, session, status]);
 
   // Tentukan apakah sudah siap
-  const isReady = DEMO_MODE ? mockReady : authenticated !== null;
+  const isReady = DEMO_MODE ? mockReady : authenticated !== null || status !== "loading";
   const isAuthenticated = DEMO_MODE ? !!mockSession : authenticated === true;
 
   if (!isReady || !isAuthenticated) {

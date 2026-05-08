@@ -1,16 +1,23 @@
-const TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
+/**
+ * Auth configuration helpers.
+ * With Auth.js migration, Supabase is no longer used.
+ * These functions are kept for backward compatibility but always return
+ * values reflecting the new Auth.js setup.
+ */
 
-export function isSupabaseConfigured() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  );
+/** Auth.js is always configured when AUTH_SECRET is set */
+export function isAuthConfigured() {
+  return Boolean(process.env.AUTH_SECRET);
 }
 
+/** Google OAuth is not currently enabled (Credentials-only) */
 export function isGoogleAuthEnabled() {
-  const rawValue = (process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH || "")
-    .trim()
-    .toLowerCase();
+  return false;
+}
 
-  return isSupabaseConfigured() && TRUE_VALUES.has(rawValue);
+/**
+ * @deprecated Use isAuthConfigured() instead
+ */
+export function isSupabaseConfigured() {
+  return false;
 }

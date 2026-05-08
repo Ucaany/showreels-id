@@ -8,7 +8,6 @@ import {
 } from "react";
 import { seedState, storageKey } from "@/lib/mock-seed";
 import type { AppState, ServiceResult, UserProfile, VideoItem } from "@/lib/types";
-import { authService } from "@/services/auth-service";
 import type { SignupInput } from "@/services/auth-service";
 import {
   profileService,
@@ -88,52 +87,89 @@ export function MockAppProvider({ children }: { children: React.ReactNode }) {
     email: string;
     password: string;
   }): Promise<ServiceResult<{ notice: string }>> => {
-    const result = await authService.login({ email, password }, state.users);
-    if (!result.ok || !result.data) {
-      return { ok: false, error: result.error };
+    // Mock login: validate against local state.users
+    const user = state.users.find(
+      (u) => u.email?.toLowerCase() === email.trim().toLowerCase()
+    );
+    if (!user) {
+      return { ok: false, error: "Email atau password salah." };
     }
-    const data = result.data;
-
-    setState((prev) => ({ ...prev, session: data }));
+    // In mock mode we skip password verification
+    void password;
+    const mockSession = {
+      token: "mock-token-" + user.id,
+      userId: user.id,
+      email: user.email,
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+    };
+    setState((prev) => ({ ...prev, session: mockSession }));
     return { ok: true, data: { notice: "Login berhasil." } };
   };
 
   const signup = async (
     input: SignupInput
   ): Promise<ServiceResult<{ notice: string }>> => {
-    const result = await authService.signup(input, state.users);
-    if (!result.ok || !result.data) {
-      return { ok: false, error: result.error };
+    // Mock signup: check duplicate email locally
+    const exists = state.users.some(
+      (u) => u.email?.toLowerCase() === input.email.trim().toLowerCase()
+    );
+    if (exists) {
+      return { ok: false, error: "Email sudah terdaftar." };
     }
-    const data = result.data;
-
+    const newUserId = crypto.randomUUID();
+    const newUser: UserProfile = {
+      id: newUserId,
+      email: input.email.trim().toLowerCase(),
+      fullName: input.fullName,
+      username: input.username,
+      role: "creator",
+      avatarUrl: "",
+      bio: "",
+      experience: "",
+      birthDate: "",
+      city: "",
+      contactEmail: "",
+      phoneNumber: "",
+      websiteUrl: "",
+      instagramUrl: "",
+      youtubeUrl: "",
+      facebookUrl: "",
+      threadsUrl: "",
+      linkedinUrl: "",
+      customLinks: [],
+      skills: [],
+      profileVisibility: "public",
+      createdAt: new Date().toISOString(),
+    };
+    const mockSession = {
+      token: "mock-token-" + newUserId,
+      userId: newUserId,
+      email: input.email.trim().toLowerCase(),
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+    };
     setState((prev) => ({
       ...prev,
-      session: data.session,
-      users: [data.user, ...prev.users],
+      session: mockSession,
+      users: [newUser, ...prev.users],
     }));
-
-    return { ok: true, data: { notice: data.notice } };
+    return { ok: true, data: { notice: "Akun berhasil dibuat." } };
   };
 
   const requestPasswordReset = async (
-    email: string
+    _email: string
   ): Promise<ServiceResult<{ notice: string }>> => {
-    const result = await authService.requestPasswordReset(email, state.users);
-    if (!result.ok || !result.data) {
-      return { ok: false, error: result.error };
-    }
-    return { ok: true, data: { notice: result.data.notice } };
+    // Mock: always return success
+    return {
+      ok: true,
+      data: { notice: "Jika email terdaftar, kami akan mengirim tautan reset password." },
+    };
   };
 
   const resetPassword = async (
-    password: string
+    _password: string
   ): Promise<ServiceResult<{ notice: string }>> => {
-    const result = await authService.resetPassword(password);
-    if (!result.ok || !result.data) {
-      return { ok: false, error: result.error };
-    }
-    return { ok: true, data: { notice: result.data.notice } };
+    // Mock: always return success
+    return { ok: true, data: { notice: "Password berhasil diubah." } };
   };
 
   const logout = () => {

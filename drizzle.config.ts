@@ -15,7 +15,6 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: {
     url: dbUrl,
-    ssl: dbUrl.includes("supabase.co") ? "require" : false,
   },
   verbose: true,
   strict: true,

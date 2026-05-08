@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
@@ -7,6 +7,7 @@ import {
   PASSWORD_RECOVERY_COOKIE,
   verifyPasswordRecoveryToken,
 } from "@/lib/password-recovery-token";
+import { hashPassword, verifyPassword } from "@/lib/password";
 
 function clearRecoveryCookie(response: NextResponse) {
   response.cookies.set(PASSWORD_RECOVERY_COOKIE, "", {
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   const user = await db.query.users.findFirst({
     where: and(eq(users.id, payload.userId), eq(users.username, payload.username)),
-    columns: { id: true },
+    columns: { id: true, passwordHash: true },
   });
 
   if (!user) {
@@ -62,47 +63,23 @@ export async function POST(request: NextRequest) {
 
   const password = parsed.data.password.trim();
 
-  const samePasswordCheck = await db.execute<{ is_same: boolean }>(
-    sql`
-      select crypt(${password}, encrypted_password) = encrypted_password as is_same
-      from auth.users
-      where id = ${payload.userId}::uuid
-      limit 1
-    `
-  );
-
-  if (!samePasswordCheck[0]) {
-    const response = NextResponse.json(
-      { error: "Akun otentikasi tidak ditemukan." },
-      { status: 404 }
-    );
-    clearRecoveryCookie(response);
-    return response;
+  // Check if new password is same as old password
+  if (user.passwordHash) {
+    const isSame = await verifyPassword(password, user.passwordHash);
+    if (isSame) {
+      return NextResponse.json(
+        { error: "Password baru harus berbeda dari password lama." },
+        { status: 400 }
+      );
+    }
   }
 
-  if (samePasswordCheck[0].is_same) {
-    return NextResponse.json(
-      { error: "Password baru harus berbeda dari password lama." },
-      { status: 400 }
-    );
-  }
-
-  await db.execute(
-    sql`
-      update auth.users
-      set encrypted_password = crypt(${password}, gen_salt('bf')),
-          updated_at = now()
-      where id = ${payload.userId}::uuid
-    `
-  );
-
-  try {
-    await db.execute(
-      sql`delete from auth.sessions where user_id = ${payload.userId}::uuid`
-    );
-  } catch (error) {
-    console.error("Failed to clear auth sessions after password reset", error);
-  }
+  // Hash and update password
+  const newHash = await hashPassword(password);
+  await db
+    .update(users)
+    .set({ passwordHash: newHash, updatedAt: new Date() })
+    .where(eq(users.id, payload.userId));
 
   const response = NextResponse.json({ ok: true });
   clearRecoveryCookie(response);

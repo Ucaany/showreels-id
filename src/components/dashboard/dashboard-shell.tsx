@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 import { CACHE_KEYS } from "@/lib/swr-config";
-import { createClient } from "@/lib/supabase/client";
+import { signOut } from "next-auth/react";
 import { usePreferences } from "@/hooks/use-preferences";
 import type { DbUser } from "@/db/schema";
 
@@ -68,7 +68,6 @@ export function DashboardShell({
   const authStatus = searchParams.get("auth");
   const searchParamsValue = searchParams.toString();
   const { dictionary } = usePreferences();
-  const supabase = createClient();
   const displayUsername = user.username ? `@${user.username}` : "@creator";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -179,7 +178,7 @@ export function DashboardShell({
     "Dashboard";
 
   const handleSignOut = async () => {
-    await supabase?.auth.signOut();
+    await signOut({ redirect: false });
     window.location.replace("/");
   };
 
