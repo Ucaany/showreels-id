@@ -26,7 +26,7 @@ import {
   visitorDailyStats,
   visitorEvents,
 } from "@/db/schema";
-import { getAdminAnalyticsOverview } from "@/server/admin-analytics";
+import { getAdminAnalyticsOverview, type AdminAnalyticsOverview } from "@/server/admin-analytics";
 import { getAdminEmailList } from "@/server/admin-access";
 import { getSiteSettings } from "@/server/site-settings";
 import {
@@ -270,79 +270,117 @@ export default async function AdminPanelPage({
   const yesterdayWibDay = getPreviousWibDateString();
   const sevenDaysAgoWibDay = getPreviousWibDateString(7);
 
-  const [
-    totalUsersRow,
-    totalVideosRow,
-    publicVideosRow,
-    semiPrivateVideosRow,
-    draftVideosRow,
-    privateVideosRow,
-    visitorTodayRow,
-    visitorYesterdayRow,
-    visitorLast7DaysRow,
-    userRows,
-    videoRows,
-    filteredVideosRow,
-    scheduledNotificationsRow,
-    activeCampaignsRow,
-    scheduleRows,
-    settings,
-    dbHealth,
-    adminAnalytics,
-  ] = await Promise.all([
-    db.select({ value: count() }).from(users).where(userBaseFilter),
-    db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(videoBaseFilter),
-    db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(and(videoBaseFilter, eq(videos.visibility, "public"))),
-    db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(and(videoBaseFilter, eq(videos.visibility, "semi_private"))),
-    db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(and(videoBaseFilter, eq(videos.visibility, "draft"))),
-    db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(and(videoBaseFilter, eq(videos.visibility, "private"))),
-    db.select({ value: sql<number>`count(distinct ${visitorEvents.visitorId})`.mapWith(Number) }).from(visitorEvents).where(gte(visitorEvents.createdAt, getWibDayStartUtc())),
-    db.select({ value: sql<number>`coalesce(sum(${visitorDailyStats.uniqueVisitors}), 0)`.mapWith(Number) }).from(visitorDailyStats).where(eq(visitorDailyStats.day, yesterdayWibDay)),
-    db.select({ value: sql<number>`coalesce(sum(${visitorDailyStats.uniqueVisitors}), 0)`.mapWith(Number) }).from(visitorDailyStats).where(and(gte(visitorDailyStats.day, sevenDaysAgoWibDay), lt(visitorDailyStats.day, currentWibDay))),
-    db.query.users.findMany({
-      where: userBaseFilter,
-      orderBy: desc(users.createdAt),
-      limit: 40,
-      with: { videos: { columns: { id: true } } },
-    }),
-    db
-      .select({
-        id: videos.id,
-        title: videos.title,
-        description: videos.description,
-        visibility: videos.visibility,
-        source: videos.source,
-        sourceUrl: videos.sourceUrl,
-        thumbnailUrl: videos.thumbnailUrl,
-        outputType: videos.outputType,
-        durationLabel: videos.durationLabel,
-        aspectRatio: videos.aspectRatio,
-        publicSlug: videos.publicSlug,
-        createdAt: videos.createdAt,
-        authorName: users.name,
-        authorUsername: users.username,
-        authorEmail: users.email,
-      })
-      .from(videos)
-      .innerJoin(users, eq(videos.userId, users.id))
-      .where(videoWhere)
-      .orderBy(videoOrderBy)
-      .limit(PAGE_SIZE)
-      .offset(offset),
-    db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(videoWhere),
-    db.select({ value: count() }).from(adminNotificationSchedules).where(eq(adminNotificationSchedules.status, "scheduled")),
-    db.select({ value: count() }).from(adminNotificationSchedules).where(or(eq(adminNotificationSchedules.status, "scheduled"), eq(adminNotificationSchedules.status, "sent"))),
-    db.query.adminNotificationSchedules.findMany({
-      orderBy: desc(adminNotificationSchedules.createdAt),
-      limit: 6,
-      with: { targetUser: { columns: { name: true, email: true, username: true } } },
-    }),
-    getSiteSettings(),
-    getDatabaseHealth(),
-    getAdminAnalyticsOverview(),
-  ]);
+  let totalUsersRow: { value: number }[] = [{ value: 0 }];
+  let totalVideosRow: { value: number }[] = [{ value: 0 }];
+  let publicVideosRow: { value: number }[] = [{ value: 0 }];
+  let semiPrivateVideosRow: { value: number }[] = [{ value: 0 }];
+  let draftVideosRow: { value: number }[] = [{ value: 0 }];
+  let privateVideosRow: { value: number }[] = [{ value: 0 }];
+  let visitorTodayRow: { value: number }[] = [{ value: 0 }];
+  let visitorYesterdayRow: { value: number }[] = [{ value: 0 }];
+  let visitorLast7DaysRow: { value: number }[] = [{ value: 0 }];
+  let userRows: Array<typeof users.$inferSelect & { videos: { id: string }[] }> = [];
+  let videoRows: Array<{
+    id: string; title: string; description: string; visibility: string;
+    source: string; sourceUrl: string; thumbnailUrl: string; outputType: string;
+    durationLabel: string; aspectRatio: string; publicSlug: string; createdAt: Date;
+    authorName: string | null; authorUsername: string | null; authorEmail: string;
+  }> = [];
+  let filteredVideosRow: { value: number }[] = [{ value: 0 }];
+  let scheduledNotificationsRow: { value: number }[] = [{ value: 0 }];
+  let activeCampaignsRow: { value: number }[] = [{ value: 0 }];
+  let scheduleRows: Awaited<ReturnType<typeof db.query.adminNotificationSchedules.findMany>> = [];
+  let settings = { maintenanceEnabled: false, pauseEnabled: false, maintenanceMessage: "", billingEnabled: true };
+  let dbHealth = { ok: false, message: "Data belum dimuat", latencyMs: 0, storage: null as unknown as Awaited<ReturnType<typeof getDatabaseStorageInfo>> };
+  let adminAnalytics = await getAdminAnalyticsOverview().catch(() => ({
+    revenue: { totalPaid: 0, monthlyPaid: 0, paidTransactions: 0 },
+    subscriptions: { active: 0, trial: 0, last30Days: 0 },
+    engagement: { clicks: 0, shares: 0, likes: 0, videoViews: 0 },
+    geography: [] as Array<{ country: string; city: string; visitors: number }>,
+    chart: [] as Array<{ day: string; views: number; visitors: number; income: number }>,
+    topClicks: [] as Array<{ label: string; path: string; clicks: number; targetUrl: string }>,
+    contentPerformance: [] as Array<{ id: string; title: string; slug: string; author: string; views: number; clicks: number; shares: number; likes: number }>,
+    transactions: [] as Array<{ invoiceId: string; userEmail: string; planName: string; amount: number; status: string; paidAt: string | null; createdAt: string }>,
+    notifications: [] as Array<{ id: string; type: string; severity: string; title: string; message: string; isRead: boolean; createdAt: string }>,
+    unreadNotifications: 0,
+  }));
 
-  const adminUsers: AdminUserItem[] = userRows.map((user) => ({
+  try {
+    const results = await Promise.all([
+      db.select({ value: count() }).from(users).where(userBaseFilter),
+      db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(videoBaseFilter),
+      db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(and(videoBaseFilter, eq(videos.visibility, "public"))),
+      db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(and(videoBaseFilter, eq(videos.visibility, "semi_private"))),
+      db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(and(videoBaseFilter, eq(videos.visibility, "draft"))),
+      db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(and(videoBaseFilter, eq(videos.visibility, "private"))),
+      db.select({ value: sql<number>`count(distinct ${visitorEvents.visitorId})`.mapWith(Number) }).from(visitorEvents).where(gte(visitorEvents.createdAt, getWibDayStartUtc())),
+      db.select({ value: sql<number>`coalesce(sum(${visitorDailyStats.uniqueVisitors}), 0)`.mapWith(Number) }).from(visitorDailyStats).where(eq(visitorDailyStats.day, yesterdayWibDay)),
+      db.select({ value: sql<number>`coalesce(sum(${visitorDailyStats.uniqueVisitors}), 0)`.mapWith(Number) }).from(visitorDailyStats).where(and(gte(visitorDailyStats.day, sevenDaysAgoWibDay), lt(visitorDailyStats.day, currentWibDay))),
+      db.query.users.findMany({
+        where: userBaseFilter,
+        orderBy: desc(users.createdAt),
+        limit: 40,
+        with: { videos: { columns: { id: true } } },
+      }),
+      db
+        .select({
+          id: videos.id,
+          title: videos.title,
+          description: videos.description,
+          visibility: videos.visibility,
+          source: videos.source,
+          sourceUrl: videos.sourceUrl,
+          thumbnailUrl: videos.thumbnailUrl,
+          outputType: videos.outputType,
+          durationLabel: videos.durationLabel,
+          aspectRatio: videos.aspectRatio,
+          publicSlug: videos.publicSlug,
+          createdAt: videos.createdAt,
+          authorName: users.name,
+          authorUsername: users.username,
+          authorEmail: users.email,
+        })
+        .from(videos)
+        .innerJoin(users, eq(videos.userId, users.id))
+        .where(videoWhere)
+        .orderBy(videoOrderBy)
+        .limit(PAGE_SIZE)
+        .offset(offset),
+      db.select({ value: count(videos.id) }).from(videos).innerJoin(users, eq(videos.userId, users.id)).where(videoWhere),
+      db.select({ value: count() }).from(adminNotificationSchedules).where(eq(adminNotificationSchedules.status, "scheduled")),
+      db.select({ value: count() }).from(adminNotificationSchedules).where(or(eq(adminNotificationSchedules.status, "scheduled"), eq(adminNotificationSchedules.status, "sent"))),
+      db.query.adminNotificationSchedules.findMany({
+        orderBy: desc(adminNotificationSchedules.createdAt),
+        limit: 6,
+        with: { targetUser: { columns: { name: true, email: true, username: true } } },
+      }),
+      getSiteSettings(),
+      getDatabaseHealth(),
+    ]);
+
+    totalUsersRow = results[0];
+    totalVideosRow = results[1];
+    publicVideosRow = results[2];
+    semiPrivateVideosRow = results[3];
+    draftVideosRow = results[4];
+    privateVideosRow = results[5];
+    visitorTodayRow = results[6];
+    visitorYesterdayRow = results[7];
+    visitorLast7DaysRow = results[8];
+    userRows = results[9] as typeof userRows;
+    videoRows = results[10] as typeof videoRows;
+    filteredVideosRow = results[11];
+    scheduledNotificationsRow = results[12];
+    activeCampaignsRow = results[13];
+    scheduleRows = results[14] as unknown as typeof scheduleRows;
+    settings = results[15] as typeof settings;
+    dbHealth = results[16] as typeof dbHealth;
+  } catch (error) {
+    console.error("[AdminPanelPage] Database queries failed:", error);
+    // Continue with fallback values already set above
+  }
+
+  const adminUsers: AdminUserItem[] = (Array.isArray(userRows) ? userRows : []).map((user) => ({
     id: user.id,
     name: user.name || "",
     email: user.email,
@@ -359,7 +397,8 @@ export default async function AdminPanelPage({
     videoCount: user.videos.length,
   }));
 
-  const adminVideos: AdminVideoItem[] = videoRows.map((video) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adminVideos: AdminVideoItem[] = (Array.isArray(videoRows) ? videoRows : []).map((video: any) => ({
     id: video.id,
     title: video.title,
     description: video.description,
@@ -371,13 +410,14 @@ export default async function AdminPanelPage({
     durationLabel: video.durationLabel,
     aspectRatio: video.aspectRatio,
     publicSlug: video.publicSlug,
-    createdAt: video.createdAt.toISOString(),
+    createdAt: video.createdAt instanceof Date ? video.createdAt.toISOString() : String(video.createdAt),
     authorName: video.authorName || "Creator",
     authorUsername: video.authorUsername || "",
     authorEmail: video.authorEmail,
   }));
 
-  const schedules: AdminNotificationScheduleItem[] = scheduleRows.map((item) => ({
+  const flatScheduleRows: any[] = Array.isArray(scheduleRows) ? scheduleRows.flat() : [];
+  const schedules: AdminNotificationScheduleItem[] = flatScheduleRows.map((item: any) => ({
     id: item.id,
     targetType: item.targetType,
     targetUser: item.targetUser
@@ -392,10 +432,10 @@ export default async function AdminPanelPage({
     status: item.status,
     sendMode: item.sendMode,
     recurrence: item.recurrence,
-    startsAt: item.startsAt.toISOString(),
-    endsAt: item.endsAt?.toISOString() ?? null,
-    nextRunAt: item.nextRunAt?.toISOString() ?? null,
-    lastSentAt: item.lastSentAt?.toISOString() ?? null,
+    startsAt: item.startsAt instanceof Date ? item.startsAt.toISOString() : String(item.startsAt),
+    endsAt: item.endsAt instanceof Date ? item.endsAt.toISOString() : (item.endsAt ?? null),
+    nextRunAt: item.nextRunAt instanceof Date ? item.nextRunAt.toISOString() : (item.nextRunAt ?? null),
+    lastSentAt: item.lastSentAt instanceof Date ? item.lastSentAt.toISOString() : (item.lastSentAt ?? null),
     activeDurationDays: item.activeDurationDays,
   }));
 
@@ -423,7 +463,7 @@ export default async function AdminPanelPage({
         maintenanceMessage: settings.maintenanceMessage,
         billingEnabled: settings.billingEnabled,
       }}
-      analytics={adminAnalytics}
+      analytics={adminAnalytics as AdminAnalyticsOverview}
       users={adminUsers}
       videos={adminVideos}
       schedules={schedules}

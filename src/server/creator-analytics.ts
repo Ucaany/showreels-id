@@ -210,7 +210,8 @@ export async function getCreatorTrafficAnalytics(input: {
   range: AnalyticsPeriodRange;
 }) {
   const { userId, username, range } = input;
-  if (!isDatabaseConfigured) {
+
+  const buildEmptyResult = () => {
     const emptyDays = enumerateDays(range.startDay, range.endDay).map((day) => ({
       day,
       views: 0,
@@ -227,8 +228,13 @@ export async function getCreatorTrafficAnalytics(input: {
       topPages: [] as CreatorTopPage[],
       recent: [] as CreatorRecentActivity[],
     };
+  };
+
+  if (!isDatabaseConfigured) {
+    return buildEmptyResult();
   }
 
+  try {
   const creatorPath = `/creator/${username || "creator"}`;
   const ownedVideos = await db.query.videos.findMany({
     where: eq(videos.userId, userId),
@@ -392,4 +398,8 @@ export async function getCreatorTrafficAnalytics(input: {
     topPages,
     recent,
   };
+  } catch (error) {
+    console.error("[getCreatorTrafficAnalytics] Database query failed, returning empty result:", error);
+    return buildEmptyResult();
+  }
 }

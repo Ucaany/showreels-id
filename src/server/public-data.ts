@@ -31,10 +31,8 @@ async function isBusinessPlanActiveForUser(userId: string) {
     const entitlementState = await getCreatorEntitlementsForUser(userId);
     return entitlementState.effectivePlan.planName === "business";
   } catch (error) {
-    if (isMissingBillingSchemaError(error)) {
-      return false;
-    }
-    throw error;
+    console.error("[isBusinessPlanActiveForUser] Failed, defaulting to false:", error);
+    return false;
   }
 }
 
@@ -54,10 +52,8 @@ async function isWhitelabelActiveForUser(userId: string) {
       settings?.whitelabelEnabled && entitlementState.entitlements.whitelabelEnabled
     );
   } catch (error) {
-    if (isMissingBillingSchemaError(error)) {
-      return false;
-    }
-    throw error;
+    console.error("[isWhitelabelActiveForUser] Failed, defaulting to false:", error);
+    return false;
   }
 }
 
@@ -147,7 +143,8 @@ async function findPublicUserByUsernameRaw(username: string) {
     });
   } catch (error) {
     if (!isLinkedinSchemaError(error)) {
-      throw error;
+      console.error("[findPublicUserByUsernameRaw] Query failed:", error);
+      return undefined;
     }
 
     console.warn("db_schema_mismatch public profile without linkedin_url", {
@@ -155,19 +152,24 @@ async function findPublicUserByUsernameRaw(username: string) {
       ...summarizeError(error),
     });
 
-    const fallback = await db.query.users.findFirst({
-      where: eq(users.username, username),
-      columns: publicProfileUserColumns,
-    });
+    try {
+      const fallback = await db.query.users.findFirst({
+        where: eq(users.username, username),
+        columns: publicProfileUserColumns,
+      });
 
-    if (!fallback) {
-      return fallback;
+      if (!fallback) {
+        return fallback;
+      }
+
+      return {
+        ...fallback,
+        linkedinUrl: "",
+      };
+    } catch (fallbackError) {
+      console.error("[findPublicUserByUsernameRaw] Fallback query also failed:", fallbackError);
+      return undefined;
     }
-
-    return {
-      ...fallback,
-      linkedinUrl: "",
-    };
   }
 }
 
@@ -214,7 +216,8 @@ async function findPublicVideoBySlug(slug: string) {
     });
   } catch (error) {
     if (!isLinkedinSchemaError(error)) {
-      throw error;
+      console.error("[findPublicVideoBySlug] Query failed:", error);
+      return undefined;
     }
 
     console.warn("db_schema_mismatch public video without linkedin_url", {
@@ -222,44 +225,49 @@ async function findPublicVideoBySlug(slug: string) {
       ...summarizeError(error),
     });
 
-    const fallback = await db.query.videos.findFirst({
-      where: eq(videos.publicSlug, slug),
-      columns: {
-        id: true,
-        userId: true,
-        title: true,
-        description: true,
-        tags: true,
-        visibility: true,
-        thumbnailUrl: true,
-        extraVideoUrls: true,
-        imageUrls: true,
-        sourceUrl: true,
-        source: true,
-        aspectRatio: true,
-        outputType: true,
-        durationLabel: true,
-        publicSlug: true,
-        createdAt: true,
-      },
-      with: {
-        author: {
-          columns: publicVideoAuthorColumns,
+    try {
+      const fallback = await db.query.videos.findFirst({
+        where: eq(videos.publicSlug, slug),
+        columns: {
+          id: true,
+          userId: true,
+          title: true,
+          description: true,
+          tags: true,
+          visibility: true,
+          thumbnailUrl: true,
+          extraVideoUrls: true,
+          imageUrls: true,
+          sourceUrl: true,
+          source: true,
+          aspectRatio: true,
+          outputType: true,
+          durationLabel: true,
+          publicSlug: true,
+          createdAt: true,
         },
-      },
-    });
+        with: {
+          author: {
+            columns: publicVideoAuthorColumns,
+          },
+        },
+      });
 
-    if (!fallback?.author) {
-      return fallback;
+      if (!fallback?.author) {
+        return fallback;
+      }
+
+      return {
+        ...fallback,
+        author: {
+          ...fallback.author,
+          linkedinUrl: "",
+        },
+      };
+    } catch (fallbackError) {
+      console.error("[findPublicVideoBySlug] Fallback query also failed:", fallbackError);
+      return undefined;
     }
-
-    return {
-      ...fallback,
-      author: {
-        ...fallback.author,
-        linkedinUrl: "",
-      },
-    };
   }
 }
 
@@ -500,7 +508,8 @@ export async function getPublicProfile(
       })
       .catch(async (error) => {
         if (!isVideoPinSchemaError(error)) {
-          throw error;
+          console.error("[getPublicProfile] Video query failed:", error);
+          return [];
         }
 
         console.warn("db_schema_mismatch public profile without video pin columns", {
@@ -508,21 +517,26 @@ export async function getPublicProfile(
           ...summarizeError(error),
         });
 
-        const fallbackVideos = await db.query.videos.findMany({
-          where: videoWhere,
-          orderBy: desc(videos.createdAt),
-          columns: {
-            ...videoColumns,
-            pinnedToProfile: false,
-            pinnedOrder: false,
-          },
-        });
+        try {
+          const fallbackVideos = await db.query.videos.findMany({
+            where: videoWhere,
+            orderBy: desc(videos.createdAt),
+            columns: {
+              ...videoColumns,
+              pinnedToProfile: false,
+              pinnedOrder: false,
+            },
+          });
 
-        return fallbackVideos.map((video) => ({
-          ...video,
-          pinnedToProfile: false,
-          pinnedOrder: 0,
-        }));
+          return fallbackVideos.map((video) => ({
+            ...video,
+            pinnedToProfile: false,
+            pinnedOrder: 0,
+          }));
+        } catch (fallbackError) {
+          console.error("[getPublicProfile] Fallback video query also failed:", fallbackError);
+          return [];
+        }
       });
 
     const pinnedVideos = profileVideos

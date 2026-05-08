@@ -89,24 +89,34 @@ export async function getDashboardMetrics(input: {
   userId: string;
   username: string;
 }): Promise<DashboardMetrics> {
-  const profilePath = `/creator/${input.username || "creator"}`;
+  try {
+    const profilePath = `/creator/${input.username || "creator"}`;
 
-  // Fetch videos (cached 30s)
-  const videoSummaries = await getCachedUserVideos(input.userId);
+    // Fetch videos (cached 30s)
+    const videoSummaries = await getCachedUserVideos(input.userId);
 
-  const publicVideos = videoSummaries.filter((v) => v.visibility === "public");
-  const publicVideoPaths = publicVideos
-    .map((video) => video.publicSlug?.trim())
-    .filter((value): value is string => Boolean(value))
-    .map((slug) => `/v/${slug}`);
+    const publicVideos = videoSummaries.filter((v) => v.visibility === "public");
+    const publicVideoPaths = publicVideos
+      .map((video) => video.publicSlug?.trim())
+      .filter((value): value is string => Boolean(value))
+      .map((slug) => `/v/${slug}`);
 
-  // Fetch visitor count (cached 60s)
-  const totalViews = await getCachedVisitorCount(profilePath, publicVideoPaths);
+    // Fetch visitor count (cached 60s)
+    const totalViews = await getCachedVisitorCount(profilePath, publicVideoPaths);
 
-  return {
-    totalVideos: videoSummaries.length,
-    publicVideos: publicVideos.length,
-    totalViews,
-    videoSummaries,
-  };
+    return {
+      totalVideos: videoSummaries.length,
+      publicVideos: publicVideos.length,
+      totalViews,
+      videoSummaries,
+    };
+  } catch (error) {
+    console.error("[getDashboardMetrics] Failed, returning empty metrics:", error);
+    return {
+      totalVideos: 0,
+      publicVideos: 0,
+      totalViews: 0,
+      videoSummaries: [],
+    };
+  }
 }
