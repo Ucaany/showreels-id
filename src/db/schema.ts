@@ -204,6 +204,7 @@ export const siteSettings = pgTable("site_settings", {
     .notNull()
     .default("Website sedang dalam maintenance sementara. Silakan kembali beberapa saat lagi."),
   billingEnabled: boolean("billing_enabled").notNull().default(false),
+  emailEnabled: boolean("email_enabled").notNull().default(true),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });
 
@@ -545,6 +546,58 @@ export const userNotificationsRelations = relations(userNotifications, ({ one })
   }),
 }));
 
+// ─── Email System Tables ────────────────────────────────────────────────────
+
+export const emailLogs = pgTable(
+  "email_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    emailType: text("email_type").notNull(),
+    recipientEmail: text("recipient_email").notNull(),
+    status: text("status")
+      .$type<"pending" | "sent" | "failed" | "skipped">()
+      .notNull()
+      .default("pending"),
+    provider: text("provider").notNull().default("resend"),
+    messageId: text("message_id"),
+    errorMessage: text("error_message"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdIdx: index("email_logs_user_id_idx").on(table.userId),
+    statusIdx: index("email_logs_status_idx").on(table.status),
+    createdAtIdx: index("email_logs_created_at_idx").on(table.createdAt),
+    typeStatusIdx: index("email_logs_type_status_idx").on(table.emailType, table.status),
+  })
+);
+
+export const emailQueueJobs = pgTable(
+  "email_queue_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    payload: jsonb("payload")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    status: text("status")
+      .$type<"pending" | "processing" | "completed" | "failed">()
+      .notNull()
+      .default("pending"),
+    retryCount: integer("retry_count").notNull().default(0),
+    lastError: text("last_error"),
+    nextRetryAt: timestamp("next_retry_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    processedAt: timestamp("processed_at", { mode: "date" }),
+  },
+  (table) => ({
+    statusIdx: index("email_queue_jobs_status_idx").on(table.status),
+    nextRetryIdx: index("email_queue_jobs_next_retry_idx").on(table.status, table.nextRetryAt),
+  })
+);
+
+// ─── Type Exports ───────────────────────────────────────────────────────────
+
 export type DbUser = typeof users.$inferSelect;
 export type NewDbUser = typeof users.$inferInsert;
 export type DbVideo = typeof videos.$inferSelect;
@@ -569,3 +622,7 @@ export type DbUserNotification = typeof userNotifications.$inferSelect;
 export type NewDbUserNotification = typeof userNotifications.$inferInsert;
 export type DbUserOnboarding = typeof userOnboarding.$inferSelect;
 export type NewDbUserOnboarding = typeof userOnboarding.$inferInsert;
+export type DbEmailLog = typeof emailLogs.$inferSelect;
+export type NewDbEmailLog = typeof emailLogs.$inferInsert;
+export type DbEmailQueueJob = typeof emailQueueJobs.$inferSelect;
+export type NewDbEmailQueueJob = typeof emailQueueJobs.$inferInsert;

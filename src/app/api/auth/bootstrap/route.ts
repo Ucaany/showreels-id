@@ -9,8 +9,21 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/server/admin-access";
 import { syncUserProfile } from "@/server/auth-profile";
 import { getOrCreateUserOnboarding } from "@/server/onboarding";
+import {
+  rateLimiters,
+  getClientIp,
+  rateLimitExceededResponse,
+} from "@/lib/rate-limit";
+import { queueEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
+  // Rate limiting
+  const ip = getClientIp(request);
+  const rateLimit = rateLimiters.bootstrap(ip);
+  if (!rateLimit.success) {
+    return rateLimitExceededResponse(rateLimit);
+  }
+
   const { searchParams } = new URL(request.url);
   const next = getSafeNextPath(searchParams.get("next"));
   const supabase = await createClient();
@@ -37,32 +50,57 @@ export async function POST(request: Request) {
       );
     }
 
-    if (profile.role !== "owner") {
-      const onboarding = await getOrCreateUserOnboarding({
-        userId: profile.id,
-        customLinks: profile.customLinks,
-        createdAt: profile.createdAt,
-        profile: {
-          fullName: profile.name,
-          username: profile.username,
-          role: profile.role,
-          bio: profile.bio,
-        },
-      });
-      const redirectTo =
-        onboarding.onboardingCompleted || onboarding.onboardingSkipped
-          ? next
-          : "/dashboard";
+    // Detect new user signup: createdAt within last 60 seconds = new user
+    const isNewUser =
+      profile.createdAt &&
+      Date.now() - new Date(profile.createdAt).getTime() < 60_000;
 
-      return NextResponse.json({
-        ok: true,
-        redirectTo,
+    // Fire-and-forget welcome email for new users
+    if (isNewUser && profile.email) {
+      const appOrigin = process.env.NEXT_PUBLIC_APP_URL || "https://showreels.id";
+      void queueEmail({
+        userId: profile.id,
+        recipientEmail: profile.email,
+        template: {
+          type: "welcome",
+          data: {
+            userName: profile.name || "Creator",
+            dashboardUrl: `${appOrigin}/dashboard`,
+          },
+        },
       });
     }
 
+    // Owner gets fast redirect - no onboarding check needed
+    if (profile.role === "owner") {
+      return NextResponse.json({
+        ok: true,
+        redirectTo: "/admin",
+      });
+    }
+
+    // Non-blocking onboarding check - run in background if possible
+    // but we need the result for redirect decision
+    const onboarding = await getOrCreateUserOnboarding({
+      userId: profile.id,
+      customLinks: profile.customLinks,
+      createdAt: profile.createdAt,
+      profile: {
+        fullName: profile.name,
+        username: profile.username,
+        role: profile.role,
+        bio: profile.bio,
+      },
+    });
+
+    const redirectTo =
+      onboarding.onboardingCompleted || onboarding.onboardingSkipped
+        ? next
+        : "/dashboard";
+
     return NextResponse.json({
       ok: true,
-      redirectTo: profile.role === "owner" ? "/admin" : next,
+      redirectTo,
     });
   } catch (syncError) {
     const mismatch =

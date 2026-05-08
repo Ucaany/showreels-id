@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
-import { billingSubscriptions, billingTransactions } from "@/db/schema";
+import { billingSubscriptions, billingTransactions, users } from "@/db/schema";
 import {
   verifyTripayCallbackSignature,
   getTripayConfig,
@@ -9,6 +9,7 @@ import {
   mapTripayStatusToSubscription,
   type TripayCallbackPayload,
 } from "@/server/tripay";
+import { queueEmail } from "@/lib/email";
 
 // Force Node.js runtime dan disable caching untuk webhook route
 // Ini mencegah Edge Runtime redirect (307) yang menyebabkan callback gagal
@@ -132,6 +133,60 @@ export async function POST(request: Request) {
           updatedAt: now,
         })
         .where(eq(billingSubscriptions.id, transaction.subscriptionId));
+
+      // Fire-and-forget: queue payment success & subscription email
+      void (async () => {
+        try {
+          const user = await db.query.users.findFirst({
+            where: eq(users.id, transaction.userId),
+          });
+          if (user?.email) {
+            const appOrigin = process.env.NEXT_PUBLIC_APP_URL || "https://showreels.id";
+            const amount = new Intl.NumberFormat("id-ID", {
+              style: "currency",
+              currency: "IDR",
+              minimumFractionDigits: 0,
+            }).format(transaction.amount);
+
+            // Payment success email
+            void queueEmail({
+              userId: user.id,
+              recipientEmail: user.email,
+              template: {
+                type: "payment_success",
+                data: {
+                  userName: user.name || "Creator",
+                  planName: transaction.planName || "Creator",
+                  amount,
+                  invoiceId: transaction.invoiceId,
+                  dashboardUrl: `${appOrigin}/dashboard/billing`,
+                },
+              },
+            });
+
+            // Subscription activated email
+            void queueEmail({
+              userId: user.id,
+              recipientEmail: user.email,
+              template: {
+                type: "subscription_activated",
+                data: {
+                  userName: user.name || "Creator",
+                  planName: transaction.planName || "Creator",
+                  expiresAt: renewalDate.toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  }),
+                  dashboardUrl: `${appOrigin}/dashboard`,
+                },
+              },
+            });
+          }
+        } catch (emailError) {
+          console.error("[Tripay Callback] Email queue error (non-blocking):", emailError);
+        }
+      })();
     } catch (error) {
       console.error("[Tripay Callback] Error update subscription:", error);
       return NextResponse.json(
