@@ -28,26 +28,31 @@ export interface DashboardMetrics {
  */
 const getCachedUserVideos = unstable_cache(
   async (userId: string) => {
-    if (!isDatabaseConfigured) return [];
+    try {
+      if (!isDatabaseConfigured) return [];
 
-    const result = await db.query.videos.findMany({
-      where: eq(videos.userId, userId),
-      orderBy: desc(videos.createdAt),
-      limit: 50, // Limit untuk dashboard — tidak perlu semua video
-      columns: {
-        id: true,
-        title: true,
-        visibility: true,
-        publicSlug: true,
-      },
-    });
+      const result = await db.query.videos.findMany({
+        where: eq(videos.userId, userId),
+        orderBy: desc(videos.createdAt),
+        limit: 50, // Limit untuk dashboard — tidak perlu semua video
+        columns: {
+          id: true,
+          title: true,
+          visibility: true,
+          publicSlug: true,
+        },
+      });
 
-    return result.map((v) => ({
-      id: v.id,
-      title: v.title,
-      visibility: v.visibility,
-      publicSlug: v.publicSlug,
-    }));
+      return result.map((v) => ({
+        id: v.id,
+        title: v.title,
+        visibility: v.visibility,
+        publicSlug: v.publicSlug,
+      }));
+    } catch (error) {
+      console.error("[getCachedUserVideos] unstable_cache callback error:", error);
+      return [];
+    }
   },
   ["dashboard-user-videos"],
   { revalidate: 30 }
@@ -59,23 +64,28 @@ const getCachedUserVideos = unstable_cache(
  */
 const getCachedVisitorCount = unstable_cache(
   async (profilePath: string, publicVideoPaths: string[]) => {
-    if (!isDatabaseConfigured) return 0;
+    try {
+      if (!isDatabaseConfigured) return 0;
 
-    const creatorPathPattern = `${profilePath}%`;
+      const creatorPathPattern = `${profilePath}%`;
 
-    const [row] = await db
-      .select({ value: count() })
-      .from(visitorEvents)
-      .where(
-        publicVideoPaths.length > 0
-          ? or(
-              sql`${visitorEvents.path} LIKE ${creatorPathPattern}`,
-              inArray(visitorEvents.path, publicVideoPaths)
-            )
-          : sql`${visitorEvents.path} LIKE ${creatorPathPattern}`
-      );
+      const [row] = await db
+        .select({ value: count() })
+        .from(visitorEvents)
+        .where(
+          publicVideoPaths.length > 0
+            ? or(
+                sql`${visitorEvents.path} LIKE ${creatorPathPattern}`,
+                inArray(visitorEvents.path, publicVideoPaths)
+              )
+            : sql`${visitorEvents.path} LIKE ${creatorPathPattern}`
+        );
 
-    return Number(row?.value || 0);
+      return Number(row?.value || 0);
+    } catch (error) {
+      console.error("[getCachedVisitorCount] unstable_cache callback error:", error);
+      return 0;
+    }
   },
   ["dashboard-visitor-count"],
   { revalidate: 60 }
