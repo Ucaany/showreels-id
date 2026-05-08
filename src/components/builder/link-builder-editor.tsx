@@ -1079,8 +1079,8 @@ export function LinkBuilderEditor({
             <p className="text-[11px] text-slate-500">Halaman link bio publik Anda</p>
           </div>
 
-          <div className="flex items-center justify-center overflow-x-auto border-t border-slate-100 px-3 py-2 sm:border-t-0 sm:justify-end sm:px-4">
-            <div className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 p-0.5">
+          <div className="flex items-center overflow-x-auto border-t border-slate-100 px-3 py-2 sm:border-t-0 sm:justify-end sm:px-4">
+            <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 p-0.5">
               <button
                 type="button"
                 className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${

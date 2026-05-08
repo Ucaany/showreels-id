@@ -2,8 +2,10 @@ import { sql } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 
 let ensurePromise: Promise<void> | null = null;
+let schemaVerified = false;
 
 async function runOnboardingSchemaBootstrap() {
+  // Only run CREATE TABLE — lightweight check
   await db.execute(sql.raw(`
 CREATE TABLE IF NOT EXISTS "user_onboarding" (
   "user_id" uuid PRIMARY KEY NOT NULL,
@@ -37,7 +39,18 @@ ALTER TABLE "user_onboarding"
   ADD COLUMN IF NOT EXISTS "has_public_profile" boolean DEFAULT false NOT NULL;
 `));
 
-  await db.execute(sql.raw(`
+  schemaVerified = true;
+}
+
+/**
+ * Backfill onboarding rows for users that don't have one yet.
+ * This is separated from schema bootstrap to avoid blocking page loads.
+ */
+export async function backfillOnboardingRows() {
+  if (!isDatabaseConfigured) return;
+
+  try {
+    await db.execute(sql.raw(`
 INSERT INTO "user_onboarding" (
   "user_id",
   "onboarding_completed",
@@ -77,45 +90,18 @@ SELECT
 FROM "users" u
 ON CONFLICT ("user_id") DO NOTHING;
 `));
-
-  await db.execute(sql.raw(`
-UPDATE "user_onboarding" uo
-SET
-  "onboarding_completed" = false,
-  "onboarding_skipped" = false,
-  "first_link_created" = false,
-  "first_video_uploaded" = false,
-  "has_public_profile" = false,
-  "current_step" = 1,
-  "updated_at" = now()
-FROM "users" u
-WHERE
-  uo."user_id" = u."id"
-  AND lower(COALESCE(u."role", '')) <> 'owner'
-  AND uo."onboarding_completed" = true
-  AND COALESCE(jsonb_array_length(COALESCE(u."custom_links", '[]'::jsonb)), 0) = 0
-  AND NOT EXISTS (SELECT 1 FROM "videos" v WHERE v."user_id" = u."id");
-`));
-
-  await db.execute(sql.raw(`
-UPDATE "user_onboarding" uo
-SET
-  "has_public_profile" = (
-    length(trim(COALESCE(u."name", ''))) > 0
-    AND length(trim(COALESCE(u."username", ''))) > 0
-    AND (
-      length(trim(COALESCE(u."bio", ''))) > 0
-      OR length(trim(COALESCE(u."role", ''))) > 0
-    )
-  ),
-  "updated_at" = now()
-FROM "users" u
-WHERE uo."user_id" = u."id";
-`));
+  } catch (error) {
+    console.error("onboarding_backfill_error", error);
+  }
 }
 
 export async function ensureOnboardingSchema() {
   if (!isDatabaseConfigured) {
+    return;
+  }
+
+  // If schema already verified in this process, skip
+  if (schemaVerified) {
     return;
   }
 

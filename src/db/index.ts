@@ -1,5 +1,5 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "@/db/schema";
 import { getDatabaseUrl, isDatabaseUrlConfigured } from "@/lib/database/config";
 
@@ -7,28 +7,27 @@ const connectionString = getDatabaseUrl();
 export const isDatabaseConfigured = isDatabaseUrlConfigured();
 
 const globalForDb = globalThis as unknown as {
-  showreelsPool?: Pool;
+  showreelsSql?: postgres.Sql;
 };
 
-const requiresSsl =
-  isDatabaseConfigured &&
-  (process.env.NODE_ENV === "production" ||
-    connectionString.includes("sslmode=require") ||
-    connectionString.includes("supabase.co"));
-
-const activePool = isDatabaseConfigured
-  ? globalForDb.showreelsPool ||
-    new Pool({
-      connectionString,
-      ssl: requiresSsl ? { rejectUnauthorized: false } : false,
+const activeSql = isDatabaseConfigured
+  ? globalForDb.showreelsSql ||
+    postgres(connectionString, {
+      ssl: connectionString.includes("supabase.co") ? "require" : false,
+      max: 10,
+      idle_timeout: 20,
+      connect_timeout: 10,
+      prepare: false, // Required for Supabase Transaction Pooler (pgbouncer)
     })
   : null;
 
-if (process.env.NODE_ENV !== "production" && activePool) {
-  globalForDb.showreelsPool = activePool;
+if (process.env.NODE_ENV !== "production" && activeSql) {
+  globalForDb.showreelsSql = activeSql;
 }
 
-export const db = activePool
-  ? drizzle(activePool, { schema })
+export const db = activeSql
+  ? drizzle(activeSql, { schema })
   : (null as unknown as ReturnType<typeof drizzle<typeof schema>>);
-export const pool = activePool as Pool;
+
+// Export sql client for CLI scripts that need to close the connection
+export const sql = activeSql as postgres.Sql;

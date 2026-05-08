@@ -35,7 +35,7 @@ export async function PUT(request: Request) {
     `
   );
 
-  if (!currentPasswordCheck.rows[0]?.is_match) {
+  if (!currentPasswordCheck[0]?.is_match) {
     return NextResponse.json({ error: "Password lama tidak sesuai." }, { status: 400 });
   }
 

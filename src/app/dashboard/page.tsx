@@ -250,20 +250,64 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const params = searchParams ? await searchParams : {};
   const forceOnboarding = params.onboarding === "1";
 
-  const [entitlementState, onboarding] = await Promise.all([
-    getCreatorEntitlementsForUser(user.id),
-    getOrCreateUserOnboarding({
-      userId: user.id,
-      customLinks: user.customLinks,
-      createdAt: user.createdAt,
-      profile: {
-        fullName: user.name,
-        username: user.username,
-        role: user.role,
-        bio: user.bio,
+  let entitlementState: Awaited<ReturnType<typeof getCreatorEntitlementsForUser>>;
+  let onboarding: Awaited<ReturnType<typeof getOrCreateUserOnboarding>>;
+
+  try {
+    [entitlementState, onboarding] = await Promise.all([
+      getCreatorEntitlementsForUser(user.id),
+      getOrCreateUserOnboarding({
+        userId: user.id,
+        customLinks: user.customLinks,
+        createdAt: user.createdAt,
+        profile: {
+          fullName: user.name,
+          username: user.username,
+          role: user.role,
+          bio: user.bio,
+        },
+      }),
+    ]);
+  } catch (error) {
+    console.error("dashboard_page_data_error", error);
+    // Fallback values so page doesn't crash
+    entitlementState = {
+      effectivePlan: {
+        planName: "free" as const,
+        billingCycle: "monthly" as const,
+        status: "active",
+        source: "fallback_free" as const,
+        trialStartedAt: null,
+        trialEndsAt: null,
+        isTrialActive: false,
+        isTrialExpired: false,
       },
-    }),
-  ]);
+      entitlements: {
+        planName: "free" as const,
+        linkBuilderMax: 5,
+        usernameChangesPer30Days: 2,
+        analyticsMaxDays: 7,
+        customThumbnailEnabled: false,
+        whitelabelEnabled: false,
+        sourceQuotaPerPlatform: { youtube: 10, gdrive: 10, instagram: 10, facebook: 10, vimeo: 10 },
+        creatorGroupEnabled: false,
+        supportEnabled: false,
+        themeSwitchComingSoon: false,
+      },
+    };
+    onboarding = {
+      userId: user.id,
+      onboardingCompleted: true,
+      onboardingSkipped: false,
+      firstLinkCreated: false,
+      firstVideoUploaded: false,
+      hasPublicProfile: Boolean(user.name && user.username),
+      currentStep: 4,
+      progressPayload: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  }
 
   // Only show onboarding for users who truly haven't set up their profile
   const shouldShowOnboarding =
@@ -295,10 +339,21 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const canUseBuildLink = true;
 
   // Use cached dashboard metrics (videos cached 30s, visitor count cached 60s)
-  const metrics = await getDashboardMetrics({
-    userId: user.id,
-    username: user.username || "creator",
-  });
+  let metrics: Awaited<ReturnType<typeof getDashboardMetrics>>;
+  try {
+    metrics = await getDashboardMetrics({
+      userId: user.id,
+      username: user.username || "creator",
+    });
+  } catch (error) {
+    console.error("dashboard_metrics_error", error);
+    metrics = {
+      totalVideos: 0,
+      publicVideos: 0,
+      totalViews: 0,
+      videoSummaries: [],
+    };
+  }
 
   const normalizedLinks = normalizeCustomLinks(user.customLinks);
   const activeLinks = normalizedLinks.filter((link) => link.enabled !== false);

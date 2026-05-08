@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
 
 config({ path: ".env.local" });
 config();
@@ -11,16 +11,16 @@ if (!process.env.DATABASE_URL_MIGRATION && !process.env.DATABASE_URL) {
 }
 
 async function main() {
-  const { db, pool } = await import("@/db");
+  const { db, sql } = await import("@/db");
   await migrate(db, {
     migrationsFolder: "./drizzle",
   });
-  await pool.end();
+  await sql.end();
 }
 
 main().catch(async (error) => {
   console.error("Migration failed", error);
-  const { pool } = await import("@/db");
-  await pool.end();
+  const { sql } = await import("@/db");
+  await sql.end();
   process.exit(1);
 });

@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 
 let ensurePromise: Promise<void> | null = null;
+let schemaVerified = false;
 
 async function runBillingSchemaBootstrap() {
   await db.execute(sql.raw(`
@@ -140,6 +141,21 @@ ON "billing_transactions" USING btree ("status");
 `));
 
   await db.execute(sql.raw(`
+CREATE INDEX IF NOT EXISTS "videos_user_source_visibility_idx"
+ON "videos" USING btree ("user_id", "source", "visibility");
+`));
+
+  schemaVerified = true;
+}
+
+/**
+ * Heavy backfill operation - inserts rows for all users and renames legacy plans.
+ * Should only be called from a cron/admin endpoint, NOT on every request.
+ */
+export async function backfillBillingRows() {
+  if (!isDatabaseConfigured) return;
+
+  await db.execute(sql.raw(`
 INSERT INTO "creator_settings" ("user_id", "billing_email")
 SELECT u.id, COALESCE(NULLIF(u.contact_email, ''), u.email, '')
 FROM "users" u
@@ -183,15 +199,14 @@ UPDATE "billing_transactions"
 SET "plan_name" = 'creator'
 WHERE "plan_name" = 'pro';
 `));
-
-  await db.execute(sql.raw(`
-CREATE INDEX IF NOT EXISTS "videos_user_source_visibility_idx"
-ON "videos" USING btree ("user_id", "source", "visibility");
-`));
 }
 
 export async function ensureBillingSchema() {
   if (!isDatabaseConfigured) {
+    return;
+  }
+
+  if (schemaVerified) {
     return;
   }
 

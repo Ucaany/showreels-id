@@ -25,12 +25,12 @@ async function backfillProfiles() {
     order by auth_users.created_at asc
   `);
 
-  if (!result.rows.length) {
+  if (!result.length) {
     console.log("No missing auth profiles found.");
     return;
   }
 
-  for (const row of result.rows) {
+  for (const row of result) {
     const authUser = {
       id: row.id,
       email: row.email,
@@ -40,7 +40,7 @@ async function backfillProfiles() {
     await syncUserProfile(authUser);
   }
 
-  console.log(`Backfilled ${result.rows.length} auth profile(s).`);
+  console.log(`Backfilled ${result.length} auth profile(s).`);
 }
 
 backfillProfiles()
@@ -49,6 +49,6 @@ backfillProfiles()
     process.exitCode = 1;
   })
   .finally(async () => {
-    const { pool } = await import("@/db");
-    await pool.end();
+    const { sql } = await import("@/db");
+    await sql.end();
   });

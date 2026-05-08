@@ -162,7 +162,7 @@ export async function POST(request: Request) {
       "visibility"
   `);
 
-  const video = insertedVideo.rows[0];
+  const video = insertedVideo[0];
 
   await markFirstVideoUploaded(currentUser.id).catch(() => null);
 

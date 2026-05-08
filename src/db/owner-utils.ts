@@ -53,7 +53,7 @@ export async function ensureAuthUser(input: {
     sql`select id::text as id from auth.users where email = ${input.email} limit 1`
   );
 
-  const existingId = existing.rows[0]?.id;
+  const existingId = existing[0]?.id;
   if (existingId) {
     return { id: existingId, created: false };
   }

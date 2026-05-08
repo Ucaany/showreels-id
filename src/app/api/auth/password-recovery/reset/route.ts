@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     `
   );
 
-  if (!samePasswordCheck.rows[0]) {
+  if (!samePasswordCheck[0]) {
     const response = NextResponse.json(
       { error: "Akun otentikasi tidak ditemukan." },
       { status: 404 }
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     return response;
   }
 
-  if (samePasswordCheck.rows[0].is_same) {
+  if (samePasswordCheck[0].is_same) {
     return NextResponse.json(
       { error: "Password baru harus berbeda dari password lama." },
       { status: 400 }

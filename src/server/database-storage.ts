@@ -36,7 +36,7 @@ export async function getDatabaseStorageInfo(): Promise<DatabaseStorageInfo> {
       select pg_database_size(current_database())::bigint as "usedBytes"
     `
   );
-  const firstRow = rows.rows[0];
+  const firstRow = rows[0];
   const usedBytes = Number(firstRow?.usedBytes ?? 0);
   const limitBytes = getDatabaseLimitBytes();
   const remainingBytes = Math.max(limitBytes - usedBytes, 0);
