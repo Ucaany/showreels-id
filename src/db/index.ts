@@ -14,7 +14,7 @@ const activeSql = isDatabaseConfigured
   ? globalForDb.showreelsSql ||
     postgres(connectionString, {
       ssl: connectionString.includes("supabase.co") ? "require" : false,
-      max: 10,
+      max: process.env.VERCEL ? 1 : 10, // Limit to 1 in serverless (Vercel)
       idle_timeout: 20,
       connect_timeout: 10,
       prepare: false, // Required for Supabase Transaction Pooler (pgbouncer)

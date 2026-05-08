@@ -1,5 +1,43 @@
+# Environment files
 .env*
+!.env.example
+
+# Git
 .git
-.codex-local
+
+# Dependencies
 node_modules
+
+# Build outputs
 .next
+out
+dist
+build
+
+# Testing
+coverage
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__
+__mocks__
+jest.config.js
+jest.setup.js
+
+# Development
+.vscode
+.idea
+*.log
+.DS_Store
+.codex-local
+
+# Documentation (not needed for build)
+plans/
+imgreques/
+*.md
+!README.md
+
+# Images not needed for build
+1.png
+Logo.png

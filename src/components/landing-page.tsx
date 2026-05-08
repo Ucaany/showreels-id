@@ -360,8 +360,8 @@ interface LandingPageProps {
     name: string | null;
     username: string | null;
     image: string | null;
-    bio: string;
-    city: string;
+    bio: string | null;
+    city: string | null;
     createdAt: Date;
   }>;
   currentUser?: {

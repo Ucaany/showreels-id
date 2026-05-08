@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
     ],
   },
   compress: true,
+  poweredByHeader: false,
+
+  // Enable Turbopack (default in Next.js 16) with empty config to silence webpack warning
+  turbopack: {},
+
   // Cache headers untuk static assets
   async headers() {
     return [
