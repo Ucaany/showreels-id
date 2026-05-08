@@ -276,6 +276,34 @@ export async function getEmailStats() {
 }
 
 /**
+ * Get daily email quota usage.
+ * Resend free tier = 100 emails/day, configurable via RESEND_DAILY_LIMIT env.
+ */
+export async function getDailyQuota() {
+  const dailyLimit = parseInt(process.env.RESEND_DAILY_LIMIT || "100", 10);
+
+  if (!isDatabaseConfigured) {
+    return { used: 0, limit: dailyLimit, remaining: dailyLimit, percentage: 0 };
+  }
+
+  // Count emails sent today (status = 'sent')
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const [result] = await db
+    .select({
+      used: sql<number>`count(*) filter (where ${emailLogs.status} = 'sent' and ${emailLogs.createdAt} >= ${todayStart.toISOString()}::timestamp)`,
+    })
+    .from(emailLogs);
+
+  const used = Number(result?.used ?? 0);
+  const remaining = Math.max(0, dailyLimit - used);
+  const percentage = Math.round((used / dailyLimit) * 100);
+
+  return { used, limit: dailyLimit, remaining, percentage };
+}
+
+/**
  * Get queue status for monitoring.
  */
 export async function getQueueStatus() {

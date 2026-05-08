@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireCurrentUser } from "@/server/current-user";
 import { isAdminEmail } from "@/server/admin-access";
-import { getEmailStats, getQueueStatus } from "@/lib/email";
+import { getEmailStats, getQueueStatus, getDailyQuota } from "@/lib/email";
 import { getSiteSettings, updateSiteSettings } from "@/server/site-settings";
 import { db, isDatabaseConfigured } from "@/db";
 import { emailLogs } from "@/db/schema";
@@ -17,10 +17,11 @@ export async function GET() {
   }
 
   try {
-    const [settings, stats, queueStatus] = await Promise.all([
+    const [settings, stats, queueStatus, dailyQuota] = await Promise.all([
       getSiteSettings(),
       getEmailStats(),
       getQueueStatus(),
+      getDailyQuota(),
     ]);
 
     // Get recent email logs (last 50)
@@ -35,6 +36,7 @@ export async function GET() {
 
     return NextResponse.json({
       emailEnabled: settings.emailEnabled,
+      dailyQuota,
       stats,
       queueStatus,
       recentLogs,
