@@ -10,6 +10,12 @@ import {
   type TripayCallbackPayload,
 } from "@/server/tripay";
 
+// Force Node.js runtime dan disable caching untuk webhook route
+// Ini mencegah Edge Runtime redirect (307) yang menyebabkan callback gagal
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 export async function POST(request: Request) {
   if (!isDatabaseConfigured) {
     return NextResponse.json(

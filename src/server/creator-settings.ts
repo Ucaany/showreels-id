@@ -13,7 +13,7 @@ function getFallbackCreatorSettings(input: { userId: string; billingEmail?: stri
     showPublicStats: false,
     whitelabelEnabled: false,
     billingEmail: input.billingEmail || "",
-    paymentMethod: "midtrans",
+    paymentMethod: "tripay",
     taxInfo: "",
     invoiceNotes: "",
     updatedAt: new Date(),

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdminEmail } from "@/server/admin-access";
 import {
-  refreshBillingTransactionStatusFromMidtrans,
+  refreshTripayTransactionStatus,
   toBillingPaymentSummary,
 } from "@/server/billing";
 import { getCurrentUser } from "@/server/current-user";
@@ -22,7 +22,7 @@ export async function GET(
   }
 
   const { invoiceId } = await context.params;
-  const transaction = await refreshBillingTransactionStatusFromMidtrans({
+  const transaction = await refreshTripayTransactionStatus({
     userId: currentUser.id,
     invoiceId,
   });

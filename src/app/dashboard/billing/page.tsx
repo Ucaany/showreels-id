@@ -3,7 +3,7 @@ import {
   getBillingTransactions,
   getOrCreateSubscription,
   getPlanCatalog,
-  refreshBillingTransactionStatusFromMidtrans,
+  refreshTripayTransactionStatus,
 } from "@/server/billing";
 import { isTripayConfigured } from "@/server/tripay";
 import { requireCurrentUser } from "@/server/current-user";
@@ -40,7 +40,7 @@ export default async function DashboardBillingPage({
 
   if (invoiceId) {
     try {
-      await refreshBillingTransactionStatusFromMidtrans({
+      await refreshTripayTransactionStatus({
         userId: user.id,
         invoiceId,
       });
@@ -160,10 +160,8 @@ export default async function DashboardBillingPage({
       }))}
       billingEmail={settings.billingEmail || user.contactEmail || user.email}
       paymentMethod={settings.paymentMethod}
-      midtransConfig={{
-        mode: tripayConfigured ? "production" : "sandbox",
-        serverKeySet: tripayConfigured,
-        clientKeySet: tripayConfigured,
+      tripayConfig={{
+        configured: tripayConfigured,
       }}
       creatorGroupLink={getCreatorGroupLink()}
       supportLink={getSupportLink()}

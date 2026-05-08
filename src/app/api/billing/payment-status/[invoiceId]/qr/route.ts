@@ -2,15 +2,10 @@ import { NextResponse } from "next/server";
 import { isAdminEmail } from "@/server/admin-access";
 import {
   getBillingTransactionByInvoiceForUser,
-  isMidtransConfigured,
   toBillingPaymentSummary,
 } from "@/server/billing";
 import { getCurrentUser } from "@/server/current-user";
-
-function getMidtransAuthHeader() {
-  const serverKey = (process.env.MIDTRANS_SERVER_KEY || "").trim();
-  return `Basic ${Buffer.from(`${serverKey}:`).toString("base64")}`;
-}
+import { isTripayConfigured } from "@/server/tripay";
 
 export async function GET(
   _request: Request,
@@ -27,7 +22,7 @@ export async function GET(
     );
   }
 
-  if (!isMidtransConfigured()) {
+  if (!isTripayConfigured()) {
     return NextResponse.json({ error: "Layanan pembayaran belum dikonfigurasi." }, { status: 412 });
   }
 
@@ -45,37 +40,21 @@ export async function GET(
     return NextResponse.json({ error: "QR belum tersedia." }, { status: 404 });
   }
 
+  // Untuk Tripay, QR URL bisa langsung di-redirect atau di-proxy
   const upstream = await fetch(payment.qrUrl, {
     method: "GET",
     headers: {
-      Authorization: getMidtransAuthHeader(),
-      Accept: "image/*,application/octet-stream,application/json",
+      Accept: "image/*,application/octet-stream",
     },
     cache: "no-store",
   });
 
   if (!upstream.ok) {
-    return NextResponse.json(
-      { error: "Gagal mengambil QR pembayaran." },
-      { status: 502 }
-    );
+    // Jika fetch gagal, redirect langsung ke QR URL
+    return NextResponse.redirect(payment.qrUrl);
   }
 
   const contentType = upstream.headers.get("content-type") || "image/png";
-
-  if (contentType.includes("application/json")) {
-    const body = (await upstream.json().catch(() => null)) as
-      | { url?: string; qr_url?: string }
-      | null;
-    const redirectUrl = body?.url || body?.qr_url;
-    if (redirectUrl) {
-      return NextResponse.redirect(redirectUrl);
-    }
-    return NextResponse.json(
-      { error: "QR pembayaran belum dapat dirender." },
-      { status: 502 }
-    );
-  }
 
   const bytes = await upstream.arrayBuffer();
   return new Response(bytes, {

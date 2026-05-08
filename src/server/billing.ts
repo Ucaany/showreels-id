@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions, billingTransactions } from "@/db/schema";
-import { hasPlaceholderEnvValue, normalizeEnvValue } from "@/lib/env-utils";
+import { normalizeEnvValue } from "@/lib/env-utils";
 import {
   getPlanFeatureBullets,
   getPlanFeatureChecklist,
@@ -9,7 +9,14 @@ import {
 } from "@/lib/plan-feature-matrix";
 import { ensureBillingSchema } from "@/server/billing-schema-bootstrap";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
-import { isTripayConfigured, createTripayClosedPayment } from "@/server/tripay";
+import {
+  isTripayConfigured,
+  createTripayClosedPayment,
+  getTripayTransactionDetail,
+  mapTripayStatusToInternal,
+  mapTripayStatusToSubscription,
+  type TripayTransactionStatus,
+} from "@/server/tripay";
 
 export type BillingPlanName = "free" | "creator" | "business";
 export type BillingCycle = "monthly" | "yearly";
@@ -83,15 +90,6 @@ function normalizeBillingPlanName(value: string | null | undefined): BillingPlan
   return "free";
 }
 
-// Midtrans functions removed - now using Tripay exclusively
-// Stub kept for backward-compatible routes that still reference it
-export function isMidtransConfigured(): boolean {
-  const serverKey = (process.env.MIDTRANS_SERVER_KEY || "").trim();
-  const clientKey = (process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "").trim();
-  if (!serverKey || !clientKey) return false;
-  if (hasPlaceholderEnvValue(serverKey) || hasPlaceholderEnvValue(clientKey)) return false;
-  return true;
-}
 
 function buildInvoiceId(userId: string) {
   const now = new Date();
@@ -139,7 +137,7 @@ function getAppOrigin() {
 
 
 
-// Legacy helper functions for old Midtrans transactions
+// Helper: extract actions array from legacy transaction payload (backward compat)
 function toLegacyActions(payload: Record<string, unknown>) {
   const rawActions = payload.actions;
   if (!Array.isArray(rawActions)) {
@@ -577,172 +575,18 @@ export async function createUpgradeTransaction(input: {
 }
 
 /**
- * @deprecated Legacy function for old Midtrans transactions only.
- * New transactions use Tripay status mapping.
+ * Refresh status transaksi dari TriPay API.
+ * Digunakan sebagai fallback polling jika callback gagal diterima.
+ * Akan mengupdate database jika status berubah.
  */
-function mapMidtransStatus(transactionStatus: string) {
-  switch (transactionStatus) {
-    case "settlement":
-    case "capture":
-      return "paid" as const;
-    case "pending":
-      return "pending" as const;
-    case "deny":
-    case "cancel":
-      return "cancelled" as const;
-    case "expire":
-      return "expired" as const;
-    default:
-      return "failed" as const;
-  }
-}
-
-/**
- * @deprecated Legacy function for old Midtrans transactions only.
- */
-function mapSubscriptionStatus(transactionStatus: string) {
-  switch (transactionStatus) {
-    case "settlement":
-    case "capture":
-      return "active" as const;
-    case "pending":
-      return "pending" as const;
-    case "deny":
-    case "cancel":
-    case "expire":
-      return "failed" as const;
-    default:
-      return "failed" as const;
-  }
-}
-
-/**
- * @deprecated Kept for backward compatibility with old Midtrans transactions.
- * New transactions use Tripay callback at /api/billing/tripay/callback.
- */
-export async function handleMidtransWebhook(payload: {
-  order_id?: string;
-  transaction_status?: string;
-  payment_type?: string;
-  gross_amount?: string | number;
-  currency?: string;
-  fraud_status?: string;
-}) {
-  const invoiceId = payload.order_id || "";
-  if (!invoiceId) {
-    return { ok: false as const, message: "order_id tidak ditemukan." };
-  }
-
-  if (!isDatabaseConfigured) {
-    return { ok: true as const, message: "Webhook diterima (db tidak aktif)." };
-  }
-
-  try {
-    await ensureBillingSchema();
-  } catch (error) {
-    console.error("Failed to bootstrap billing schema", error);
-  }
-
-  try {
-    const transaction = await db.query.billingTransactions.findFirst({
-      where: eq(billingTransactions.invoiceId, invoiceId),
-    });
-    if (!transaction) {
-      return { ok: false as const, message: "Transaksi invoice tidak ditemukan." };
-    }
-
-    const transactionStatus = payload.transaction_status || "failed";
-    const mappedTransactionStatus = mapMidtransStatus(transactionStatus);
-    const mappedSubscriptionStatus = mapSubscriptionStatus(transactionStatus);
-    const isPaid = mappedTransactionStatus === "paid";
-    const normalizedTransactionPlan = normalizeBillingPlanName(transaction.planName);
-    const grossAmount = Number(payload.gross_amount ?? transaction.amount) || transaction.amount;
-
-    if (Math.round(grossAmount) !== Math.round(transaction.amount)) {
-      return {
-        ok: false as const,
-        message: "Nominal pembayaran tidak sesuai dengan invoice backend.",
-      };
-    }
-
-    const [updatedTransaction] = await db
-      .update(billingTransactions)
-      .set({
-        status: mappedTransactionStatus,
-        paymentMethod: payload.payment_type || transaction.paymentMethod,
-        currency: payload.currency || transaction.currency,
-        amount: grossAmount,
-        paidAt: isPaid ? new Date() : transaction.paidAt,
-        rawPayload: {
-          ...(transaction.rawPayload || {}),
-          webhook: payload,
-        },
-        updatedAt: new Date(),
-      })
-      .where(eq(billingTransactions.id, transaction.id))
-      .returning();
-
-    const subscription = await db.query.billingSubscriptions.findFirst({
-      where: and(
-        eq(billingSubscriptions.userId, transaction.userId),
-        eq(billingSubscriptions.id, transaction.subscriptionId || "")
-      ),
-    });
-
-    if (subscription) {
-      const renewalDate = isPaid
-        ? new Date(
-            Date.now() +
-              (transaction.billingCycle === "yearly" ? 365 : 30) *
-                24 *
-                60 *
-                60 *
-                1000
-          )
-        : subscription.renewalDate;
-
-      await db
-        .update(billingSubscriptions)
-        .set({
-          planName: isPaid
-            ? normalizedTransactionPlan
-            : normalizeBillingPlanName(subscription.planName),
-          nextPlanName: isPaid
-            ? normalizedTransactionPlan
-            : normalizeBillingPlanName(subscription.nextPlanName),
-          status: mappedSubscriptionStatus,
-          price: transaction.amount,
-          billingCycle: transaction.billingCycle,
-          renewalDate,
-          updatedAt: new Date(),
-        })
-        .where(eq(billingSubscriptions.id, subscription.id));
-    }
-
-    return {
-      ok: true as const,
-      transaction: updatedTransaction,
-    };
-  } catch (error) {
-    if (isMissingBillingSchemaError(error)) {
-      return {
-        ok: false as const,
-        message:
-          "Schema billing belum siap di database production. Jalankan migrasi database terbaru.",
-      };
-    }
-    throw error;
-  }
-}
-
-/**
- * @deprecated This function is kept for backward compatibility with old Midtrans transactions.
- * It will return the transaction as-is for non-Midtrans providers.
- */
-export async function refreshBillingTransactionStatusFromMidtrans(input: {
+export async function refreshTripayTransactionStatus(input: {
   userId: string;
   invoiceId: string;
 }) {
+  if (!isDatabaseConfigured) {
+    return null;
+  }
+
   const transaction = await getBillingTransactionByInvoiceForUser(
     input.userId,
     input.invoiceId
@@ -751,13 +595,110 @@ export async function refreshBillingTransactionStatusFromMidtrans(input: {
     return null;
   }
 
-  // Only process Midtrans transactions
-  if (transaction.provider !== "midtrans") {
+  // Jika status sudah final, tidak perlu poll lagi
+  const finalStatuses = ["paid", "expired", "failed", "cancelled"];
+  if (finalStatuses.includes(transaction.status)) {
     return transaction;
   }
 
-  // For old Midtrans transactions, just return as-is
-  // (Midtrans integration has been removed)
-  console.warn("[Deprecated] Midtrans transaction refresh attempted:", input.invoiceId);
-  return transaction;
+  // Hanya poll untuk transaksi Tripay
+  if (transaction.provider !== "tripay") {
+    return transaction;
+  }
+
+  // Call TriPay API untuk cek status terbaru
+  const providerRef = transaction.providerReference || "";
+  if (!providerRef) {
+    return transaction;
+  }
+
+  const tripayDetail = await getTripayTransactionDetail(providerRef);
+  if (!tripayDetail) {
+    console.warn("[billing] Gagal fetch detail transaksi dari Tripay:", providerRef);
+    return transaction;
+  }
+
+  // Map status dari TriPay
+  const tripayStatus = (tripayDetail.status || "UNPAID") as TripayTransactionStatus;
+  const newInternalStatus = mapTripayStatusToInternal(tripayStatus);
+
+  // Jika status sama, tidak perlu update
+  if (newInternalStatus === transaction.status) {
+    return transaction;
+  }
+
+  // Update transaction di database
+  const now = new Date();
+  const updateData: Record<string, unknown> = {
+    status: newInternalStatus,
+    updatedAt: now,
+  };
+
+  if (newInternalStatus === "paid") {
+    updateData.paidAt = now;
+  }
+
+  try {
+    await db
+      .update(billingTransactions)
+      .set(updateData)
+      .where(eq(billingTransactions.id, transaction.id));
+  } catch (error) {
+    console.error("[billing] Error update transaction dari polling:", error);
+    return transaction;
+  }
+
+  // Update subscription jika payment berhasil
+  if (newInternalStatus === "paid" && transaction.subscriptionId) {
+    const subscriptionStatus = mapTripayStatusToSubscription(tripayStatus);
+    const renewalDate = new Date();
+    renewalDate.setMonth(
+      renewalDate.getMonth() + (transaction.billingCycle === "yearly" ? 12 : 1)
+    );
+
+    try {
+      await db
+        .update(billingSubscriptions)
+        .set({
+          status: subscriptionStatus,
+          planName: transaction.planName,
+          renewalDate,
+          updatedAt: now,
+        })
+        .where(eq(billingSubscriptions.id, transaction.subscriptionId));
+    } catch (error) {
+      console.error("[billing] Error update subscription dari polling:", error);
+    }
+  }
+
+  // Jika expired/failed, revert subscription ke expired jika masih pending
+  if (
+    (newInternalStatus === "expired" || newInternalStatus === "failed") &&
+    transaction.subscriptionId
+  ) {
+    try {
+      const subscription = await db.query.billingSubscriptions.findFirst({
+        where: eq(billingSubscriptions.id, transaction.subscriptionId),
+      });
+
+      if (subscription && subscription.status === "pending") {
+        await db
+          .update(billingSubscriptions)
+          .set({
+            status: "expired",
+            updatedAt: now,
+          })
+          .where(eq(billingSubscriptions.id, transaction.subscriptionId));
+      }
+    } catch (error) {
+      console.error("[billing] Error reverting subscription dari polling:", error);
+    }
+  }
+
+  return {
+    ...transaction,
+    status: newInternalStatus,
+    paidAt: newInternalStatus === "paid" ? now : transaction.paidAt,
+    updatedAt: now,
+  };
 }

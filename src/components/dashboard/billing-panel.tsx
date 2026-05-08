@@ -123,7 +123,7 @@ export function BillingPanel({
   initialTransactions,
   billingEmail,
   paymentMethod,
-  midtransConfig,
+  tripayConfig,
   billingEnabled = false,
 }: {
   initialPlan: PlanPayload;
@@ -133,10 +133,8 @@ export function BillingPanel({
   initialTransactions: TransactionPayload[];
   billingEmail: string;
   paymentMethod: string;
-  midtransConfig: {
-    mode: "sandbox" | "production";
-    serverKeySet: boolean;
-    clientKeySet: boolean;
+  tripayConfig: {
+    configured: boolean;
   };
   creatorGroupLink: string;
   supportLink: string;
@@ -240,12 +238,36 @@ export function BillingPanel({
     await handleRefresh();
   };
 
-  // Handle payment=success: tampilkan notifikasi lalu redirect ke dashboard
+  // Handle payment=success: polling payment-status API untuk sync dari TriPay, lalu redirect
   useEffect(() => {
     if (searchParams.get("payment") !== "success") return;
 
     const handleSuccess = async () => {
-      // Refresh data dulu agar plan terupdate
+      // Cari transaksi pending terbaru untuk di-sync
+      const txToSync = transactions.find((tx) => tx.status === "pending" && tx.invoiceId);
+
+      if (txToSync) {
+        // Polling payment-status API yang akan sync langsung ke TriPay
+        const MAX_RETRIES = 5;
+        const POLL_INTERVAL = 2000; // 2 detik
+
+        for (let i = 0; i < MAX_RETRIES; i++) {
+          try {
+            const res = await fetch(`/api/billing/payment-status/${txToSync.invoiceId}`);
+            if (res.ok) {
+              const data = await res.json() as { status?: string };
+              if (data.status === "paid") break; // Sudah berhasil sync
+            }
+          } catch {
+            // Ignore fetch errors, retry
+          }
+          if (i < MAX_RETRIES - 1) {
+            await new Promise((r) => setTimeout(r, POLL_INTERVAL));
+          }
+        }
+      }
+
+      // Refresh data dari DB setelah sync
       await handleRefresh();
 
       await showFeedbackAlert({
