@@ -224,6 +224,18 @@ export function DashboardShell({
     <div className="flex h-full flex-col bg-white px-4 py-5">
       {/* Logo / Plan Info */}
       {mobile ? (
+        mode === "admin" ? (
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="Showreels.id" className="h-10 w-10 object-contain" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-slate-900">Admin Panel</p>
+              <p className="text-xs text-slate-500">Full Access</p>
+            </div>
+          </div>
+        ) : (
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
             <CreditCard className="h-5 w-5 text-slate-600" />
@@ -233,6 +245,7 @@ export function DashboardShell({
             <p className="text-xs text-slate-500">Aktif</p>
           </div>
         </div>
+        )
       ) : (
         <div className={cn(
           "flex items-center gap-3",
@@ -374,13 +387,15 @@ export function DashboardShell({
           </div>
 
           <div className="flex min-w-0 items-center gap-2.5">
-            <Link
-              href="/dashboard/billing"
-              className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:inline-flex"
-            >
-              <CreditCard className="h-3.5 w-3.5 text-slate-500" />
-              <span className="font-semibold capitalize">{planName}</span>
-            </Link>
+            {mode !== "admin" && (
+              <Link
+                href="/dashboard/billing"
+                className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:inline-flex"
+              >
+                <CreditCard className="h-3.5 w-3.5 text-slate-500" />
+                <span className="font-semibold capitalize">{planName}</span>
+              </Link>
+            )}
             <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-0.5 shadow-sm md:px-3 md:py-1.5">
               <AvatarBadge
                 name={user.name || "Creator"}

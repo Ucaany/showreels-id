@@ -29,6 +29,7 @@ import {
 import { getAdminAnalyticsOverview, type AdminAnalyticsOverview } from "@/server/admin-analytics";
 import { getAdminEmailList } from "@/server/admin-access";
 import { getSiteSettings } from "@/server/site-settings";
+import { getDailyQuota } from "@/lib/email";
 import {
   getPreviousWibDateString,
   getWibDateString,
@@ -111,6 +112,7 @@ export default async function AdminPanelPage({
           maintenanceMessage: "",
           billingEnabled: true,
         }}
+        emailQuota={{ used: 12, limit: 100, remaining: 88, percentage: 12 }}
         analytics={{
           revenue: { totalPaid: 750000, monthlyPaid: 250000, paidTransactions: 5 },
           subscriptions: { active: 8, trial: 4, last30Days: 3 },
@@ -292,6 +294,7 @@ export default async function AdminPanelPage({
   let scheduleRows: Awaited<ReturnType<typeof db.query.adminNotificationSchedules.findMany>> = [];
   let settings = { maintenanceEnabled: false, pauseEnabled: false, maintenanceMessage: "", billingEnabled: true };
   let dbHealth = { ok: false, message: "Data belum dimuat", latencyMs: 0, storage: null as unknown as Awaited<ReturnType<typeof getDatabaseStorageInfo>> };
+  const emailQuota = await getDailyQuota().catch(() => ({ used: 0, limit: 100, remaining: 100, percentage: 0 }));
   let adminAnalytics = await getAdminAnalyticsOverview().catch(() => ({
     revenue: { totalPaid: 0, monthlyPaid: 0, paidTransactions: 0 },
     subscriptions: { active: 0, trial: 0, last30Days: 0 },
@@ -463,6 +466,7 @@ export default async function AdminPanelPage({
         maintenanceMessage: settings.maintenanceMessage,
         billingEnabled: settings.billingEnabled,
       }}
+      emailQuota={emailQuota}
       analytics={adminAnalytics as AdminAnalyticsOverview}
       users={adminUsers}
       videos={adminVideos}
