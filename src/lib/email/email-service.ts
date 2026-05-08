@@ -53,7 +53,25 @@ export async function queueEmail(options: QueueEmailOptions): Promise<void> {
       return;
     }
 
-    // Insert into queue
+    // Strategy: Direct send first, queue as fallback for retries
+    // This ensures emails are sent immediately without waiting for cron
+    const directResult = await sendEmailDirect(options);
+
+    if (directResult.success) {
+      // Log success directly
+      await db.insert(emailLogs).values({
+        userId: options.userId ?? null,
+        emailType: options.template.type,
+        recipientEmail: options.recipientEmail,
+        status: "sent",
+        provider: "resend",
+        messageId: directResult.messageId ?? null,
+      });
+      return;
+    }
+
+    // Direct send failed — queue for retry via cron
+    console.warn("[email] Direct send failed, queueing for retry:", directResult.error);
     await db.insert(emailQueueJobs).values({
       payload: {
         userId: options.userId,
