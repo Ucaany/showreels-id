@@ -653,12 +653,13 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
       return null;
     }
 
-    if (
+    const isPrivateLikeVisibility =
       normalizedVideo.visibility === "draft" ||
       normalizedVideo.visibility === "private" ||
-      normalizedVideo.visibility === "semi_private"
-    ) {
-      return isOwner ? normalizedVideo : null;
+      normalizedVideo.visibility === "semi_private";
+
+    if (isPrivateLikeVisibility && !isOwner) {
+      return null;
     }
 
     const siblingVideos = await db.query.videos.findMany({
