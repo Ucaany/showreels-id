@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
+import { db, isDatabaseConfigured } from "@/db";
 import { users, accounts, sessions, verificationTokens } from "@/db/schema";
 import { verifyPassword } from "@/lib/password";
 
@@ -18,6 +18,10 @@ function resolveAppOrigin(baseUrl: string) {
     const origin = new URL(baseUrl).origin;
 
     if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      return origin;
+    }
+
+    if (ALLOWED_REDIRECT_ORIGINS.has(origin)) {
       return origin;
     }
 
@@ -41,13 +45,18 @@ function getGoogleCredentials() {
 
 const googleCredentials = getGoogleCredentials();
 
+const adapter =
+  isDatabaseConfigured && db
+    ? DrizzleAdapter(db, {
+        usersTable: users,
+        accountsTable: accounts,
+        sessionsTable: sessions,
+        verificationTokensTable: verificationTokens,
+      })
+    : undefined;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: DrizzleAdapter(db!, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
+  adapter,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days

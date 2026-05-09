@@ -30,22 +30,6 @@ const nextConfig: NextConfig = {
   // Enable Turbopack (default in Next.js 16) with empty config to silence webpack warning
   turbopack: {},
 
-  async redirects() {
-    return [
-      {
-        source: "/:path*",
-        has: [
-          {
-            type: "host",
-            value: "www.showreels.id",
-          },
-        ],
-        destination: "https://showreels.id/:path*",
-        permanent: true,
-      },
-    ];
-  },
-
   // Cache headers untuk static assets
   async headers() {
     return [
