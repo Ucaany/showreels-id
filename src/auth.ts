@@ -7,6 +7,40 @@ import { db } from "@/db";
 import { users, accounts, sessions, verificationTokens } from "@/db/schema";
 import { verifyPassword } from "@/lib/password";
 
+const CANONICAL_ORIGIN = "https://showreels.id";
+const ALLOWED_REDIRECT_ORIGINS = new Set([
+  "https://showreels.id",
+  "https://www.showreels.id",
+]);
+
+function resolveAppOrigin(baseUrl: string) {
+  try {
+    const origin = new URL(baseUrl).origin;
+
+    if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      return origin;
+    }
+
+    return CANONICAL_ORIGIN;
+  } catch {
+    return CANONICAL_ORIGIN;
+  }
+}
+
+function getGoogleCredentials() {
+  const clientId = process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID;
+  const clientSecret =
+    process.env.AUTH_GOOGLE_SECRET ?? process.env.GOOGLE_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    return null;
+  }
+
+  return { clientId, clientSecret };
+}
+
+const googleCredentials = getGoogleCredentials();
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db!, {
     usersTable: users,
@@ -23,13 +57,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     newUser: "/onboarding",
     error: "/auth/login",
   },
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   providers: [
-    // Google OAuth provider - only enable if credentials are configured
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    // Google OAuth provider - optional, aktif jika env tersedia
+    ...(googleCredentials
       ? [
           Google({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            clientId: googleCredentials.clientId,
+            clientSecret: googleCredentials.clientSecret,
             allowDangerousEmailAccountLinking: true,
             authorization: {
               params: {
@@ -102,6 +137,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      const appOrigin = resolveAppOrigin(baseUrl);
+
+      if (url.startsWith("/")) {
+        return `${appOrigin}${url}`;
+      }
+
+      try {
+        const targetUrl = new URL(url);
+
+        if (ALLOWED_REDIRECT_ORIGINS.has(targetUrl.origin)) {
+          return `${appOrigin}${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+        }
+      } catch {
+        // no-op
+      }
+
+      return `${appOrigin}/dashboard`;
+    },
     async authorized({ auth: authSession, request }) {
       const { pathname } = request.nextUrl;
 
@@ -141,5 +195,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return !!authSession?.user;
     },
   },
-  trustHost: true,
+  trustHost:
+    process.env.AUTH_TRUST_HOST === undefined
+      ? true
+      : process.env.AUTH_TRUST_HOST === "true",
 });

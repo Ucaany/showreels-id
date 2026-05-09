@@ -37,6 +37,27 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const authLock = useAuthAttemptLock();
   const safeNextPath = getSafeNextPath(nextPath);
+  const isGoogleAuthEnabled =
+    !DEMO_MODE &&
+    (process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true" ||
+      process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "true");
+  const resolveRedirectTarget = (resultUrl?: string | null) => {
+    if (!resultUrl) return safeNextPath;
+
+    if (resultUrl.startsWith("/")) {
+      return getSafeNextPath(resultUrl, safeNextPath);
+    }
+
+    try {
+      const parsed = new URL(resultUrl);
+      return getSafeNextPath(
+        `${parsed.pathname}${parsed.search}${parsed.hash}`,
+        safeNextPath
+      );
+    } catch {
+      return safeNextPath;
+    }
+  };
   const signupHref =
     safeNextPath === "/dashboard"
       ? "/auth/signup"
@@ -115,6 +136,7 @@ export function LoginForm({
       const result = await signIn("credentials", {
         email: values.email.trim().toLowerCase(),
         password: values.password,
+        callbackUrl: safeNextPath,
         redirect: false,
       });
 
@@ -138,7 +160,7 @@ export function LoginForm({
         icon: "success",
         confirmButtonText: "Lanjut",
       });
-      window.location.replace(safeNextPath);
+      window.location.replace(resolveRedirectTarget(result?.url));
     } catch {
       const message = "Login belum bisa diproses. Periksa koneksi lalu coba lagi.";
       setSubmitError(message);
@@ -265,7 +287,7 @@ export function LoginForm({
         </div>
 
         {/* Google Login Button - only show if Google OAuth is configured */}
-        {!DEMO_MODE && process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true" && (
+        {isGoogleAuthEnabled && (
           <button
             type="button"
             onClick={async () => {
@@ -274,7 +296,7 @@ export function LoginForm({
                   callbackUrl: safeNextPath,
                   redirect: true,
                 });
-              } catch (error) {
+              } catch {
                 void showFeedbackAlert({
                   title: "Login Google gagal",
                   text: "Terjadi kesalahan saat login dengan Google. Silakan coba lagi atau gunakan email/password.",
