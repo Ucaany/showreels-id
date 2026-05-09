@@ -4,8 +4,14 @@ import { z } from "zod";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import {
+  DEFAULT_THUMBNAIL_URL,
+  detectMediaType,
+  detectPreviewType,
+  fetchTiktokThumbnail,
+  getAutoThumbnailFromVideoUrl,
   normalizeAssetUrl,
   normalizeHttpUrl,
+  resolveThumbnailUrl,
   validateEmbedReadyVideoUrl,
 } from "@/lib/video-utils";
 import { isProtectedOwnerTarget } from "@/server/admin-access";
@@ -81,6 +87,15 @@ export async function PATCH(
     );
   }
   const source = sourceValidation.source;
+  const platformThumbnailUrl = getAutoThumbnailFromVideoUrl(sourceValidation.canonicalUrl);
+  const autoThumbnailUrl =
+    source === "tiktok" ? await fetchTiktokThumbnail(sourceValidation.canonicalUrl) : "";
+  const resolvedThumbnailUrl = resolveThumbnailUrl({
+    customThumbnailUrl: parsed.data.thumbnailUrl,
+    autoThumbnailUrl,
+    platformThumbnailUrl,
+    fallbackDefault: DEFAULT_THUMBNAIL_URL,
+  });
 
   const [updated] = await db
     .update(videos)
@@ -90,7 +105,10 @@ export async function PATCH(
       visibility: parsed.data.visibility,
       sourceUrl: sourceValidation.canonicalUrl,
       source,
-      thumbnailUrl: parsed.data.thumbnailUrl,
+      thumbnailUrl: resolvedThumbnailUrl,
+      previewImage: resolvedThumbnailUrl,
+      previewType: detectPreviewType(source),
+      mediaType: detectMediaType({ sourceUrl: sourceValidation.canonicalUrl, imageUrls: [] }),
       outputType: parsed.data.outputType,
       durationLabel: parsed.data.durationLabel,
       aspectRatio: parsed.data.aspectRatio,

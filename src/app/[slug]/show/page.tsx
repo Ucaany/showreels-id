@@ -11,7 +11,8 @@ import { getPublicProfile } from "@/server/public-data";
  * generateMetadata dan page render akan share hasil query yang sama.
  */
 const getCachedPublicProfile = cache(
-  (slug: string, viewerUserId?: string | null) => getPublicProfile(slug, viewerUserId)
+  (slug: string, viewerUserId?: string | null, page?: number, pageSize?: number) =>
+    getPublicProfile(slug, viewerUserId, { page, pageSize })
 );
 
 export async function generateMetadata({
@@ -62,17 +63,19 @@ export default async function PublicPortfolioPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; page?: string }>;
 }) {
   const { slug } = await params;
-  const { view } = await searchParams;
+  const { view, page } = await searchParams;
 
   if (isReservedPublicSlug(slug)) {
     notFound();
   }
 
   const currentUser = await getCurrentUser();
-  const profile = await getCachedPublicProfile(slug, currentUser?.id);
+  const pageNumber = Number.parseInt(page || "1", 10);
+  const safePage = Number.isFinite(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+  const profile = await getCachedPublicProfile(slug, currentUser?.id, safePage, 12);
 
   if (!profile) {
     notFound();

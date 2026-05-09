@@ -8,8 +8,13 @@ import type {
 } from "@/lib/types";
 import {
   createPublicSlug,
+  DEFAULT_THUMBNAIL_URL,
+  detectMediaType,
+  detectPreviewType,
   detectVideoSource,
+  getAutoThumbnailFromVideoUrl,
   getSourceLabel,
+  resolveThumbnailUrl,
 } from "@/lib/video-utils";
 
 export interface CreateVideoInput {
@@ -53,6 +58,13 @@ export const videoService = {
     const publicSlug = createPublicSlug(input.title, allSlugs);
     const normalizedTags = input.tags.map((tag) => tag.trim()).filter(Boolean);
 
+    const canonicalSourceUrl = input.sourceUrl.trim();
+    const resolvedThumb = resolveThumbnailUrl({
+      customThumbnailUrl: input.thumbnailUrl?.trim() || "",
+      platformThumbnailUrl: getAutoThumbnailFromVideoUrl(canonicalSourceUrl),
+      fallbackDefault: DEFAULT_THUMBNAIL_URL,
+    });
+
     const video: VideoItem = {
       id: createId("vid"),
       userId: input.userId,
@@ -66,11 +78,14 @@ export const videoService = {
         }),
       tags: normalizedTags,
       visibility: input.visibility,
-      thumbnailUrl: input.thumbnailUrl?.trim() || "",
+      thumbnailUrl: resolvedThumb,
+      previewImage: resolvedThumb,
       extraVideoUrls: input.extraVideoUrls || [],
       imageUrls: input.imageUrls || [],
-      sourceUrl: input.sourceUrl.trim(),
+      sourceUrl: canonicalSourceUrl,
       source,
+      mediaType: detectMediaType({ sourceUrl: canonicalSourceUrl, imageUrls: input.imageUrls || [] }),
+      previewType: detectPreviewType(source),
       aspectRatio: input.aspectRatio || "landscape",
       outputType: input.outputType?.trim() || "",
       durationLabel: input.durationLabel?.trim() || "",

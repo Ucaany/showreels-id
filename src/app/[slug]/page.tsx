@@ -3,7 +3,7 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { BioCreatorPublicPage, VideoDetailPublicPage } from "@/components/public/public-creator-pages";
 import { createTextExcerpt, getCreatorBioHref, getVideoDetailHref, isReservedPublicSlug } from "@/lib/public-route-utils";
-import { getAutoThumbnailFromVideoUrl } from "@/lib/video-utils";
+import { getAutoThumbnailFromVideoUrl, resolveThumbnailUrl } from "@/lib/video-utils";
 import { getCurrentUser } from "@/server/current-user";
 import { getPublicProfile, getPublicVideo } from "@/server/public-data";
 
@@ -64,7 +64,12 @@ export async function generateMetadata({
     return {};
   }
 
-  const image = video.thumbnailUrl || getAutoThumbnailFromVideoUrl(video.sourceUrl) || undefined;
+  const image =
+    resolveThumbnailUrl({
+      customThumbnailUrl: video.thumbnailUrl,
+      autoThumbnailUrl: video.previewImage,
+      platformThumbnailUrl: getAutoThumbnailFromVideoUrl(video.sourceUrl),
+    }) || undefined;
   const title = `${video.title} by ${video.author.name || "Creator"} — Showreels.id`;
   const description = createTextExcerpt(video.description, 155) || "Detail portfolio video Showreels.id.";
   const url = getVideoDetailHref(video.publicSlug);

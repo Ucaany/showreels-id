@@ -1,9 +1,16 @@
-import type { VideoSource, VideoVisibility } from "@/lib/types";
+import type {
+  MediaType,
+  PreviewType,
+  VideoSource,
+  VideoVisibility,
+} from "@/lib/types";
 import { extractGoogleDriveFileId } from "@/lib/avatar-utils";
 
 const YOUTUBE_ID_REGEX = /^[a-zA-Z0-9_-]{6,15}$/;
 const INSTAGRAM_ID_REGEX = /^[a-zA-Z0-9._-]{5,}$/;
 const NUMERIC_ID_REGEX = /^[0-9]{5,}$/;
+
+export const DEFAULT_THUMBNAIL_URL = "/default-thumbnail.jpg";
 
 type EmbedReadyVideoUrl = {
   source: VideoSource;
@@ -332,6 +339,103 @@ export function getVisibilityLabel(visibility: VideoVisibility): string {
   if (visibility === "private") return "Private";
   if (visibility === "semi_private") return "Semi Private";
   return "Public";
+}
+
+export function detectPreviewType(source: VideoSource | null): PreviewType {
+  if (!source) return "upload";
+  if (source === "youtube") return "youtube";
+  if (source === "tiktok") return "tiktok";
+  if (source === "vimeo") return "vimeo";
+  if (source === "instagram") return "instagram";
+  if (source === "facebook") return "facebook";
+  if (source === "gdrive") return "gdrive";
+  return "upload";
+}
+
+export function detectMediaType(input: {
+  sourceUrl?: string | null;
+  imageUrls?: string[] | null;
+}): MediaType {
+  const sourceUrl = (input.sourceUrl || "").trim();
+  if (sourceUrl) {
+    return "video";
+  }
+  const imageUrls = input.imageUrls || [];
+  return imageUrls.length > 0 ? "image" : "video";
+}
+
+export async function fetchTiktokThumbnail(sourceUrl: string): Promise<string> {
+  const parsed = getEmbedReadyVideoUrl(sourceUrl);
+  if (!parsed || parsed.source !== "tiktok") {
+    return "";
+  }
+
+  const candidates: string[] = [];
+
+  try {
+    const tikwmUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(parsed.canonicalUrl)}`;
+    const response = await fetch(tikwmUrl, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const payload = (await response.json()) as {
+        data?: { cover?: string; origin_cover?: string; ai_dynamic_cover?: string };
+      };
+      candidates.push(
+        payload?.data?.origin_cover || "",
+        payload?.data?.cover || "",
+        payload?.data?.ai_dynamic_cover || ""
+      );
+    }
+  } catch {
+    // fallback ke oEmbed
+  }
+
+  try {
+    const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(parsed.canonicalUrl)}`;
+    const response = await fetch(oembedUrl, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const payload = (await response.json()) as { thumbnail_url?: string };
+      candidates.push(payload.thumbnail_url || "");
+    }
+  } catch {
+    // handled by empty fallback
+  }
+
+  for (const candidate of candidates) {
+    const normalized = normalizeAssetUrl(candidate || "");
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return "";
+}
+
+export function resolveThumbnailUrl(input: {
+  customThumbnailUrl?: string | null;
+  autoThumbnailUrl?: string | null;
+  platformThumbnailUrl?: string | null;
+  fallbackDefault?: string;
+}): string {
+  const custom = normalizeAssetUrl(input.customThumbnailUrl || "");
+  if (custom) return custom;
+
+  const auto = normalizeAssetUrl(input.autoThumbnailUrl || "");
+  if (auto) return auto;
+
+  const platform = normalizeAssetUrl(input.platformThumbnailUrl || "");
+  if (platform) return platform;
+
+  return input.fallbackDefault || DEFAULT_THUMBNAIL_URL;
 }
 
 export function normalizeHttpUrl(value: string): string {

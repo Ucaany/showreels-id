@@ -155,6 +155,24 @@ export const videos = pgTable(
       .default("landscape"),
     outputType: text("output_type").notNull().default(""),
     durationLabel: text("duration_label").notNull().default(""),
+    mediaType: text("media_type")
+      .$type<"video" | "image">()
+      .notNull()
+      .default("video"),
+    previewType: text("preview_type")
+      .$type<
+        | "youtube"
+        | "tiktok"
+        | "vimeo"
+        | "upload"
+        | "image"
+        | "instagram"
+        | "facebook"
+        | "gdrive"
+      >()
+      .notNull()
+      .default("upload"),
+    previewImage: text("preview_image").notNull().default(""),
     pinnedToProfile: boolean("pinned_to_profile").notNull().default(false),
     pinnedOrder: integer("pinned_order").notNull().default(0),
     publicSlug: text("public_slug").notNull().unique(),
@@ -169,6 +187,12 @@ export const videos = pgTable(
       table.userId,
       table.source,
       table.visibility
+    ),
+    mediaVisibilityIdx: index("videos_user_media_visibility_created_idx").on(
+      table.userId,
+      table.mediaType,
+      table.visibility,
+      table.createdAt
     ),
   })
 );

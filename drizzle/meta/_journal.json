@@ -71,6 +71,13 @@
       "when": 1777270800000,
       "tag": "0009_user_onboarding_stepper",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1778361000000,
+      "tag": "0019_portfolio_media_fields",
+      "breakpoints": true
     }
   ]
 }

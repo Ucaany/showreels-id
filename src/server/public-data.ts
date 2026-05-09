@@ -195,6 +195,9 @@ async function findPublicVideoBySlug(slug: string) {
         tags: true,
         visibility: true,
         thumbnailUrl: true,
+        previewImage: true,
+        previewType: true,
+        mediaType: true,
         extraVideoUrls: true,
         imageUrls: true,
         sourceUrl: true,
@@ -236,6 +239,9 @@ async function findPublicVideoBySlug(slug: string) {
           tags: true,
           visibility: true,
           thumbnailUrl: true,
+          previewImage: true,
+          previewType: true,
+          mediaType: true,
           extraVideoUrls: true,
           imageUrls: true,
           sourceUrl: true,
@@ -471,7 +477,11 @@ export async function getPublicShowcaseVideos(limit = 30) {
 
 export async function getPublicProfile(
   username: string,
-  viewerUserId?: string | null
+  viewerUserId?: string | null,
+  options?: {
+    page?: number;
+    pageSize?: number;
+  }
 ) {
   if (!isDatabaseConfigured) {
     return null;
@@ -497,6 +507,9 @@ export async function getPublicProfile(
       pinnedToProfile: true,
       pinnedOrder: true,
       thumbnailUrl: true,
+      previewImage: true,
+      previewType: true,
+      mediaType: true,
       extraVideoUrls: true,
       imageUrls: true,
       sourceUrl: true,
@@ -509,12 +522,23 @@ export async function getPublicProfile(
     } as const;
 
     const videoWhere = and(eq(videos.userId, user.id), eq(videos.visibility, "public"));
+    const safePageSize = Math.min(24, Math.max(6, options?.pageSize ?? 12));
+    const safePage = Math.max(1, options?.page ?? 1);
+    const offset = (safePage - 1) * safePageSize;
+
+    const totalVideosRows = await db
+      .select({ value: count() })
+      .from(videos)
+      .where(videoWhere);
+    const totalVideos = totalVideosRows[0]?.value ?? 0;
 
     const profileVideos = await db.query.videos
       .findMany({
         where: videoWhere,
         orderBy: desc(videos.createdAt),
         columns: videoColumns,
+        limit: safePageSize,
+        offset,
       })
       .catch(async (error) => {
         if (!isVideoPinSchemaError(error)) {
@@ -549,10 +573,20 @@ export async function getPublicProfile(
         }
       });
 
-    const pinnedVideos = profileVideos
-      .filter((video) => video.pinnedToProfile)
-      .sort((a, b) => (a.pinnedOrder || 999) - (b.pinnedOrder || 999))
-      .slice(0, 3);
+    const pinnedVideos = await db.query.videos
+      .findMany({
+        where: and(videoWhere, eq(videos.pinnedToProfile, true)),
+        orderBy: desc(videos.createdAt),
+        columns: videoColumns,
+        limit: 20,
+      })
+      .then((items) =>
+        items
+          .filter((video) => video.pinnedToProfile)
+          .sort((a, b) => (a.pinnedOrder || 999) - (b.pinnedOrder || 999))
+          .slice(0, 3)
+      )
+      .catch(() => []);
 
     const [whitelabelEnabled, businessPlanActive] = await Promise.all([
       isWhitelabelActiveForUser(user.id),
@@ -566,6 +600,12 @@ export async function getPublicProfile(
       },
       videos: profileVideos,
       pinnedVideos,
+      totalVideos,
+      page: safePage,
+      pageSize: safePageSize,
+      totalPages: Math.max(1, Math.ceil(totalVideos / safePageSize)),
+      hasNextPage: safePage * safePageSize < totalVideos,
+      hasPreviousPage: safePage > 1,
       whitelabelEnabled,
       businessPlanActive,
       isOwner,
@@ -621,6 +661,25 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
       return isOwner ? normalizedVideo : null;
     }
 
+    const siblingVideos = await db.query.videos.findMany({
+      where: and(
+        eq(videos.userId, normalizedVideo.author.id),
+        eq(videos.visibility, "public")
+      ),
+      orderBy: desc(videos.createdAt),
+      columns: {
+        publicSlug: true,
+      },
+      limit: 500,
+    });
+
+    const slugList = siblingVideos
+      .map((item) => item.publicSlug)
+      .filter(Boolean);
+    const currentIndex = slugList.findIndex((item) => item === normalizedVideo.publicSlug);
+    const previousSlug = currentIndex >= 0 ? slugList[currentIndex + 1] || null : null;
+    const nextSlug = currentIndex > 0 ? slugList[currentIndex - 1] || null : null;
+
     return {
       ...normalizedVideo,
       author: {
@@ -628,6 +687,12 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
         customLinks: normalizeCustomLinks(normalizedVideo.author.customLinks),
       },
       whitelabelEnabled: await isWhitelabelActiveForUser(normalizedVideo.author.id),
+      previousSlug,
+      nextSlug,
+      hasPreviousVideo: Boolean(previousSlug),
+      hasNextVideo: Boolean(nextSlug),
+      totalCreatorVideos: slugList.length,
+      page: currentIndex >= 0 ? currentIndex + 1 : 1,
     };
   } catch (error) {
     console.error("Failed to load public video", error);

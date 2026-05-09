@@ -2,7 +2,11 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Image as ImageIcon, PlayCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand, Image as ImageIcon, PlayCircle } from "lucide-react";
+import Lightbox from "yet-another-react-lightbox";
+import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import "yet-another-react-lightbox/styles.css";
 import { Button } from "@/components/ui/button";
 import { detectVideoSource, getEmbedUrl } from "@/lib/video-utils";
 import type { VideoAspectRatio, VideoSource } from "@/lib/types";
@@ -38,6 +42,7 @@ export function MediaPreviewCarousel({
   aspectRatio = "landscape",
 }: MediaPreviewCarouselProps) {
   const [index, setIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const slides = useMemo<MediaSlide[]>(() => {
     const coverSlides: MediaSlide[] = manualThumbnailUrl
@@ -98,6 +103,12 @@ export function MediaPreviewCarousel({
       ? "relative overflow-hidden rounded-2xl border border-slate-200 bg-[#F3F4F6] shadow-card"
       : "relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-card";
 
+  const imageSlides = slides.filter((slide) => slide.type !== "video");
+  const lightboxIndex = Math.max(
+    0,
+    imageSlides.findIndex((slide) => slide.url === active.url)
+  );
+
   const renderVideo = (url: string) => {
     const source = detectVideoSource(url) as VideoSource | null;
     if (!source) {
@@ -117,6 +128,7 @@ export function MediaPreviewCarousel({
             className="h-full w-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
+            loading="lazy"
           />
         </div>
       </div>
@@ -148,16 +160,28 @@ export function MediaPreviewCarousel({
         renderVideo(active.url)
       ) : (
         <div className="relative">
-          <Image
-            src={active.url}
-            alt={`Preview media ${index + 1}`}
-            width={1280}
-            height={720}
-            sizes="(max-width: 1024px) 100vw, 820px"
-            unoptimized
-            className={`rounded-2xl border border-slate-200 bg-[#F3F4F6] shadow-card object-cover ${frameClass}`}
-            loading="lazy"
-          />
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(true)}
+            className="group block w-full"
+            aria-label="Buka preview fullscreen"
+          >
+            <Image
+              src={active.url}
+              alt={`Preview media ${index + 1}`}
+              width={1280}
+              height={720}
+              sizes="(max-width: 1024px) 100vw, 820px"
+              className={`rounded-2xl border border-slate-200 bg-[#F3F4F6] shadow-card object-cover ${frameClass}`}
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMzInIGhlaWdodD0nMTgnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzMyJyBoZWlnaHQ9JzE4JyBmaWxsPScjZWVlZWVlJy8+PC9zdmc+"
+            />
+            <span className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-slate-900/80 px-2.5 py-1 text-[11px] font-semibold text-white opacity-90 transition group-hover:opacity-100">
+              <Expand className="h-3.5 w-3.5" />
+              Fullscreen
+            </span>
+          </button>
           {active.type === "cover" && showStatusBadge ? (
             <span className="absolute left-3 top-3 rounded-full bg-slate-900/85 px-2.5 py-1 text-xs font-semibold text-white">
               Cover Video
@@ -220,6 +244,14 @@ export function MediaPreviewCarousel({
           ))}
         </div>
       ) : null}
+      <Lightbox
+        open={lightboxOpen}
+        close={() => setLightboxOpen(false)}
+        index={lightboxIndex}
+        slides={imageSlides.map((slide) => ({ src: slide.url }))}
+        plugins={[Zoom, Fullscreen]}
+        carousel={{ finite: imageSlides.length <= 1 }}
+      />
     </div>
   );
 }

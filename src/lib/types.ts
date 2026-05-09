@@ -2,6 +2,16 @@ export type VideoSource = "youtube" | "gdrive" | "instagram" | "vimeo" | "facebo
 export type VideoVisibility = "draft" | "private" | "semi_private" | "public";
 export type ProfileVisibility = "private" | "semi_private" | "public";
 export type VideoAspectRatio = "landscape" | "portrait";
+export type MediaType = "video" | "image";
+export type PreviewType =
+  | "youtube"
+  | "tiktok"
+  | "vimeo"
+  | "upload"
+  | "image"
+  | "instagram"
+  | "facebook"
+  | "gdrive";
 
 export interface StoredImageCrop {
   x: number;
@@ -63,10 +73,13 @@ export interface VideoItem {
   tags: string[];
   visibility: VideoVisibility;
   thumbnailUrl: string;
+  previewImage: string;
   extraVideoUrls: string[];
   imageUrls: string[];
   sourceUrl: string;
   source: VideoSource;
+  mediaType: MediaType;
+  previewType: PreviewType;
   aspectRatio: VideoAspectRatio;
   outputType: string;
   durationLabel: string;
@@ -83,6 +96,9 @@ export interface VideoFormInput {
   outputType?: string;
   durationLabel?: string;
   thumbnailUrl?: string;
+  previewImage?: string;
+  mediaType?: MediaType;
+  previewType?: PreviewType;
   extraVideoUrls?: string[];
   imageUrls?: string[];
   description?: string;

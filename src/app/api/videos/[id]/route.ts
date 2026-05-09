@@ -9,7 +9,13 @@ import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 import {
   buildAiDescription,
   createPublicSlug,
+  DEFAULT_THUMBNAIL_URL,
+  detectMediaType,
+  detectPreviewType,
+  fetchTiktokThumbnail,
+  getAutoThumbnailFromVideoUrl,
   normalizeAssetUrl,
+  resolveThumbnailUrl,
   validateEmbedReadyVideoUrl,
 } from "@/lib/video-utils";
 import type { VideoSource } from "@/lib/types";
@@ -88,6 +94,21 @@ export async function PATCH(
   const source = sourceValidation.source;
   const entitlementState = await getCreatorEntitlementsForUser(currentUser.id);
   const normalizedThumbnailUrl = normalizeAssetUrl(parsed.data.thumbnailUrl || "");
+  const mediaType = detectMediaType({
+    sourceUrl: sourceValidation.canonicalUrl,
+    imageUrls: parsed.data.imageUrls,
+  });
+  const previewType = detectPreviewType(source);
+  const platformThumbnailUrl = getAutoThumbnailFromVideoUrl(sourceValidation.canonicalUrl);
+  const autoThumbnailUrl =
+    source === "tiktok" ? await fetchTiktokThumbnail(sourceValidation.canonicalUrl) : "";
+  const resolvedThumbnailUrl = resolveThumbnailUrl({
+    customThumbnailUrl: normalizedThumbnailUrl,
+    autoThumbnailUrl,
+    platformThumbnailUrl,
+    fallbackDefault: DEFAULT_THUMBNAIL_URL,
+  });
+  const previewImage = resolvedThumbnailUrl;
 
   if (!entitlementState.entitlements.customThumbnailEnabled && normalizedThumbnailUrl) {
     return NextResponse.json(
@@ -146,7 +167,10 @@ export async function PATCH(
         }),
       tags: parsed.data.tags,
       visibility: parsed.data.visibility,
-      thumbnailUrl: normalizedThumbnailUrl,
+      thumbnailUrl: resolvedThumbnailUrl,
+      previewImage,
+      previewType,
+      mediaType,
       extraVideoUrls: parsed.data.extraVideoUrls,
       imageUrls: parsed.data.imageUrls,
       sourceUrl: sourceValidation.canonicalUrl,

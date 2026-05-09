@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, Briefcase, CalendarDays, Grid2X2, Link2, List, Mail, MapPin, Phone, PlayCircle, ShoppingBag, Video } from "lucide-react";
+import { memo } from "react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Briefcase, CalendarDays, Grid2X2, Link2, List, Mail, MapPin, Phone, PlayCircle, ShoppingBag, Video } from "lucide-react";
 import { FaInstagram, FaTiktok, FaYoutube, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaTelegram, FaDiscord, FaSpotify, FaBehance, FaDribbble, FaGithub, FaMedium, FaXTwitter } from "react-icons/fa6";
 import { SiThreads, SiTiktok, SiShopee, SiGoogledrive } from "react-icons/si";
 import { AvatarBadge } from "@/components/avatar-badge";
@@ -13,7 +14,7 @@ import { formatDateLabel } from "@/lib/helpers";
 import { getBackgroundImageCropStyle } from "@/lib/image-crop";
 import { isProfileVerified } from "@/lib/profile-utils";
 import { createTextExcerpt, getCreatorBioHref, getCreatorPortfolioHref, getSafeExternalUrl, getVideoDetailHref } from "@/lib/public-route-utils";
-import { getAutoThumbnailFromVideoUrl, getSourceLabel } from "@/lib/video-utils";
+import { DEFAULT_THUMBNAIL_URL, getAutoThumbnailFromVideoUrl, getSourceLabel, resolveThumbnailUrl } from "@/lib/video-utils";
 import { VerifiedBadge } from "@/components/verified-badge";
 
 type PublicProfile = NonNullable<Awaited<ReturnType<typeof import("@/server/public-data").getPublicProfile>>>;
@@ -60,8 +61,13 @@ function getLinkIcon(link: { iconKey?: string; platform?: string }) {
   return LINK_ICON_MAP[key] || Link2;
 }
 
-function getVideoThumb(video: Pick<ProfileVideo, "thumbnailUrl" | "sourceUrl">) {
-  return video.thumbnailUrl || getAutoThumbnailFromVideoUrl(video.sourceUrl) || "";
+function getVideoThumb(video: Pick<ProfileVideo, "thumbnailUrl" | "previewImage" | "sourceUrl">) {
+  return resolveThumbnailUrl({
+    customThumbnailUrl: video.thumbnailUrl,
+    autoThumbnailUrl: video.previewImage,
+    platformThumbnailUrl: getAutoThumbnailFromVideoUrl(video.sourceUrl),
+    fallbackDefault: DEFAULT_THUMBNAIL_URL,
+  });
 }
 
 function PlatformBadge({ children }: { children: React.ReactNode }) {
@@ -78,7 +84,7 @@ function PublicFooter({ hidden }: { hidden?: boolean }) {
 }
 
 function CreatorCover({ profile, className = "h-36", soft = false, transparent = false }: { profile: PublicProfile; className?: string; soft?: boolean; transparent?: boolean }) {
-  const autoCoverImage = getVideoThumb(profile.videos[0] || { thumbnailUrl: "", sourceUrl: "" });
+  const autoCoverImage = getVideoThumb(profile.videos[0] || { thumbnailUrl: "", previewImage: "", sourceUrl: "" });
   const coverImage = profile.user.coverImageUrl || autoCoverImage;
 
   return (
@@ -310,12 +316,12 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
                 Portfolio
               </h2>
               <p className="mt-0.5 text-[12px] font-medium text-[#9A9A9A] sm:text-[13px]">
-                {profile.videos.length} project
+                {(profile.totalVideos ?? profile.videos.length)} project
               </p>
             </div>
             <div className="flex shrink-0 items-center rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] p-0.5">
               <Link
-                href={`${getCreatorPortfolioHref(username)}?view=grid`}
+                href={`${getCreatorPortfolioHref(username)}?view=grid&page=1`}
                 className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold transition sm:text-[13px] ${
                   !isList
                     ? "bg-[#111111] shadow-sm"
@@ -327,7 +333,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
                 <span className="hidden min-[360px]:inline">Grid</span>
               </Link>
               <Link
-                href={`${getCreatorPortfolioHref(username)}?view=list`}
+                href={`${getCreatorPortfolioHref(username)}?view=list&page=1`}
                 className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold transition sm:text-[13px] ${
                   isList
                     ? "bg-[#111111] shadow-sm"
@@ -358,10 +364,39 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
         ) : (
           <div className={isList ? "grid gap-3 sm:gap-4" : "grid gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3"}>
             {profile.videos.map((video) => (
-              <PortfolioVideoCard key={video.id} video={video} list={isList} creatorName={creatorName} />
+              <PortfolioVideoCard key={video.id} video={video} list={isList} />
             ))}
           </div>
         )}
+        {profile.totalPages && profile.totalPages > 1 ? (
+          <nav className="mt-7 flex items-center justify-center gap-2" aria-label="Pagination portfolio">
+            <Link
+              href={`${getCreatorPortfolioHref(username)}?view=${isList ? "list" : "grid"}&page=${Math.max(1, (profile.page || 1) - 1)}`}
+              className={`inline-flex min-h-10 items-center rounded-full border px-4 text-sm font-semibold ${
+                profile.hasPreviousPage
+                  ? "border-[#E7E5E4] bg-white text-[#111111] hover:border-[#111111]"
+                  : "pointer-events-none border-[#ECECEC] bg-[#F6F6F6] text-[#9A9A9A]"
+              }`}
+              aria-disabled={!profile.hasPreviousPage}
+            >
+              Previous
+            </Link>
+            <span className="px-3 text-xs font-semibold text-[#6B6B6B]">
+              Page {profile.page || 1} / {profile.totalPages}
+            </span>
+            <Link
+              href={`${getCreatorPortfolioHref(username)}?view=${isList ? "list" : "grid"}&page=${(profile.page || 1) + 1}`}
+              className={`inline-flex min-h-10 items-center rounded-full border px-4 text-sm font-semibold ${
+                profile.hasNextPage
+                  ? "border-[#E7E5E4] bg-white text-[#111111] hover:border-[#111111]"
+                  : "pointer-events-none border-[#ECECEC] bg-[#F6F6F6] text-[#9A9A9A]"
+              }`}
+              aria-disabled={!profile.hasNextPage}
+            >
+              Next
+            </Link>
+          </nav>
+        ) : null}
       </main>
 
       <div className="relative z-10">
@@ -371,7 +406,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
   );
 }
 
-function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo; list?: boolean; creatorName: string }) {
+const PortfolioVideoCard = memo(function PortfolioVideoCard({ video, list }: { video: ProfileVideo; list?: boolean }) {
   const thumb = getVideoThumb(video);
   const sourceLabel = getSourceLabel(video.source as never);
   const postedLabel = formatDateLabel(video.createdAt.toISOString());
@@ -444,7 +479,7 @@ function PortfolioVideoCard({ video, list, creatorName }: { video: ProfileVideo;
       </article>
     </Link>
   );
-}
+});
 
 export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
   const username = video.author?.username || "";
@@ -452,6 +487,8 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
   const creatorHref = username ? getCreatorBioHref(username) : "/";
   const portfolioHref = username ? getCreatorPortfolioHref(username) : "/videos";
   const sourceLabel = getSourceLabel(video.source as never);
+  const hasPrev = Boolean(video.hasPreviousVideo);
+  const hasNext = Boolean(video.hasNextVideo);
 
   const glassCard = "border-[#E7E5E4]/60 bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_12px_32px_rgba(17,17,17,0.05)] backdrop-blur-sm";
 
@@ -485,9 +522,39 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
             <ArrowLeft className="h-4 w-4" />
             Kembali ke Portfolio
           </Link>
-          <Link href={video.sourceUrl} target="_blank" rel="noopener noreferrer" className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold max-[420px]:w-full max-[420px]:justify-center ${darkButtonClass}`}>
-            Buka Source <ArrowUpRight className="h-4 w-4" />
-          </Link>
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+            {video.totalCreatorVideos && video.totalCreatorVideos > 2 ? (
+              <>
+                <Link
+                  href={hasPrev ? getVideoDetailHref(video.previousSlug || "") : detailHref}
+                  className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold ${
+                    hasPrev
+                      ? "border-[#E7E5E4]/60 bg-white/90 text-[#111111] hover:border-[#111111]"
+                      : "pointer-events-none border-[#ECECEC] bg-[#F7F7F7] text-[#A3A3A3]"
+                  }`}
+                  aria-disabled={!hasPrev}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Previous
+                </Link>
+                <Link
+                  href={hasNext ? getVideoDetailHref(video.nextSlug || "") : detailHref}
+                  className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold ${
+                    hasNext
+                      ? "border-[#E7E5E4]/60 bg-white/90 text-[#111111] hover:border-[#111111]"
+                      : "pointer-events-none border-[#ECECEC] bg-[#F7F7F7] text-[#A3A3A3]"
+                  }`}
+                  aria-disabled={!hasNext}
+                >
+                  Next
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </>
+            ) : null}
+            <Link href={video.sourceUrl} target="_blank" rel="noopener noreferrer" className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-bold max-[420px]:w-full max-[420px]:justify-center ${darkButtonClass}`}>
+              Buka Source <ArrowUpRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -496,7 +563,7 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
             <Card className={`${glassCard} overflow-hidden rounded-[1.75rem] sm:rounded-[2rem]`}>
               <div className="flex items-center justify-center p-3 sm:p-4">
                 <div className={video.aspectRatio === "portrait" ? "w-full max-w-[440px]" : "w-full"}>
-                  <MediaPreviewCarousel manualThumbnailUrl={video.thumbnailUrl} fallbackThumbnailUrl={getAutoThumbnailFromVideoUrl(video.sourceUrl)} mainVideoUrl={video.sourceUrl} extraVideoUrls={video.extraVideoUrls} imageUrls={video.imageUrls} title={video.title} showHeading={false} showStatusBadge={Boolean(video.thumbnailUrl)} preferMainVideo aspectRatio={video.aspectRatio || "landscape"} />
+                  <MediaPreviewCarousel manualThumbnailUrl={video.thumbnailUrl} fallbackThumbnailUrl={video.previewImage || getAutoThumbnailFromVideoUrl(video.sourceUrl)} mainVideoUrl={video.mediaType === "image" ? "" : video.sourceUrl} extraVideoUrls={video.extraVideoUrls} imageUrls={video.imageUrls} title={video.title} showHeading={false} showStatusBadge={Boolean(video.thumbnailUrl)} preferMainVideo={video.mediaType !== "image"} aspectRatio={video.aspectRatio || "landscape"} />
                 </div>
               </div>
             </Card>
@@ -550,6 +617,35 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
             </Card>
           </aside>
         </div>
+        {video.totalCreatorVideos && video.totalCreatorVideos > 2 ? (
+          <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#E7E5E4]/70 bg-white/95 p-3 backdrop-blur-sm lg:hidden">
+            <div className="mx-auto flex max-w-md items-center justify-between gap-2">
+              <Link
+                href={hasPrev ? getVideoDetailHref(video.previousSlug || "") : detailHref}
+                className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border text-sm font-semibold ${
+                  hasPrev
+                    ? "border-[#E7E5E4] bg-white text-[#111111]"
+                    : "pointer-events-none border-[#ECECEC] bg-[#F7F7F7] text-[#A3A3A3]"
+                }`}
+                aria-disabled={!hasPrev}
+              >
+                Previous
+              </Link>
+              <span className="shrink-0 px-2 text-[11px] font-semibold text-[#8A8A8A]">{video.page || 1}/{video.totalCreatorVideos}</span>
+              <Link
+                href={hasNext ? getVideoDetailHref(video.nextSlug || "") : detailHref}
+                className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border text-sm font-semibold ${
+                  hasNext
+                    ? "border-[#E7E5E4] bg-white text-[#111111]"
+                    : "pointer-events-none border-[#ECECEC] bg-[#F7F7F7] text-[#A3A3A3]"
+                }`}
+                aria-disabled={!hasNext}
+              >
+                Next
+              </Link>
+            </div>
+          </div>
+        ) : null}
       </main>
 
       <div className="relative z-10">
