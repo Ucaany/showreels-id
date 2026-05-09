@@ -264,11 +264,24 @@ export function LoginForm({
           <span className="h-px bg-gradient-to-r from-[#dbe5ff] via-slate-200 to-transparent" />
         </div>
 
-        {/* Google Login Button */}
-        {!DEMO_MODE && (
+        {/* Google Login Button - only show if Google OAuth is configured */}
+        {!DEMO_MODE && process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true" && (
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: safeNextPath })}
+            onClick={async () => {
+              try {
+                await signIn("google", {
+                  callbackUrl: safeNextPath,
+                  redirect: true,
+                });
+              } catch (error) {
+                void showFeedbackAlert({
+                  title: "Login Google gagal",
+                  text: "Terjadi kesalahan saat login dengan Google. Silakan coba lagi atau gunakan email/password.",
+                  icon: "error",
+                });
+              }
+            }}
             disabled={isFormDisabled}
             className={altActionClassName}
           >

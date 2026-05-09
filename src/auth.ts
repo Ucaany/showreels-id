@@ -24,12 +24,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/auth/login",
   },
   providers: [
-    // Google OAuth provider
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || "",
-      allowDangerousEmailAccountLinking: true,
-    }),
+    // Google OAuth provider - only enable if credentials are configured
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            allowDangerousEmailAccountLinking: true,
+            authorization: {
+              params: {
+                prompt: "consent",
+                access_type: "offline",
+                response_type: "code",
+              },
+            },
+          }),
+        ]
+      : []),
     // Credentials (email/password)
     Credentials({
       name: "credentials",

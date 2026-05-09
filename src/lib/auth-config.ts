@@ -10,9 +10,11 @@ export function isAuthConfigured() {
   return Boolean(process.env.AUTH_SECRET);
 }
 
-/** Google OAuth is not currently enabled (Credentials-only) */
+/** Google OAuth is enabled if credentials are configured */
 export function isGoogleAuthEnabled() {
-  return false;
+  return Boolean(
+    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+  );
 }
 
 /**
