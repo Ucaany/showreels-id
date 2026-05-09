@@ -107,6 +107,32 @@ export function isVideoPinSchemaError(error: unknown) {
   return message.includes("does not exist");
 }
 
+export function isVideoPreviewSchemaError(error: unknown) {
+  const code = readErrorCode(error);
+  const message = readErrorMessage(error).toLowerCase();
+
+  const mentionsColumn =
+    message.includes("preview_image") ||
+    message.includes("preview_type") ||
+    message.includes("media_type") ||
+    message.includes('column "preview_image"') ||
+    message.includes('column "preview_type"') ||
+    message.includes('column "media_type"') ||
+    message.includes("videos.preview_image") ||
+    message.includes("videos.preview_type") ||
+    message.includes("videos.media_type");
+
+  if (!mentionsColumn) {
+    return false;
+  }
+
+  if (code === UNDEFINED_COLUMN_CODE) {
+    return true;
+  }
+
+  return message.includes("does not exist");
+}
+
 export function isUsersSchemaMismatchError(error: unknown) {
   const code = readErrorCode(error);
   const message = readErrorMessage(error).toLowerCase();
