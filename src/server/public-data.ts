@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
 import { creatorSettings, users, videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
-import { isLinkedinSchemaError, isVideoPinSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
+import { isLinkedinSchemaError, isVideoPinSchemaError, isVideoPreviewSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
@@ -132,6 +132,46 @@ const publicVideoAuthorColumns = {
   profileVisibility: true,
 } as const;
 
+const publicVideoBaseColumns = {
+  id: true,
+  userId: true,
+  title: true,
+  description: true,
+  tags: true,
+  visibility: true,
+  thumbnailUrl: true,
+  extraVideoUrls: true,
+  imageUrls: true,
+  sourceUrl: true,
+  source: true,
+  aspectRatio: true,
+  outputType: true,
+  durationLabel: true,
+  publicSlug: true,
+  createdAt: true,
+} as const;
+
+const publicVideoColumns = {
+  ...publicVideoBaseColumns,
+  previewImage: true,
+  previewType: true,
+  mediaType: true,
+} as const;
+
+function withLegacyPreviewFields<T extends { thumbnailUrl: string; source: string; sourceUrl: string; imageUrls?: unknown; previewImage?: string | null; previewType?: string | null; mediaType?: string | null }>(video: T) {
+  const imageUrls = Array.isArray(video.imageUrls) ? video.imageUrls : [];
+  return {
+    ...video,
+    previewImage:
+      video.previewImage ||
+      video.thumbnailUrl ||
+      getThumbnailCandidates(video.sourceUrl, video.thumbnailUrl)[0] ||
+      "",
+    previewType: video.previewType || video.source || "upload",
+    mediaType: video.mediaType || (imageUrls.length > 0 && !video.sourceUrl ? "image" : "video"),
+  };
+}
+
 async function findPublicUserByUsernameRaw(username: string) {
   try {
     return await db.query.users.findFirst({
@@ -185,29 +225,9 @@ const findPublicUserByUsername = unstable_cache(
 
 async function findPublicVideoBySlug(slug: string) {
   try {
-    return await db.query.videos.findFirst({
+    const video = await db.query.videos.findFirst({
       where: eq(videos.publicSlug, slug),
-      columns: {
-        id: true,
-        userId: true,
-        title: true,
-        description: true,
-        tags: true,
-        visibility: true,
-        thumbnailUrl: true,
-        previewImage: true,
-        previewType: true,
-        mediaType: true,
-        extraVideoUrls: true,
-        imageUrls: true,
-        sourceUrl: true,
-        source: true,
-        aspectRatio: true,
-        outputType: true,
-        durationLabel: true,
-        publicSlug: true,
-        createdAt: true,
-      },
+      columns: publicVideoColumns,
       with: {
         author: {
           columns: {
@@ -217,57 +237,59 @@ async function findPublicVideoBySlug(slug: string) {
         },
       },
     });
+
+    return video ? withLegacyPreviewFields(video) : video;
   } catch (error) {
-    if (!isLinkedinSchemaError(error)) {
+    const hasLinkedinMismatch = isLinkedinSchemaError(error);
+    const hasPreviewMismatch = isVideoPreviewSchemaError(error);
+
+    if (!hasLinkedinMismatch && !hasPreviewMismatch) {
       console.error("[findPublicVideoBySlug] Query failed:", error);
       return undefined;
     }
 
-    console.warn("db_schema_mismatch public video without linkedin_url", {
+    console.warn("db_schema_mismatch public video legacy fallback", {
       slug,
+      missingLinkedin: hasLinkedinMismatch,
+      missingPreviewFields: hasPreviewMismatch,
       ...summarizeError(error),
     });
 
     try {
       const fallback = await db.query.videos.findFirst({
         where: eq(videos.publicSlug, slug),
-        columns: {
-          id: true,
-          userId: true,
-          title: true,
-          description: true,
-          tags: true,
-          visibility: true,
-          thumbnailUrl: true,
-          previewImage: true,
-          previewType: true,
-          mediaType: true,
-          extraVideoUrls: true,
-          imageUrls: true,
-          sourceUrl: true,
-          source: true,
-          aspectRatio: true,
-          outputType: true,
-          durationLabel: true,
-          publicSlug: true,
-          createdAt: true,
-        },
+        columns: hasPreviewMismatch ? publicVideoBaseColumns : publicVideoColumns,
         with: {
           author: {
-            columns: publicVideoAuthorColumns,
+            columns: hasLinkedinMismatch
+              ? publicVideoAuthorColumns
+              : {
+                  ...publicVideoAuthorColumns,
+                  linkedinUrl: true,
+                },
           },
         },
       });
 
-      if (!fallback?.author) {
+      if (!fallback) {
         return fallback;
       }
 
+      const normalizedVideo = withLegacyPreviewFields(fallback);
+
+      if (!normalizedVideo.author) {
+        return normalizedVideo;
+      }
+
       return {
-        ...fallback,
+        ...normalizedVideo,
         author: {
-          ...fallback.author,
-          linkedinUrl: "",
+          ...normalizedVideo.author,
+          linkedinUrl:
+            "linkedinUrl" in normalizedVideo.author &&
+            typeof normalizedVideo.author.linkedinUrl === "string"
+              ? normalizedVideo.author.linkedinUrl
+              : "",
         },
       };
     } catch (fallbackError) {
@@ -500,25 +522,15 @@ export async function getPublicProfile(
     }
 
     const videoColumns = {
-      id: true,
-      title: true,
-      description: true,
-      visibility: true,
+      ...publicVideoColumns,
       pinnedToProfile: true,
       pinnedOrder: true,
-      thumbnailUrl: true,
-      previewImage: true,
-      previewType: true,
-      mediaType: true,
-      extraVideoUrls: true,
-      imageUrls: true,
-      sourceUrl: true,
-      source: true,
-      aspectRatio: true,
-      outputType: true,
-      durationLabel: true,
-      publicSlug: true,
-      createdAt: true,
+    } as const;
+
+    const legacyVideoColumns = {
+      ...publicVideoBaseColumns,
+      pinnedToProfile: true,
+      pinnedOrder: true,
     } as const;
 
     const videoWhere = and(eq(videos.userId, user.id), eq(videos.visibility, "public"));
@@ -541,13 +553,18 @@ export async function getPublicProfile(
         offset,
       })
       .catch(async (error) => {
-        if (!isVideoPinSchemaError(error)) {
+        const hasPinMismatch = isVideoPinSchemaError(error);
+        const hasPreviewMismatch = isVideoPreviewSchemaError(error);
+
+        if (!hasPinMismatch && !hasPreviewMismatch) {
           console.error("[getPublicProfile] Video query failed:", error);
           return [];
         }
 
-        console.warn("db_schema_mismatch public profile without video pin columns", {
+        console.warn("db_schema_mismatch public profile video legacy fallback", {
           username,
+          missingPinFields: hasPinMismatch,
+          missingPreviewFields: hasPreviewMismatch,
           ...summarizeError(error),
         });
 
@@ -555,23 +572,25 @@ export async function getPublicProfile(
           const fallbackVideos = await db.query.videos.findMany({
             where: videoWhere,
             orderBy: desc(videos.createdAt),
-            columns: {
-              ...videoColumns,
-              pinnedToProfile: false,
-              pinnedOrder: false,
-            },
+            columns: hasPreviewMismatch ? legacyVideoColumns : videoColumns,
+            limit: safePageSize,
+            offset,
           });
 
           return fallbackVideos.map((video) => ({
-            ...video,
-            pinnedToProfile: false,
-            pinnedOrder: 0,
+            ...withLegacyPreviewFields(video),
+            pinnedToProfile: hasPinMismatch ? false : video.pinnedToProfile,
+            pinnedOrder: hasPinMismatch ? 0 : video.pinnedOrder,
           }));
         } catch (fallbackError) {
           console.error("[getPublicProfile] Fallback video query also failed:", fallbackError);
           return [];
         }
       });
+
+    const normalizedProfileVideos = profileVideos.map((video) =>
+      withLegacyPreviewFields(video)
+    );
 
     const pinnedVideos = await db.query.videos
       .findMany({
@@ -598,7 +617,7 @@ export async function getPublicProfile(
         ...user,
         customLinks: normalizeCustomLinks(user.customLinks),
       },
-      videos: profileVideos,
+      videos: normalizedProfileVideos,
       pinnedVideos,
       totalVideos,
       page: safePage,
