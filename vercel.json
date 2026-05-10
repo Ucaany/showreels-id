@@ -17,6 +17,14 @@
     {
       "path": "/api/cron/email-queue",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/audit-full",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/audit-api",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

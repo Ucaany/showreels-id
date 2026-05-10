@@ -1,6 +1,6 @@
 /**
  * In-memory session cache for fast auth lookups.
- * Reduces Supabase getUser() calls by caching validated sessions.
+ * Reduces repeated session validation work by caching validated sessions.
  * 
  * Future upgrade: Replace with @upstash/redis when Redis is available.
  */

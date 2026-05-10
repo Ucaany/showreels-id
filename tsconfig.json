@@ -38,6 +38,12 @@
   ],
   "exclude": [
     "node_modules",
-    "_backup_supabase"
+    "_backup_supabase",
+    "_removed_legacy",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
   ]
 }

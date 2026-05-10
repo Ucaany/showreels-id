@@ -2,7 +2,7 @@
  * Demo Mode Configuration
  * 
  * When NEXT_PUBLIC_DEMO_MODE=true, the app uses local cookie-based sessions
- * with predefined test accounts instead of Supabase Auth.
+ * with predefined test accounts instead of production Auth.js flows.
  * 
  * Test Accounts:
  * - Admin: admin@showreels.id / admin123

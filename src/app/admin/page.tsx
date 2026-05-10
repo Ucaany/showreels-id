@@ -36,6 +36,8 @@ import {
   getWibDayStartUtc,
 } from "@/lib/visitor-time";
 import { getDatabaseStorageInfo } from "@/server/database-storage";
+import { getLatestAuditSummary } from "@/server/audit-reporter";
+import { auditApiChecks, auditRouteChecks, auditScans } from "@/db/schema";
 
 type AdminSearchParams = {
   search?: string;
@@ -100,6 +102,7 @@ export default async function AdminPanelPage({
           scheduledNotifications: 2,
           activeCampaigns: 1,
         }}
+        audit={{ latestScan: null, counts: { critical: 0, high: 0, medium: 0, low: 0 }, score: 100, statusLabel: "Demo Audit", findings: [], routes: [], apis: [], scans: [] }}
         dbHealth={{
           ok: true,
           message: "Demo mode — database tidak terhubung",
@@ -307,6 +310,19 @@ export default async function AdminPanelPage({
     notifications: [] as Array<{ id: string; type: string; severity: string; title: string; message: string; isRead: boolean; createdAt: string }>,
     unreadNotifications: 0,
   }));
+  let auditDashboard = await getLatestAuditSummary()
+    .then(async (summary) => {
+      const latest = summary.latestScan;
+      const [routes, apis, scans] = latest
+        ? await Promise.all([
+            db.query.auditRouteChecks.findMany({ where: eq(auditRouteChecks.scanId, latest.id), orderBy: desc(auditRouteChecks.createdAt), limit: 80 }),
+            db.query.auditApiChecks.findMany({ where: eq(auditApiChecks.scanId, latest.id), orderBy: desc(auditApiChecks.createdAt), limit: 80 }),
+            db.query.auditScans.findMany({ orderBy: desc(auditScans.createdAt), limit: 10 }),
+          ])
+        : [[], [], []];
+      return { ...summary, routes, apis, scans };
+    })
+    .catch(() => ({ latestScan: null, counts: { critical: 0, high: 0, medium: 0, low: 0 }, score: 100, statusLabel: "Audit belum siap", findings: [], routes: [], apis: [], scans: [] }));
 
   try {
     const results = await Promise.all([
@@ -468,6 +484,7 @@ export default async function AdminPanelPage({
       }}
       emailQuota={emailQuota}
       analytics={adminAnalytics as AdminAnalyticsOverview}
+      audit={auditDashboard}
       users={adminUsers}
       videos={adminVideos}
       schedules={schedules}
