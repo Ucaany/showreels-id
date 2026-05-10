@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PrefetchOnHoverLink } from "@/components/public/prefetch-on-hover-link";
 import { memo } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Briefcase, CalendarDays, Grid2X2, Link2, List, Mail, MapPin, Phone, PlayCircle, ShoppingBag, Video } from "lucide-react";
 import { FaInstagram, FaTiktok, FaYoutube, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaTelegram, FaDiscord, FaSpotify, FaBehance, FaDribbble, FaGithub, FaMedium, FaXTwitter } from "react-icons/fa6";
@@ -413,7 +414,7 @@ const PortfolioVideoCard = memo(function PortfolioVideoCard({ video, list }: { v
   const categoryLabel = video.outputType || "General";
 
   return (
-    <Link href={getVideoDetailHref(video.publicSlug)} className="group block min-w-0">
+    <PrefetchOnHoverLink href={getVideoDetailHref(video.publicSlug)} className="group block min-w-0">
       <article
         className={`h-full overflow-hidden rounded-[1.5rem] border border-[#E7E5E4]/60 bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(17,17,17,0.04)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(17,17,17,0.08)] ${
           list ? "flex" : ""
@@ -477,7 +478,7 @@ const PortfolioVideoCard = memo(function PortfolioVideoCard({ video, list }: { v
           </div>
         </div>
       </article>
-    </Link>
+    </PrefetchOnHoverLink>
   );
 });
 

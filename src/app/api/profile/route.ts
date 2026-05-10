@@ -13,6 +13,8 @@ import { deleteUserAccount } from "@/server/auth-profile";
 import { getCurrentUser } from "@/server/current-user";
 import { markFirstLinkCreated } from "@/server/onboarding";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
+import { invalidatePublicProfileCache } from "@/server/redis-public-cache";
+import { revalidateCreatorPublicPaths } from "@/server/revalidate-public-paths";
 
 const USERNAME_CHANGE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -208,6 +210,12 @@ export async function PATCH(request: Request) {
       await markFirstLinkCreated(currentUser.id).catch(() => null);
     }
 
+    const oldU = currentUser.username?.trim();
+    if (oldU) void invalidatePublicProfileCache(oldU);
+    if (username && username !== oldU) void invalidatePublicProfileCache(username);
+    revalidateCreatorPublicPaths(oldU);
+    revalidateCreatorPublicPaths(username);
+
     return NextResponse.json({ user: updated });
   } catch (updateError) {
     if (!isCustomLinksSchemaError(updateError)) {
@@ -231,6 +239,12 @@ export async function PATCH(request: Request) {
       .update(users)
       .set(updatePayload)
       .where(eq(users.id, currentUser.id));
+
+    const oldU = currentUser.username?.trim();
+    if (oldU) void invalidatePublicProfileCache(oldU);
+    if (username && username !== oldU) void invalidatePublicProfileCache(username);
+    revalidateCreatorPublicPaths(oldU);
+    revalidateCreatorPublicPaths(username);
 
     return NextResponse.json({
       ok: true,

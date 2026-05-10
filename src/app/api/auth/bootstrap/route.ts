@@ -10,7 +10,7 @@ import { isAdminEmail } from "@/server/admin-access";
 import { syncUserProfile } from "@/server/auth-profile";
 import { getOrCreateUserOnboarding } from "@/server/onboarding";
 import {
-  rateLimiters,
+  checkBootstrapRateLimit,
   getClientIp,
   rateLimitExceededResponse,
 } from "@/lib/rate-limit";
@@ -19,7 +19,7 @@ import { queueEmail } from "@/lib/email";
 export async function POST(request: Request) {
   // Rate limiting
   const ip = getClientIp(request);
-  const rateLimit = rateLimiters.bootstrap(ip);
+  const rateLimit = await checkBootstrapRateLimit(ip);
   if (!rateLimit.success) {
     return rateLimitExceededResponse(rateLimit);
   }

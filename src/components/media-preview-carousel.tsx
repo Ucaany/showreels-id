@@ -8,7 +8,7 @@ import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import { Button } from "@/components/ui/button";
-import { detectVideoSource, getEmbedUrl } from "@/lib/video-utils";
+import { detectVideoSource, getAutoThumbnailFromVideoUrl, getEmbedUrl } from "@/lib/video-utils";
 import type { VideoAspectRatio, VideoSource } from "@/lib/types";
 
 type MediaSlide =
@@ -43,6 +43,8 @@ export function MediaPreviewCarousel({
 }: MediaPreviewCarouselProps) {
   const [index, setIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  /** Lazy-mount iframe only after user taps play (per video URL). */
+  const [embedReadyForUrl, setEmbedReadyForUrl] = useState<Record<string, boolean>>({});
 
   const slides = useMemo<MediaSlide[]>(() => {
     const coverSlides: MediaSlide[] = manualThumbnailUrl
@@ -119,17 +121,60 @@ export function MediaPreviewCarousel({
       );
     }
 
+    const poster =
+      (manualThumbnailUrl && url === mainVideoUrl ? manualThumbnailUrl : "") ||
+      fallbackThumbnailUrl ||
+      getAutoThumbnailFromVideoUrl(url) ||
+      "";
+    const embedReady = embedReadyForUrl[url] ?? false;
+
     return (
       <div className={mediaWrapperClass}>
-        <div className={frameClass}>
-          <iframe
-            title={title}
-            src={getEmbedUrl(url, source)}
-            className="h-full w-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            loading="lazy"
-          />
+        <div className={`relative ${frameClass}`}>
+          {embedReady ? (
+            <iframe
+              title={title}
+              src={getEmbedUrl(url, source)}
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              loading="lazy"
+            />
+          ) : (
+            <>
+              {poster ? (
+                <Image
+                  src={poster}
+                  alt=""
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 820px"
+                  className="rounded-2xl object-cover"
+                  loading="lazy"
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMzInIGhlaWdodD0nMTgnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzMyJyBoZWlnaHQ9JzE4JyBmaWxsPScjZWVlZWVlJy8+PC9zdmc+"
+                />
+              ) : (
+                <div className="flex h-full min-h-[200px] w-full items-center justify-center rounded-2xl bg-slate-900">
+                  <PlayCircle className="h-14 w-14 text-slate-500" />
+                </div>
+              )}
+              <button
+                type="button"
+                className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40 transition hover:bg-black/50"
+                aria-label="Putar video"
+                onClick={() =>
+                  setEmbedReadyForUrl((prev) => ({
+                    ...prev,
+                    [url]: true,
+                  }))
+                }
+              >
+                <span className="rounded-full bg-white/95 p-4 shadow-lg ring-1 ring-black/10">
+                  <PlayCircle className="h-12 w-12 text-slate-900" aria-hidden />
+                </span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     );

@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Instrument_Serif, Inter } from "next/font/google";
 import "./globals.css";
+import { SentryInit } from "@/components/sentry-init";
 import { AppProviders } from "@/providers/app-providers";
 import { ToastContainer } from "@/components/ui/toast-container";
 import { getRequestLocale } from "@/server/request-locale";
@@ -51,8 +54,11 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
+        <SentryInit />
         <AppProviders initialLocale={locale}>{children}</AppProviders>
         <ToastContainer />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

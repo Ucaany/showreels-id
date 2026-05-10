@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ne, notInArray } from "drizzle-orm";
+import { and, count, desc, eq, lt, ne, notInArray, or, type SQL } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
 import { creatorSettings, users, videos } from "@/db/schema";
@@ -8,6 +8,11 @@ import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
 import { isMissingBillingSchemaError } from "@/server/database-errors";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 import { getThumbnailCandidates } from "@/lib/video-utils";
+import {
+  getCachedJson,
+  publicProfileCacheKey,
+  setCachedJson,
+} from "@/server/redis-public-cache";
 
 export interface PublicShowcaseVideo {
   id: string;
@@ -214,16 +219,15 @@ async function findPublicUserByUsernameRaw(username: string) {
 }
 
 /**
- * Cached version of findPublicUserByUsername
- * Revalidate setiap 60 detik — menghemat DB reads untuk profil populer
+ * Cached lookup — profil publik sering dibaca; TTL 1 jam selaras PRD.
  */
 const findPublicUserByUsername = unstable_cache(
   findPublicUserByUsernameRaw,
   ["public-user-by-username"],
-  { revalidate: 60 }
+  { revalidate: 3600 }
 );
 
-async function findPublicVideoBySlug(slug: string) {
+async function findPublicVideoBySlugUncached(slug: string) {
   try {
     const video = await db.query.videos.findFirst({
       where: eq(videos.publicSlug, slug),
@@ -298,6 +302,12 @@ async function findPublicVideoBySlug(slug: string) {
     }
   }
 }
+
+const findPublicVideoBySlug = unstable_cache(
+  async (slug: string) => findPublicVideoBySlugUncached(slug),
+  ["public-video-by-slug-v1"],
+  { revalidate: 3600 }
+);
 
 async function fetchCompletePublicVideos(
   adminEmailsCsv: string,
@@ -440,14 +450,14 @@ const landingStatsCache = unstable_cache(
     }
   },
   ["landing-stats-v3"],
-  { revalidate: 60 }
+  { revalidate: 300 }
 );
 
 const showcaseVideosCache = unstable_cache(
   async (adminEmailsCsv: string, limit: number) =>
     fetchCompletePublicVideos(adminEmailsCsv, limit),
   ["public-showcase-videos-v1"],
-  { revalidate: 60 }
+  { revalidate: 300 }
 );
 
 export async function getLandingStats() {
@@ -497,138 +507,205 @@ export async function getPublicShowcaseVideos(limit = 30) {
   }
 }
 
+async function loadPublicProfileCore(
+  username: string,
+  viewerUserId?: string | null,
+  options?: {
+    page: number;
+    pageSize: number;
+    cursor?: { createdAt: string; id: string };
+  }
+) {
+  const user = await findPublicUserByUsername(username);
+
+  if (!user || user.role === "owner" || isAdminEmail(user.email)) {
+    return null;
+  }
+
+  const isOwner = Boolean(viewerUserId && viewerUserId === user.id);
+  if (user.profileVisibility === "private" && !isOwner) {
+    return null;
+  }
+
+  const videoColumns = {
+    ...publicVideoColumns,
+    pinnedToProfile: true,
+    pinnedOrder: true,
+  } as const;
+
+  const legacyVideoColumns = {
+    ...publicVideoBaseColumns,
+    pinnedToProfile: true,
+    pinnedOrder: true,
+  } as const;
+
+  const videoWhere = and(eq(videos.userId, user.id), eq(videos.visibility, "public"));
+  const safePageSize = options?.pageSize ?? 12;
+  const safePage = Math.max(1, options?.page ?? 1);
+  const cursor = options?.cursor;
+  const offset = cursor ? 0 : (safePage - 1) * safePageSize;
+
+  let cursorFilter: SQL | undefined;
+  if (cursor) {
+    const d = new Date(cursor.createdAt);
+    if (!Number.isNaN(d.getTime())) {
+      cursorFilter = or(
+        lt(videos.createdAt, d),
+        and(eq(videos.createdAt, d), lt(videos.id, cursor.id))
+      );
+    }
+  }
+
+  const listWhere = cursorFilter ? and(videoWhere, cursorFilter) : videoWhere;
+
+  const totalVideosRows = await db
+    .select({ value: count() })
+    .from(videos)
+    .where(videoWhere);
+  const totalVideos = totalVideosRows[0]?.value ?? 0;
+
+  const fetchLimit = cursor ? safePageSize + 1 : safePageSize;
+
+  const profileVideos = await db.query.videos
+    .findMany({
+      where: listWhere,
+      orderBy: [desc(videos.createdAt), desc(videos.id)],
+      columns: videoColumns,
+      limit: fetchLimit,
+      offset: cursor ? 0 : offset,
+    })
+    .catch(async (error) => {
+      const hasPinMismatch = isVideoPinSchemaError(error);
+      const hasPreviewMismatch = isVideoPreviewSchemaError(error);
+
+      if (!hasPinMismatch && !hasPreviewMismatch) {
+        console.error("[getPublicProfile] Video query failed:", error);
+        return [];
+      }
+
+      console.warn("db_schema_mismatch public profile video legacy fallback", {
+        username,
+        missingPinFields: hasPinMismatch,
+        missingPreviewFields: hasPreviewMismatch,
+        ...summarizeError(error),
+      });
+
+      try {
+        const fallbackVideos = await db.query.videos.findMany({
+          where: listWhere,
+          orderBy: [desc(videos.createdAt), desc(videos.id)],
+          columns: hasPreviewMismatch ? legacyVideoColumns : videoColumns,
+          limit: fetchLimit,
+          offset: cursor ? 0 : offset,
+        });
+
+        return fallbackVideos.map((video) => ({
+          ...withLegacyPreviewFields(video),
+          pinnedToProfile: hasPinMismatch ? false : video.pinnedToProfile,
+          pinnedOrder: hasPinMismatch ? 0 : video.pinnedOrder,
+        }));
+      } catch (fallbackError) {
+        console.error("[getPublicProfile] Fallback video query also failed:", fallbackError);
+        return [];
+      }
+    });
+
+  let normalizedProfileVideos = profileVideos.map((video) => withLegacyPreviewFields(video));
+
+  let nextCursor: { createdAt: string; id: string } | null = null;
+  let hasNextFromCursor = false;
+  if (cursor) {
+    hasNextFromCursor = normalizedProfileVideos.length > safePageSize;
+    normalizedProfileVideos = normalizedProfileVideos.slice(0, safePageSize);
+    const last = normalizedProfileVideos[normalizedProfileVideos.length - 1];
+    if (hasNextFromCursor && last) {
+      nextCursor = {
+        createdAt:
+          last.createdAt instanceof Date ? last.createdAt.toISOString() : String(last.createdAt),
+        id: last.id,
+      };
+    }
+  }
+
+  const pinnedVideos = await db.query.videos
+    .findMany({
+      where: and(videoWhere, eq(videos.pinnedToProfile, true)),
+      orderBy: desc(videos.createdAt),
+      columns: videoColumns,
+      limit: 20,
+    })
+    .then((items) =>
+      items
+        .filter((video) => video.pinnedToProfile)
+        .sort((a, b) => (a.pinnedOrder || 999) - (b.pinnedOrder || 999))
+        .slice(0, 3)
+    )
+    .catch(() => []);
+
+  const [whitelabelEnabled, businessPlanActive] = await Promise.all([
+    isWhitelabelActiveForUser(user.id),
+    isBusinessPlanActiveForUser(user.id),
+  ]);
+
+  const hasNextOffset = !cursor && safePage * safePageSize < totalVideos;
+
+  return {
+    user: {
+      ...user,
+      customLinks: normalizeCustomLinks(user.customLinks),
+    },
+    videos: normalizedProfileVideos,
+    pinnedVideos,
+    totalVideos,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.max(1, Math.ceil(totalVideos / safePageSize)),
+    hasNextPage: cursor ? hasNextFromCursor : hasNextOffset,
+    hasPreviousPage: cursor ? false : safePage > 1,
+    nextCursor,
+    whitelabelEnabled,
+    businessPlanActive,
+    isOwner,
+  };
+}
+
 export async function getPublicProfile(
   username: string,
   viewerUserId?: string | null,
   options?: {
     page?: number;
     pageSize?: number;
+    /** Keyset pagination: next page after this video (created_at + id). */
+    cursor?: { createdAt: string; id: string };
   }
 ) {
   if (!isDatabaseConfigured) {
     return null;
   }
 
+  const safePageSize = Math.min(24, Math.max(6, options?.pageSize ?? 12));
+  const safePage = Math.max(1, options?.page ?? 1);
+  const viewerKey = viewerUserId ?? "anon";
+  const cursorKey = options?.cursor
+    ? `cur:${options.cursor.id}:${options.cursor.createdAt}`
+    : `pg:${safePage}:${safePageSize}`;
+  const redisKey = publicProfileCacheKey(username, viewerKey, safePage, safePageSize, cursorKey);
+
+  const cached = await getCachedJson(redisKey);
+  if (cached != null) {
+    return cached as NonNullable<Awaited<ReturnType<typeof loadPublicProfileCore>>>;
+  }
+
   try {
-    const user = await findPublicUserByUsername(username);
-
-    if (!user || user.role === "owner" || isAdminEmail(user.email)) {
-      return null;
-    }
-
-    const isOwner = Boolean(viewerUserId && viewerUserId === user.id);
-    if (user.profileVisibility === "private" && !isOwner) {
-      return null;
-    }
-
-    const videoColumns = {
-      ...publicVideoColumns,
-      pinnedToProfile: true,
-      pinnedOrder: true,
-    } as const;
-
-    const legacyVideoColumns = {
-      ...publicVideoBaseColumns,
-      pinnedToProfile: true,
-      pinnedOrder: true,
-    } as const;
-
-    const videoWhere = and(eq(videos.userId, user.id), eq(videos.visibility, "public"));
-    const safePageSize = Math.min(24, Math.max(6, options?.pageSize ?? 12));
-    const safePage = Math.max(1, options?.page ?? 1);
-    const offset = (safePage - 1) * safePageSize;
-
-    const totalVideosRows = await db
-      .select({ value: count() })
-      .from(videos)
-      .where(videoWhere);
-    const totalVideos = totalVideosRows[0]?.value ?? 0;
-
-    const profileVideos = await db.query.videos
-      .findMany({
-        where: videoWhere,
-        orderBy: desc(videos.createdAt),
-        columns: videoColumns,
-        limit: safePageSize,
-        offset,
-      })
-      .catch(async (error) => {
-        const hasPinMismatch = isVideoPinSchemaError(error);
-        const hasPreviewMismatch = isVideoPreviewSchemaError(error);
-
-        if (!hasPinMismatch && !hasPreviewMismatch) {
-          console.error("[getPublicProfile] Video query failed:", error);
-          return [];
-        }
-
-        console.warn("db_schema_mismatch public profile video legacy fallback", {
-          username,
-          missingPinFields: hasPinMismatch,
-          missingPreviewFields: hasPreviewMismatch,
-          ...summarizeError(error),
-        });
-
-        try {
-          const fallbackVideos = await db.query.videos.findMany({
-            where: videoWhere,
-            orderBy: desc(videos.createdAt),
-            columns: hasPreviewMismatch ? legacyVideoColumns : videoColumns,
-            limit: safePageSize,
-            offset,
-          });
-
-          return fallbackVideos.map((video) => ({
-            ...withLegacyPreviewFields(video),
-            pinnedToProfile: hasPinMismatch ? false : video.pinnedToProfile,
-            pinnedOrder: hasPinMismatch ? 0 : video.pinnedOrder,
-          }));
-        } catch (fallbackError) {
-          console.error("[getPublicProfile] Fallback video query also failed:", fallbackError);
-          return [];
-        }
-      });
-
-    const normalizedProfileVideos = profileVideos.map((video) =>
-      withLegacyPreviewFields(video)
-    );
-
-    const pinnedVideos = await db.query.videos
-      .findMany({
-        where: and(videoWhere, eq(videos.pinnedToProfile, true)),
-        orderBy: desc(videos.createdAt),
-        columns: videoColumns,
-        limit: 20,
-      })
-      .then((items) =>
-        items
-          .filter((video) => video.pinnedToProfile)
-          .sort((a, b) => (a.pinnedOrder || 999) - (b.pinnedOrder || 999))
-          .slice(0, 3)
-      )
-      .catch(() => []);
-
-    const [whitelabelEnabled, businessPlanActive] = await Promise.all([
-      isWhitelabelActiveForUser(user.id),
-      isBusinessPlanActiveForUser(user.id),
-    ]);
-
-    return {
-      user: {
-        ...user,
-        customLinks: normalizeCustomLinks(user.customLinks),
-      },
-      videos: normalizedProfileVideos,
-      pinnedVideos,
-      totalVideos,
+    const result = await loadPublicProfileCore(username, viewerUserId, {
       page: safePage,
       pageSize: safePageSize,
-      totalPages: Math.max(1, Math.ceil(totalVideos / safePageSize)),
-      hasNextPage: safePage * safePageSize < totalVideos,
-      hasPreviousPage: safePage > 1,
-      whitelabelEnabled,
-      businessPlanActive,
-      isOwner,
-    };
+      cursor: options?.cursor,
+    });
+    if (result) {
+      await setCachedJson(redisKey, result, 3600);
+    }
+    return result;
   } catch (error) {
     console.error("Failed to load public profile", error);
     return null;

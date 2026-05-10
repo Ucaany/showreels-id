@@ -6,6 +6,11 @@ import { videoSchema } from "@/lib/auth-schemas";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
+import { invalidatePublicProfileCache } from "@/server/redis-public-cache";
+import {
+  revalidateCreatorPublicPaths,
+  revalidatePublicVideoPages,
+} from "@/server/revalidate-public-paths";
 import {
   buildAiDescription,
   createPublicSlug,
@@ -189,6 +194,11 @@ export async function PATCH(
       visibility: videos.visibility,
     });
 
+  const uname = currentUser.username?.trim();
+  if (uname) void invalidatePublicProfileCache(uname);
+  if (uname) revalidateCreatorPublicPaths(uname);
+  revalidatePublicVideoPages([existingVideo.publicSlug, video.publicSlug]);
+
   return NextResponse.json({ video });
 }
 
@@ -211,7 +221,7 @@ export async function DELETE(
   const [deleted] = await db
     .delete(videos)
     .where(and(eq(videos.id, id), eq(videos.userId, currentUser.id)))
-    .returning({ id: videos.id });
+    .returning({ id: videos.id, publicSlug: videos.publicSlug });
 
   if (!deleted) {
     return NextResponse.json(
@@ -219,6 +229,11 @@ export async function DELETE(
       { status: 404 }
     );
   }
+
+  const uname = currentUser.username?.trim();
+  if (uname) void invalidatePublicProfileCache(uname);
+  if (uname) revalidateCreatorPublicPaths(uname);
+  revalidatePublicVideoPages([deleted.publicSlug]);
 
   return NextResponse.json({ success: true });
 }

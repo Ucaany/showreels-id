@@ -7,6 +7,11 @@ import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 import { markFirstVideoUploaded } from "@/server/onboarding";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
+import { invalidatePublicProfileCache } from "@/server/redis-public-cache";
+import {
+  revalidateCreatorPublicPaths,
+  revalidatePublicVideoPages,
+} from "@/server/revalidate-public-paths";
 import {
   buildAiDescription,
   createPublicSlug,
@@ -269,6 +274,13 @@ export async function POST(request: Request) {
   const video = ((insertedVideo as any).rows ?? insertedVideo)?.[0];
 
   await markFirstVideoUploaded(currentUser.id).catch(() => null);
+
+  const uname = currentUser.username?.trim();
+  if (uname) void invalidatePublicProfileCache(uname);
+  if (uname) revalidateCreatorPublicPaths(uname);
+  if (video?.publicSlug) {
+    revalidatePublicVideoPages([video.publicSlug]);
+  }
 
   return NextResponse.json({ video });
 }

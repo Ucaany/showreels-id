@@ -4,6 +4,11 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { passwordRecoveryVerifySchema } from "@/lib/auth-schemas";
 import {
+  checkPasswordRecoveryVerifyRateLimit,
+  getClientIp,
+  rateLimitExceededResponse,
+} from "@/lib/rate-limit";
+import {
   createPasswordRecoveryToken,
   PASSWORD_RECOVERY_COOKIE,
 } from "@/lib/password-recovery-token";
@@ -13,6 +18,12 @@ function normalizeName(value: string) {
 }
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rateLimit = await checkPasswordRecoveryVerifyRateLimit(ip);
+  if (!rateLimit.success) {
+    return rateLimitExceededResponse(rateLimit);
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = passwordRecoveryVerifySchema.safeParse(body);
 

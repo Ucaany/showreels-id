@@ -1,8 +1,19 @@
 import { NextResponse } from "next/server";
 import { DEMO_MODE, findDemoAccount } from "@/lib/demo-mode";
 import { setDemoSession } from "@/lib/demo-session";
+import {
+  checkDemoLoginRateLimit,
+  getClientIp,
+  rateLimitExceededResponse,
+} from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rateLimit = await checkDemoLoginRateLimit(ip);
+  if (!rateLimit.success) {
+    return rateLimitExceededResponse(rateLimit);
+  }
+
   if (!DEMO_MODE) {
     return NextResponse.json(
       { error: "Demo mode is not enabled." },

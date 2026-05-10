@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cache } from "react";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { PortfolioCreatorPublicPage } from "@/components/public/public-creator-pages";
 import { createTextExcerpt, getCreatorPortfolioHref, isReservedPublicSlug } from "@/lib/public-route-utils";
@@ -26,7 +27,10 @@ export async function generateMetadata({
     return {};
   }
 
-  const profile = await getCachedPublicProfile(slug);
+  const ua = (await headers()).get("user-agent") ?? "";
+  const isMobile = /Mobile|Android|iPhone|iPad|webOS/i.test(ua);
+  const pageSize = isMobile ? 6 : 9;
+  const profile = await getCachedPublicProfile(slug, undefined, 1, pageSize);
   if (!profile) {
     return {};
   }
@@ -75,7 +79,10 @@ export default async function PublicPortfolioPage({
   const currentUser = await getCurrentUser();
   const pageNumber = Number.parseInt(page || "1", 10);
   const safePage = Number.isFinite(pageNumber) && pageNumber > 0 ? pageNumber : 1;
-  const profile = await getCachedPublicProfile(slug, currentUser?.id, safePage, 12);
+  const ua = (await headers()).get("user-agent") ?? "";
+  const isMobile = /Mobile|Android|iPhone|iPad|webOS/i.test(ua);
+  const pageSize = isMobile ? 6 : 9;
+  const profile = await getCachedPublicProfile(slug, currentUser?.id, safePage, pageSize);
 
   if (!profile) {
     notFound();
