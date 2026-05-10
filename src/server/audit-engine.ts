@@ -83,45 +83,46 @@ export async function runAuditScan(input: {
     const finishedAt = new Date();
     const durationMs = finishedAt.getTime() - startedAt.getTime();
 
-    await db.transaction(async (tx) => {
-      if (routeChecks.length) {
-        await tx.insert(auditRouteChecks).values(routeChecks.map((check) => ({ scanId: scan.id, ...check })));
-      }
-      if (apiChecks.length) {
-        await tx.insert(auditApiChecks).values(apiChecks.map((check) => ({ scanId: scan.id, ...check })));
-      }
-      if (allFindings.length) {
-        await tx.insert(auditFindings).values(allFindings.map((finding) => ({ scanId: scan.id, ...normalizeAuditFinding(finding) })));
-      }
-      await tx.insert(systemHealthHistory).values({
-        scanId: scan.id,
-        healthScore: score,
-        criticalCount: counts.critical,
-        highCount: counts.high,
-        mediumCount: counts.medium,
-        lowCount: counts.low,
-      });
-      await tx
-        .update(auditScans)
-        .set({
-          status: "completed",
-          finishedAt,
-          durationMs,
-          healthScore: score,
-          lowCount: counts.low,
-          mediumCount: counts.medium,
-          highCount: counts.high,
-          criticalCount: counts.critical,
-          summaryJson: {
-            statusLabel: getAuditStatusLabel(score),
-            totalFindings: allFindings.length,
-            routeChecks: routeChecks.length,
-            apiChecks: apiChecks.length,
-          },
-          updatedAt: finishedAt,
-        })
-        .where(eq(auditScans.id, scan.id));
+    // neon-http driver does not support db.transaction(); persist in order.
+    if (routeChecks.length) {
+      await db.insert(auditRouteChecks).values(routeChecks.map((check) => ({ scanId: scan.id, ...check })));
+    }
+    if (apiChecks.length) {
+      await db.insert(auditApiChecks).values(apiChecks.map((check) => ({ scanId: scan.id, ...check })));
+    }
+    if (allFindings.length) {
+      await db
+        .insert(auditFindings)
+        .values(allFindings.map((finding) => ({ scanId: scan.id, ...normalizeAuditFinding(finding) })));
+    }
+    await db.insert(systemHealthHistory).values({
+      scanId: scan.id,
+      healthScore: score,
+      criticalCount: counts.critical,
+      highCount: counts.high,
+      mediumCount: counts.medium,
+      lowCount: counts.low,
     });
+    await db
+      .update(auditScans)
+      .set({
+        status: "completed",
+        finishedAt,
+        durationMs,
+        healthScore: score,
+        lowCount: counts.low,
+        mediumCount: counts.medium,
+        highCount: counts.high,
+        criticalCount: counts.critical,
+        summaryJson: {
+          statusLabel: getAuditStatusLabel(score),
+          totalFindings: allFindings.length,
+          routeChecks: routeChecks.length,
+          apiChecks: apiChecks.length,
+        },
+        updatedAt: finishedAt,
+      })
+      .where(eq(auditScans.id, scan.id));
 
     return { scanId: scan.id, score, counts, totalFindings: allFindings.length };
   } catch (error) {
