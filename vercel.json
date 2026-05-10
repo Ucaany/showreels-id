@@ -5,6 +5,15 @@
   "installCommand": "npm ci --legacy-peer-deps",
   "regions": ["iad1"],
   "functions": {
+    "src/app/api/admin/audit/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cron/audit-full/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cron/audit-api/route.ts": {
+      "maxDuration": 60
+    },
     "src/app/api/**/*.ts": {
       "maxDuration": 30
     }

@@ -10,12 +10,19 @@ import { validateApiEndpoints } from "@/server/validators/api-validator";
 import { validateRuntimeConfig } from "@/server/validators/config-validator";
 
 function getDefaultBaseUrl() {
-  return (
+  const explicit =
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.APP_URL ||
-    process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}` ||
-    "http://localhost:3000"
-  );
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
+
+  const productionHint = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  const fromVercelProduction =
+    productionHint &&
+    (productionHint.startsWith("http://") || productionHint.startsWith("https://")
+      ? productionHint
+      : `https://${productionHint}`);
+
+  return explicit || fromVercelProduction || "http://localhost:3000";
 }
 
 function countFindings(findings: AuditFindingInput[]) {
