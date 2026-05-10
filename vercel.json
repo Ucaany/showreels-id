@@ -24,7 +24,7 @@
     },
     {
       "path": "/api/cron/audit-api",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 2 * * *"
     }
   ]
 }
