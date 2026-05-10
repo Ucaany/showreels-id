@@ -19,6 +19,7 @@ import {
   resolveThumbnailUrl,
   validateEmbedReadyVideoUrl,
 } from "@/lib/video-utils";
+import { isVideoPreviewSchemaError } from "@/lib/db-schema-mismatch";
 import type { VideoSource } from "@/lib/types";
 
 async function countPublicVideosBySource(input: {
@@ -138,56 +139,131 @@ export async function POST(request: Request) {
       source,
     });
 
-  const insertedVideo = await db.execute<{
-    id: string;
-    publicSlug: string;
-    title: string;
-    visibility: string;
-  }>(sql`
-    insert into "videos" (
-      "id",
-      "user_id",
-      "title",
-      "description",
-      "tags",
-      "visibility",
-      "thumbnail_url",
-      "preview_image",
-      "preview_type",
-      "media_type",
-      "extra_video_urls",
-      "image_urls",
-      "source_url",
-      "source",
-      "aspect_ratio",
-      "output_type",
-      "duration_label",
-      "public_slug"
-    ) values (
-      ${crypto.randomUUID()},
-      ${currentUser.id},
-      ${trimmedTitle},
-      ${description},
-      ${JSON.stringify(parsed.data.tags)}::jsonb,
-      ${parsed.data.visibility},
-      ${resolvedThumbnailUrl},
-      ${previewImage},
-      ${previewType},
-      ${mediaType},
-      ${JSON.stringify(parsed.data.extraVideoUrls)}::jsonb,
-      ${JSON.stringify(parsed.data.imageUrls)}::jsonb,
-      ${sourceValidation.canonicalUrl},
-      ${source},
-      ${parsed.data.aspectRatio},
-      ${parsed.data.outputType.trim()},
-      ${parsed.data.durationLabel.trim()},
-      ${publicSlug}
-    ) returning
-      "id",
-      "public_slug" as "publicSlug",
-      "title",
-      "visibility"
-  `);
+  let insertedVideo:
+    | {
+        rows?: {
+          id: string;
+          publicSlug: string;
+          title: string;
+          visibility: string;
+        }[];
+      }
+    | {
+        id: string;
+        publicSlug: string;
+        title: string;
+        visibility: string;
+      }[];
+
+  try {
+    insertedVideo = await db.execute<{
+      id: string;
+      publicSlug: string;
+      title: string;
+      visibility: string;
+    }>(sql`
+      insert into "videos" (
+        "id",
+        "user_id",
+        "title",
+        "description",
+        "tags",
+        "visibility",
+        "thumbnail_url",
+        "preview_image",
+        "preview_type",
+        "media_type",
+        "extra_video_urls",
+        "image_urls",
+        "source_url",
+        "source",
+        "aspect_ratio",
+        "output_type",
+        "duration_label",
+        "public_slug"
+      ) values (
+        ${crypto.randomUUID()},
+        ${currentUser.id},
+        ${trimmedTitle},
+        ${description},
+        ${JSON.stringify(parsed.data.tags)}::jsonb,
+        ${parsed.data.visibility},
+        ${resolvedThumbnailUrl},
+        ${previewImage},
+        ${previewType},
+        ${mediaType},
+        ${JSON.stringify(parsed.data.extraVideoUrls)}::jsonb,
+        ${JSON.stringify(parsed.data.imageUrls)}::jsonb,
+        ${sourceValidation.canonicalUrl},
+        ${source},
+        ${parsed.data.aspectRatio},
+        ${parsed.data.outputType.trim()},
+        ${parsed.data.durationLabel.trim()},
+        ${publicSlug}
+      ) returning
+        "id",
+        "public_slug" as "publicSlug",
+        "title",
+        "visibility"
+    `);
+  } catch (error) {
+    if (!isVideoPreviewSchemaError(error)) {
+      console.error("Failed to save video", error);
+      return NextResponse.json(
+        { error: "Server gagal menyimpan video. Coba lagi beberapa saat." },
+        { status: 500 }
+      );
+    }
+
+    console.warn(
+      "Video preview/media columns are missing. Falling back to legacy video insert. Run drizzle/0019_portfolio_media_fields.sql on production database."
+    );
+
+    insertedVideo = await db.execute<{
+      id: string;
+      publicSlug: string;
+      title: string;
+      visibility: string;
+    }>(sql`
+      insert into "videos" (
+        "id",
+        "user_id",
+        "title",
+        "description",
+        "tags",
+        "visibility",
+        "thumbnail_url",
+        "extra_video_urls",
+        "image_urls",
+        "source_url",
+        "source",
+        "aspect_ratio",
+        "output_type",
+        "duration_label",
+        "public_slug"
+      ) values (
+        ${crypto.randomUUID()},
+        ${currentUser.id},
+        ${trimmedTitle},
+        ${description},
+        ${JSON.stringify(parsed.data.tags)}::jsonb,
+        ${parsed.data.visibility},
+        ${resolvedThumbnailUrl},
+        ${JSON.stringify(parsed.data.extraVideoUrls)}::jsonb,
+        ${JSON.stringify(parsed.data.imageUrls)}::jsonb,
+        ${sourceValidation.canonicalUrl},
+        ${source},
+        ${parsed.data.aspectRatio},
+        ${parsed.data.outputType.trim()},
+        ${parsed.data.durationLabel.trim()},
+        ${publicSlug}
+      ) returning
+        "id",
+        "public_slug" as "publicSlug",
+        "title",
+        "visibility"
+    `);
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const video = ((insertedVideo as any).rows ?? insertedVideo)?.[0];
