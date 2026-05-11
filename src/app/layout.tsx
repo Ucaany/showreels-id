@@ -30,8 +30,42 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "showreels.id",
-  description: "Portfolio video profesional untuk creator.",
+  metadataBase: new URL("https://showreels.id"),
+  title: {
+    default: "showreels.id — Modern Video Portfolio for Creators",
+    template: "%s | showreels.id",
+  },
+  description:
+    "Bangun portfolio video profesional dalam satu link publik. Tampilkan profil creator, social links, custom links, dan karya terbaik dengan desain modern minimal.",
+  keywords: [
+    "showreels",
+    "video portfolio",
+    "portfolio creator",
+    "creator profile",
+    "showreel Indonesia",
+    "public video page",
+  ],
+  applicationName: "showreels.id",
+  creator: "showreels.id",
+  publisher: "showreels.id",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    url: "https://showreels.id",
+    siteName: "showreels.id",
+    title: "showreels.id — Modern Video Portfolio for Creators",
+    description:
+      "Satu halaman publik untuk profil creator, social links, custom links, dan karya video terbaik.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "showreels.id — Modern Video Portfolio for Creators",
+    description:
+      "Bangun portfolio video profesional dalam satu link publik yang cepat, rapi, dan siap dibagikan.",
+  },
   appleWebApp: {
     title: "showreels",
     capable: true,
