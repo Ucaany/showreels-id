@@ -4,8 +4,22 @@ export async function simulateDelay(duration = 500): Promise<void> {
   });
 }
 
-export function formatDateLabel(dateISO: string): string {
-  const date = new Date(dateISO);
+/**
+ * Safely converts Date | string to ISO string.
+ * Prevents runtime error when calling .toISOString() on string values.
+ */
+export function toSafeISOString(value: Date | string | null | undefined): string {
+  if (!value) {
+    return new Date().toISOString();
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  return value.toISOString();
+}
+
+export function formatDateLabel(dateISO: string | Date): string {
+  const date = typeof dateISO === "string" ? new Date(dateISO) : dateISO;
   return new Intl.DateTimeFormat("id-ID", {
     day: "2-digit",
     month: "short",

@@ -5,7 +5,6 @@ import { creatorSettings, users, videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { isLinkedinSchemaError, isVideoPinSchemaError, isVideoPreviewSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
-import { isMissingBillingSchemaError } from "@/server/database-errors";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 import { getThumbnailCandidates } from "@/lib/video-utils";
 import {
@@ -779,6 +778,10 @@ export async function getPublicVideo(slug: string, viewerUserId?: string | null)
 
     return {
       ...normalizedVideo,
+      createdAt:
+        normalizedVideo.createdAt instanceof Date
+          ? normalizedVideo.createdAt
+          : new Date(normalizedVideo.createdAt),
       author: {
         ...normalizedVideo.author,
         customLinks: normalizeCustomLinks(normalizedVideo.author.customLinks),

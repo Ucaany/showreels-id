@@ -410,7 +410,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
 const PortfolioVideoCard = memo(function PortfolioVideoCard({ video, list }: { video: ProfileVideo; list?: boolean }) {
   const thumb = getVideoThumb(video);
   const sourceLabel = getSourceLabel(video.source as never);
-  const postedLabel = formatDateLabel(video.createdAt.toISOString());
+  const postedLabel = formatDateLabel(video.createdAt);
   const categoryLabel = video.outputType || "General";
 
   return (
@@ -586,7 +586,7 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
                 <InfoRow label="Platform" value={sourceLabel} />
                 <InfoRow label="Durasi" value={video.durationLabel || "-"} />
                 <InfoRow label="Status" value={video.visibility === "public" ? "Public / Selesai" : "Owner Preview"} />
-                <InfoRow label="Tanggal" value={formatDateLabel(video.createdAt.toISOString())} />
+                <InfoRow label="Tanggal" value={formatDateLabel(video.createdAt)} />
               </div>
               {video.tags.length > 0 ? <div className="mt-4 flex flex-wrap gap-2">{video.tags.map((tag) => <PlatformBadge key={tag}>#{tag}</PlatformBadge>)}</div> : null}
             </Card>
