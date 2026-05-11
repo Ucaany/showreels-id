@@ -39,5 +39,6 @@ imgreques/
 !README.md
 
 # Images not needed for build
-1.png
-Logo.png
+/1.png
+/Logo.png
+!public/logo.png
