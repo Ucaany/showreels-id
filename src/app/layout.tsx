@@ -33,11 +33,22 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "showreels.id",
   description: "Portfolio video profesional untuk creator.",
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+  appleWebApp: {
+    title: "showreels",
+    capable: true,
+    statusBarStyle: "default",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+    other: [{ rel: "manifest", url: "/site.webmanifest" }],
+  },
+  manifest: "/site.webmanifest",
 };
 
 export default async function RootLayout({
