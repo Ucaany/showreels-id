@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/cn";
@@ -10,21 +13,35 @@ export function AppLogo({
   tone?: "dark" | "light";
 }) {
   const darkTone = tone === "dark";
+  const [logoVisible, setLogoVisible] = useState(true);
 
   return (
-    <Link href="/" className={cn("inline-flex items-center gap-2.5", className)}>
-      <div className="relative h-[2.15rem] w-[2.15rem] sm:h-9 sm:w-9">
-        <Image
-          src="/logo.png"
-          alt="Showreels.id Logo"
-          fill
-          className="object-contain"
-          priority
-        />
-      </div>
+    <Link
+      href="/"
+      aria-label="showreels.id home"
+      className={cn("inline-flex items-center gap-2.5", className)}
+    >
+      <span className="relative flex h-[2.15rem] w-[2.15rem] shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-9 sm:w-9">
+        {logoVisible ? (
+          <Image
+            src="/logo.png"
+            alt=""
+            width={36}
+            height={36}
+            decoding="async"
+            unoptimized
+            className="h-full w-full object-contain"
+            onError={() => setLogoVisible(false)}
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center rounded-lg bg-[#1a46c9] text-base font-bold text-white">
+            s
+          </span>
+        )}
+      </span>
       <span
         className={cn(
-          "text-[1rem] font-semibold tracking-[-0.02em] sm:text-[1.04rem]",
+          "text-[1rem] font-semibold sm:text-[1.04rem]",
           darkTone ? "text-slate-950" : "text-white"
         )}
       >

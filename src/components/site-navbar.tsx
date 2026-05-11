@@ -22,9 +22,7 @@ export function SiteNavbar({ currentUser }: SiteNavbarProps) {
   return (
     <header className="fixed left-0 right-0 top-0 z-[70] border-b border-slate-200 bg-white/92 backdrop-blur">
       <div className="mx-auto flex min-h-[4.55rem] w-full max-w-[1160px] items-center justify-between gap-4 px-4 py-2.5 sm:px-6 lg:px-8">
-        <Link href="/">
-          <AppLogo />
-        </Link>
+        <AppLogo />
 
         <div className="hidden items-center gap-2.5 lg:flex">
           {currentUser ? (
