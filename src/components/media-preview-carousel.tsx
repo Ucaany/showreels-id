@@ -6,7 +6,12 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Expand, Image as ImageIcon, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { optimizeThumbnailSrc } from "@/lib/cdn-image";
-import { detectVideoSource, getAutoThumbnailFromVideoUrl, getEmbedUrl } from "@/lib/video-utils";
+import {
+  detectVideoSource,
+  getAutoThumbnailFromVideoUrl,
+  getEmbedUrl,
+  isDirectVideoUrl,
+} from "@/lib/video-utils";
 import type { VideoAspectRatio, VideoSource } from "@/lib/types";
 
 const LazyMediaLightbox = dynamic(
@@ -136,11 +141,20 @@ export function MediaPreviewCarousel({
       getAutoThumbnailFromVideoUrl(url) ||
       "";
     const embedReady = embedReadyForUrl[url] ?? false;
+    const directVideo = source === "upload" || isDirectVideoUrl(url);
 
     return (
       <div className={mediaWrapperClass}>
         <div className={`relative ${frameClass}`}>
-          {embedReady ? (
+          {directVideo ? (
+            <video
+              src={url}
+              poster={poster || undefined}
+              className="h-full w-full rounded-2xl object-cover"
+              controls
+              preload="metadata"
+            />
+          ) : embedReady ? (
             <iframe
               title={title}
               src={getEmbedUrl(url, source)}

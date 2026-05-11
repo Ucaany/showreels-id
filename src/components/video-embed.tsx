@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
-import { getEmbedUrl } from "@/lib/video-utils";
+import { getEmbedUrl, isDirectVideoUrl } from "@/lib/video-utils";
 import type { VideoSource } from "@/lib/types";
 
 /**
@@ -21,6 +21,7 @@ export function VideoEmbed({
   title: string;
 }) {
   const embedUrl = getEmbedUrl(sourceUrl, source);
+  const directVideo = source === "upload" || isDirectVideoUrl(sourceUrl);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -49,7 +50,14 @@ export function VideoEmbed({
         className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-card"
       >
         <div className="aspect-video w-full">
-          {isVisible ? (
+          {directVideo ? (
+            <video
+              src={sourceUrl}
+              className="h-full w-full bg-slate-900 object-contain"
+              controls
+              preload="metadata"
+            />
+          ) : isVisible ? (
             <iframe
               title={title}
               src={embedUrl}

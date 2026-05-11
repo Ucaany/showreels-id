@@ -101,7 +101,7 @@ export async function POST(request: Request) {
     const redirectTo =
       onboarding.onboardingCompleted || onboarding.onboardingSkipped
         ? next
-        : "/dashboard";
+        : "/onboarding";
 
     return NextResponse.json({
       ok: true,

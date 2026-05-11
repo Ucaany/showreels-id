@@ -48,6 +48,12 @@ export interface DbOnboardingProgressPayload {
     platform?: string;
     enabled?: boolean;
   };
+  socialLinks?: {
+    instagram?: string;
+    tiktok?: string;
+    youtube?: string;
+    website?: string;
+  };
   [key: string]: unknown;
 }
 

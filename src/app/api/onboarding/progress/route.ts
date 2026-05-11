@@ -2,7 +2,12 @@ import { and, eq, ne } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db, isDatabaseConfigured } from "@/db";
 import { users } from "@/db/schema";
-import { createLinkItem, normalizeOrder, normalizeStoredLinks } from "@/lib/link-builder";
+import {
+  createLinkItem,
+  normalizeOrder,
+  normalizeStoredLinks,
+  type LinkItem,
+} from "@/lib/link-builder";
 import { onboardingProgressSchema } from "@/lib/onboarding";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
@@ -42,10 +47,86 @@ function hasMinimalPublicProfile(input: {
 }) {
   const fullName = (input.fullName || "").trim();
   const username = (input.username || "").trim();
-  const role = (input.role || "").trim();
-  const bio = (input.bio || "").trim();
 
-  return Boolean(fullName && username && (role || bio));
+  return Boolean(fullName && username);
+}
+
+function isOnboardingTiktokLink(link: LinkItem) {
+  return (
+    link.platform === "tiktok" ||
+    link.metadata?.onboardingSocialPlatform === "tiktok" ||
+    link.metadata?.source === "onboarding_social_tiktok"
+  );
+}
+
+function syncOnboardingTiktokLink(links: LinkItem[], url: string) {
+  const existingIndex = links.findIndex(isOnboardingTiktokLink);
+  if (!url) {
+    if (existingIndex < 0) {
+      return { links, changed: false, added: false };
+    }
+    return {
+      links: normalizeOrder(links.filter((_, index) => index !== existingIndex)),
+      changed: true,
+      added: false,
+    };
+  }
+
+  if (existingIndex >= 0) {
+    const existing = links[existingIndex];
+    if (existing.url === url && existing.enabled !== false) {
+      return { links, changed: false, added: false };
+    }
+
+    return {
+      links: normalizeOrder(
+        links.map((link, index) =>
+          index === existingIndex
+            ? {
+                ...link,
+                title: "TikTok",
+                url,
+                value: url,
+                finalUrl: url,
+                platform: "tiktok",
+                enabled: true,
+                metadata: {
+                  ...(link.metadata || {}),
+                  onboardingSocialPlatform: "tiktok",
+                  source: "onboarding_social_tiktok",
+                },
+              }
+            : link
+        )
+      ),
+      changed: true,
+      added: false,
+    };
+  }
+
+  return {
+    links: normalizeOrder([
+      ...links,
+      {
+        id: crypto.randomUUID(),
+        type: "social",
+        title: "TikTok",
+        url,
+        value: url,
+        platform: "tiktok",
+        inputValue: url,
+        finalUrl: url,
+        enabled: true,
+        order: links.length,
+        metadata: {
+          onboardingSocialPlatform: "tiktok",
+          source: "onboarding_social_tiktok",
+        },
+      },
+    ]),
+    changed: true,
+    added: true,
+  };
 }
 
 export async function PATCH(request: Request) {
@@ -158,6 +239,65 @@ export async function PATCH(request: Request) {
     }
   }
 
+  const socialLinks = parsed.data.socialLinks;
+  if (socialLinks && Object.keys(socialLinks).length > 0) {
+    const socialPatch: Partial<typeof users.$inferInsert> = {};
+    if (typeof socialLinks.instagram === "string") {
+      socialPatch.instagramUrl = socialLinks.instagram;
+    }
+    if (typeof socialLinks.youtube === "string") {
+      socialPatch.youtubeUrl = socialLinks.youtube;
+    }
+    if (typeof socialLinks.website === "string") {
+      socialPatch.websiteUrl = socialLinks.website;
+    }
+
+    const tiktokSync = syncOnboardingTiktokLink(latestLinks, socialLinks.tiktok || "");
+    if (tiktokSync.added && typeof linkBuilderMax === "number") {
+      const activeCount = latestLinks.filter((item) => item.enabled !== false).length;
+      if (activeCount + 1 > linkBuilderMax) {
+        return NextResponse.json(
+          {
+            error:
+              linkBuilderMax === 5
+                ? "Batas 5 link tercapai. Upgrade ke Creator untuk menambah link TikTok."
+                : `Batas ${linkBuilderMax} link tercapai.`,
+            code: "link_limit_exceeded",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    if (isDatabaseConfigured && (Object.keys(socialPatch).length > 0 || tiktokSync.changed)) {
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          ...socialPatch,
+          ...(tiktokSync.changed ? { customLinks: tiktokSync.links } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, currentUser.id))
+        .returning({
+          customLinks: users.customLinks,
+        });
+
+      latestLinks =
+        typeof linkBuilderMax === "number"
+          ? normalizeStoredLinks(updatedUser?.customLinks ?? tiktokSync.links, linkBuilderMax)
+          : normalizeStoredLinks(updatedUser?.customLinks ?? tiktokSync.links);
+      profilePatchApplied = true;
+    } else if (!isDatabaseConfigured && process.env.NODE_ENV !== "production") {
+      latestLinks = tiktokSync.links;
+      profilePatchApplied = true;
+    }
+
+    const hasAnySocial = Boolean(
+      socialLinks.instagram || socialLinks.tiktok || socialLinks.youtube || socialLinks.website
+    );
+    firstLinkCreated = firstLinkCreated || hasAnySocial || latestLinks.length > 0;
+  }
+
   if (parsed.data.createFirstLink && wantsToAddFirstLink) {
     const requestedLinks = parsed.data.links?.length ? parsed.data.links : parsed.data.firstLink ? [parsed.data.firstLink] : [];
     if (!requestedLinks.length) {
@@ -235,6 +375,7 @@ export async function PATCH(request: Request) {
     ...existingPayload,
     ...(parsed.data.progressPayload || {}),
     ...(profile ? { profile } : {}),
+    ...(socialLinks ? { socialLinks } : {}),
     ...(parsed.data.firstLink ? { firstLink: parsed.data.firstLink } : {}),
     ...(parsed.data.links ? { links: parsed.data.links } : {}),
   };

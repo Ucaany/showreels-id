@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     sourceUrl: sourceValidation.canonicalUrl,
     imageUrls: parsed.data.imageUrls,
   });
-  const previewType = detectPreviewType(source);
+  const previewType = mediaType === "image" ? "image" : detectPreviewType(source);
   const platformThumbnailUrl = getAutoThumbnailFromVideoUrl(sourceValidation.canonicalUrl);
   const autoThumbnailUrl =
     source === "tiktok" ? await fetchTiktokThumbnail(sourceValidation.canonicalUrl) : "";

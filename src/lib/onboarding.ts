@@ -20,7 +20,7 @@ const roleSchema = z.preprocess(
 
 const bioSchema = z.preprocess(
   normalizeOptionalText,
-  z.string().max(240, "Bio terlalu panjang.").default("")
+  z.string().max(120, "Bio maksimal 120 karakter.").default("")
 );
 
 const imageUrlSchema = z.preprocess(
@@ -33,7 +33,7 @@ export const onboardingProfileSchema = z
     fullName: z
       .string()
       .trim()
-      .min(1, "Nama wajib diisi.")
+      .min(3, "Nama minimal 3 karakter.")
       .max(120, "Nama maksimal 120 karakter."),
     username: z
       .string()
@@ -73,9 +73,41 @@ export const onboardingFirstLinkSchema = z.object({
   enabled: z.boolean().optional().default(true),
 });
 
+export const onboardingSocialLinksSchema = z.object({
+  instagram: z
+    .string()
+    .trim()
+    .max(300, "URL Instagram terlalu panjang.")
+    .transform((value) => normalizeSocialUrl(value))
+    .optional()
+    .default(""),
+  tiktok: z
+    .string()
+    .trim()
+    .max(300, "URL TikTok terlalu panjang.")
+    .transform((value) => normalizeSocialUrl(value))
+    .optional()
+    .default(""),
+  youtube: z
+    .string()
+    .trim()
+    .max(300, "URL YouTube terlalu panjang.")
+    .transform((value) => normalizeSocialUrl(value))
+    .optional()
+    .default(""),
+  website: z
+    .string()
+    .trim()
+    .max(300, "URL website terlalu panjang.")
+    .transform((value) => normalizeSocialUrl(value))
+    .optional()
+    .default(""),
+});
+
 export const onboardingProgressSchema = z.object({
   currentStep: z.coerce.number().int().min(1).max(4).optional(),
   profile: onboardingProfileSchema.optional(),
+  socialLinks: onboardingSocialLinksSchema.optional(),
   firstLink: onboardingFirstLinkSchema.optional(),
   links: z.array(onboardingFirstLinkSchema).max(12, "Maksimal 12 link saat onboarding.").optional(),
   createFirstLink: z.boolean().optional().default(false),

@@ -9,6 +9,8 @@ import { extractGoogleDriveFileId } from "@/lib/avatar-utils";
 const YOUTUBE_ID_REGEX = /^[a-zA-Z0-9_-]{6,15}$/;
 const INSTAGRAM_ID_REGEX = /^[a-zA-Z0-9._-]{5,}$/;
 const NUMERIC_ID_REGEX = /^[0-9]{5,}$/;
+const DIRECT_VIDEO_EXTENSION_REGEX = /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i;
+const DIRECT_IMAGE_EXTENSION_REGEX = /\.(jpg|jpeg|png|webp|gif|avif)(\?.*)?$/i;
 
 export const DEFAULT_THUMBNAIL_URL = "/default-thumbnail.jpg";
 
@@ -186,6 +188,20 @@ function extractTiktokId(url: string): string | null {
   return null;
 }
 
+export function isDirectVideoUrl(url: string): boolean {
+  const normalized = normalizeHttpUrl(url);
+  return Boolean(normalized && DIRECT_VIDEO_EXTENSION_REGEX.test(normalized));
+}
+
+export function isDirectImageUrl(url: string): boolean {
+  const normalized = normalizeHttpUrl(url);
+  return Boolean(normalized && DIRECT_IMAGE_EXTENSION_REGEX.test(normalized));
+}
+
+export function isDirectUploadUrl(url: string): boolean {
+  return isDirectVideoUrl(url) || isDirectImageUrl(url);
+}
+
 export function getEmbedReadyVideoUrl(url: string): EmbedReadyVideoUrl | null {
   const normalized = normalizeHttpUrl(url);
   if (!normalized) {
@@ -255,6 +271,15 @@ export function getEmbedReadyVideoUrl(url: string): EmbedReadyVideoUrl | null {
     };
   }
 
+  if (isDirectUploadUrl(normalized)) {
+    return {
+      source: "upload",
+      id: normalized,
+      canonicalUrl: normalized,
+      embedUrl: normalized,
+    };
+  }
+
   return null;
 }
 
@@ -270,7 +295,7 @@ export function validateEmbedReadyVideoUrl(url: string): {
     return {
       ok: false,
       error:
-        "URL video belum embed-ready. Gunakan link YouTube, Google Drive, Instagram, Facebook, Vimeo, atau TikTok yang langsung mengarah ke konten video.",
+        "URL video belum embed-ready. Gunakan link YouTube, Google Drive, Instagram, Facebook, Vimeo, TikTok, atau file media langsung.",
     };
   }
 
@@ -317,6 +342,10 @@ export function createPublicSlug(
 }
 
 export function getEmbedUrl(sourceUrl: string, source: VideoSource): string {
+  if (source === "upload") {
+    return normalizeHttpUrl(sourceUrl) || sourceUrl;
+  }
+
   const parsed = getEmbedReadyVideoUrl(sourceUrl);
   if (parsed && parsed.source === source) {
     return parsed.embedUrl;
@@ -331,6 +360,7 @@ export function getSourceLabel(source: VideoSource): string {
   if (source === "instagram") return "Instagram";
   if (source === "facebook") return "Facebook";
   if (source === "tiktok") return "TikTok";
+  if (source === "upload") return "Upload";
   return "Vimeo";
 }
 
@@ -349,6 +379,7 @@ export function detectPreviewType(source: VideoSource | null): PreviewType {
   if (source === "instagram") return "instagram";
   if (source === "facebook") return "facebook";
   if (source === "gdrive") return "gdrive";
+  if (source === "upload") return "upload";
   return "upload";
 }
 
@@ -357,6 +388,9 @@ export function detectMediaType(input: {
   imageUrls?: string[] | null;
 }): MediaType {
   const sourceUrl = (input.sourceUrl || "").trim();
+  if (sourceUrl && isDirectImageUrl(sourceUrl)) {
+    return "image";
+  }
   if (sourceUrl) {
     return "video";
   }
@@ -509,6 +543,10 @@ export function getAutoThumbnailFromVideoUrl(sourceUrl: string): string {
     return "";
   }
 
+  if (source === "upload" && isDirectImageUrl(sourceUrl)) {
+    return normalizeHttpUrl(sourceUrl);
+  }
+
   return "";
 }
 
@@ -565,6 +603,11 @@ export function getThumbnailCandidates(
     if (parsed?.source === "instagram") {
       addCandidate(`https://www.instagram.com/p/${parsed.id}/media/?size=l`);
     }
+    return candidates;
+  }
+
+  if (source === "upload" && isDirectImageUrl(sourceUrl)) {
+    addCandidate(normalizeHttpUrl(sourceUrl));
   }
 
   return candidates;
@@ -593,7 +636,9 @@ export function buildAiDescription({
         ? "Konten ini disiapkan agar tetap nyaman diputar langsung dari Facebook saat dibuka client."
       : source === "tiktok"
         ? "Konten ini dioptimalkan untuk format vertikal TikTok dengan ritme cepat dan visual yang engaging."
-          : "Video ini disusun dengan format presentasi yang tetap nyaman saat dibuka lintas perangkat.";
+      : source === "upload"
+        ? "File portfolio ini diunggah langsung agar mudah ditampilkan sebagai karya utama di halaman publik."
+        : "Video ini disusun dengan format presentasi yang tetap nyaman saat dibuka lintas perangkat.";
 
   return `Project "${title}" menampilkan pendekatan editing yang fokus pada alur cerita yang jelas, ritme visual yang bersih, dan hasil akhir yang siap dipresentasikan. ${sourceSummary} ${tagSummary}`;
 }

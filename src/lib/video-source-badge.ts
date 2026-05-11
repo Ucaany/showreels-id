@@ -45,6 +45,12 @@ export function getVideoSourceBadgeMeta(sourceUrl: string): SourceBadgeMeta {
       className: "bg-zinc-900 text-white ring-1 ring-zinc-700/30",
     };
   }
+  if (source === "upload") {
+    return {
+      label: "Upload",
+      className: "bg-slate-900 text-white ring-1 ring-slate-700/30",
+    };
+  }
 
   return {
     label: "Video",
