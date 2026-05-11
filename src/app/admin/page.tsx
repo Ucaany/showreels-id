@@ -53,6 +53,16 @@ const PAGE_SIZE = 9;
 const PLATFORM_VALUES = ["instagram", "facebook", "youtube"];
 const STATUS_VALUES = ["public", "private"];
 
+function normalizeAdminVideoVisibility(value: string): AdminVideoItem["visibility"] {
+  return value === "public" || value === "semi_private" || value === "draft" || value === "private"
+    ? value
+    : "private";
+}
+
+function normalizeAdminVideoAspectRatio(value: string): AdminVideoItem["aspectRatio"] {
+  return value === "portrait" ? "portrait" : "landscape";
+}
+
 async function getDatabaseHealth() {
   const startedAt = Date.now();
 
@@ -291,14 +301,17 @@ export default async function AdminPanelPage({
     durationLabel: string; aspectRatio: string; publicSlug: string; createdAt: Date;
     authorName: string | null; authorUsername: string | null; authorEmail: string;
   }> = [];
+  type ScheduleRow = typeof adminNotificationSchedules.$inferSelect & {
+    targetUser: Pick<typeof users.$inferSelect, "name" | "email" | "username"> | null;
+  };
   let filteredVideosRow: { value: number }[] = [{ value: 0 }];
   let scheduledNotificationsRow: { value: number }[] = [{ value: 0 }];
   let activeCampaignsRow: { value: number }[] = [{ value: 0 }];
-  let scheduleRows: Awaited<ReturnType<typeof db.query.adminNotificationSchedules.findMany>> = [];
+  let scheduleRows: ScheduleRow[] = [];
   let settings = { maintenanceEnabled: false, pauseEnabled: false, maintenanceMessage: "", billingEnabled: true };
   let dbHealth = { ok: false, message: "Data belum dimuat", latencyMs: 0, storage: null as unknown as Awaited<ReturnType<typeof getDatabaseStorageInfo>> };
   const emailQuota = await getDailyQuota().catch(() => ({ used: 0, limit: 100, remaining: 100, percentage: 0 }));
-  let adminAnalytics = await getAdminAnalyticsOverview().catch(() => ({
+  const adminAnalytics = await getAdminAnalyticsOverview().catch(() => ({
     revenue: { totalPaid: 0, monthlyPaid: 0, paidTransactions: 0 },
     subscriptions: { active: 0, trial: 0, last30Days: 0 },
     engagement: { clicks: 0, shares: 0, likes: 0, videoViews: 0 },
@@ -310,7 +323,7 @@ export default async function AdminPanelPage({
     notifications: [] as Array<{ id: string; type: string; severity: string; title: string; message: string; isRead: boolean; createdAt: string }>,
     unreadNotifications: 0,
   }));
-  let auditDashboard = await getLatestAuditSummary()
+  const auditDashboard = await getLatestAuditSummary()
     .then(async (summary) => {
       const latest = summary.latestScan;
       const [routes, apis, scans] = latest
@@ -391,7 +404,7 @@ export default async function AdminPanelPage({
     filteredVideosRow = results[11];
     scheduledNotificationsRow = results[12];
     activeCampaignsRow = results[13];
-    scheduleRows = results[14] as unknown as typeof scheduleRows;
+    scheduleRows = results[14] as ScheduleRow[];
     settings = results[15] as typeof settings;
     dbHealth = results[16] as typeof dbHealth;
   } catch (error) {
@@ -416,18 +429,17 @@ export default async function AdminPanelPage({
     videoCount: user.videos.length,
   }));
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adminVideos: AdminVideoItem[] = (Array.isArray(videoRows) ? videoRows : []).map((video: any) => ({
+  const adminVideos: AdminVideoItem[] = (Array.isArray(videoRows) ? videoRows : []).map((video) => ({
     id: video.id,
     title: video.title,
     description: video.description,
-    visibility: video.visibility,
+    visibility: normalizeAdminVideoVisibility(video.visibility),
     source: video.source,
     sourceUrl: video.sourceUrl,
     thumbnailUrl: video.thumbnailUrl,
     outputType: video.outputType,
     durationLabel: video.durationLabel,
-    aspectRatio: video.aspectRatio,
+    aspectRatio: normalizeAdminVideoAspectRatio(video.aspectRatio),
     publicSlug: video.publicSlug,
     createdAt: video.createdAt instanceof Date ? video.createdAt.toISOString() : String(video.createdAt),
     authorName: video.authorName || "Creator",
@@ -435,8 +447,8 @@ export default async function AdminPanelPage({
     authorEmail: video.authorEmail,
   }));
 
-  const flatScheduleRows: any[] = Array.isArray(scheduleRows) ? scheduleRows.flat() : [];
-  const schedules: AdminNotificationScheduleItem[] = flatScheduleRows.map((item: any) => ({
+  const flatScheduleRows: ScheduleRow[] = Array.isArray(scheduleRows) ? scheduleRows.flat() : [];
+  const schedules: AdminNotificationScheduleItem[] = flatScheduleRows.map((item) => ({
     id: item.id,
     targetType: item.targetType,
     targetUser: item.targetUser

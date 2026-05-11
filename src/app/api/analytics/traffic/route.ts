@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { withPrivateNoStoreHeaders } from "@/lib/http-cache";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 import {
@@ -12,12 +13,15 @@ import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 export async function GET(request: Request) {
   const currentUser = await getCurrentUser();
   if (!currentUser?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401, headers: withPrivateNoStoreHeaders() }
+    );
   }
   if (isAdminEmail(currentUser.email)) {
     return NextResponse.json(
       { error: "Akun owner tidak menggunakan analytics creator." },
-      { status: 403 }
+      { status: 403, headers: withPrivateNoStoreHeaders() }
     );
   }
 
@@ -50,5 +54,5 @@ export async function GET(request: Request) {
     analyticsMaxDays: entitlementState.entitlements.analyticsMaxDays,
     planName: entitlementState.effectivePlan.planName,
     points: analytics.points,
-  });
+  }, { headers: withPrivateNoStoreHeaders() });
 }

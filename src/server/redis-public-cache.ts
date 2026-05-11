@@ -21,6 +21,7 @@ export function getRedis(): Redis | null {
 }
 
 const PROFILE_PREFIX = "public_profile:v2";
+const PORTFOLIO_PREFIX = "public_portfolio:v1";
 
 export function publicProfileCacheKey(
   username: string,
@@ -31,6 +32,15 @@ export function publicProfileCacheKey(
 ): string {
   const safeUser = encodeURIComponent(username.toLowerCase());
   return `${PROFILE_PREFIX}:${safeUser}:${viewerKey}:${page}:${pageSize}:${cursorKey}`;
+}
+
+export function publicPortfolioCacheKey(
+  username: string,
+  pageSize: number,
+  cursorKey: string
+): string {
+  const safeUser = encodeURIComponent(username.toLowerCase());
+  return `${PORTFOLIO_PREFIX}:${safeUser}:${pageSize}:${cursorKey}`;
 }
 
 /** Best-effort recursive ISO date revival for cached JSON */
@@ -80,16 +90,21 @@ export async function invalidatePublicProfileCache(username: string): Promise<vo
   const client = getRedis();
   if (!client || !username.trim()) return;
 
-  const pattern = `${PROFILE_PREFIX}:${encodeURIComponent(username.toLowerCase())}:*`;
+  const patterns = [
+    `${PROFILE_PREFIX}:${encodeURIComponent(username.toLowerCase())}:*`,
+    `${PORTFOLIO_PREFIX}:${encodeURIComponent(username.toLowerCase())}:*`,
+  ];
   try {
-    let cursor = "0";
-    do {
-      const [next, keys] = await client.scan(cursor, { match: pattern, count: 100 });
-      cursor = next;
-      if (keys.length > 0) {
-        await client.del(...keys);
-      }
-    } while (cursor !== "0");
+    for (const pattern of patterns) {
+      let cursor = "0";
+      do {
+        const [next, keys] = await client.scan(cursor, { match: pattern, count: 100 });
+        cursor = next;
+        if (keys.length > 0) {
+          await client.del(...keys);
+        }
+      } while (cursor !== "0");
+    }
   } catch {
     /* ignore */
   }

@@ -17,7 +17,7 @@ export function SiteMaintenanceGate() {
   useEffect(() => {
     let active = true;
 
-    fetch("/api/site-status", { cache: "no-store" })
+    fetch("/api/site-status", { cache: "force-cache" })
       .then((response) => response.json())
       .then((payload: SiteStatus) => {
         if (active) {

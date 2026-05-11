@@ -1,15 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Redis } from '@upstash/redis'
 
 // In-memory cache sebagai fallback jika Redis tidak tersedia
-const memoryCache = new Map<string, { data: any; timestamp: number }>()
+const memoryCache = new Map<string, { data: unknown; timestamp: number }>()
 const MEMORY_CACHE_TTL = 86400000 // 24 hours in ms
+
+type CachedResponse = {
+  status: number
+  headers: Record<string, string>
+  body: string
+}
+
+interface IdempotencyCache {
+  get(key: string): Promise<unknown | null>
+  set(key: string, data: unknown): Promise<void>
+}
 
 /**
  * Simple in-memory idempotency cache
  * Digunakan jika Redis tidak tersedia
  */
 class MemoryIdempotencyCache {
-  async get(key: string): Promise<any | null> {
+  async get(key: string): Promise<unknown | null> {
     const cached = memoryCache.get(key)
     if (!cached) return null
     
@@ -22,7 +34,7 @@ class MemoryIdempotencyCache {
     return cached.data
   }
 
-  async set(key: string, data: any): Promise<void> {
+  async set(key: string, data: unknown): Promise<void> {
     memoryCache.set(key, {
       data,
       timestamp: Date.now(),
@@ -45,51 +57,71 @@ class MemoryIdempotencyCache {
  * Digunakan jika Redis credentials tersedia
  */
 class RedisIdempotencyCache {
-  private redis: any
+  private redis: Redis | null = null
 
   constructor() {
     // Lazy load Redis only if credentials are available
     if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
       try {
-        const { Redis } = require('@upstash/redis')
         this.redis = new Redis({
           url: process.env.UPSTASH_REDIS_REST_URL,
           token: process.env.UPSTASH_REDIS_REST_TOKEN,
         })
-      } catch (error) {
+      } catch {
         console.warn('Redis not available, falling back to memory cache')
         this.redis = null
       }
     }
   }
 
-  async get(key: string): Promise<any | null> {
+  async get(key: string): Promise<unknown | null> {
     if (!this.redis) return null
     
     try {
-      const data = await this.redis.get(key)
-      return data ? JSON.parse(data) : null
-    } catch (error) {
-      console.error('Redis get error:', error)
+      const data = await this.redis.get<unknown>(key)
+      return typeof data === 'string' ? JSON.parse(data) : data ?? null
+    } catch {
+      console.error('Redis get error')
       return null
     }
   }
 
-  async set(key: string, data: any): Promise<void> {
+  async set(key: string, data: unknown): Promise<void> {
     if (!this.redis) return
     
     try {
-      await this.redis.setex(key, 86400, JSON.stringify(data)) // 24 hours
-    } catch (error) {
-      console.error('Redis set error:', error)
+      await this.redis.set(key, JSON.stringify(data), { ex: 86400 }) // 24 hours
+    } catch {
+      console.error('Redis set error')
     }
   }
 }
 
-// Initialize cache (Redis or Memory)
-const cache = process.env.UPSTASH_REDIS_REST_URL 
-  ? new RedisIdempotencyCache()
-  : new MemoryIdempotencyCache()
+let idempotencyCache: IdempotencyCache | null = null
+
+function getIdempotencyCache(): IdempotencyCache {
+  if (idempotencyCache) return idempotencyCache
+
+  idempotencyCache = process.env.UPSTASH_REDIS_REST_URL
+    ? new RedisIdempotencyCache()
+    : new MemoryIdempotencyCache()
+
+  return idempotencyCache
+}
+
+function isCachedResponse(value: unknown): value is CachedResponse {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const candidate = value as Partial<CachedResponse>
+  return (
+    typeof candidate.status === 'number' &&
+    typeof candidate.body === 'string' &&
+    Boolean(candidate.headers) &&
+    typeof candidate.headers === 'object'
+  )
+}
 
 /**
  * Middleware untuk idempotency
@@ -124,9 +156,10 @@ export async function withIdempotency(
 
   // Check if we've seen this key before
   const cacheKey = `idempotency:${idempotencyKey}`
+  const cache = getIdempotencyCache()
   const cached = await cache.get(cacheKey)
 
-  if (cached) {
+  if (isCachedResponse(cached)) {
     // Return cached response
     const { status, headers, body } = cached
     return new NextResponse(body, { 

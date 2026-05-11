@@ -3,19 +3,23 @@ import { NextResponse } from "next/server";
 import { db, isDatabaseConfigured } from "@/db";
 import { visitorEvents, videos } from "@/db/schema";
 import { normalizeStoredLinks } from "@/lib/link-builder";
+import { withPrivateNoStoreHeaders } from "@/lib/http-cache";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
 
 export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401, headers: withPrivateNoStoreHeaders() }
+    );
   }
 
   if (isAdminEmail(currentUser.email)) {
     return NextResponse.json(
       { error: "Akun owner tidak menggunakan dashboard creator." },
-      { status: 403 }
+      { status: 403, headers: withPrivateNoStoreHeaders() }
     );
   }
 
@@ -31,7 +35,7 @@ export async function GET() {
       products: 0,
       revenue: 0,
       topLink: activeLinks[0]?.title || null,
-    });
+    }, { headers: withPrivateNoStoreHeaders() });
   }
 
   const creatorPath = `/creator/${currentUser.username || "creator"}`;
@@ -81,5 +85,5 @@ export async function GET() {
     products: productsResultValue,
     revenue: 0,
     topLink: activeLinks[0]?.title || null,
-  });
+  }, { headers: withPrivateNoStoreHeaders() });
 }

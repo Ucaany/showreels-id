@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
@@ -25,14 +25,15 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [ready, setReady] = useState(false);
 
   const token = searchParams.get("token") || "";
+  const tokenError = token ? "" : "Token reset password tidak ditemukan atau sudah berakhir.";
+  const visibleError = error || tokenError;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -41,13 +42,6 @@ export default function ResetPasswordPage() {
       confirmPassword: "",
     },
   });
-
-  useEffect(() => {
-    if (!token) {
-      setError("Token reset password tidak ditemukan atau sudah berakhir.");
-    }
-    setReady(true);
-  }, [token]);
 
   const onSubmit = form.handleSubmit(async ({ password }) => {
     setError("");
@@ -95,15 +89,9 @@ export default function ResetPasswordPage() {
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
-        {!ready ? (
-          <p className="rounded-xl bg-slate-100 px-3 py-2 text-sm text-slate-700">
-            Menyiapkan sesi reset password...
-          </p>
-        ) : null}
-
-        {ready && error && !message ? (
+        {visibleError && !message ? (
           <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
-            {error}
+            {visibleError}
           </p>
         ) : null}
 
@@ -147,9 +135,7 @@ export default function ResetPasswordPage() {
         <Button
           className="w-full"
           type="submit"
-          disabled={
-            form.formState.isSubmitting || !ready || (!token && !message)
-          }
+          disabled={form.formState.isSubmitting || !token || Boolean(message)}
         >
           {form.formState.isSubmitting ? "Menyimpan..." : "Simpan Password Baru"}
         </Button>
@@ -162,5 +148,22 @@ export default function ResetPasswordPage() {
         </Link>
       </p>
     </AuthShell>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthShell
+          title="Reset password"
+          subtitle="Memuat form reset password."
+        >
+          <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />
+        </AuthShell>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

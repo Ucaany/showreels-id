@@ -13,7 +13,7 @@ export type Profile = {
   image: string | null
   bio: string | null
   visibility: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export type Video = {
@@ -25,21 +25,21 @@ export type Video = {
   visibility: string
   isPinned: boolean
   createdAt: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export type AnalyticsSummary = {
   totalViews: number
   totalClicks: number
   uniqueVisitors: number
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export type BillingPlan = {
   currentPlan: string
   status: string
   expiresAt: string | null
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export type Notification = {
@@ -48,7 +48,7 @@ export type Notification = {
   message: string
   isRead: boolean
   createdAt: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**
@@ -105,7 +105,7 @@ export function useAnalyticsSummary(range: string = '7d', config?: SWRConfigurat
  * Revalidate hanya saat mount atau manual trigger
  */
 export function useAnalyticsTraffic(range: string = '7d', config?: SWRConfiguration) {
-  return useSWR(
+  return useSWR<unknown>(
     CACHE_KEYS.ANALYTICS_TRAFFIC(range),
     fetcher,
     {
@@ -121,7 +121,7 @@ export function useAnalyticsTraffic(range: string = '7d', config?: SWRConfigurat
  * Revalidate hanya saat mount atau manual trigger
  */
 export function useAnalyticsTopPages(range: string = '7d', config?: SWRConfiguration) {
-  return useSWR(
+  return useSWR<unknown>(
     CACHE_KEYS.ANALYTICS_TOP_PAGES(range),
     fetcher,
     {
@@ -151,7 +151,7 @@ export function useBillingPlan(config?: SWRConfiguration) {
  * Hook untuk fetch billing transactions
  */
 export function useBillingTransactions(config?: SWRConfiguration) {
-  return useSWR(
+  return useSWR<unknown>(
     CACHE_KEYS.BILLING_TRANSACTIONS,
     fetcher,
     {
@@ -181,7 +181,7 @@ export function useNotifications(config?: SWRConfiguration) {
  * Hook untuk fetch dashboard summary
  */
 export function useDashboardSummary(config?: SWRConfiguration) {
-  return useSWR(
+  return useSWR<AnalyticsSummary>(
     CACHE_KEYS.DASHBOARD_SUMMARY,
     fetcher,
     {
@@ -195,7 +195,7 @@ export function useDashboardSummary(config?: SWRConfiguration) {
  * Hook untuk fetch settings - link profile
  */
 export function useSettingsLinkProfile(config?: SWRConfiguration) {
-  return useSWR(
+  return useSWR<unknown>(
     CACHE_KEYS.SETTINGS_LINK_PROFILE,
     fetcher,
     {
@@ -209,7 +209,7 @@ export function useSettingsLinkProfile(config?: SWRConfiguration) {
  * Hook untuk fetch settings - privacy
  */
 export function useSettingsPrivacy(config?: SWRConfiguration) {
-  return useSWR(
+  return useSWR<unknown>(
     CACHE_KEYS.SETTINGS_PRIVACY,
     fetcher,
     {
@@ -223,7 +223,7 @@ export function useSettingsPrivacy(config?: SWRConfiguration) {
  * Hook untuk fetch settings - payment
  */
 export function useSettingsPayment(config?: SWRConfiguration) {
-  return useSWR(
+  return useSWR<unknown>(
     CACHE_KEYS.SETTINGS_PAYMENT,
     fetcher,
     {
@@ -237,7 +237,7 @@ export function useSettingsPayment(config?: SWRConfiguration) {
  * Hook untuk fetch settings - whitelabel
  */
 export function useSettingsWhitelabel(config?: SWRConfiguration) {
-  return useSWR(
+  return useSWR<unknown>(
     CACHE_KEYS.SETTINGS_WHITELABEL,
     fetcher,
     {

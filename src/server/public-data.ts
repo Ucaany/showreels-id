@@ -3,15 +3,24 @@ import { unstable_cache } from "next/cache";
 import { db, isDatabaseConfigured } from "@/db";
 import { creatorSettings, users, videos } from "@/db/schema";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
+import { optimizeThumbnailSrc } from "@/lib/cdn-image";
 import { isLinkedinSchemaError, isVideoPinSchemaError, isVideoPreviewSchemaError, summarizeError } from "@/lib/db-schema-mismatch";
 import { getAdminEmails, isAdminEmail } from "@/server/admin-access";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
-import { getThumbnailCandidates } from "@/lib/video-utils";
+import {
+  DEFAULT_THUMBNAIL_URL,
+  getAutoThumbnailFromVideoUrl,
+  getSourceLabel,
+  getThumbnailCandidates,
+  resolveThumbnailUrl,
+} from "@/lib/video-utils";
 import {
   getCachedJson,
+  publicPortfolioCacheKey,
   publicProfileCacheKey,
   setCachedJson,
 } from "@/server/redis-public-cache";
+import type { VideoSource } from "@/lib/types";
 
 export interface PublicShowcaseVideo {
   id: string;
@@ -28,6 +37,25 @@ export interface PublicShowcaseVideo {
     name: string | null;
     image: string | null;
   };
+}
+
+export interface PublicPortfolioSliceVideo {
+  id: string;
+  title: string;
+  publicSlug: string;
+  description: string;
+  createdAt: string;
+  thumbnailUrl: string;
+  sourceLabel: string;
+  outputType: string;
+  durationLabel: string;
+}
+
+export interface PublicPortfolioSlice {
+  videos: PublicPortfolioSliceVideo[];
+  nextCursor: { createdAt: string; id: string } | null;
+  hasNextPage: boolean;
+  totalVideos: number;
 }
 
 async function isBusinessPlanActiveForUser(userId: string) {
@@ -155,13 +183,6 @@ const publicVideoBaseColumns = {
   createdAt: true,
 } as const;
 
-const publicVideoColumns = {
-  ...publicVideoBaseColumns,
-  previewImage: true,
-  previewType: true,
-  mediaType: true,
-} as const;
-
 function withLegacyPreviewFields<T extends { thumbnailUrl: string; source: string; sourceUrl: string; imageUrls?: unknown; previewImage?: string | null; previewType?: string | null; mediaType?: string | null }>(video: T) {
   const imageUrls = Array.isArray(video.imageUrls) ? video.imageUrls : [];
   return {
@@ -230,7 +251,7 @@ async function findPublicVideoBySlugUncached(slug: string) {
   try {
     const video = await db.query.videos.findFirst({
       where: eq(videos.publicSlug, slug),
-      columns: publicVideoColumns,
+      columns: publicVideoBaseColumns,
       with: {
         author: {
           columns: {
@@ -261,7 +282,7 @@ async function findPublicVideoBySlugUncached(slug: string) {
     try {
       const fallback = await db.query.videos.findFirst({
         where: eq(videos.publicSlug, slug),
-        columns: hasPreviewMismatch ? publicVideoBaseColumns : publicVideoColumns,
+        columns: publicVideoBaseColumns,
         with: {
           author: {
             columns: hasLinkedinMismatch
@@ -527,7 +548,7 @@ async function loadPublicProfileCore(
   }
 
   const videoColumns = {
-    ...publicVideoColumns,
+    ...publicVideoBaseColumns,
     pinnedToProfile: true,
     pinnedOrder: true,
   } as const;
@@ -635,6 +656,7 @@ async function loadPublicProfileCore(
     })
     .then((items) =>
       items
+        .map((video) => withLegacyPreviewFields(video))
         .filter((video) => video.pinnedToProfile)
         .sort((a, b) => (a.pinnedOrder || 999) - (b.pinnedOrder || 999))
         .slice(0, 3)
@@ -707,6 +729,139 @@ export async function getPublicProfile(
     return result;
   } catch (error) {
     console.error("Failed to load public profile", error);
+    return null;
+  }
+}
+
+async function loadPublicPortfolioSliceCore(
+  username: string,
+  options?: {
+    pageSize?: number;
+    cursor?: { createdAt: string; id: string };
+  }
+): Promise<PublicPortfolioSlice | null> {
+  const user = await findPublicUserByUsername(username);
+
+  if (
+    !user ||
+    user.role === "owner" ||
+    isAdminEmail(user.email) ||
+    user.profileVisibility !== "public"
+  ) {
+    return null;
+  }
+
+  const safePageSize = Math.min(24, Math.max(6, options?.pageSize ?? 9));
+  const cursor = options?.cursor;
+  const videoWhere = and(eq(videos.userId, user.id), eq(videos.visibility, "public"));
+
+  let cursorFilter: SQL | undefined;
+  if (cursor) {
+    const d = new Date(cursor.createdAt);
+    if (!Number.isNaN(d.getTime())) {
+      cursorFilter = or(
+        lt(videos.createdAt, d),
+        and(eq(videos.createdAt, d), lt(videos.id, cursor.id))
+      );
+    }
+  }
+
+  const listWhere = cursorFilter ? and(videoWhere, cursorFilter) : videoWhere;
+
+  const [totalVideosRows, profileVideos] = await Promise.all([
+    db.select({ value: count() }).from(videos).where(videoWhere),
+    db.query.videos.findMany({
+      where: listWhere,
+      orderBy: [desc(videos.createdAt), desc(videos.id)],
+      columns: {
+        id: true,
+        title: true,
+        publicSlug: true,
+        description: true,
+        createdAt: true,
+        sourceUrl: true,
+        source: true,
+        thumbnailUrl: true,
+        outputType: true,
+        durationLabel: true,
+      },
+      limit: safePageSize + 1,
+    }),
+  ]);
+
+  const hasNextPage = profileVideos.length > safePageSize;
+  const visibleVideos = profileVideos.slice(0, safePageSize);
+  const last = visibleVideos[visibleVideos.length - 1];
+
+  return {
+    videos: visibleVideos.map((video) => ({
+      id: video.id,
+      title: video.title,
+      publicSlug: video.publicSlug,
+      description: video.description,
+      createdAt:
+        video.createdAt instanceof Date
+          ? video.createdAt.toISOString()
+          : new Date(video.createdAt).toISOString(),
+      thumbnailUrl: optimizeThumbnailSrc(
+        resolveThumbnailUrl({
+          customThumbnailUrl: sanitizeMediaUrl(video.thumbnailUrl),
+          platformThumbnailUrl: getAutoThumbnailFromVideoUrl(video.sourceUrl),
+          fallbackDefault: DEFAULT_THUMBNAIL_URL,
+        })
+      ),
+      sourceLabel: getSourceLabel(video.source as VideoSource),
+      outputType: video.outputType,
+      durationLabel: video.durationLabel,
+    })),
+    nextCursor:
+      hasNextPage && last
+        ? {
+            createdAt:
+              last.createdAt instanceof Date
+                ? last.createdAt.toISOString()
+                : new Date(last.createdAt).toISOString(),
+            id: last.id,
+          }
+        : null,
+    hasNextPage,
+    totalVideos: totalVideosRows[0]?.value ?? 0,
+  };
+}
+
+export async function getPublicPortfolioSlice(
+  username: string,
+  options?: {
+    pageSize?: number;
+    cursor?: { createdAt: string; id: string };
+  }
+): Promise<PublicPortfolioSlice | null> {
+  if (!isDatabaseConfigured) {
+    return null;
+  }
+
+  const safePageSize = Math.min(24, Math.max(6, options?.pageSize ?? 9));
+  const cursorKey = options?.cursor
+    ? `cur:${options.cursor.id}:${options.cursor.createdAt}`
+    : "first";
+  const redisKey = publicPortfolioCacheKey(username, safePageSize, cursorKey);
+
+  const cached = await getCachedJson<PublicPortfolioSlice>(redisKey);
+  if (cached != null) {
+    return cached;
+  }
+
+  try {
+    const result = await loadPublicPortfolioSliceCore(username, {
+      pageSize: safePageSize,
+      cursor: options?.cursor,
+    });
+    if (result) {
+      await setCachedJson(redisKey, result, 300);
+    }
+    return result;
+  } catch (error) {
+    console.error("Failed to load public portfolio slice", error);
     return null;
   }
 }

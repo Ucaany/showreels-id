@@ -1,15 +1,18 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Expand, Image as ImageIcon, PlayCircle } from "lucide-react";
-import Lightbox from "yet-another-react-lightbox";
-import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
-import Zoom from "yet-another-react-lightbox/plugins/zoom";
-import "yet-another-react-lightbox/styles.css";
 import { Button } from "@/components/ui/button";
+import { optimizeThumbnailSrc } from "@/lib/cdn-image";
 import { detectVideoSource, getAutoThumbnailFromVideoUrl, getEmbedUrl } from "@/lib/video-utils";
 import type { VideoAspectRatio, VideoSource } from "@/lib/types";
+
+const LazyMediaLightbox = dynamic(
+  () => import("@/components/media-lightbox").then((mod) => mod.MediaLightbox),
+  { ssr: false, loading: () => null }
+);
 
 type MediaSlide =
   | { type: "cover"; url: string }
@@ -45,12 +48,18 @@ export function MediaPreviewCarousel({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   /** Lazy-mount iframe only after user taps play (per video URL). */
   const [embedReadyForUrl, setEmbedReadyForUrl] = useState<Record<string, boolean>>({});
+  const optimizedManualThumbnailUrl = manualThumbnailUrl
+    ? optimizeThumbnailSrc(manualThumbnailUrl, { width: 1280, height: 720 })
+    : "";
+  const optimizedFallbackThumbnailUrl = fallbackThumbnailUrl
+    ? optimizeThumbnailSrc(fallbackThumbnailUrl, { width: 1280, height: 720 })
+    : "";
 
   const slides = useMemo<MediaSlide[]>(() => {
-    const coverSlides: MediaSlide[] = manualThumbnailUrl
-      ? [{ type: "cover" as const, url: manualThumbnailUrl }]
+    const coverSlides: MediaSlide[] = optimizedManualThumbnailUrl
+      ? [{ type: "cover" as const, url: optimizedManualThumbnailUrl }]
       : [];
-    const galleryEnabled = Boolean(manualThumbnailUrl);
+    const galleryEnabled = Boolean(optimizedManualThumbnailUrl);
     const videoSlides: MediaSlide[] = galleryEnabled
       ? [
       ...(mainVideoUrl ? [{ type: "video", url: mainVideoUrl } as const] : []),
@@ -60,14 +69,14 @@ export function MediaPreviewCarousel({
     const imageSlides: MediaSlide[] = galleryEnabled
       ? imageUrls.map((url) => ({
           type: "image" as const,
-          url,
+          url: optimizeThumbnailSrc(url, { width: 1280, height: 720, crop: "limit" }),
         }))
       : [];
     const singleFallback: MediaSlide[] = !galleryEnabled
       ? preferMainVideo && mainVideoUrl
         ? [{ type: "video" as const, url: mainVideoUrl }]
-        : fallbackThumbnailUrl
-          ? [{ type: "cover" as const, url: fallbackThumbnailUrl }]
+        : optimizedFallbackThumbnailUrl
+          ? [{ type: "cover" as const, url: optimizedFallbackThumbnailUrl }]
           : mainVideoUrl
             ? [{ type: "video" as const, url: mainVideoUrl }]
             : []
@@ -80,8 +89,8 @@ export function MediaPreviewCarousel({
       ? [...videoSlides, ...coverSlides, ...imageSlides]
       : [...coverSlides, ...videoSlides, ...imageSlides];
   }, [
-    manualThumbnailUrl,
-    fallbackThumbnailUrl,
+    optimizedManualThumbnailUrl,
+    optimizedFallbackThumbnailUrl,
     mainVideoUrl,
     extraVideoUrls,
     imageUrls,
@@ -122,8 +131,8 @@ export function MediaPreviewCarousel({
     }
 
     const poster =
-      (manualThumbnailUrl && url === mainVideoUrl ? manualThumbnailUrl : "") ||
-      fallbackThumbnailUrl ||
+      (optimizedManualThumbnailUrl && url === mainVideoUrl ? optimizedManualThumbnailUrl : "") ||
+      optimizedFallbackThumbnailUrl ||
       getAutoThumbnailFromVideoUrl(url) ||
       "";
     const embedReady = embedReadyForUrl[url] ?? false;
@@ -289,14 +298,14 @@ export function MediaPreviewCarousel({
           ))}
         </div>
       ) : null}
-      <Lightbox
-        open={lightboxOpen}
-        close={() => setLightboxOpen(false)}
-        index={lightboxIndex}
-        slides={imageSlides.map((slide) => ({ src: slide.url }))}
-        plugins={[Zoom, Fullscreen]}
-        carousel={{ finite: imageSlides.length <= 1 }}
-      />
+      {lightboxOpen ? (
+        <LazyMediaLightbox
+          open={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          index={lightboxIndex}
+          slides={imageSlides.map((slide) => ({ src: slide.url }))}
+        />
+      ) : null}
     </div>
   );
 }

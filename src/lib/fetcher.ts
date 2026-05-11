@@ -2,10 +2,10 @@
  * Custom Error class untuk fetch operations
  */
 export class FetchError extends Error {
-  info: any
+  info: unknown
   status: number
 
-  constructor(message: string, status: number, info?: any) {
+  constructor(message: string, status: number, info?: unknown) {
     super(message)
     this.name = 'FetchError'
     this.status = status
@@ -22,7 +22,12 @@ export class FetchError extends Error {
  * @returns Parsed JSON response
  * @throws FetchError jika response tidak ok
  */
-export async function fetcher<T = any>(
+type ErrorPayload = {
+  error?: string
+  message?: string
+}
+
+export async function fetcher<T = unknown>(
   url: string,
   init?: RequestInit
 ): Promise<T> {
@@ -35,7 +40,7 @@ export async function fetcher<T = any>(
   })
 
   if (!response.ok) {
-    const info = await response.json().catch(() => null)
+    const info = (await response.json().catch(() => null)) as ErrorPayload | null
     throw new FetchError(
       info?.error || info?.message || 'An error occurred while fetching data',
       response.status,
@@ -49,9 +54,9 @@ export async function fetcher<T = any>(
 /**
  * Fetcher untuk POST requests
  */
-export async function postFetcher<T = any>(
+export async function postFetcher<T = unknown>(
   url: string,
-  data: any
+  data: unknown
 ): Promise<T> {
   return fetcher<T>(url, {
     method: 'POST',
@@ -62,9 +67,9 @@ export async function postFetcher<T = any>(
 /**
  * Fetcher untuk PUT requests
  */
-export async function putFetcher<T = any>(
+export async function putFetcher<T = unknown>(
   url: string,
-  data: any
+  data: unknown
 ): Promise<T> {
   return fetcher<T>(url, {
     method: 'PUT',
@@ -75,9 +80,9 @@ export async function putFetcher<T = any>(
 /**
  * Fetcher untuk PATCH requests
  */
-export async function patchFetcher<T = any>(
+export async function patchFetcher<T = unknown>(
   url: string,
-  data: any
+  data: unknown
 ): Promise<T> {
   return fetcher<T>(url, {
     method: 'PATCH',
@@ -88,7 +93,7 @@ export async function patchFetcher<T = any>(
 /**
  * Fetcher untuk DELETE requests
  */
-export async function deleteFetcher<T = any>(url: string): Promise<T> {
+export async function deleteFetcher<T = unknown>(url: string): Promise<T> {
   return fetcher<T>(url, {
     method: 'DELETE',
   })

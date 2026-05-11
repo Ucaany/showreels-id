@@ -48,13 +48,56 @@ export function imageKitOptimizedUrl(path: string, options?: { width?: number; h
   return `${base}/tr:${trSegment}/${cleanPath}`;
 }
 
+function cloudinaryTransformSegment(options?: {
+  width?: number;
+  height?: number;
+  crop?: "fill" | "limit" | "fit";
+}): string {
+  const w = options?.width ? `w_${options.width}` : "w_640";
+  const h = options?.height ? `h_${options.height}` : "";
+  const c = options?.crop ? `c_${options.crop}` : "c_fill";
+  return ["f_auto", "q_auto", c, w, h].filter(Boolean).join(",");
+}
+
+function optimizeCloudinaryDeliveryUrl(
+  src: string,
+  options?: { width?: number; height?: number; crop?: "fill" | "limit" | "fit" }
+): string {
+  try {
+    const url = new URL(src);
+    if (url.hostname !== "res.cloudinary.com") {
+      return src;
+    }
+
+    const uploadMarker = "/image/upload/";
+    const uploadIndex = url.pathname.indexOf(uploadMarker);
+    if (uploadIndex < 0) {
+      return src;
+    }
+
+    const beforeUpload = url.pathname.slice(0, uploadIndex + uploadMarker.length);
+    const afterUpload = url.pathname.slice(uploadIndex + uploadMarker.length);
+    if (!afterUpload || afterUpload.includes("f_auto") || afterUpload.includes("q_auto")) {
+      return src;
+    }
+
+    url.pathname = `${beforeUpload}${cloudinaryTransformSegment(options)}/${afterUpload}`;
+    return url.toString();
+  } catch {
+    return src;
+  }
+}
+
 /**
  * Safe thumbnail src for cards (fallback). Prefer storing optimized Cloudinary URLs at upload time;
  * use {@link cloudinaryOptimizedUrl} when building new URLs.
  */
-export function optimizeThumbnailSrc(src: string | null | undefined): string {
+export function optimizeThumbnailSrc(
+  src: string | null | undefined,
+  options?: { width?: number; height?: number; crop?: "fill" | "limit" | "fit" }
+): string {
   if (!src?.trim()) return DEFAULT_THUMB_PATH;
-  return src;
+  return optimizeCloudinaryDeliveryUrl(src.trim(), options);
 }
 
 export function defaultThumbnailSrc(): string {

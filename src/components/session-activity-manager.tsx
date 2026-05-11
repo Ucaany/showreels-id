@@ -81,7 +81,7 @@ export function SessionActivityManager() {
     } else if (status === "unauthenticated") {
       authenticatedRef.current = false;
       clearLastActivity();
-      setWarningVisible(false);
+      window.setTimeout(() => setWarningVisible(false), 0);
       signingOutRef.current = false;
     }
 

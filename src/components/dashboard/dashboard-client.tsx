@@ -222,13 +222,13 @@ export function DashboardClient({ canUseBuildLink }: { canUseBuildLink: boolean 
     },
     {
       label: 'Total Views',
-      value: (summary as any)?.totalViews || 0,
+      value: summary?.totalViews || 0,
       helper: '7 hari terakhir',
       icon: BarChart3,
     },
     {
       label: 'Total Clicks',
-      value: (summary as any)?.totalClicks || 0,
+      value: summary?.totalClicks || 0,
       helper: '7 hari terakhir',
       icon: MousePointerClick,
     },

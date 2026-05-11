@@ -11,6 +11,7 @@ import { OwnerEditButton } from "@/components/owner-edit-button";
 import { PublicShareQrActions } from "@/components/public/public-share-qr-actions";
 import { SocialLinks } from "@/components/social-links";
 import { Card } from "@/components/ui/card";
+import { optimizeThumbnailSrc } from "@/lib/cdn-image";
 import { formatDateLabel } from "@/lib/helpers";
 import { getBackgroundImageCropStyle } from "@/lib/image-crop";
 import { isProfileVerified } from "@/lib/profile-utils";
@@ -63,12 +64,15 @@ function getLinkIcon(link: { iconKey?: string; platform?: string }) {
 }
 
 function getVideoThumb(video: Pick<ProfileVideo, "thumbnailUrl" | "previewImage" | "sourceUrl">) {
-  return resolveThumbnailUrl({
-    customThumbnailUrl: video.thumbnailUrl,
-    autoThumbnailUrl: video.previewImage,
-    platformThumbnailUrl: getAutoThumbnailFromVideoUrl(video.sourceUrl),
-    fallbackDefault: DEFAULT_THUMBNAIL_URL,
-  });
+  return optimizeThumbnailSrc(
+    resolveThumbnailUrl({
+      customThumbnailUrl: video.thumbnailUrl,
+      autoThumbnailUrl: video.previewImage,
+      platformThumbnailUrl: getAutoThumbnailFromVideoUrl(video.sourceUrl),
+      fallbackDefault: DEFAULT_THUMBNAIL_URL,
+    }),
+    { width: 640, height: 360 }
+  );
 }
 
 function PlatformBadge({ children }: { children: React.ReactNode }) {
@@ -86,7 +90,10 @@ function PublicFooter({ hidden }: { hidden?: boolean }) {
 
 function CreatorCover({ profile, className = "h-36", soft = false, transparent = false }: { profile: PublicProfile; className?: string; soft?: boolean; transparent?: boolean }) {
   const autoCoverImage = getVideoThumb(profile.videos[0] || { thumbnailUrl: "", previewImage: "", sourceUrl: "" });
-  const coverImage = profile.user.coverImageUrl || autoCoverImage;
+  const coverImage = optimizeThumbnailSrc(profile.user.coverImageUrl || autoCoverImage, {
+    width: 1280,
+    height: 720,
+  });
 
   return (
     <div className={`relative overflow-hidden rounded-[1.75rem] border border-[#E1E1DF] bg-[radial-gradient(circle_at_20%_20%,#ffffff_0%,#EFEDEA_35%,#d8d6d1_100%)] ${className}`}>
@@ -242,7 +249,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
         }}
       />
       {/* Animated gradient layers — flat, wide, not circular */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.30]">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.30] max-sm:hidden motion-reduce:hidden">
         <div className="absolute -left-[20%] -top-[30%] h-[70vh] w-[140%] bg-[radial-gradient(ellipse_80%_50%_at_30%_40%,#87CEEB_0%,transparent_70%)] animate-[portfolio-blob-move_20s_ease-in-out_infinite]" />
         <div className="absolute -right-[20%] top-[20%] h-[60vh] w-[140%] bg-[radial-gradient(ellipse_70%_45%_at_70%_50%,#B8E4F0_0%,transparent_65%)] animate-[portfolio-blob-move_25s_ease-in-out_infinite_reverse]" />
         <div className="absolute bottom-0 left-0 h-[50vh] w-full bg-[radial-gradient(ellipse_90%_40%_at_50%_80%,#D0ECF6_0%,transparent_60%)] animate-[portfolio-blob-move_30s_ease-in-out_infinite]" />
@@ -510,7 +517,7 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
         }}
       />
       {/* Animated gradient layers */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.30]">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.30] max-sm:hidden motion-reduce:hidden">
         <div className="absolute -left-[20%] -top-[30%] h-[70vh] w-[140%] bg-[radial-gradient(ellipse_80%_50%_at_30%_40%,#87CEEB_0%,transparent_70%)] animate-[portfolio-blob-move_20s_ease-in-out_infinite]" />
         <div className="absolute -right-[20%] top-[20%] h-[60vh] w-[140%] bg-[radial-gradient(ellipse_70%_45%_at_70%_50%,#B8E4F0_0%,transparent_65%)] animate-[portfolio-blob-move_25s_ease-in-out_infinite_reverse]" />
         <div className="absolute bottom-0 left-0 h-[50vh] w-full bg-[radial-gradient(ellipse_90%_40%_at_50%_80%,#D0ECF6_0%,transparent_60%)] animate-[portfolio-blob-move_30s_ease-in-out_infinite]" />

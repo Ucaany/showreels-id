@@ -22,7 +22,7 @@ export type PublicProfile = {
   bio: string | null
   image: string | null
   visibility: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export type PublicVideo = {
@@ -33,7 +33,7 @@ export type PublicVideo = {
   sourceUrl: string
   thumbnailUrl: string | null
   createdAt: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**

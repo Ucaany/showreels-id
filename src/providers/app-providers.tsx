@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { type Locale } from "@/lib/i18n";
 import { SessionActivityManager } from "@/components/session-activity-manager";
 import { SiteMaintenanceGate } from "@/components/site-maintenance-gate";
@@ -15,11 +16,18 @@ export function AppProviders({
   children: React.ReactNode;
   initialLocale: Locale;
 }) {
+  const pathname = usePathname();
+  const shouldRunSessionActivity =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/payment");
+
   return (
     <SessionProvider>
       <SWRProvider>
         <PreferencesProvider initialLocale={initialLocale}>
-          <SessionActivityManager />
+          {shouldRunSessionActivity ? <SessionActivityManager /> : null}
           <VisitorTracker />
           <SiteMaintenanceGate />
           {children}

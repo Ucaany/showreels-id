@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "apps/**/.astro/**",
     "apps/**/dist/**",
+    "_removed_legacy/**",
   ]),
 ]);
 

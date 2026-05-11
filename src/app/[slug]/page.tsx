@@ -4,8 +4,9 @@ import { notFound } from "next/navigation";
 import { BioCreatorPublicPage, VideoDetailPublicPage } from "@/components/public/public-creator-pages";
 import { createTextExcerpt, getCreatorBioHref, getVideoDetailHref, isReservedPublicSlug } from "@/lib/public-route-utils";
 import { getAutoThumbnailFromVideoUrl, resolveThumbnailUrl } from "@/lib/video-utils";
-import { getCurrentUser } from "@/server/current-user";
 import { getPublicProfile, getPublicVideo } from "@/server/public-data";
+
+export const revalidate = 60;
 
 /**
  * React.cache() deduplicate calls within the same request.
@@ -105,15 +106,13 @@ export default async function PublicSlugPage({
     notFound();
   }
 
-  const currentUser = await getCurrentUser();
-
   // Menggunakan cached version — deduplicate dengan generateMetadata
-  const profile = await getCachedPublicProfile(slug, currentUser?.id);
+  const profile = await getCachedPublicProfile(slug);
   if (profile) {
     return <BioCreatorPublicPage profile={profile} />;
   }
 
-  const video = await getCachedPublicVideo(slug, currentUser?.id);
+  const video = await getCachedPublicVideo(slug);
   if (video && video.author) {
     return <VideoDetailPublicPage video={video} />;
   }

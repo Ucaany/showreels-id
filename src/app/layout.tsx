@@ -6,7 +6,6 @@ import "./globals.css";
 import { SentryInit } from "@/components/sentry-init";
 import { AppProviders } from "@/providers/app-providers";
 import { ToastContainer } from "@/components/ui/toast-container";
-import { getRequestLocale } from "@/server/request-locale";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -51,13 +50,11 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = await getRequestLocale();
-
   return (
     <html
       lang="id"
@@ -66,7 +63,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <SentryInit />
-        <AppProviders initialLocale={locale}>{children}</AppProviders>
+        <AppProviders initialLocale="id">{children}</AppProviders>
         <ToastContainer />
         <Analytics />
         <SpeedInsights />

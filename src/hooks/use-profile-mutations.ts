@@ -11,7 +11,7 @@ export type ProfileUpdateInput = {
   bio?: string | null
   image?: string | null
   visibility?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**

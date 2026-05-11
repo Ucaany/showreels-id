@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useMockApp } from "@/hooks/use-mock-app";
@@ -15,15 +15,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { ready: mockReady, session: mockSession } = useMockApp();
   const { data: session, status } = useSession();
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (DEMO_MODE) {
       // Demo mode: gunakan mock session
       if (mockReady && !mockSession) {
         router.replace("/auth/login");
-      } else if (mockReady && mockSession) {
-        setAuthenticated(true);
       }
       return;
     }
@@ -31,16 +28,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     // Production mode: cek Auth.js session
     if (status === "loading") return;
 
-    if (status === "authenticated" && session?.user) {
-      setAuthenticated(true);
-    } else if (status === "unauthenticated") {
+    if (status === "unauthenticated") {
       router.replace("/auth/login");
     }
   }, [mockReady, mockSession, router, session, status]);
 
   // Tentukan apakah sudah siap
-  const isReady = DEMO_MODE ? mockReady : authenticated !== null || status !== "loading";
-  const isAuthenticated = DEMO_MODE ? !!mockSession : authenticated === true;
+  const isReady = DEMO_MODE ? mockReady : status !== "loading";
+  const isAuthenticated = DEMO_MODE
+    ? !!mockSession
+    : status === "authenticated" && Boolean(session?.user);
 
   if (!isReady || !isAuthenticated) {
     return (

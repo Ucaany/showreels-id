@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { desc, eq } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 import { videos } from "@/db/schema";
+import { withPrivateNoStoreHeaders } from "@/lib/http-cache";
 import { getCurrentUser } from "@/server/current-user";
 import { isAdminEmail } from "@/server/admin-access";
 
@@ -12,17 +13,20 @@ import { isAdminEmail } from "@/server/admin-access";
 export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401, headers: withPrivateNoStoreHeaders() }
+    );
   }
   if (isAdminEmail(currentUser.email)) {
     return NextResponse.json(
       { error: "Akun owner tidak menggunakan dashboard creator." },
-      { status: 403 }
+      { status: 403, headers: withPrivateNoStoreHeaders() }
     );
   }
 
   if (!isDatabaseConfigured) {
-    return NextResponse.json({ videos: [] });
+    return NextResponse.json({ videos: [] }, { headers: withPrivateNoStoreHeaders() });
   }
 
   const myVideos = await db.query.videos.findMany({
@@ -42,5 +46,5 @@ export async function GET() {
     limit: 50,
   });
 
-  return NextResponse.json({ videos: myVideos });
+  return NextResponse.json({ videos: myVideos }, { headers: withPrivateNoStoreHeaders() });
 }

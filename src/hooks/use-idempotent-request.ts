@@ -1,9 +1,13 @@
 import { useRef, useCallback } from 'react'
 
-type RequestState = {
-  pending: boolean
-  result: any
-  error: any
+type RequestState<T> = {
+  status: 'pending'
+} | {
+  status: 'success'
+  result: T
+} | {
+  status: 'error'
+  error: unknown
 }
 
 type IdempotentRequestOptions = {
@@ -28,8 +32,8 @@ type IdempotentRequestOptions = {
  * }
  * ```
  */
-export function useIdempotentRequest<T = any>() {
-  const requestsRef = useRef<Map<string, RequestState>>(new Map())
+export function useIdempotentRequest<T = unknown>() {
+  const requestsRef = useRef<Map<string, RequestState<T>>>(new Map())
 
   const execute = useCallback(async (
     key: string,
@@ -42,14 +46,14 @@ export function useIdempotentRequest<T = any>() {
     const existing = requestsRef.current.get(key)
     
     if (existing && !force) {
-      if (existing.pending) {
+      if (existing.status === 'pending') {
         // Wait for pending request
         return new Promise((resolve, reject) => {
           const checkInterval = setInterval(() => {
             const current = requestsRef.current.get(key)
-            if (current && !current.pending) {
+            if (current && current.status !== 'pending') {
               clearInterval(checkInterval)
-              if (current.error) reject(current.error)
+              if (current.status === 'error') reject(current.error)
               else resolve(current.result)
             }
           }, 100)
@@ -62,20 +66,20 @@ export function useIdempotentRequest<T = any>() {
         })
       }
       
-      if (existing.result) {
+      if (existing.status === 'success') {
         // Return cached result
         return existing.result
       }
     }
 
     // Mark as pending
-    requestsRef.current.set(key, { pending: true, result: null, error: null })
+    requestsRef.current.set(key, { status: 'pending' })
 
     try {
       const result = await fn()
       
       // Store result
-      requestsRef.current.set(key, { pending: false, result, error: null })
+      requestsRef.current.set(key, { status: 'success', result })
       
       // Clear after TTL
       setTimeout(() => {
@@ -85,7 +89,7 @@ export function useIdempotentRequest<T = any>() {
       return result
     } catch (error) {
       // Store error
-      requestsRef.current.set(key, { pending: false, result: null, error })
+      requestsRef.current.set(key, { status: 'error', error })
       
       // Clear after shorter TTL for errors
       setTimeout(() => {

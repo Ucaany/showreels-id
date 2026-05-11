@@ -148,6 +148,7 @@ export function BillingPanel({
   const [transactions, setTransactions] = useState(initialTransactions);
   const [refreshing, setRefreshing] = useState(false);
   const [stopping, setStopping] = useState(false);
+  const [nowMs] = useState(() => Date.now());
 
   const activePlanLabel = catalog[effectivePlanName]?.label || effectivePlanName;
   const activePrice = catalog[effectivePlanName]?.monthly || 0;
@@ -161,9 +162,9 @@ export function BillingPanel({
       if (tx.status !== "pending") return false;
       if (!tx.checkoutUrl) return false;
       if (!tx.expiredAt) return true; // Jika tidak ada expiredAt, anggap masih valid
-      return new Date(tx.expiredAt).getTime() > Date.now();
+      return new Date(tx.expiredAt).getTime() > nowMs;
     }) || null;
-  }, [transactions]);
+  }, [nowMs, transactions]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -537,7 +538,7 @@ export function BillingPanel({
                       {item.status === "pending" ? <Clock className="h-3.5 w-3.5" /> : null}
                       {item.status}
                     </span>
-                    {item.status === "pending" && item.checkoutUrl && item.expiredAt && new Date(item.expiredAt).getTime() > Date.now() && (
+                    {item.status === "pending" && item.checkoutUrl && item.expiredAt && new Date(item.expiredAt).getTime() > nowMs && (
                       <a href={item.checkoutUrl} target="_blank" rel="noopener noreferrer">
                         <Button size="sm" variant="secondary" aria-label="Bayar sekarang">
                           <ExternalLink className="h-4 w-4" />

@@ -7,6 +7,7 @@ import {
   FaThreads,
   FaYoutube,
 } from "react-icons/fa6";
+import type { ComponentType } from "react";
 
 interface SocialLinksProps {
   websiteUrl?: string;
@@ -23,7 +24,7 @@ interface SocialLinksProps {
 const baseLinkClass =
   "inline-flex items-center gap-2 rounded-full border border-[#E1E1DF] bg-white px-3.5 py-2 text-xs font-semibold text-[#525252] transition hover:border-[#111111] hover:text-[#111111] hover:shadow-sm";
 
-const SOCIAL_ICONS: Record<string, { icon: any; color: string }> = {
+const SOCIAL_ICONS: Record<string, { icon: ComponentType<{ className?: string }>; color: string }> = {
   instagram: { icon: FaInstagram, color: "text-[#E1306C]" },
   youtube: { icon: FaYoutube, color: "text-[#FF0000]" },
   facebook: { icon: FaFacebookF, color: "text-[#1877F2]" },

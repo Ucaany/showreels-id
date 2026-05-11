@@ -194,6 +194,12 @@ export const videos = pgTable(
       table.visibility,
       table.createdAt
     ),
+    publicCursorIdx: index("videos_public_cursor_idx").on(
+      table.userId,
+      table.visibility,
+      table.createdAt,
+      table.id
+    ),
   })
 );
 

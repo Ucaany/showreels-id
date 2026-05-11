@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
+import { optimizeThumbnailSrc } from "@/lib/cdn-image";
 import { getCurrentUser } from "@/server/current-user";
 import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
@@ -95,7 +96,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Upload gagal: tidak ada URL." }, { status: 500 });
     }
 
-    return NextResponse.json({ url });
+    return NextResponse.json({
+      url: optimizeThumbnailSrc(url, { width: 1600, height: 900, crop: "limit" }),
+    });
   } catch (e) {
     console.error("[upload-thumbnail]", e);
     return NextResponse.json({ error: "Gagal mengunggah ke CDN. Coba lagi." }, { status: 500 });

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useRef, FormEvent } from 'react'
+import { useState, FormEvent } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
 type IdempotentFormProps = {
-  onSubmit: (data: Record<string, any>, idempotencyKey: string) => Promise<void>
+  onSubmit: (data: Record<string, FormDataEntryValue>, idempotencyKey: string) => Promise<void>
   children: React.ReactNode
   className?: string
 }
@@ -23,7 +23,7 @@ type IdempotentFormProps = {
  */
 export function IdempotentForm({ onSubmit, children, className }: IdempotentFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const idempotencyKeyRef = useRef<string>(uuidv4())
+  const [idempotencyKey, setIdempotencyKey] = useState(() => uuidv4())
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -38,10 +38,10 @@ export function IdempotentForm({ onSubmit, children, className }: IdempotentForm
       const formData = new FormData(e.currentTarget)
       const data = Object.fromEntries(formData.entries())
       
-      await onSubmit(data, idempotencyKeyRef.current)
+      await onSubmit(data, idempotencyKey)
       
       // Generate new key for next submission
-      idempotencyKeyRef.current = uuidv4()
+      setIdempotencyKey(uuidv4())
     } catch (error) {
       console.error('Form submission failed:', error)
     } finally {
@@ -55,7 +55,7 @@ export function IdempotentForm({ onSubmit, children, className }: IdempotentForm
       <input
         type="hidden"
         name="idempotencyKey"
-        value={idempotencyKeyRef.current}
+        value={idempotencyKey}
       />
     </form>
   )

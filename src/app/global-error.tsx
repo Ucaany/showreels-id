@@ -91,8 +91,8 @@ export default function GlobalError({
               >
                 Muat Ulang
               </button>
-              <a
-                href="/"
+              <button
+                onClick={() => window.location.assign("/")}
                 style={{
                   padding: "0.625rem 1.25rem",
                   backgroundColor: "#ffffff",
@@ -101,12 +101,11 @@ export default function GlobalError({
                   fontSize: "0.875rem",
                   fontWeight: 500,
                   border: "1px solid #e2e8f0",
-                  textDecoration: "none",
                   cursor: "pointer",
                 }}
               >
                 Beranda
-              </a>
+              </button>
             </div>
           </div>
         </div>
