@@ -20,9 +20,9 @@ export function SiteNavbar({ currentUser }: SiteNavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-[70] border-b border-slate-200 bg-white/92 backdrop-blur">
-      <div className="mx-auto flex min-h-[4.55rem] w-full max-w-[1160px] items-center justify-between gap-4 px-4 py-2.5 sm:px-6 lg:px-8">
-        <AppLogo />
+    <header className="fixed left-0 right-0 top-0 z-[70] overflow-x-hidden border-b border-slate-200 bg-white/92 backdrop-blur">
+      <div className="mx-auto flex min-h-[4.55rem] w-full max-w-[1160px] items-center justify-between gap-3 px-4 py-2.5 sm:gap-4 sm:px-6 lg:px-8">
+        <AppLogo className="max-w-[calc(100vw-5.5rem)]" />
 
         <div className="hidden items-center gap-2.5 lg:flex">
           {currentUser ? (
@@ -70,7 +70,7 @@ export function SiteNavbar({ currentUser }: SiteNavbarProps) {
 
       {mobileMenuOpen && (
         <div className="border-t border-slate-200 bg-white lg:hidden">
-          <div className="mx-auto max-w-[1160px] space-y-1 px-4 py-4 sm:px-6">
+          <div className="mx-auto max-h-[calc(100dvh-4.55rem)] max-w-[1160px] space-y-1 overflow-y-auto px-4 py-4 sm:px-6">
             {currentUser ? (
               <>
                 <Link
@@ -80,13 +80,15 @@ export function SiteNavbar({ currentUser }: SiteNavbarProps) {
                 >
                   Dashboard
                 </Link>
-                <div className="flex items-center gap-2 px-3 py-2">
+                <div className="flex min-w-0 items-center gap-2 px-3 py-2">
                   <AvatarBadge
                     name={currentUser.name || "Creator"}
                     avatarUrl={currentUser.image || ""}
                     size="sm"
                   />
-                  <span className="text-sm text-slate-600">{currentUser.email}</span>
+                  <span className="min-w-0 truncate text-sm text-slate-600">
+                    {currentUser.email}
+                  </span>
                 </div>
               </>
             ) : (
@@ -100,7 +102,7 @@ export function SiteNavbar({ currentUser }: SiteNavbarProps) {
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="block rounded-lg px-3 py-2 text-base font-semibold text-slate-900 hover:bg-slate-50"
+                  className="block rounded-lg bg-[#1a46c9] px-3 py-2 text-center text-base font-semibold text-white hover:bg-[#153a9f]"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Daftar

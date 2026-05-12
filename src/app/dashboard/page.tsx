@@ -14,14 +14,12 @@ import {
 import { NotificationInboxPanel } from "@/components/dashboard/notification-inbox-panel";
 import { OnboardingReminderCard } from "@/components/dashboard/onboarding-reminder-card";
 import { PublicLinkCardCompact } from "@/components/dashboard/public-link-card-compact";
-import { OnboardingStepper } from "@/components/onboarding/onboarding-stepper";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { requireCurrentUser } from "@/server/current-user";
 import { getDashboardMetrics } from "@/server/dashboard-data";
 import { getOrCreateUserOnboarding } from "@/server/onboarding";
-import { getCreatorEntitlementsForUser } from "@/server/subscription-policy";
 
 type QuickAction = {
   href: string;
@@ -37,12 +35,6 @@ type MetricCard = {
   value: number;
   helper: string;
   icon: typeof Wand2;
-};
-
-type DashboardPageProps = {
-  searchParams?: Promise<{
-    onboarding?: string;
-  }>;
 };
 
 function formatNumber(value: number) {
@@ -245,56 +237,26 @@ function QuickActionCard({ actions }: { actions: QuickAction[] }) {
   );
 }
 
-export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+export default async function DashboardPage() {
   const user = await requireCurrentUser();
-  const params = searchParams ? await searchParams : {};
-  const forceOnboarding = params.onboarding === "1";
 
-  let entitlementState: Awaited<ReturnType<typeof getCreatorEntitlementsForUser>>;
   let onboarding: Awaited<ReturnType<typeof getOrCreateUserOnboarding>>;
 
   try {
-    [entitlementState, onboarding] = await Promise.all([
-      getCreatorEntitlementsForUser(user.id),
-      getOrCreateUserOnboarding({
-        userId: user.id,
-        customLinks: user.customLinks,
-        createdAt: user.createdAt,
-        profile: {
-          fullName: user.name,
-          username: user.username,
-          role: user.role,
-          bio: user.bio,
-        },
-      }),
-    ]);
+    onboarding = await getOrCreateUserOnboarding({
+      userId: user.id,
+      customLinks: user.customLinks,
+      createdAt: user.createdAt,
+      profile: {
+        fullName: user.name,
+        username: user.username,
+        role: user.role,
+        bio: user.bio,
+      },
+    });
   } catch (error) {
     console.error("dashboard_page_data_error", error);
     // Fallback values so page doesn't crash
-    entitlementState = {
-      effectivePlan: {
-        planName: "free" as const,
-        billingCycle: "monthly" as const,
-        status: "active",
-        source: "fallback_free" as const,
-        trialStartedAt: null,
-        trialEndsAt: null,
-        isTrialActive: false,
-        isTrialExpired: false,
-      },
-      entitlements: {
-        planName: "free" as const,
-        linkBuilderMax: 5,
-        usernameChangesPer30Days: 2,
-        analyticsMaxDays: 7,
-        customThumbnailEnabled: false,
-        whitelabelEnabled: false,
-        sourceQuotaPerPlatform: { youtube: 10, gdrive: 10, instagram: 10, facebook: 10, vimeo: 10, tiktok: 10 },
-        creatorGroupEnabled: false,
-        supportEnabled: false,
-        themeSwitchComingSoon: false,
-      },
-    };
     onboarding = {
       userId: user.id,
       onboardingCompleted: true,
@@ -307,33 +269,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-  }
-
-  // Only show onboarding for users who truly haven't set up their profile
-  const shouldShowOnboarding =
-    !onboarding.onboardingCompleted &&
-    (!onboarding.onboardingSkipped || forceOnboarding) &&
-    !user.name &&
-    !user.username;
-
-  if (shouldShowOnboarding) {
-    return (
-      <OnboardingStepper
-        initialStatus={onboarding}
-        initialUser={{
-          fullName: user.name || "",
-          username: user.username || "",
-          role: user.role || "",
-          bio: user.bio || "",
-          image: user.image || "",
-          coverImageUrl: user.coverImageUrl || "",
-        }}
-        linkBuilderMax={entitlementState.entitlements.linkBuilderMax}
-        planName={entitlementState.effectivePlan.planName}
-        subscriptionStatus={entitlementState.effectivePlan.status as "active" | "trial" | "expired" | "failed" | "pending"}
-        embedded
-      />
-    );
   }
 
   const canUseBuildLink = true;
@@ -422,8 +357,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <div className="space-y-6">
-      {onboarding.onboardingSkipped && !onboarding.onboardingCompleted ? (
-        <OnboardingReminderCard userId={user.id} resumeHref="/dashboard?onboarding=1" />
+      {!onboarding.onboardingCompleted ? (
+        <OnboardingReminderCard userId={user.id} resumeHref="/onboarding" />
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">

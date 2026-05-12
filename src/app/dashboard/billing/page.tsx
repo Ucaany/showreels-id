@@ -124,6 +124,7 @@ export default async function DashboardBillingPage({
           facebook: 10,
           vimeo: 10,
           tiktok: 10,
+          upload: null,
         },
         creatorGroupEnabled: false,
         supportEnabled: false,

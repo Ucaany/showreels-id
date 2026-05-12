@@ -19,10 +19,8 @@ function hasMinimalPublicProfile(input: {
 }) {
   const fullName = (input.fullName || "").trim();
   const username = (input.username || "").trim();
-  const role = (input.role || "").trim();
-  const bio = (input.bio || "").trim();
 
-  return Boolean(fullName && username && (role || bio));
+  return Boolean(fullName && username);
 }
 
 export async function POST(request: Request) {
@@ -68,6 +66,36 @@ export async function POST(request: Request) {
         .where(eq(videos.userId, currentUser.id))
     : [];
   const videoCount = Number(videoRows[0]?.value ?? 0);
+  const hasPublicProfile = hasMinimalPublicProfile({
+    fullName: currentUser.name || "",
+    username: currentUser.username || "",
+    role: currentUser.role || "",
+    bio: currentUser.bio || "",
+  });
+  const firstVideoUploaded =
+    parsed.data.firstVideoUploaded ||
+    onboarding.firstVideoUploaded ||
+    videoCount > 0;
+
+  if (!hasPublicProfile || !firstVideoUploaded) {
+    await updateUserOnboardingProgress({
+      userId: currentUser.id,
+      onboardingCompleted: false,
+      firstVideoUploaded,
+      hasPublicProfile,
+      currentStep: hasPublicProfile ? 3 : 1,
+    }).catch(() => null);
+
+    return NextResponse.json(
+      {
+        error: !hasPublicProfile
+          ? "Lengkapi nama dan username sebelum menyelesaikan onboarding."
+          : "Upload minimal satu portfolio sebelum menyelesaikan onboarding.",
+        code: "onboarding_requirements_incomplete",
+      },
+      { status: 400 }
+    );
+  }
 
   const status = await completeUserOnboarding(currentUser.id, {
     ...(onboarding.progressPayload && typeof onboarding.progressPayload === "object"
@@ -80,16 +108,8 @@ export async function POST(request: Request) {
     userId: currentUser.id,
     onboardingSkipped: false,
     firstLinkCreated: linksCount > 0 || onboarding.firstLinkCreated,
-    firstVideoUploaded:
-      parsed.data.firstVideoUploaded ||
-      onboarding.firstVideoUploaded ||
-      videoCount > 0,
-    hasPublicProfile: hasMinimalPublicProfile({
-      fullName: currentUser.name || "",
-      username: currentUser.username || "",
-      role: currentUser.role || "",
-      bio: currentUser.bio || "",
-    }),
+    firstVideoUploaded,
+    hasPublicProfile,
   });
 
   return NextResponse.json({

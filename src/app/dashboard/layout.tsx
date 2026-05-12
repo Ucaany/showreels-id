@@ -56,12 +56,7 @@ export default async function DashboardLayout({
     onboardingSkipped = false;
   }
 
-  // If user has no name/username AND onboarding not completed, redirect to onboarding page
-  const shouldShowOnboarding =
-    !onboardingCompleted &&
-    !onboardingSkipped &&
-    !user.name &&
-    !user.username;
+  const shouldShowOnboarding = !onboardingCompleted && !onboardingSkipped;
 
   if (shouldShowOnboarding) {
     redirect("/onboarding");

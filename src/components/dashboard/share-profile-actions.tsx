@@ -150,7 +150,7 @@ export function ShareProfileActions({
 
   return (
     <>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex min-w-0 flex-wrap gap-2">
         <Button
           type="button"
           size="sm"
@@ -184,16 +184,16 @@ export function ShareProfileActions({
       </div>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0f2347]/55 p-4">
+        <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#0f2347]/55 p-3 sm:p-4">
           <button
             type="button"
             className="absolute inset-0 cursor-default"
             aria-label="Close share modal backdrop"
             onClick={() => setIsOpen(false)}
           />
-          <div className="relative z-[91] w-full max-w-[560px] rounded-[1.4rem] border border-slate-200 bg-white p-4 shadow-xl sm:p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
+          <div className="relative z-[91] max-h-[90vh] w-full max-w-[560px] overflow-y-auto rounded-[1.4rem] border border-slate-200 bg-white p-4 shadow-xl sm:p-5">
+            <div className="flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
                   Share Link Postingan
                 </p>
@@ -218,25 +218,25 @@ export function ShareProfileActions({
               <p className="truncate text-sm font-medium text-[#2c4c80]">{publicLink}</p>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="mt-4 grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:grid-cols-3">
               {shareChannels.map((channel) => {
                 const Icon = channel.icon;
                 return (
                   <Link key={channel.id} href={channel.href} target="_blank">
                     <Button variant="secondary" className="w-full justify-start">
                       <Icon className="h-4 w-4" />
-                      {channel.label}
+                      <span className="min-w-0 truncate">{channel.label}</span>
                     </Button>
                   </Link>
                 );
               })}
               <Button variant="secondary" className="justify-start" onClick={handleInstagramFallback}>
                 <SiInstagram className="h-4 w-4" />
-                Instagram
+                <span className="min-w-0 truncate">Instagram</span>
               </Button>
               <Button variant="secondary" className="justify-start" onClick={handleNativeShare}>
                 <Share2 className="h-4 w-4" />
-                Share Sheet
+                <span className="min-w-0 truncate">Share Sheet</span>
               </Button>
             </div>
 

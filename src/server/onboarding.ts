@@ -39,10 +39,21 @@ function hasMinimalPublicProfile(input: {
 }) {
   const fullName = (input.fullName || "").trim();
   const username = (input.username || "").trim();
-  const role = (input.role || "").trim();
-  const bio = (input.bio || "").trim();
 
-  return Boolean(fullName && username && (role || bio));
+  return Boolean(fullName && username);
+}
+
+function resolveIncompleteStep(input: {
+  hasPublicProfile: boolean;
+  firstVideoUploaded: boolean;
+}) {
+  if (!input.hasPublicProfile) {
+    return 1;
+  }
+  if (!input.firstVideoUploaded) {
+    return 3;
+  }
+  return 4;
 }
 
 async function countUserVideos(userId: string) {
@@ -105,7 +116,47 @@ export async function getOrCreateUserOnboarding(input: {
       where: eq(userOnboarding.userId, input.userId),
     });
     if (existing) {
-      return existing;
+      const firstLinkCreated = existing.firstLinkCreated || fallbackLinksCount > 0;
+      const firstVideoUploaded = existing.firstVideoUploaded || (await countUserVideos(input.userId)) > 0;
+      const hasPublicProfile = hasMinimalPublicProfile({
+        fullName: input.profile?.fullName,
+        username: input.profile?.username,
+        role: input.profile?.role,
+        bio: input.profile?.bio,
+      });
+      const onboardingCompleted = hasPublicProfile && firstVideoUploaded;
+      const currentStep = onboardingCompleted
+        ? 4
+        : existing.currentStep >= 4
+          ? resolveIncompleteStep({ hasPublicProfile, firstVideoUploaded })
+          : Math.min(3, Math.max(1, existing.currentStep || 1));
+
+      const shouldSync =
+        existing.firstLinkCreated !== firstLinkCreated ||
+        existing.firstVideoUploaded !== firstVideoUploaded ||
+        existing.hasPublicProfile !== hasPublicProfile ||
+        existing.onboardingCompleted !== onboardingCompleted ||
+        existing.currentStep !== currentStep;
+
+      if (!shouldSync) {
+        return existing;
+      }
+
+      const [updated] = await db
+        .update(userOnboarding)
+        .set({
+          firstLinkCreated,
+          firstVideoUploaded,
+          hasPublicProfile,
+          onboardingCompleted,
+          onboardingSkipped: onboardingCompleted ? false : existing.onboardingSkipped,
+          currentStep,
+          updatedAt: new Date(),
+        })
+        .where(eq(userOnboarding.userId, input.userId))
+        .returning();
+
+      return updated || existing;
     }
 
     const firstLinkCreated = normalizeStoredLinks(input.customLinks).length > 0;
@@ -116,7 +167,7 @@ export async function getOrCreateUserOnboarding(input: {
       role: input.profile?.role,
       bio: input.profile?.bio,
     });
-    const onboardingCompleted = firstLinkCreated || firstVideoUploaded;
+    const onboardingCompleted = hasPublicProfile && firstVideoUploaded;
 
     const [created] = await db
       .insert(userOnboarding)

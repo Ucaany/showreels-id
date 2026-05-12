@@ -345,7 +345,7 @@ export function DashboardShell({
   }
 
   return (
-    <div className="relative min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="relative min-h-screen overflow-x-hidden bg-slate-50 font-sans text-slate-900">
       {/* Gradient background - light blue/white, behind all content */}
       <div
         className="pointer-events-none fixed inset-0 -z-10 opacity-[0.35]"
@@ -369,8 +369,8 @@ export function DashboardShell({
           sidebarOpen ? "md:left-72" : "md:left-20"
         )}
       >
-        <div className="flex h-16 items-center justify-between gap-3 px-4 md:px-8">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-16 min-w-0 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4 md:px-8">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
             <button
               type="button"
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm md:hidden"
@@ -379,14 +379,14 @@ export function DashboardShell({
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div className="text-sm text-slate-500">
-              <Link href="/dashboard" className="transition hover:text-slate-900">Dashboard</Link>
-              <span className="mx-2 text-slate-300">/</span>
-              <Link href={pathname} className="font-medium text-slate-900 transition hover:text-slate-700">{breadcrumbLabel}</Link>
+            <div className="min-w-0 truncate text-sm text-slate-500">
+              <Link href="/dashboard" className="hidden transition hover:text-slate-900 min-[380px]:inline">Dashboard</Link>
+              <span className="mx-2 hidden text-slate-300 min-[380px]:inline">/</span>
+              <Link href={pathname} className="truncate font-medium text-slate-900 transition hover:text-slate-700">{breadcrumbLabel}</Link>
             </div>
           </div>
 
-          <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             {mode !== "admin" && (
               <Link
                 href="/dashboard/billing"
@@ -423,9 +423,9 @@ export function DashboardShell({
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu backdrop"
           />
-          <div className="absolute left-0 top-0 h-full w-[84vw] max-w-[360px] border-r border-slate-200 bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 p-4">
-              <AppLogo />
+          <div className="absolute left-0 top-0 h-full w-[84vw] max-w-[360px] overflow-hidden border-r border-slate-200 bg-white shadow-2xl">
+            <div className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-200 p-4">
+              <AppLogo className="min-w-0" />
               <button
                 type="button"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800"
@@ -446,7 +446,7 @@ export function DashboardShell({
           sidebarOpen ? "md:pl-72" : "md:pl-20"
         )}
       >
-        <main key={pathname} className="p-4 pb-24 md:p-8 md:pb-8">{children}</main>
+        <main key={pathname} className="min-w-0 overflow-x-hidden p-3 pb-24 sm:p-4 md:p-8 md:pb-8">{children}</main>
       </div>
 
       <BottomNavigation />

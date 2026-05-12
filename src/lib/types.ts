@@ -1,4 +1,11 @@
-export type VideoSource = "youtube" | "gdrive" | "instagram" | "vimeo" | "facebook" | "tiktok";
+export type VideoSource =
+  | "youtube"
+  | "gdrive"
+  | "instagram"
+  | "vimeo"
+  | "facebook"
+  | "tiktok"
+  | "upload";
 export type VideoVisibility = "draft" | "private" | "semi_private" | "public";
 export type ProfileVisibility = "private" | "semi_private" | "public";
 export type VideoAspectRatio = "landscape" | "portrait";

@@ -26,7 +26,7 @@ type ProfileVideo = PublicProfile["videos"][number];
 const pageShellClass = "min-h-screen overflow-x-hidden bg-[#F5F5F4] text-[#111111]";
 const cardClass = "border-[#E1E1DF] bg-white shadow-[0_18px_50px_rgba(17,17,17,0.06)]";
 const darkButtonClass = "bg-[#111111] !text-white shadow-[0_14px_30px_rgba(17,17,17,0.16)] transition hover:bg-[#1E1E1E] focus:outline-none focus:ring-2 focus:ring-[#111111]/25 disabled:bg-[#3A3A3A] disabled:text-[#DADADA] [&_svg]:text-white";
-const monoButtonClass = "inline-flex min-h-[52px] w-full items-center gap-3 rounded-[1.25rem] border border-[#E1E1DF] bg-white px-4 text-sm font-semibold text-[#111111] transition hover:-translate-y-0.5 hover:border-[#111111] hover:shadow-[0_12px_28px_rgba(17,17,17,0.08)] focus:outline-none focus:ring-2 focus:ring-[#111111]/20";
+const monoButtonClass = "inline-flex min-h-[52px] w-full min-w-0 items-center gap-3 rounded-[1.25rem] border border-[#E1E1DF] bg-white px-4 text-sm font-semibold text-[#111111] transition hover:-translate-y-0.5 hover:border-[#111111] hover:shadow-[0_12px_28px_rgba(17,17,17,0.08)] focus:outline-none focus:ring-2 focus:ring-[#111111]/20";
 
 const LINK_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   link: Link2,
@@ -155,13 +155,13 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
             </div>
 
             {/* Name with verified badge */}
-            <h1 className="mt-5 max-w-full text-3xl font-bold tracking-[-0.04em] text-[#111111] sm:text-4xl">
+            <h1 className="text-safe mt-5 max-w-full text-3xl font-bold text-[#111111] sm:text-4xl">
               {profile.user.name || "Creator"}
               {isProfileVerified(profile) && <VerifiedBadge className="ml-2 align-middle" />}
             </h1>
 
             {/* Role and username — single line */}
-            <p className="mt-2 text-sm font-semibold text-[#525252]">
+            <p className="text-safe mt-2 max-w-full text-sm font-semibold text-[#525252]">
               {profile.user.role ? <span className="text-base font-medium text-[#111111]">{profile.user.role}</span> : null}
               {profile.user.role ? <span className="mx-1.5 text-[#DADADA]">•</span> : null}
               <span>@{profile.user.username}</span>
@@ -171,7 +171,7 @@ export function BioCreatorPublicPage({ profile }: { profile: PublicProfile }) {
             <SocialLinks className="mt-5 justify-center" balanced websiteUrl={profile.user.websiteUrl} instagramUrl={profile.user.instagramUrl} youtubeUrl={profile.user.youtubeUrl} facebookUrl={profile.user.facebookUrl} threadsUrl={profile.user.threadsUrl} linkedinUrl={profile.user.linkedinUrl} />
 
             {/* Bio / Description */}
-            <p className="mt-4 max-w-[32rem] text-[15px] leading-tight text-[#525252] sm:text-base">{bio || "Bio belum ditambahkan."}</p>
+            <p className="text-safe mt-4 max-w-[32rem] text-[15px] leading-tight text-[#525252] sm:text-base">{bio || "Bio belum ditambahkan."}</p>
 
             {/* Buttons / Links */}
             <div className="mt-7 w-full space-y-3 sm:space-y-4">
@@ -257,7 +257,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
 
       <main className="relative z-10 mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
         {/* ── Profile Header Card ── */}
-        <section className="mb-10 overflow-hidden rounded-[1.75rem] border border-[#E7E5E4]/60 bg-white/90 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_12px_32px_rgba(17,17,17,0.05)] backdrop-blur-sm sm:rounded-[2rem] sm:p-8 lg:p-10">
+          <section className="mb-10 overflow-hidden rounded-[1.75rem] border border-[#E7E5E4]/60 bg-white/90 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_12px_32px_rgba(17,17,17,0.05)] backdrop-blur-sm sm:rounded-[2rem] sm:p-8 lg:p-10">
           <div className="flex flex-col items-center text-center">
             {/* (a) Avatar */}
             <div className="rounded-full border-[3px] border-white bg-white shadow-[0_8px_24px_rgba(17,17,17,0.10)]">
@@ -265,13 +265,13 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
             </div>
 
             {/* (b) Name + Verified Badge */}
-            <h1 className="mt-5 text-[1.65rem] font-extrabold tracking-[-0.03em] text-[#111111] sm:text-3xl lg:text-[2.1rem]">
+            <h1 className="text-safe mt-5 text-[1.65rem] font-extrabold text-[#111111] sm:text-3xl lg:text-[2.1rem]">
               {creatorName}
               {isProfileVerified(profile) && <VerifiedBadge className="ml-2 inline-block align-middle" />}
             </h1>
 
             {/* (c) Role • @username */}
-            <p className="mt-1.5 text-sm text-[#6B6B6B] sm:text-[15px]">
+            <p className="text-safe mt-1.5 max-w-full text-sm text-[#6B6B6B] sm:text-[15px]">
               {profile.user.role ? <span className="font-semibold text-[#333333]">{profile.user.role}</span> : null}
               {profile.user.role ? <span className="mx-1.5 text-[#D4D4D4]">·</span> : null}
               <span className="font-medium">@{username}</span>
@@ -295,10 +295,10 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
             </p>
 
             {/* (e) Buttons: Back to Bio + Dashboard (conditional) */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+            <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-2.5">
               <Link
                 href={bioHref}
-                className="inline-flex min-h-[42px] items-center gap-2 rounded-full border border-[#E7E5E4] bg-white px-5 text-[13px] font-semibold text-[#333333] shadow-sm transition hover:border-[#111111] hover:shadow-md"
+                  className="inline-flex min-h-[42px] min-w-0 items-center justify-center gap-2 rounded-full border border-[#E7E5E4] bg-white px-5 text-[13px] font-semibold text-[#333333] shadow-sm transition hover:border-[#111111] hover:shadow-md max-[380px]:w-full"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Back to Bio
@@ -306,7 +306,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
               {profile.isOwner && (
                 <Link
                   href="/dashboard"
-                  className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-[#111111] px-5 text-[13px] font-semibold shadow-[0_8px_20px_rgba(17,17,17,0.15)] transition hover:bg-[#1E1E1E] hover:shadow-[0_12px_28px_rgba(17,17,17,0.2)]"
+                  className="inline-flex min-h-[42px] min-w-0 items-center justify-center gap-2 rounded-full bg-[#111111] px-5 text-[13px] font-semibold shadow-[0_8px_20px_rgba(17,17,17,0.15)] transition hover:bg-[#1E1E1E] hover:shadow-[0_12px_28px_rgba(17,17,17,0.2)] max-[380px]:w-full"
                   style={{ color: '#ffffff' }}
                 >
                   Kembali ke Dashboard
@@ -317,8 +317,8 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
         </section>
 
         {/* ── Section Title + View Toggle ── */}
-        <div className="mb-5 rounded-2xl border border-[#E7E5E4]/50 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-sm sm:rounded-[1.25rem]">
-          <div className="flex items-center justify-between gap-3">
+          <div className="mb-5 rounded-2xl border border-[#E7E5E4]/50 bg-white/70 px-4 py-4 shadow-sm backdrop-blur-sm sm:rounded-[1.25rem] sm:px-5">
+          <div className="flex min-w-0 items-center justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-lg font-bold tracking-[-0.02em] text-[#111111] sm:text-xl">
                 Portfolio
@@ -370,14 +370,14 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
             </Link>
           </div>
         ) : (
-          <div className={isList ? "grid gap-3 sm:gap-4" : "grid gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3"}>
+          <div className={isList ? "grid min-w-0 gap-3 sm:gap-4" : "grid min-w-0 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3"}>
             {profile.videos.map((video) => (
               <PortfolioVideoCard key={video.id} video={video} list={isList} />
             ))}
           </div>
         )}
         {profile.totalPages && profile.totalPages > 1 ? (
-          <nav className="mt-7 flex items-center justify-center gap-2" aria-label="Pagination portfolio">
+          <nav className="mt-7 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination portfolio">
             <Link
               href={`${getCreatorPortfolioHref(username)}?view=${isList ? "list" : "grid"}&page=${Math.max(1, (profile.page || 1) - 1)}`}
               className={`inline-flex min-h-10 items-center rounded-full border px-4 text-sm font-semibold ${
@@ -424,11 +424,11 @@ const PortfolioVideoCard = memo(function PortfolioVideoCard({ video, list }: { v
     <PrefetchOnHoverLink href={getVideoDetailHref(video.publicSlug)} className="group block min-w-0">
       <article
         className={`h-full overflow-hidden rounded-[1.5rem] border border-[#E7E5E4]/60 bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(17,17,17,0.04)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(17,17,17,0.08)] ${
-          list ? "flex" : ""
+          list ? "sm:flex" : ""
         }`}
       >
         {/* Thumbnail — forced 16:9 landscape for both grid and list */}
-        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "w-[160px] min-[480px]:w-[220px] sm:w-[280px] lg:w-[320px] shrink-0 aspect-video" : ""}`}>
+        <div className={`relative overflow-hidden bg-[#F0F0EF] ${list ? "aspect-video w-full shrink-0 sm:w-[220px] lg:w-[320px]" : ""}`}>
           {thumb ? (
             <Image
               src={thumb}
@@ -451,7 +451,7 @@ const PortfolioVideoCard = memo(function PortfolioVideoCard({ video, list }: { v
         </div>
 
         {/* Content */}
-        <div className={`p-4 sm:p-5 ${list ? "flex flex-1 flex-col justify-center" : ""}`}>
+        <div className={`min-w-0 p-4 sm:p-5 ${list ? "flex flex-1 flex-col justify-center" : ""}`}>
           {/* Badges row */}
           <div className="mb-2 flex flex-wrap items-center gap-1.5">
             <span className="inline-flex items-center rounded-full border border-[#EBEBEB] bg-[#F7F7F7] px-2.5 py-0.5 text-[10.5px] font-semibold text-[#6B6B6B]">
@@ -473,7 +473,7 @@ const PortfolioVideoCard = memo(function PortfolioVideoCard({ video, list }: { v
           </p>
 
           {/* Footer: date + attribution */}
-          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#F0F0F0] pt-3 text-[11.5px]">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[#F0F0F0] pt-3 text-[11.5px]">
             <span className="inline-flex items-center gap-1 font-medium text-[#9A9A9A]">
               <CalendarDays className="h-3 w-3" />
               {postedLabel}
@@ -579,8 +579,8 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
             {/* Project Description */}
             <Card className={`${glassCard} rounded-[1.75rem] p-5 sm:rounded-[2rem] sm:p-7`}>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8A8A8A]">Project Description</p>
-              <h1 className="mt-3 text-[2rem] font-bold leading-tight tracking-[-0.04em] text-[#111111] sm:text-5xl">{video.title}</h1>
-              <p className="mt-5 whitespace-pre-line text-base leading-8 text-[#525252]">{video.description || "Belum ada deskripsi untuk project ini."}</p>
+              <h1 className="text-safe mt-3 text-[2rem] font-bold leading-tight text-[#111111] sm:text-5xl">{video.title}</h1>
+              <p className="text-safe mt-5 whitespace-pre-line text-base leading-8 text-[#525252]">{video.description || "Belum ada deskripsi untuk project ini."}</p>
             </Card>
           </div>
 

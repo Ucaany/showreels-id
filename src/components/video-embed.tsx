@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
-import { getEmbedUrl } from "@/lib/video-utils";
+import { getEmbedUrl, isDirectVideoUrl } from "@/lib/video-utils";
 import type { VideoSource } from "@/lib/types";
 
 /**
@@ -21,6 +21,7 @@ export function VideoEmbed({
   title: string;
 }) {
   const embedUrl = getEmbedUrl(sourceUrl, source);
+  const directVideo = source === "upload" || isDirectVideoUrl(sourceUrl);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -43,13 +44,20 @@ export function VideoEmbed({
   }, []);
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <div
         ref={containerRef}
-        className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-card"
+        className="video-wrapper border border-slate-200 bg-slate-900 shadow-card"
       >
-        <div className="aspect-video w-full">
-          {isVisible ? (
+        <div className="h-full w-full">
+          {directVideo ? (
+            <video
+              src={sourceUrl}
+              className="h-full w-full bg-slate-900 object-contain"
+              controls
+              preload="metadata"
+            />
+          ) : isVisible ? (
             <iframe
               title={title}
               src={embedUrl}
@@ -68,7 +76,7 @@ export function VideoEmbed({
           )}
         </div>
       </div>
-      <p className="text-sm text-slate-600">
+      <p className="text-safe text-sm text-slate-600">
         Jika embed tidak tampil, buka sumber asli di{" "}
         <Link href={sourceUrl} className="text-brand-600 hover:text-brand-700">
           tautan video ini

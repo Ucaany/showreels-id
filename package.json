@@ -11,6 +11,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:responsive": "node scripts/responsive-screenshots.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "db:generate": "drizzle-kit generate",
@@ -59,6 +60,7 @@
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.10",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

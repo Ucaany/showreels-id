@@ -712,10 +712,10 @@ export function LandingPage({
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <div className="min-h-screen overflow-x-clip bg-canvas text-slate-950">
-        <header className="fixed left-0 right-0 top-0 z-[70] border-b border-slate-200 bg-white/92 backdrop-blur">
-          <div className="mx-auto flex min-h-[4.55rem] w-full max-w-[1160px] items-center justify-between gap-4 px-4 py-2.5 sm:px-6 lg:px-8">
-            <AppLogo />
+      <div className="min-h-screen overflow-x-hidden bg-canvas text-slate-950">
+        <header className="fixed left-0 right-0 top-0 z-[70] overflow-x-hidden border-b border-slate-200 bg-white/92 backdrop-blur">
+          <div className="mx-auto flex min-h-[4.55rem] w-full max-w-[1160px] items-center justify-between gap-2 px-4 py-2.5 sm:gap-4 sm:px-6 lg:px-8">
+            <AppLogo className="max-w-[calc(100vw-9.25rem)] min-[360px]:max-w-[calc(100vw-10.5rem)] lg:max-w-none" />
 
             <nav className="hidden items-center gap-5 text-[0.95rem] font-semibold tracking-[-0.012em] text-slate-900 lg:flex">
               <a
@@ -797,11 +797,11 @@ export function LandingPage({
               )}
             </div>
 
-            <div className="flex items-center gap-2 lg:hidden">
+            <div className="flex shrink-0 items-center gap-2 lg:hidden">
               {!currentUser && (
                 <Link
                   href="/auth/login"
-                  className="inline-flex h-10 items-center rounded-full border border-slate-200 bg-white px-4 text-[0.85rem] font-semibold text-slate-900 transition hover:bg-slate-50"
+                  className="inline-flex h-10 items-center rounded-full border border-slate-200 bg-white px-3 text-[0.84rem] font-semibold text-slate-900 transition hover:bg-slate-50 min-[380px]:px-4"
                 >
                   {loginLabel}
                 </Link>
@@ -827,9 +827,9 @@ export function LandingPage({
               onClick={() => setMobileMenuOpen(false)}
               aria-label="Close menu backdrop"
             />
-            <aside className="absolute right-0 top-0 h-full w-[min(88vw,360px)] border-l border-slate-200 bg-white p-5 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <AppLogo />
+            <aside className="absolute right-0 top-0 h-full w-[min(88vw,360px)] max-w-[calc(100vw-1rem)] overflow-y-auto border-l border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="mb-6 flex min-w-0 items-center justify-between gap-3">
+                <AppLogo className="min-w-0" />
                 <button
                   type="button"
                   className="inline-flex h-12 w-12 items-center justify-center rounded-[1.05rem] border border-slate-200 bg-white text-slate-700"
@@ -937,7 +937,7 @@ export function LandingPage({
         ) : null}
 
         <main className="overflow-x-clip pb-14 pt-[4.72rem] sm:pt-[4.95rem]">
-          <section className="mx-auto w-full max-w-[1160px] overflow-visible px-4 pb-12 pt-16 sm:overflow-hidden sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
+          <section className="mx-auto w-full max-w-[1160px] overflow-visible px-4 pb-12 pt-12 sm:overflow-hidden sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
             <div className="grid items-center gap-9 lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] lg:gap-11">
               <div className="mx-auto min-w-0 max-w-[36rem] text-center lg:mx-0 lg:text-left">
                 <Badge className="max-w-[calc(100vw-2rem)] overflow-hidden rounded-full border border-[#dbe5ff] bg-[#eef4ff]/90 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] !text-[#1a46c9] shadow-none backdrop-blur-[1px] sm:text-eyebrow">
@@ -948,13 +948,13 @@ export function LandingPage({
                     <span className="min-w-0 truncate">{dictionary.landingHeroBadge}</span>
                   </span>
                 </Badge>
-                <h1 className="mt-4 max-w-full overflow-visible pb-1 font-display text-hero-display font-semibold text-slate-950">
+                <h1 className="text-safe mt-4 max-w-full overflow-visible pb-1 font-display text-hero-display font-semibold text-slate-950">
                   {dictionary.landingHeroTitleLead}
                   <span className={cn("mt-1 block pb-1 font-normal leading-[1.02] text-hero-accent", accentTextClass)}>
                     {dictionary.landingHeroTitleAccent}
                   </span>
                 </h1>
-                <p className="mx-auto mt-4 max-w-[35rem] text-body-lg text-slate-600 lg:mx-0">
+                <p className="text-safe mx-auto mt-4 max-w-[35rem] text-body-lg text-slate-600 lg:mx-0">
                   {dictionary.landingHeroDescription}
                 </p>
 
@@ -1123,7 +1123,7 @@ export function LandingPage({
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-stretch">
                 {/* Card 1: Profil Creator Publik (Hero) */}
                 <m.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={false}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0 }}
@@ -1167,7 +1167,7 @@ export function LandingPage({
 
                 {/* Card 2: Sumber Video Multi-platform */}
                 <m.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={false}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.1 }}
@@ -1202,7 +1202,7 @@ export function LandingPage({
 
                 {/* Card 3: Kontrol Visibilitas */}
                 <m.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={false}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.3 }}
@@ -1240,7 +1240,7 @@ export function LandingPage({
 
                 {/* Card 4: Halaman Video Publik */}
                 <m.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={false}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
@@ -1303,7 +1303,7 @@ export function LandingPage({
                   return (
                     <m.article
                       key={platform.name}
-                      initial={{ opacity: 0, y: 18 }}
+                      initial={false}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
                       transition={{ duration: 0.35, delay: index * 0.07 }}
@@ -1358,9 +1358,6 @@ export function LandingPage({
           </section>
 
           <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white py-10 sm:py-12 lg:py-14">
-            <div className="absolute left-0 top-0 h-64 w-64 rounded-full bg-slate-100 opacity-30 blur-3xl" />
-            <div className="absolute right-0 bottom-0 h-64 w-64 rounded-full bg-slate-100 opacity-30 blur-3xl" />
-            
             <div className="relative z-10 mx-auto w-full max-w-[1160px] px-4 sm:px-6 lg:px-8">
               <div className="text-center">
                 <Badge className={sectionBadgeClass}>
@@ -1403,7 +1400,7 @@ export function LandingPage({
                   return (
                     <m.article
                       key={step.label}
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={false}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.3 }}
                       transition={{ duration: 0.4, delay: index * 0.15 }}
@@ -1506,7 +1503,7 @@ export function LandingPage({
                       {THEME_PREVIEWS.map((theme) => (
                         <PhonePreviewMockup
                           key={`${theme.name}-${loopIndex}`}
-                          className="w-[206px] flex-none sm:w-[224px]"
+                          className="w-[206px] flex-none sm:w-[208px]"
                           gradientClassName={theme.bg}
                           name={theme.name}
                           handle={theme.handle.replace("@", "")}
@@ -1792,7 +1789,7 @@ export function LandingPage({
                 <Badge className="rounded-full border border-slate-600 bg-zinc-900 px-3 py-1 text-eyebrow font-extrabold uppercase text-white shadow-sm">
                   {dictionary.landingFinalBadge}
                 </Badge>
-                <h2 className="mt-5 font-display text-[clamp(1.88rem,8.2vw,4rem)] font-extrabold leading-[1.08] tracking-[-0.036em] text-white sm:text-[clamp(2rem,4.5vw,4rem)]">
+                <h2 className="text-safe mt-5 font-display text-[clamp(1.88rem,8.2vw,4rem)] font-extrabold leading-[1.08] text-white sm:text-[clamp(2rem,4.5vw,4rem)]">
                   {dictionary.landingFinalTitleLead}{" "}
                   <span className="font-accent text-[#8da8ff]">
                     {dictionary.landingFinalTitleAccent}
@@ -1841,7 +1838,7 @@ export function LandingPage({
         </main>
 
         <footer className="mt-14 border-t border-slate-200 bg-slate-50">
-          <div className="mx-auto grid w-full max-w-[1160px] gap-7 px-4 py-9 sm:px-6 lg:grid-cols-[1.1fr_0.7fr_0.7fr_0.7fr] lg:px-8">
+          <div className="mx-auto grid w-full max-w-[1160px] gap-7 px-4 py-9 sm:px-6 md:grid-cols-2 lg:grid-cols-[1.1fr_0.7fr_0.7fr_0.7fr] lg:px-8">
             <div>
               <AppLogo />
               <p className="text-body-base mt-3 max-w-md text-slate-600">
@@ -1918,7 +1915,7 @@ export function LandingPage({
             </div>
           </div>
           <div className="border-t border-slate-200">
-            <div className="mx-auto flex w-full max-w-[1160px] items-center justify-between gap-3 px-4 py-4 text-helper text-slate-500 sm:px-6 lg:px-8">
+            <div className="mx-auto flex w-full max-w-[1160px] flex-col items-start justify-between gap-2 px-4 py-4 text-helper text-slate-500 sm:flex-row sm:items-center sm:px-6 lg:px-8">
               <p>Copyright {year} showreels.id. All rights reserved.</p>
               <p className="hidden items-center gap-1 sm:inline-flex">
                 <ChevronDown className="h-4 w-4 rotate-[-90deg]" />

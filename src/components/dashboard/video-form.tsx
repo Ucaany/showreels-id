@@ -503,10 +503,10 @@ export function VideoForm({
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      <Card className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.12),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.99),_rgba(248,250,252,0.98))] shadow-sm shadow-slate-900/5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+    <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,320px)] lg:gap-6">
+      <Card className="min-w-0 overflow-hidden rounded-[1.35rem] border border-slate-200 bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.12),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.99),_rgba(248,250,252,0.98))] p-4 shadow-sm shadow-slate-900/5 sm:rounded-[1.75rem] sm:p-5">
+        <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-700">
               Video dashboard
             </p>
@@ -520,7 +520,7 @@ export function VideoForm({
             </p>
             <p className="mt-1 text-xs font-medium text-slate-500">{autoSaveInfo}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+          <div className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm sm:max-w-[320px]">
             <p className="font-semibold text-slate-900">Status preview</p>
             <p className="mt-1 text-slate-600">
               {galleryEnabled
@@ -784,7 +784,7 @@ export function VideoForm({
             </p>
           ) : null}
 
-          <Button type="submit" disabled={form.formState.isSubmitting}>
+          <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
               ? "Menyimpan..."
               : mode === "edit"
@@ -794,7 +794,7 @@ export function VideoForm({
         </form>
       </Card>
 
-      <Card className="sticky top-24 h-fit space-y-4 rounded-[1.75rem] border border-slate-200 bg-white shadow-sm shadow-slate-900/5">
+      <Card className="min-w-0 space-y-4 rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-sm shadow-slate-900/5 sm:rounded-[1.75rem] sm:p-5 lg:sticky lg:top-24 lg:h-fit">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-700">
             Link publik
@@ -805,11 +805,11 @@ export function VideoForm({
         </div>
         <div className="rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
           <p className="text-xs font-medium text-slate-500">Slug</p>
-          <p className="mt-1 truncate font-mono text-sm text-slate-900">
+            <p className="mt-1 truncate font-mono text-sm text-slate-900">
             /v/{slugPreview || "showreels-portofolio"}
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="grid grid-cols-1 gap-2 text-sm min-[380px]:grid-cols-2">
           <div className="rounded-xl bg-slate-50 px-3 py-2">
             <p className="text-xs font-medium text-slate-500">Sumber</p>
             <p className="mt-1 font-semibold text-slate-900">{source || "-"}</p>

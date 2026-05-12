@@ -173,11 +173,11 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       {/* Filter & Controls */}
       <div className="space-y-3">
         {/* Tab Filters */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="min-w-0 flex-1 overflow-x-auto scrollbar-none">
             <div className="flex min-w-max items-center gap-1.5 pb-0.5">
               {filterItems.map((item) => (
@@ -203,7 +203,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
         </div>
 
         {/* Pinned Info Badge */}
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-violet-50 px-2.5 py-1.5 text-[11px] font-semibold text-violet-700">
             <Pin className="h-3 w-3" />
             Pinned to Bio Link {counts.pinned}/3
@@ -214,7 +214,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
         </div>
 
         {/* Search & Sort Controls */}
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_160px_150px_auto]">
+        <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_160px_150px_auto]">
           <label className="relative block">
             <span className="sr-only">Cari judul video</span>
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -337,7 +337,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
               return (
                 <article
                   key={video.id}
-                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all hover:border-slate-200 hover:shadow-md"
+                  className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all hover:border-slate-200 hover:shadow-md"
                 >
                   {/* Thumbnail */}
                   <div className="relative aspect-video overflow-hidden bg-slate-100">
@@ -386,7 +386,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                     </div>
 
                     {/* Actions */}
-                    <div className="mt-3 flex items-center gap-1.5 border-t border-slate-100 pt-3">
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-3">
                       {isPinnable && (
                         <Link href={`/v/${video.publicSlug}`}>
                           <button
@@ -458,9 +458,9 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
             return (
               <article
                 key={video.id}
-                className="group rounded-xl border border-slate-100 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all hover:border-slate-200 hover:shadow-md sm:rounded-2xl sm:p-4"
+                className="group min-w-0 rounded-xl border border-slate-100 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all hover:border-slate-200 hover:shadow-md sm:rounded-2xl sm:p-4"
               >
-                <div className="grid gap-3 sm:grid-cols-[100px_1fr_auto] sm:items-center">
+                <div className="grid min-w-0 gap-3 sm:grid-cols-[100px_minmax(0,1fr)_auto] sm:items-center">
                   {/* Thumbnail */}
                   <div className="relative h-16 overflow-hidden rounded-xl border border-slate-100 bg-slate-100 sm:h-14">
                     {thumbnail ? (
@@ -497,7 +497,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+                    <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2 text-[11px] text-slate-400">
                       <Badge className="text-[10px]">{getSourceLabel(video.source as never)}</Badge>
                       <span>{formatDateLabel(video.createdAt)}</span>
                       <span className="hidden sm:inline">·</span>
@@ -578,7 +578,7 @@ export function DashboardVideoList({ videos }: DashboardVideoListProps) {
 
       {/* Pagination */}
       {totalPages > 1 ? (
-        <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <button
             type="button"
             disabled={currentPage <= 1}
