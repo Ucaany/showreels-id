@@ -35,6 +35,7 @@ export type BayarGGCreatePaymentRequest = {
   customer_email?: string;
   customer_phone?: string;
   payment_method: BayarGGPaymentMethod;
+  payment_url: string;
   callback_url: string;
   redirect_url: string;
 };
@@ -320,6 +321,7 @@ export async function createBayarGGPayment(input: {
     customer_email: input.customerEmail,
     customer_phone: input.customerPhone,
     payment_method: input.paymentMethod || config.defaultPaymentMethod,
+    payment_url: "https://www.bayar.gg/pay",
     callback_url: input.callbackUrl,
     redirect_url: input.redirectUrl,
   };
