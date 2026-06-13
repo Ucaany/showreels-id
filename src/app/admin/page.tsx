@@ -309,7 +309,7 @@ export default async function AdminPanelPage({
   let scheduledNotificationsRow: { value: number }[] = [{ value: 0 }];
   let activeCampaignsRow: { value: number }[] = [{ value: 0 }];
   let scheduleRows: ScheduleRow[] = [];
-  let settings = { maintenanceEnabled: false, pauseEnabled: false, maintenanceMessage: "", billingEnabled: true };
+  let settings = { maintenanceEnabled: false, pauseEnabled: false, maintenanceMessage: "", billingEnabled: true, defaultPaymentMethod: "bayar_gg" };
   let dbHealth = { ok: false, message: "Data belum dimuat", latencyMs: 0, storage: null as unknown as Awaited<ReturnType<typeof getDatabaseStorageInfo>> };
   const emailQuota = await getDailyQuota().catch(() => ({ used: 0, limit: 100, remaining: 100, percentage: 0 }));
   const adminAnalytics = await getAdminAnalyticsOverview().catch(() => ({

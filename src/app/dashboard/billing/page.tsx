@@ -87,6 +87,7 @@ export default async function DashboardBillingPage({
       whitelabelEnabled: false,
       billingEmail: user.contactEmail || user.email,
       paymentMethod: "bayar_gg",
+      paymentEnabled: true,
       taxInfo: "",
       invoiceNotes: "",
       updatedAt: new Date(),
