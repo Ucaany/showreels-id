@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   CheckCircle2,
-  CreditCard,
   ExternalLink,
   RefreshCw,
   RotateCcw,
@@ -302,31 +301,23 @@ export function PaymentCheckoutPanel({
               </div>
             ) : null}
 
-            {payment.status === "pending" && payment.checkoutUrl ? (
+            {payment.status === "pending" ? (
               <div className="rounded-2xl border border-[#e4dad4] bg-white p-4">
                 <p className="text-sm font-semibold text-[#201b18]">
-                  Lanjutkan Pembayaran
+                  Pembayaran QRIS
                 </p>
                 <p className="mt-1 text-sm text-[#5f524b]">
-                  Klik tombol di bawah untuk membuka halaman pembayaran Bayar.gg
-                  dan menyelesaikan checkout.
+                  Scan QRIS di bawah untuk menyelesaikan pembayaran tanpa keluar
+                  dari dashboard. Setelah membayar, klik Cek Status.
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <a href={payment.checkoutUrl} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" className="w-full sm:w-auto">
-                      <CreditCard className="h-4 w-4" />
-                      Bayar via Bayar.gg
-                    </Button>
-                  </a>
-                  {payment.payCode ? (
-                    <div className="flex items-center gap-2 rounded-xl border border-[#e4dad4] bg-[#f8f3ef] px-3 py-2 text-sm">
-                      <span className="text-[#5f524b]">Kode referensi:</span>
-                      <span className="font-mono font-semibold text-[#201b18]">
-                        {payment.payCode}
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
+                {payment.payCode ? (
+                  <div className="mt-3 flex items-center gap-2 rounded-xl border border-[#e4dad4] bg-[#f8f3ef] px-3 py-2 text-sm">
+                    <span className="text-[#5f524b]">Kode referensi:</span>
+                    <span className="font-mono font-semibold text-[#201b18]">
+                      {payment.payCode}
+                    </span>
+                  </div>
+                ) : null}
 
                 {payment.qrUrl ? (
                   <div className="mt-5 space-y-3 rounded-xl border border-[#e7ddd7] bg-[#fcf9f7] p-3">
@@ -346,6 +337,27 @@ export function PaymentCheckoutPanel({
                         <ExternalLink className="h-4 w-4" />
                         Buka Link QRIS
                       </Button>
+                    </a>
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-[#5f524b]">
+                    QR Code tidak tersedia untuk metode pembayaran ini.
+                  </p>
+                )}
+
+                {payment.checkoutUrl ? (
+                  <div className="mt-4 border-t border-[#e7ddd7] pt-3">
+                    <p className="text-xs text-[#7f6f67]">
+                      Atau bayar melalui halaman Bayar.gg:
+                    </p>
+                    <a
+                      href={payment.checkoutUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-flex items-center gap-1 text-xs text-[#e24f3b] underline hover:text-[#c43d2d]"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      {payment.checkoutUrl}
                     </a>
                   </div>
                 ) : null}

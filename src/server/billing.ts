@@ -234,10 +234,6 @@ export function toBillingPaymentSummary(
     pickFirstString(webhook?.paid_reff_num, statusCheck?.paid_reff_num, payload.paid_reff_num) ||
     null;
 
-  const isQrisLikePayment =
-    paymentMethod.toLowerCase().includes("qris") ||
-    actions.some((action) => action.name === "generate-qr-code");
-
   return {
     invoiceId: transaction.invoiceId,
     amount: transaction.amount,
@@ -249,7 +245,8 @@ export function toBillingPaymentSummary(
     expiresAt,
     payCode,
     qrActions: actions,
-    qrUrl: isQrisLikePayment ? qrUrl : null,
+    // Always return qrUrl if available — dashboard displays QRIS inline
+    qrUrl: qrUrl || null,
   };
 }
 
