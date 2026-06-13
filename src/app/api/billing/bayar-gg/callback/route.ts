@@ -12,6 +12,7 @@ import {
   verifyBayarGGWebhookSignature,
   type BayarGGWebhookPayload,
 } from "@/server/bayar-gg";
+import { getPlanPrice, type BillingCycle, type BillingPlanName } from "@/server/billing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -125,6 +126,48 @@ export async function POST(request: Request) {
   }
 
   const isNewPaid = internalStatus === "paid" && previousStatus !== "paid";
+
+  // Validate nominal: webhook amount must match expected plan price exactly
+  if (isNewPaid) {
+    const expectedAmount = getPlanPrice(
+      transaction.planName as BillingPlanName,
+      (transaction.billingCycle || "monthly") as BillingCycle
+    );
+    const webhookAmount = payload.final_amount ?? payload.amount ?? payload.paid_amount;
+
+    if (
+      webhookAmount !== undefined &&
+      expectedAmount > 0 &&
+      webhookAmount !== expectedAmount
+    ) {
+      console.error("[Bayar.gg Callback] Amount mismatch - marking transaction as failed", {
+        invoiceId: payload.invoice_id,
+        expected: expectedAmount,
+        received: webhookAmount,
+        plan: transaction.planName,
+      });
+
+      // Mark transaction as failed due to amount mismatch
+      try {
+        await db
+          .update(billingTransactions)
+          .set({
+            status: "failed",
+            rawPayload: updatedRawPayload,
+            updatedAt: now,
+          })
+          .where(eq(billingTransactions.id, transaction.id));
+      } catch (error) {
+        console.error("[Bayar.gg Callback] Error marking mismatched transaction as failed:", error);
+      }
+
+      // Return 200 to prevent Bayar.gg from retrying a permanently invalid webhook
+      return NextResponse.json({
+        success: false,
+        error: "Amount mismatch: nominal pembayaran tidak sesuai harga paket.",
+      });
+    }
+  }
 
   if (isNewPaid && transaction.subscriptionId) {
     const subscriptionStatus = mapBayarGGStatusToSubscription(payload.status);

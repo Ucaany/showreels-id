@@ -62,17 +62,19 @@ export async function POST(request: Request) {
         ? 412
         : result.code === "bayar_gg_validation_error"
           ? 400
-          : result.code === "bayar_gg_auth_error" ||
-              result.code === "bayar_gg_network_error" ||
-              result.code === "bayar_gg_error"
+          : result.code === "bayar_gg_amount_mismatch"
             ? 502
-            : result.code === "same_plan_active"
-              ? 409
-              : result.code === "invalid_billing_cycle"
-                ? 400
-                : result.code === "db_not_ready" || result.code === "billing_schema_missing"
-                  ? 503
-                  : 502;
+            : result.code === "bayar_gg_auth_error" ||
+                result.code === "bayar_gg_network_error" ||
+                result.code === "bayar_gg_error"
+              ? 502
+              : result.code === "same_plan_active"
+                ? 409
+                : result.code === "invalid_billing_cycle"
+                  ? 400
+                  : result.code === "db_not_ready" || result.code === "billing_schema_missing"
+                    ? 503
+                    : 502;
 
     return NextResponse.json({ error: result.message, code: result.code }, { status });
   }

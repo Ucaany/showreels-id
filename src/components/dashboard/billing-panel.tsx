@@ -193,7 +193,7 @@ export function BillingPanel({
   }, [globalMutate]);
 
   const handleRenew = () => {
-    router.push(`/payment?plan=${renewTarget}&intent=checkout`);
+    router.push(`/dashboard/payment?plan=${renewTarget}&intent=checkout`);
   };
 
   const handleStopPlan = async () => {
@@ -458,7 +458,7 @@ export function BillingPanel({
               <p className="mt-2 text-xs text-zinc-500">
                 Setelah trial berakhir, akun akan otomatis turun ke plan Free. Upgrade sekarang untuk terus menggunakan fitur Creator!
               </p>
-              <Link href="/payment?plan=creator&intent=checkout" className="mt-3 inline-block">
+              <Link href="/dashboard/payment?plan=creator&intent=checkout" className="mt-3 inline-block">
                 <Button size="sm" className="bg-zinc-800 hover:bg-zinc-700">
                   <Sparkles className="h-4 w-4" />
                   Upgrade ke Creator
@@ -500,7 +500,7 @@ export function BillingPanel({
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-700">Transaksi</p>
               <h2 className="mt-1 text-lg font-semibold text-zinc-950">Riwayat terbaru</h2>
             </div>
-            <Link href="/payment">
+            <Link href="/dashboard/payment">
               <Button variant="secondary" size="sm">
                 <ShieldCheck className="h-4 w-4" />
                 Pilih Plan

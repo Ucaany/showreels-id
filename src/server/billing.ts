@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gt } from "drizzle-orm";
 import { db, isDatabaseConfigured } from "@/db";
 import { billingSubscriptions, billingTransactions } from "@/db/schema";
 import {
@@ -414,6 +414,39 @@ export async function getBillingTransactionByInvoiceForUser(
   }
 }
 
+/**
+ * Cari transaksi pending Bayar.gg yang masih valid (belum expired) untuk user + plan + cycle tertentu.
+ * Digunakan untuk mencegah pembuatan invoice ganda.
+ */
+export async function findValidPendingTransaction(
+  userId: string,
+  planName: BillingPlanName,
+  billingCycle: BillingCycle
+) {
+  if (!isDatabaseConfigured) return null;
+
+  try {
+    const transaction = await db.query.billingTransactions.findFirst({
+      where: and(
+        eq(billingTransactions.userId, userId),
+        eq(billingTransactions.planName, planName),
+        eq(billingTransactions.billingCycle, billingCycle),
+        eq(billingTransactions.status, "pending"),
+        eq(billingTransactions.provider, "bayar_gg"),
+        gt(billingTransactions.expiredAt, new Date())
+      ),
+      orderBy: desc(billingTransactions.createdAt),
+    });
+
+    if (!transaction || !transaction.checkoutUrl) return null;
+    return transaction;
+  } catch (error) {
+    if (isMissingBillingSchemaError(error)) return null;
+    console.error("findValidPendingTransaction_db_error", error);
+    return null;
+  }
+}
+
 export async function createUpgradeTransaction(input: {
   userId: string;
   fullName: string;
@@ -521,6 +554,21 @@ export async function createUpgradeTransaction(input: {
       };
     }
 
+    // Reuse existing valid pending transaction to prevent duplicate invoices
+    const existingPending = await findValidPendingTransaction(
+      input.userId,
+      normalizedTargetPlan,
+      input.billingCycle
+    );
+    if (existingPending) {
+      return {
+        ok: true as const,
+        mode: "paid" as const,
+        transaction: existingPending,
+        payment: toBillingPaymentSummary(existingPending),
+      };
+    }
+
     const bayarGGResult = await createBayarGGPayment({
       amount,
       customerName: input.fullName || "Creator",
@@ -553,6 +601,23 @@ export async function createUpgradeTransaction(input: {
     }
 
     const bayarGGData = bayarGGResult.data;
+
+    // Validate that Bayar.gg returned amount matches expected plan price exactly
+    const providerAmount = bayarGGData.final_amount ?? bayarGGData.amount;
+    if (providerAmount !== undefined && providerAmount !== amount) {
+      console.error("[billing] Amount mismatch from Bayar.gg", {
+        expected: amount,
+        received: providerAmount,
+        invoiceId: bayarGGData.invoice_id,
+        plan: normalizedTargetPlan,
+      });
+      return {
+        ok: false as const,
+        code: "bayar_gg_amount_mismatch" as const,
+        message: `Nominal dari gateway pembayaran (Rp${providerAmount.toLocaleString("id-ID")}) tidak sesuai dengan harga paket (Rp${amount.toLocaleString("id-ID")}). Silakan coba lagi atau hubungi admin.`,
+      };
+    }
+
     const [transaction] = await db
       .insert(billingTransactions)
       .values({
@@ -665,6 +730,36 @@ export async function refreshPaymentTransactionStatus(input: {
 
   if (newInternalStatus === "paid") {
     updateData.paidAt = parseBayarGGDateTime(providerStatus.paid_at) || now;
+
+    // Validate nominal: provider amount must match plan price exactly
+    const providerPaidAmount = providerStatus.final_amount ?? providerStatus.amount;
+    const expectedAmount = getPlanPrice(
+      normalizeBillingPlanName(transaction.planName),
+      transaction.billingCycle as BillingCycle
+    );
+    if (
+      providerPaidAmount !== undefined &&
+      expectedAmount > 0 &&
+      providerPaidAmount !== expectedAmount
+    ) {
+      console.error("[billing] Polling amount mismatch - marking transaction as failed", {
+        invoiceId: transaction.invoiceId,
+        expected: expectedAmount,
+        received: providerPaidAmount,
+        plan: transaction.planName,
+      });
+      // Mark transaction as failed due to amount mismatch
+      updateData.status = "failed";
+      try {
+        await db
+          .update(billingTransactions)
+          .set(updateData)
+          .where(eq(billingTransactions.id, transaction.id));
+      } catch (error) {
+        console.error("[billing] Error marking mismatched transaction as failed:", error);
+      }
+      return { ...transaction, status: "failed" as const, updatedAt: now };
+    }
   }
 
   try {
