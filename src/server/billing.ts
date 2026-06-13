@@ -602,8 +602,9 @@ export async function createUpgradeTransaction(input: {
 
     const bayarGGData = bayarGGResult.data;
 
-    // Validate that Bayar.gg returned amount matches expected plan price exactly
-    const providerAmount = bayarGGData.final_amount ?? bayarGGData.amount;
+    // Validate that Bayar.gg returned base amount matches expected plan price
+    // Note: final_amount includes gateway fees, so we compare against base amount
+    const providerAmount = bayarGGData.amount;
     if (providerAmount !== undefined && providerAmount !== amount) {
       console.error("[billing] Amount mismatch from Bayar.gg", {
         expected: amount,
@@ -731,8 +732,9 @@ export async function refreshPaymentTransactionStatus(input: {
   if (newInternalStatus === "paid") {
     updateData.paidAt = parseBayarGGDateTime(providerStatus.paid_at) || now;
 
-    // Validate nominal: provider amount must match plan price exactly
-    const providerPaidAmount = providerStatus.final_amount ?? providerStatus.amount;
+    // Validate nominal: provider base amount must match plan price
+    // Note: final_amount includes gateway fees, so we compare against base amount
+    const providerPaidAmount = providerStatus.amount;
     const expectedAmount = getPlanPrice(
       normalizeBillingPlanName(transaction.planName),
       transaction.billingCycle as BillingCycle

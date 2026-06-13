@@ -133,7 +133,8 @@ export async function POST(request: Request) {
       transaction.planName as BillingPlanName,
       (transaction.billingCycle || "monthly") as BillingCycle
     );
-    const webhookAmount = payload.final_amount ?? payload.amount ?? payload.paid_amount;
+    // Note: final_amount includes gateway fees, use base amount for validation
+    const webhookAmount = payload.amount;
 
     if (
       webhookAmount !== undefined &&
