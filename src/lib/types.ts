@@ -1,0 +1,124 @@
+export type VideoSource =
+  | "youtube"
+  | "gdrive"
+  | "instagram"
+  | "vimeo"
+  | "facebook"
+  | "tiktok"
+  | "upload";
+export type VideoVisibility = "draft" | "private" | "semi_private" | "public";
+export type ProfileVisibility = "private" | "semi_private" | "public";
+export type VideoAspectRatio = "landscape" | "portrait";
+export type MediaType = "video" | "image";
+export type PreviewType =
+  | "youtube"
+  | "tiktok"
+  | "vimeo"
+  | "upload"
+  | "image"
+  | "instagram"
+  | "facebook"
+  | "gdrive";
+
+export interface StoredImageCrop {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
+export interface CustomLinkEntry {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  platform?: string;
+  badge?: string;
+  thumbnailUrl?: string;
+  enabled: boolean;
+  order: number;
+}
+
+export interface AuthSession {
+  token: string;
+  userId: string;
+  email: string;
+  expiresAt: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  username: string;
+  fullName: string;
+  role: string;
+  avatarUrl: string;
+  avatarCrop?: StoredImageCrop;
+  coverCrop?: StoredImageCrop;
+  bio: string;
+  experience: string;
+  birthDate: string;
+  city: string;
+  contactEmail: string;
+  phoneNumber: string;
+  websiteUrl: string;
+  instagramUrl: string;
+  youtubeUrl: string;
+  facebookUrl: string;
+  threadsUrl: string;
+  linkedinUrl: string;
+  customLinks?: CustomLinkEntry[];
+  skills: string[];
+  profileVisibility: ProfileVisibility;
+  createdAt: string;
+}
+
+export interface VideoItem {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  tags: string[];
+  visibility: VideoVisibility;
+  thumbnailUrl: string;
+  previewImage: string;
+  extraVideoUrls: string[];
+  imageUrls: string[];
+  sourceUrl: string;
+  source: VideoSource;
+  mediaType: MediaType;
+  previewType: PreviewType;
+  aspectRatio: VideoAspectRatio;
+  outputType: string;
+  durationLabel: string;
+  publicSlug: string;
+  createdAt: string;
+}
+
+export interface VideoFormInput {
+  title: string;
+  sourceUrl: string;
+  tags: string;
+  visibility: VideoVisibility;
+  aspectRatio?: VideoAspectRatio;
+  outputType?: string;
+  durationLabel?: string;
+  thumbnailUrl?: string;
+  previewImage?: string;
+  mediaType?: MediaType;
+  previewType?: PreviewType;
+  extraVideoUrls?: string[];
+  imageUrls?: string[];
+  description?: string;
+}
+
+export interface ServiceResult<T> {
+  ok: boolean;
+  data?: T;
+  error?: string;
+}
+
+export interface AppState {
+  session: AuthSession | null;
+  users: UserProfile[];
+  videos: VideoItem[];
+}

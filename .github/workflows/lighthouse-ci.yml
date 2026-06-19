@@ -1,0 +1,30 @@
+# Set GitHub secret LIGHTHOUSE_URL ke URL publik yang boleh di-scan (staging/production).
+name: Lighthouse CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run Lighthouse (one-shot)
+        env:
+          LIGHTHOUSE_URL: ${{ secrets.LIGHTHOUSE_URL }}
+        run: |
+          if [ -z "$LIGHTHOUSE_URL" ]; then
+            echo "LIGHTHOUSE_URL secret not set; skipping."
+            exit 0
+          fi
+          npx --yes lighthouse@12 "$LIGHTHOUSE_URL" \
+            --chrome-flags="--headless --no-sandbox" \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --quiet
