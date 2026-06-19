@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLang } from "@/lib/i18n/landing-context";
 
 export type Lang = "ID" | "EN";
 
@@ -17,12 +16,27 @@ const LANGS: FlagItem[] = [
   { code: "EN", flag: "🇬🇧", label: "EN" },
 ];
 
+const STORAGE_KEY = "showreels-lang";
+
 export default function LanguageSwitch() {
-  const { lang, setLang } = useLang();
+  const [lang, setLang] = useState<Lang>("ID");
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const saved = (typeof window !== "undefined" &&
+      window.localStorage.getItem(STORAGE_KEY)) as Lang | null;
+    if (saved === "ID" || saved === "EN") setLang(saved);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = lang === "ID" ? "id" : "en";
+    }
+  }, [lang]);
 
   const handleSelect = (code: Lang) => {
     setLang(code);
+    window.localStorage.setItem(STORAGE_KEY, code);
     setOpen(false);
   };
 

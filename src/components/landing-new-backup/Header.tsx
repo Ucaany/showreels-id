@@ -3,15 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { navItems } from "@/lib/constants/landing";
-import { navItemsEN } from "@/lib/constants/landing-en";
 import { AppLogo } from "@/components/app-logo";
-import { useLang } from "@/lib/i18n/landing-context";
 import LanguageSwitch from "./LanguageSwitch";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
-  const { lang } = useLang();
-  const nav = lang === "EN" ? navItemsEN : navItems;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -32,7 +28,7 @@ export default function Header() {
           <AppLogo />
 
           <div className="hidden md:flex items-center gap-8">
-            {nav.map((item) => (
+            {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -55,7 +51,7 @@ export default function Header() {
               href="#cta"
               className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-semibold text-ink shadow-[0_6px_20px_rgba(0,0,0,0.15)] transition-all hover:-translate-y-0.5 hover:bg-white/90"
             >
-              {lang === "EN" ? "Get Started" : "Mulai Gratis"}
+              Mulai Gratis
               <svg
                 className="h-3.5 w-3.5"
                 fill="none"

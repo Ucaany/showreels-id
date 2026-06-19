@@ -3,13 +3,8 @@
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import { faqs } from "@/lib/constants/landing";
-import { faqsEN, faqSectionEN } from "@/lib/constants/landing-en";
-import { useLang } from "@/lib/i18n/landing-context";
 
 export default function FAQSection() {
-  const { lang } = useLang();
-  const isEN = lang === "EN";
-  const items = isEN ? faqsEN : faqs;
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   return (
@@ -21,28 +16,18 @@ export default function FAQSection() {
           <div className="mb-3 flex items-center gap-3 text-ink/35">
             <span className="h-px w-10 bg-current" />
             <span className="rounded-full border border-brand-100 bg-white px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-brand-700">
-              {faqSectionEN.eyebrow}
+              FAQ
             </span>
             <span className="h-px w-10 bg-current" />
           </div>
           <h2 className="text-section-display font-semibold text-ink">
-            {isEN ? (
-              <>
-                {faqSectionEN.headline}{" "}
-                <span className="font-accent text-accent">{faqSectionEN.headlineAccent}</span>
-                {faqSectionEN.headlineSuffix}
-              </>
-            ) : (
-              <>
-                Pertanyaan yang{" "}
-                <span className="font-accent text-accent">sering</span> ditanyakan.
-              </>
-            )}
+            Pertanyaan yang{" "}
+            <span className="font-accent text-accent">sering</span> ditanyakan.
           </h2>
         </div>
 
         <div className="space-y-2.5">
-          {items.map((f, i) => {
+          {faqs.map((f, i) => {
             const open = openIdx === i;
             return (
               <div
@@ -55,7 +40,6 @@ export default function FAQSection() {
               >
                 <button
                   onClick={() => setOpenIdx(open ? null : i)}
-                  aria-expanded={open}
                   className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
                 >
                   <span

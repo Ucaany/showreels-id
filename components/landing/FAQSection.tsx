@@ -17,7 +17,7 @@ export default function FAQSection() {
               className="flex min-h-[56px] items-center justify-between rounded-full border border-border bg-white px-5 transition-all hover:border-text-muted hover:shadow-soft"
             >
               <span className="text-sm font-medium text-text-primary">
-                {faq}
+                {faq.q}
               </span>
               <svg
                 className="h-5 w-5 flex-shrink-0 text-text-muted"

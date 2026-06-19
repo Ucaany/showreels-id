@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import { useLang } from "@/lib/i18n/landing-context";
-import { testimonialSectionEN } from "@/lib/constants/landing-en";
 
 type Role = "Videographer" | "Content Creator" | "Editor";
 type Testimonial = {
@@ -25,7 +23,7 @@ const LAST = [
   "Pertiwi",
 ];
 
-const QUOTES_ID = [
+const QUOTES = [
   "Portfolio jadi jauh lebih rapi. Klien langsung klik dari Instagram.",
   "Clean, simpel, dan tampil profesional tanpa ribet setup.",
   "Semua video dari berbagai platform dalam satu link. Game changer.",
@@ -37,20 +35,23 @@ const QUOTES_ID = [
 const ROLES: Role[] = ["Videographer", "Content Creator", "Editor"];
 const RATINGS = [5, 5, 4, 5, 5, 4];
 
-function buildTestimonials(quotes: string[]): Testimonial[] {
-  return Array.from({ length: 6 }, (_, i) => ({
-    name: `${FIRST[i]} ${LAST[i]}`,
-    role: ROLES[i % ROLES.length],
-    quote: quotes[i] ?? quotes[0],
-    rating: RATINGS[i] ?? 5,
-  }));
+function buildTestimonials(): Testimonial[] {
+  return Array.from({ length: 6 }, (_, i) => {
+    const first = FIRST[i];
+    const last = LAST[i];
+    return {
+      name: `${first} ${last}`,
+      role: ROLES[i % ROLES.length],
+      quote: QUOTES[i],
+      rating: RATINGS[i] ?? 5,
+    };
+  });
 }
 
+
+
 export default function TestimonialSection() {
-  const { lang } = useLang();
-  const isEN = lang === "EN";
-  const quotes = isEN ? testimonialSectionEN.quotes : QUOTES_ID;
-  const testimonials = useMemo(() => buildTestimonials(quotes), [quotes]);
+  const testimonials = useMemo(() => buildTestimonials(), []);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [itemsPerView, setItemsPerView] = useState(3);
@@ -82,9 +83,6 @@ export default function TestimonialSection() {
     else setIndex(i);
   };
 
-  const prevLabel = isEN ? "Previous" : "Sebelumnya";
-  const nextLabel = isEN ? "Next" : "Berikutnya";
-
   return (
     <section id="testimoni" className="relative py-14 md:py-16">
       <div className="absolute inset-0 -z-10 grid-bg-soft" aria-hidden />
@@ -93,23 +91,13 @@ export default function TestimonialSection() {
           <div className="mb-4 flex items-center gap-3 text-ink/35">
             <span className="h-px w-10 bg-current" />
             <span className="rounded-full border border-brand-100 bg-white px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-brand-700">
-              {isEN ? testimonialSectionEN.eyebrow : "TESTIMONI"}
+              TESTIMONI
             </span>
             <span className="h-px w-10 bg-current" />
           </div>
           <h2 className="text-section-display font-semibold text-ink">
-            {isEN ? (
-              <>
-                {testimonialSectionEN.headline}{" "}
-                <span className="font-accent text-accent">{testimonialSectionEN.headlineAccent}</span>{" "}
-                {testimonialSectionEN.headlineSuffix}
-              </>
-            ) : (
-              <>
-                Dipakai kreator yang{" "}
-                <span className="font-accent text-accent">serius</span> berkarya.
-              </>
-            )}
+            Dipakai kreator yang{" "}
+            <span className="font-accent text-accent">serius</span> berkarya.
           </h2>
         </div>
 
@@ -148,7 +136,7 @@ export default function TestimonialSection() {
           <div className="mt-6 flex items-center justify-center gap-3">
             <button
               onClick={() => goTo(index - 1)}
-              aria-label={prevLabel}
+              aria-label="Sebelumnya"
               className="flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--border)] bg-white text-ink/70 transition-all hover:border-ink hover:bg-ink hover:text-white"
             >
               <ChevronLeft className="h-4 w-4" strokeWidth={2.4} />
@@ -169,7 +157,7 @@ export default function TestimonialSection() {
             </div>
             <button
               onClick={() => goTo(index + 1)}
-              aria-label={nextLabel}
+              aria-label="Berikutnya"
               className="flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--border)] bg-white text-ink/70 transition-all hover:border-ink hover:bg-ink hover:text-white"
             >
               <ChevronRight className="h-4 w-4" strokeWidth={2.4} />
@@ -191,11 +179,7 @@ function Card({ testimonial }: { testimonial: Testimonial }) {
               <Star
                 key={i}
                 strokeWidth={1.5}
-                className={`h-3.5 w-3.5 ${
-                  i <= testimonial.rating
-                    ? "fill-[#FACC15] text-[#FACC15]"
-                    : "fill-[#E5E7EB] text-[#E5E7EB]"
-                }`}
+                className={`h-3.5 w-3.5 ${i <= testimonial.rating ? "fill-[#FACC15] text-[#FACC15]" : "fill-[#E5E7EB] text-[#E5E7EB]"}`}
               />
             ))}
           </div>
@@ -208,8 +192,12 @@ function Card({ testimonial }: { testimonial: Testimonial }) {
         </p>
       </div>
       <div className="mt-5 border-t border-[color:var(--border-soft)] pt-4">
-        <p className="truncate text-[12.5px] font-semibold text-ink">{testimonial.name}</p>
-        <p className="truncate text-[11px] font-normal text-ink/55">{testimonial.role}</p>
+        <p className="truncate text-[12.5px] font-semibold text-ink">
+          {testimonial.name}
+        </p>
+        <p className="truncate text-[11px] font-normal text-ink/55">
+          {testimonial.role}
+        </p>
       </div>
     </div>
   );

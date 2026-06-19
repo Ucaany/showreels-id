@@ -1,17 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { pricingPlans } from "@/lib/constants/landing";
-import { pricingPlansEN, pricingSectionEN } from "@/lib/constants/landing-en";
-import { useLang } from "@/lib/i18n/landing-context";
 import PricingCard from "./PricingCard";
 
 type BillingCycle = "monthly" | "quarterly";
 
 export default function PricingSection() {
-  const { lang } = useLang();
-  const isEN = lang === "EN";
-  const plans = isEN ? pricingPlansEN : pricingPlans;
   const [cycle, setCycle] = useState<BillingCycle>("quarterly");
 
   return (
@@ -19,6 +15,7 @@ export default function PricingSection() {
       id="harga"
       className="relative overflow-hidden bg-white pt-14 pb-8 text-black md:pt-24 md:pb-12"
     >
+      {/* Subtle grid pattern */}
       <div
         className="absolute inset-0 -z-10 opacity-40"
         style={{
@@ -33,6 +30,7 @@ export default function PricingSection() {
         aria-hidden
       />
 
+      {/* Soft glow blobs for depth */}
       <div
         className="glow-blob h-96 w-96 bg-brand-300/15 left-[5%] top-12 animate-blob"
         aria-hidden
@@ -47,28 +45,18 @@ export default function PricingSection() {
           <div className="mb-3 flex items-center gap-3 text-ink/30">
             <span className="h-px w-10 bg-current" />
             <span className="rounded-full border border-brand-100 bg-white px-3 py-1 font-sans text-[10.5px] font-semibold uppercase tracking-[0.18em] text-brand-700">
-              {isEN ? pricingSectionEN.eyebrow : "Pricing"}
+              Pricing
             </span>
             <span className="h-px w-10 bg-current" />
           </div>
 
           <h2 className="text-section-display font-semibold text-ink">
-            {isEN ? (
-              <>
-                {pricingSectionEN.headline}{" "}
-                <span className="font-accent text-brand-600">{pricingSectionEN.headlineAccent}</span>
-              </>
-            ) : (
-              <>
-                Plans untuk{" "}
-                <span className="font-accent text-brand-600">kebutuhanmu</span>
-              </>
-            )}
+            Plans untuk{" "}
+            <span className="font-accent text-brand-600">kebutuhanmu</span>
           </h2>
           <p className="mt-3 text-body-base font-normal text-ink/60">
-            {isEN
-              ? pricingSectionEN.subheadline
-              : "Kami analisis kebutuhan bisnismu, dan bikin harga yang pas untuk kamu."}
+            Kami analisis kebutuhan bisnismu, dan bikin harga yang pas untuk
+            kamu.
           </p>
 
           <div
@@ -86,7 +74,7 @@ export default function PricingSection() {
                   : "text-ink/45 hover:text-ink/80"
               }`}
             >
-              {isEN ? pricingSectionEN.monthly : "Monthly"}
+              Monthly
             </button>
             <button
               role="tab"
@@ -98,7 +86,7 @@ export default function PricingSection() {
                   : "text-ink/45 hover:text-ink/80"
               }`}
             >
-              {isEN ? pricingSectionEN.quarterly : "3 Months"}
+              3 Months
               <span className="inline-flex items-center rounded-full bg-black/[0.06] px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-[0.1em] text-ink/70">
                 -20%
               </span>
@@ -107,7 +95,7 @@ export default function PricingSection() {
         </div>
 
         <div className="mx-auto mt-8 grid max-w-[760px] items-stretch justify-center gap-4 md:mt-10 md:grid-cols-2">
-          {plans.map((plan) => (
+          {pricingPlans.map((plan) => (
             <PricingCard key={plan.name} plan={plan} cycle={cycle} />
           ))}
         </div>

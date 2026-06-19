@@ -330,10 +330,3 @@ export const testimonials = [
 ];
 
 export type LangType = Lang;
-
-export const footerColumns = {
-  produk: ["Fitur", "Harga", "Changelog", "Roadmap"],
-  perusahaan: ["Tentang Kami", "Blog", "Karir", "Press"],
-  bantuan: ["Dokumentasi", "FAQ", "Kontak", "Status"],
-  legal: ["Privasi", "Syarat & Ketentuan", "Cookies", "DPA"],
-};

@@ -1,4 +1,3 @@
-import { LandingLangProvider } from "@/lib/i18n/landing-context";
 import Header from "./Header";
 import Hero from "./Hero";
 import BeforeAfterSection from "./BeforeAfterSection";
@@ -14,21 +13,19 @@ import Footer from "./Footer";
 
 export default function LandingPageNew() {
   return (
-    <LandingLangProvider>
-      <main className="relative min-h-screen bg-white text-ink pt-[64px]">
-        <Header />
-        <Hero />
-        <BeforeAfterSection />
-        <FeatureSection />
-        <HowItWorks />
-        <StatsSection />
-        <TestimonialSection />
-        <PricingSection />
-        <TrustSection />
-        <FAQSection />
-        <CTABanner />
-        <Footer />
-      </main>
-    </LandingLangProvider>
+    <main className="relative min-h-screen bg-white text-ink pt-[64px]">
+      <Header />
+      <Hero />
+      <BeforeAfterSection />
+      <FeatureSection />
+      <HowItWorks />
+      <StatsSection />
+      <TestimonialSection />
+      <PricingSection />
+      <TrustSection />
+      <FAQSection />
+      <CTABanner />
+      <Footer />
+    </main>
   );
 }
