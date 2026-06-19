@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Menu, X } from "lucide-react";
 import { navItems } from "@/lib/constants/landing";
 import { navItemsEN } from "@/lib/constants/landing-en";
 import { AppLogo } from "@/components/app-logo";
@@ -9,70 +11,202 @@ import { useLang } from "@/lib/i18n/landing-context";
 import LanguageSwitch from "./LanguageSwitch";
 
 export default function Header() {
-  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { lang } = useLang();
   const nav = lang === "EN" ? navItemsEN : navItems;
 
+  // Lock body scroll when sidebar is open
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    if (menuOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [menuOpen]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  // Auto-close on resize to desktop
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () => {
+      if (window.innerWidth >= 1024) setMenuOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
-        scrolled
-          ? "border-b border-white/10 bg-white/70 backdrop-blur-xl shadow-sm"
-          : "border-b border-transparent bg-white/0 backdrop-blur-md"
-      }`}
-    >
-      <div className="container mx-auto max-w-[1180px] px-6">
-        <nav className="flex h-[64px] items-center justify-between gap-3">
-          <AppLogo />
+    <>
+      <header
+        className="fixed top-0 left-0 right-0 z-40 w-full bg-white border-b border-black/[0.06]"
+      >
+        <div className="container mx-auto max-w-[1180px] px-5 sm:px-6">
+          <nav className="flex h-[64px] items-center justify-between gap-3">
+            <AppLogo />
 
-          <div className="hidden md:flex items-center gap-8">
-            {nav.map((item) => (
+            {/* Desktop nav (>= lg) */}
+            <div className="hidden lg:flex items-center gap-7">
+              {nav.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-[13.5px] font-medium text-ink/70 transition-colors hover:text-ink"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Desktop: language + login */}
+              <div className="hidden lg:flex items-center gap-2 sm:gap-3">
+                <LanguageSwitch />
+                <Link
+                  href="/auth/login"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-ink/15 px-4 text-[13px] font-semibold text-ink/80 transition-all hover:-translate-y-0.5 hover:border-ink/30 hover:text-ink"
+                >
+                  Login
+                </Link>
+              </div>
+
+              {/* CTA: plain black text, no card/pill */}
               <Link
-                key={item.href}
-                href={item.href}
-                className="text-[13.5px] font-medium text-ink/70 transition-colors hover:text-ink"
+                href="#cta"
+                className="inline-flex h-10 items-center gap-1.5 text-[13px] font-semibold text-ink transition-colors hover:text-ink/70"
               >
-                {item.label}
+                {lang === "EN" ? "Get Started" : "Mulai Gratis"}
               </Link>
-            ))}
-          </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <LanguageSwitch />
-            <Link
-              href="/auth/login"
-              className="hidden md:inline-flex h-10 items-center gap-1.5 rounded-full border border-ink/15 px-4 text-[13px] font-semibold text-ink/80 transition-all hover:-translate-y-0.5 hover:border-ink/30 hover:text-ink"
-            >
-              Login
-            </Link>
-            <Link
-              href="#cta"
-              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-semibold text-ink shadow-[0_6px_20px_rgba(0,0,0,0.15)] transition-all hover:-translate-y-0.5 hover:bg-white/90"
-            >
-              {lang === "EN" ? "Get Started" : "Mulai Gratis"}
-              <svg
-                className="h-3.5 w-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+              {/* Hamburger: visible below lg */}
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                aria-label="Open menu"
+                aria-expanded={menuOpen}
+                className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink/10 bg-transparent text-ink/80 transition-all hover:border-ink/25 hover:text-ink"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.4}
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
-            </Link>
-          </div>
-        </nav>
-      </div>
-    </header>
+                <Menu className="h-[18px] w-[18px]" strokeWidth={2.2} />
+              </button>
+            </div>
+          </nav>
+        </div>
+      </header>
+
+      {/* Sidebar (tablet & mobile) */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              onClick={closeMenu}
+              className="fixed inset-0 z-50 bg-ink/35 backdrop-blur-sm"
+              aria-hidden
+            />
+
+            {/* Drawer */}
+            <motion.aside
+              key="drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation menu"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.32 }}
+              className="fixed right-0 top-0 z-50 flex h-full w-[min(340px,86vw)] flex-col bg-white shadow-[-24px_0_60px_rgba(10,13,20,0.18)]"
+            >
+              {/* Drawer header */}
+              <div className="flex h-[64px] items-center justify-between border-b border-black/[0.06] px-5">
+                <AppLogo />
+                <button
+                  type="button"
+                  onClick={closeMenu}
+                  aria-label="Close menu"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-ink/10 text-ink/70 transition-all hover:border-ink/25 hover:text-ink"
+                >
+                  <X className="h-4 w-4" strokeWidth={2.2} />
+                </button>
+              </div>
+
+              {/* Nav links */}
+              <nav className="flex-1 overflow-y-auto px-3 py-4">
+                <p className="px-3 pb-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-ink/35">
+                  {lang === "EN" ? "Menu" : "Menu"}
+                </p>
+                <ul className="flex flex-col">
+                  {nav.map((item) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={closeMenu}
+                        className="flex items-center justify-between rounded-xl px-3 py-3 text-[15px] font-semibold text-ink/85 transition-colors hover:bg-brand-50/70 hover:text-ink"
+                      >
+                        <span>{item.label}</span>
+                        <svg
+                          className="h-3.5 w-3.5 text-ink/30"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.2}
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+
+              {/* Footer actions */}
+              <div className="border-t border-black/[0.06] px-4 py-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.18em] text-ink/35">
+                    {lang === "EN" ? "Language" : "Bahasa"}
+                  </p>
+                  <LanguageSwitch />
+                </div>
+
+                <Link
+                  href="/auth/login"
+                  onClick={closeMenu}
+                  className="mb-2 flex h-11 w-full items-center justify-center rounded-xl border border-ink/15 text-[13.5px] font-semibold text-ink/85 transition-all hover:border-ink/30 hover:text-ink"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="#cta"
+                  onClick={closeMenu}
+                  className="flex h-11 w-full items-center justify-center text-[13.5px] font-semibold text-ink"
+                >
+                  {lang === "EN" ? "Get Started" : "Mulai Gratis"}
+                </Link>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

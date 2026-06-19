@@ -152,8 +152,8 @@ export default function PricingCard({
     <div
       className={`relative flex h-full flex-col rounded-2xl p-6 transition-all duration-500 md:p-7 ${
         featured
-          ? "border-2 border-brand-600/40 bg-transparent text-black shadow-[0_24px_60px_-25px_rgba(29,78,216,0.35)] md:hover:-translate-y-1 md:hover:border-brand-600/60"
-          : "border border-black/10 bg-transparent text-black shadow-[0_18px_40px_-25px_rgba(10,13,20,0.18)] backdrop-blur-[6px] md:hover:-translate-y-1 md:hover:border-black/20"
+          ? "border-2 border-brand-600/30 bg-white/90 text-black shadow-[0_24px_60px_-25px_rgba(29,78,216,0.30)] backdrop-blur-[6px] md:hover:-translate-y-1 md:hover:border-brand-600/50"
+          : "border border-black/[0.08] bg-white/80 text-black shadow-[0_18px_40px_-25px_rgba(10,13,20,0.18)] backdrop-blur-[6px] md:hover:-translate-y-1 md:hover:border-black/20"
       }`}
     >
       <div className="mb-5 flex items-start justify-between">

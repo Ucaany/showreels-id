@@ -19,28 +19,6 @@ export default function PricingSection() {
       id="harga"
       className="relative overflow-hidden bg-white pt-14 pb-8 text-black md:pt-24 md:pb-12"
     >
-      <div
-        className="absolute inset-0 -z-10 opacity-40"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, rgba(10,13,20,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(10,13,20,0.05) 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
-          maskImage:
-            "radial-gradient(ellipse 90% 80% at 50% 45%, black 25%, rgba(0,0,0,0.65) 55%, transparent 95%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse 90% 80% at 50% 45%, black 25%, rgba(0,0,0,0.65) 55%, transparent 95%)",
-        }}
-        aria-hidden
-      />
-
-      <div
-        className="glow-blob h-96 w-96 bg-brand-300/15 left-[5%] top-12 animate-blob"
-        aria-hidden
-      />
-      <div
-        className="glow-blob h-80 w-80 bg-brand-200/15 right-[4%] bottom-20 animate-blob"
-        aria-hidden
-      />
 
       <div className="container mx-auto max-w-[1180px] px-6">
         <div className="mx-auto mb-8 flex max-w-[720px] flex-col items-center text-center">
@@ -74,7 +52,7 @@ export default function PricingSection() {
           <div
             role="tablist"
             aria-label="Billing cycle"
-            className="mt-5 inline-flex h-10 items-center gap-1 rounded-full border border-black/10 bg-transparent p-1"
+            className="mt-5 inline-flex h-10 items-center gap-1 rounded-full border border-ink/15 bg-transparent p-1"
           >
             <button
               role="tab"

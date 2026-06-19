@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import useSWR from "swr";
+import { useLang } from "@/lib/i18n/landing-context";
+
+type PlatformStats = { users: number; videos: number };
+
+const fetcher = (url: string) =>
+  fetch(url).then((r) => (r.ok ? (r.json() as Promise<PlatformStats>) : null));
 
 const avatarColors = [
   { bg: "bg-brand-50", text: "text-brand-700" },
@@ -9,20 +15,23 @@ const avatarColors = [
   { bg: "bg-brand-50", text: "text-brand-600" },
 ];
 
-const baseCount = 12505;
-const variance = 18;
+function formatCompact(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M+`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K+`;
+  return `${value}+`;
+}
 
 export default function HeroBadge() {
-  const [count, setCount] = useState(baseCount);
+  const { lang } = useLang();
+  const { data } = useSWR<PlatformStats | null>(
+    "/api/public/platform-stats",
+    fetcher,
+    { refreshInterval: 300_000, revalidateOnFocus: false }
+  );
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      setCount(baseCount + Math.floor(Math.random() * variance));
-    }, 4200);
-    return () => clearInterval(id);
-  }, []);
-
-  const display = count.toLocaleString("id-ID");
+  const userCount = data?.users ?? 0;
+  const display = userCount > 0 ? formatCompact(userCount) : "—";
+  const label = lang === "EN" ? "active users" : "pengguna aktif";
 
   return (
     <div className="inline-flex items-center gap-2.5 rounded-full border border-[color:var(--border)] bg-white px-3.5 py-1.5 shadow-[0_2px_12px_rgba(10,13,20,0.04)]">
@@ -42,7 +51,7 @@ export default function HeroBadge() {
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-600" />
         </span>
         <span className="font-semibold tracking-tight text-ink">{display}</span>
-        <span className="text-ink/60">pengguna aktif</span>
+        <span className="text-ink/60">{label}</span>
       </span>
     </div>
   );
