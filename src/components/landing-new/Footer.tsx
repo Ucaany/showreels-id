@@ -18,28 +18,28 @@ const columnsID = [
   {
     title: "PERUSAHAAN",
     items: [
-      { label: "Tentang Kami", href: "#" },
+      { label: "Tentang Kami", href: "/about" },
       { label: "Blog", href: "#" },
       { label: "Karir", href: "#" },
-      { label: "Kontak", href: "#" },
+      { label: "Kontak", href: "/customer-service" },
     ],
   },
   {
     title: "BANTUAN",
     items: [
       { label: "FAQ", href: "#faq" },
-      { label: "Pusat Bantuan", href: "#" },
+      { label: "Pusat Bantuan", href: "/customer-service" },
       { label: "Panduan", href: "#" },
-      { label: "Kebijakan Privasi", href: "#" },
+      { label: "Kebijakan Privasi", href: "/legal/privasi" },
     ],
   },
   {
     title: "LEGAL",
     items: [
-      { label: "Privasi", href: "#" },
-      { label: "Syarat & Ketentuan", href: "#" },
-      { label: "Cookies", href: "#" },
-      { label: "DMCA", href: "#" },
+      { label: "Privasi", href: "/legal/privasi" },
+      { label: "Syarat & Ketentuan", href: "/legal/syarat" },
+      { label: "Cookies", href: "/legal/cookies" },
+      { label: "DPA", href: "/legal/dpa" },
     ],
   },
 ];
@@ -47,19 +47,39 @@ const columnsID = [
 const columnsEN = [
   {
     title: footerEN.columns.product.heading,
-    items: footerEN.columns.product.items.map((label) => ({ label, href: "#" })),
+    items: [
+      { label: "Features", href: "#fitur" },
+      { label: "Pricing", href: "#harga" },
+      { label: "Templates", href: "#" },
+      { label: "Integrations", href: "#" },
+    ],
   },
   {
     title: footerEN.columns.company.heading,
-    items: footerEN.columns.company.items.map((label) => ({ label, href: "#" })),
+    items: [
+      { label: "About", href: "/about" },
+      { label: "Blog", href: "#" },
+      { label: "Careers", href: "#" },
+      { label: "Contact", href: "/customer-service" },
+    ],
   },
   {
     title: footerEN.columns.help.heading,
-    items: footerEN.columns.help.items.map((label) => ({ label, href: "#" })),
+    items: [
+      { label: "FAQ", href: "#faq" },
+      { label: "Help Center", href: "/customer-service" },
+      { label: "Guides", href: "#" },
+      { label: "Privacy Policy", href: "/legal/privasi" },
+    ],
   },
   {
     title: footerEN.columns.legal.heading,
-    items: footerEN.columns.legal.items.map((label) => ({ label, href: "#" })),
+    items: [
+      { label: "Privacy", href: "/legal/privasi" },
+      { label: "Terms", href: "/legal/syarat" },
+      { label: "Cookies", href: "/legal/cookies" },
+      { label: "DPA", href: "/legal/dpa" },
+    ],
   },
 ];
 

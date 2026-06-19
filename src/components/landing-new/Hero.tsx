@@ -161,7 +161,7 @@ function UsernameForm() {
               </span>
             </div>
             <Link
-              href="/auth/register"
+              href="/auth/signup"
               className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-1.5 text-[12px] font-semibold text-white shadow-[0_4px_16px_rgba(37,99,235,0.28)] hover:-translate-y-0.5 transition-all hover:bg-brand-700"
             >
               {isEN ? "Register Now" : "Daftar Sekarang"}
@@ -235,7 +235,7 @@ export default function Hero() {
             : "Portofolio video profesional dari YouTube, TikTok, Instagram, dan Vimeo — dalam satu halaman siap dibagikan."}
         </p>
 
-        <div className="mt-8 animate-reveal [animation-delay:240ms]">
+        <div id="username" className="mt-8 animate-reveal [animation-delay:240ms]">
           <UsernameForm />
         </div>
       </div>

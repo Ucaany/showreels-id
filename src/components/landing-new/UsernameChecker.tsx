@@ -105,7 +105,7 @@ export default function UsernameChecker() {
                 </span>
               </div>
               <Link
-                href="/auth/register"
+                href="/auth/signup"
                 className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-5 py-2 text-[12.5px] font-semibold text-white shadow-[0_4px_16px_rgba(37,99,235,0.25)] transition-all hover:-translate-y-0.5 hover:bg-brand-700"
               >
                 Daftar Sekarang <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.4} />

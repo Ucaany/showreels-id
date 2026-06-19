@@ -192,7 +192,7 @@ export default function PricingCard({
 
       <div className="mt-5">
         <Link
-          href="#cta"
+          href="/auth/signup"
           className="group inline-flex h-12 w-full items-center justify-center gap-1.5 rounded-xl border border-white/40 bg-transparent text-[13.5px] font-semibold text-white transition-all duration-200 hover:bg-white/10"
         >
           <span>{plan.cta}</span>
