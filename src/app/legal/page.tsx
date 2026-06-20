@@ -30,7 +30,7 @@ export default function LegalPage() {
       <div className="mx-auto w-full max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-900/5 sm:p-8 lg:p-10">
         <div className="max-w-3xl">
           <p className="text-eyebrow font-semibold uppercase text-[#ea580c]">Legal</p>
-          <h1 className="mt-3 font-display text-[clamp(2rem,5vw,3.5rem)] font-extrabold leading-[1.06] tracking-[-0.04em] text-slate-950">
+          <h1 className="mt-3 font-display text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.06] tracking-[-0.04em] text-slate-950">
             Halaman legal Showreels
           </h1>
           <p className="mt-4 text-body-lg text-slate-600">
@@ -48,7 +48,7 @@ export default function LegalPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[1rem] font-extrabold tracking-[-0.02em] text-slate-950">
+                  <p className="text-[1rem] font-bold tracking-[-0.02em] text-slate-950">
                     {item.title}
                   </p>
                   <p className="mt-1 text-[0.9rem] leading-6 text-slate-600">

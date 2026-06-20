@@ -337,3 +337,105 @@ export const footerColumns = {
   bantuan: ["Dokumentasi", "FAQ", "Kontak", "Status"],
   legal: ["Privasi", "Syarat & Ketentuan", "Cookies", "DPA"],
 };
+
+export const customerService = {
+  eyebrow: "Pusat Bantuan",
+  headline: "Kami siap bantu",
+  headlineAccent: "kamu",
+  headlineSuffix: "setiap saat.",
+  subheadline:
+    "Kalau ada kendala soal login, submit video, profil publik, atau pembayaran, tim support kami siap merespons dengan cepat dan jelas.",
+  hoursEyebrow: "WAKTU LAYANAN",
+  hours: [
+    {
+      icon: "clock",
+      label: "Jam Operasional",
+      value: "Senin – Jumat",
+      helper: "09.00 – 17.00 WIB",
+    },
+    {
+      icon: "mail",
+      label: "Email",
+      value: "Respons 1×24 jam",
+      helper: "Di hari kerja",
+    },
+    {
+      icon: "message",
+      label: "WhatsApp",
+      value: "Respons cepat",
+      helper: "Senin – Jumat, 09.00 – 17.00 WIB",
+    },
+  ],
+  channelsEyebrow: "HUBUNGI KAMI",
+  channelsHeading: "Pilih cara",
+  channelsHeadingAccent: "terbaik",
+  channelsHeadingSuffix: " buat kamu.",
+  channelsSubhead:
+    "Tiga kanal resmi yang bisa kamu pakai — pilih yang paling nyaman.",
+  channels: [
+    {
+      title: "Email",
+      value: "support@showreels.id",
+      helper: "Untuk pertanyaan detail & lampiran.",
+      action: "Kirim email",
+      href: "mailto:support@showreels.id",
+      icon: "mail",
+    },
+    {
+      title: "Telepon",
+      value: "+62 898-3704-013",
+      helper: "Senin – Jumat, 09.00 – 17.00 WIB.",
+      action: "Hubungi sekarang",
+      href: "tel:+628983704013",
+      icon: "phone",
+    },
+    {
+      title: "WhatsApp",
+      value: "+62 898-3704-013",
+      helper: "Respons cepat untuk konsultasi awal.",
+      action: "Chat WhatsApp",
+      href: "https://wa.me/628983704013",
+      icon: "message",
+    },
+  ],
+  faqsEyebrow: "FAQ",
+  faqsHeading: "Pertanyaan yang",
+  faqsHeadingAccent: "sering",
+  faqsHeadingSuffix: " ditanyakan.",
+  faqs: [
+    {
+      q: "Bagaimana cara reset password akun saya?",
+      a: "Buka halaman Login, klik 'Lupa password', lalu masukkan email terdaftar. Kami akan mengirim tautan reset ke inbox kamu dalam beberapa menit.",
+    },
+    {
+      q: "Kenapa video saya tidak muncul di halaman publik?",
+      a: "Pastikan status video sudah 'Published' di dashboard dan link platform (YouTube, TikTok, dll) masih aktif. Coba juga bersihkan cache browser lalu muat ulang halaman.",
+    },
+    {
+      q: "Berapa lama proses review submit video?",
+      a: "Untuk paket gratis, review biasanya selesai dalam 1×24 jam kerja. Paket Creator dan Pro mendapat prioritas dan biasanya lebih cepat.",
+    },
+    {
+      q: "Bagaimana cara mengganti paket subscription?",
+      a: "Masuk ke Dashboard → Billing → Kelola Paket. Kamu bisa upgrade, downgrade, atau berhenti kapanpun. Perubahan pro-rated dihitung otomatis.",
+    },
+    {
+      q: "Apakah data saya aman?",
+      a: "Ya. Semua data dienkripsi dengan SSL end-to-end, dan kami tidak pernah membagikan informasi pribadi ke pihak ketiga tanpa izin kamu.",
+    },
+    {
+      q: "Bisa pakai custom domain di showreels.id?",
+      a: "Tentu. Paket Creator dan Pro mendukung custom domain. Hubungi kami via email untuk panduan setup DNS dan verifikasi domain.",
+    },
+  ],
+  ctaEyebrow: "BUTUH BANTUAN SEKARANG?",
+  ctaHeading: "Tim kami",
+  ctaHeadingAccent: "siap",
+  ctaHeadingSuffix: " mendengar.",
+  ctaBody:
+    "Kembali ke dashboard untuk cek status video, atau mulai dari awal dan buat link portofolio profesionalmu hari ini.",
+  ctaPrimaryLabel: "Buka Dashboard",
+  ctaPrimaryHref: "/dashboard",
+  ctaSecondaryLabel: "Mulai Gratis",
+  ctaSecondaryHref: "/auth/signup",
+};

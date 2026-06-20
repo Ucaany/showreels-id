@@ -179,11 +179,6 @@ function UsernameForm() {
         )}
       </div>
 
-      <p className="mt-3 text-center text-[11px] text-ink/30">
-        {isEN ? "Joined by" : "Bergabung dengan"}{" "}
-        <span className="font-semibold text-ink/50">12.000+</span>{" "}
-        {isEN ? "creators." : "kreator."}
-      </p>
     </div>
   );
 }

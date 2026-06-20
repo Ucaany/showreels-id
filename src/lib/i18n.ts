@@ -99,15 +99,6 @@ export const dictionaries = {
     statCreators: "Kreator aktif",
     statVideos: "Video tersimpan",
     statProfiles: "Profil publik siap dibagikan",
-    authLoginTitle: "Masuk ke akunmu",
-    authLoginSubtitle:
-      "Gunakan email dan password, atau langsung lanjut dengan akun Google.",
-    authSignupTitle: "Buat akun kreator",
-    authSignupSubtitle:
-      "Daftar sekali, lalu kelola profil dan video portfolio dari dashboard.",
-    continueGoogle: "Lanjut dengan Google",
-    noAccount: "Belum punya akun?",
-    hasAccount: "Sudah punya akun?",
     welcomeBack: "Selamat datang kembali,",
     myVideos: "Video Portofolio Saya",
     editProfile: "Edit Profil",
@@ -167,6 +158,189 @@ export const dictionaries = {
     landingSolutionItem4: "Custom link prioritas untuk media kit, booking, dan lainnya",
     landingCreatorsTitle: "Creator yang sudah bergabung",
     landingCreatorsEmpty: "Jadilah yang pertama bergabung.",
+
+    // === AUTH — LOGIN ===
+    authLoginTitle: "Masuk ke Showreels",
+    authLoginSubtitle:
+      "Akses dashboard dan kelola portofolio video kamu dalam satu tempat.",
+    authLoginButton: "Masuk",
+    authLoginLocked: "Login terkunci",
+    authLoginProcessing: "Memproses...",
+    authLoginEmailLabel: "Email",
+    authLoginPasswordLabel: "Password",
+    authLoginEmailPlaceholder: "nama@email.com",
+    authLoginPasswordPlaceholder: "Masukkan password",
+    authForgotPasswordLink: "Lupa password?",
+    authNoAccountText: "Belum punya akun?",
+    authSignupNowLink: "Daftar sekarang",
+    authDividerLogin: "atau masuk dengan",
+    authGoogleConnecting: "Menghubungkan...",
+    authTermsLoginLead: "Dengan masuk, kamu menyetujui",
+    authTermsSignupLead: "Dengan mendaftar, kamu menyetujui",
+    authTermsAnd: "dan",
+    authTermsTail: ".",
+    authTermsLink: "Syarat & Ketentuan",
+    authPrivacyLink: "Kebijakan Privasi",
+    authShowPassword: "Lihat password",
+    authHidePassword: "Sembunyikan password",
+    authLoginInvalid: "Periksa kembali email dan password yang diisi.",
+    authLoginWrongCreds: "Email atau password belum cocok.",
+    authLoginBootstrapFailed:
+      "Akun berhasil diverifikasi, tetapi dashboard belum siap dibuka.",
+    authLoginBlockedTitle: "Akun diblokir",
+    authLoginBlockedMessage:
+      "Akun ini sedang diblokir dan belum bisa digunakan.",
+    authLoginLockedTitle: "Login terkunci",
+    authLoginInvalidHint: "Periksa kembali email dan password yang diisi.",
+    authLoginHeldTitle: "Login tertahan",
+    authLoginOauthErrorTitle: "Login belum berhasil",
+    authLoginOauthErrorText:
+      "Terjadi kesalahan saat proses autentikasi.",
+    authLoginGoogleFailedTitle: "Login Google gagal",
+    authLoginGoogleFailedText:
+      "Terjadi kendala saat menghubungkan akun Google. Silakan coba lagi.",
+
+    // === AUTH — SIGNUP ===
+    authSignupTitle: "Buat Akun Showreels",
+    authSignupSubtitle:
+      "Daftar gratis. Username unik untuk portofoliomu akan dibuatkan otomatis dan bisa diubah nanti.",
+    authSignupButton: "Daftar",
+    authSignupLocked: "Daftar terkunci",
+    authSignupProcessing: "Membuat akun...",
+    authSignupFullNameLabel: "Nama lengkap",
+    authSignupEmailLabel: "Email",
+    authSignupPasswordLabel: "Password",
+    authSignupConfirmPasswordLabel: "Konfirmasi password",
+    authSignupPasswordPlaceholder: "Minimal 8 karakter",
+    authSignupConfirmPasswordPlaceholder: "Ulangi password",
+    authHasAccountText: "Sudah punya akun?",
+    authLoginHereLink: "Masuk di sini",
+    authDividerSignup: "atau daftar dengan",
+    authGoogleSignupFailedTitle: "Daftar dengan Google gagal",
+    authGoogleSignupFailedText:
+      "Terjadi kendala saat menghubungkan akun Google. Silakan coba lagi.",
+    authSignupInvalid: "Periksa kembali data pendaftaran yang diisi.",
+    authSignupRegisterFailed: "Gagal membuat akun.",
+    authSignupAutoLoginTitle: "Akun berhasil dibuat",
+    authSignupAutoLoginText:
+      "Akun sudah dibuat. Silakan login dengan email dan password yang baru didaftarkan.",
+    authSignupAutoLoginInline:
+      "Akun sudah dibuat, tetapi login otomatis belum berhasil. Silakan masuk manual.",
+    authSignupSetupIncomplete:
+      "Akun sudah dibuat, tetapi setup awal belum selesai.",
+    authSignupBlockedTitle: "Akun diblokir",
+    authSignupBlockedMessage:
+      "Akun ini sedang diblokir dan belum bisa digunakan.",
+    authSignupLockedTitle: "Daftar terkunci",
+    authSignupInvalidHint:
+      "Periksa kembali data pendaftaran yang diisi.",
+    authSignupDbNotConfigured:
+      "Database belum terhubung. Coba lagi setelah konfigurasi selesai.",
+    authSignupInvalidPayload: "Data pendaftaran belum valid.",
+    authSignupUsernameReserved:
+      "Username tidak dapat digunakan. Coba username lain.",
+    authSignupUsernameTaken: "Username sudah dipakai. Pilih username lain.",
+    authSignupEmailTaken:
+      "Email sudah terdaftar. Silakan masuk ke akunmu.",
+    authSignupGenericError:
+      "Terjadi kesalahan saat membuat akun. Silakan coba lagi.",
+    authSignupNotReadyTitle: "Profil belum siap",
+    authSignupCatchError:
+      "Pendaftaran belum bisa diproses. Coba lagi sebentar lagi.",
+
+    // === AUTH — FORGOT PASSWORD ===
+    authResetTitle: "Atur Ulang Password",
+    authResetSubtitle:
+      "Masukkan email terdaftar untuk menerima link reset",
+    authResetSentSubtitle: "Cek email kamu untuk instruksi selanjutnya",
+    authResetButton: "Kirim Link Reset",
+    authResetSending: "Mengirim...",
+    authResetResend: "Kirim ulang",
+    authResetRememberText: "Ingat kembali?",
+    authResetBackToLogin: "Kembali ke login",
+    authResetEmptyEmail: "Silakan masukkan alamat email.",
+    authResetSendFailed: "Gagal mengirim link reset. Coba lagi.",
+    authResetNetworkError:
+      "Terjadi kesalahan. Periksa koneksi internet dan coba lagi.",
+    authResetEmailSentPrefix:
+      "Link untuk mengatur ulang password telah dikirim ke",
+    authResetCheckSpamLead:
+      "Buka email kamu dan klik tautan di dalamnya.",
+    authResetCheckSpamTail:
+      "Jika tidak muncul, cek folder spam atau junk.",
+    authResetEmailLabel: "Email",
+    authResetEmailPlaceholder: "nama@email.com",
+    authResetEmailRequiredTitle: "Email wajib diisi",
+    authResetEmailRequiredHint: "Silakan masukkan alamat email.",
+    authResetSendFailedTitle: "Gagal mengirim link reset",
+    authResetNetworkErrorTitle: "Terjadi kesalahan",
+
+    // === LANDING — HERO (Hero.tsx UI strings) ===
+    landingHeroHeadlineLead: "Satu link untuk",
+    landingHeroHeadlineAccent: "semua karya video terbaikmu.",
+    landingHeroSubheadline:
+      "Portofolio video profesional dari YouTube, TikTok, Instagram, dan Vimeo — dalam satu halaman siap dibagikan.",
+    landingHeroUsernamePlaceholder: "username-kamu",
+    landingHeroClear: "Hapus",
+    landingHeroCheck: "Cek",
+    landingHeroAvailableSuffix: "tersedia!",
+    landingHeroTakenInline: "Username sudah dipakai, coba yang lain.",
+    landingHeroRegisterCta: "Daftar Sekarang",
+
+    // === LANDING — CTA BANNER ===
+    landingCtaPointFast: "Setup < 2 menit",
+    landingCtaPointFree: "Tanpa kartu kredit",
+    landingCtaPointCustom: "Full customize",
+    landingCtaTitle: "Siap tampil profesional dengan satu link?",
+    landingCtaPrimaryButton: "Mulai Gratis",
+    landingCtaSecondaryButton: "Login",
+
+    // === LANDING — HOW IT WORKS ===
+    landingHowItWorksStepsEyebrow: "CARA KERJA",
+    landingHowItWorksStepsDescription:
+      "Mulai gunakan Showreels dalam 3 langkah sederhana dan cepat.",
+    landingHowItWorksStepPill1: "LANGKAH 1",
+    landingHowItWorksStepPill2: "LANGKAH 2",
+    landingHowItWorksStepPill3: "LANGKAH 3",
+    landingHowItWorksStepTitle1: "Pilih Paket",
+    landingHowItWorksStepTitle2: "Tambah Video",
+    landingHowItWorksStepTitle3: "Publish & Bagikan",
+    landingHowItWorksStepHeading1: "Mulai gratis, upgrade kapan saja",
+    landingHowItWorksStepBody1:
+      "Tidak perlu kartu kredit. Pilih paket Free atau langsung Creator untuk fitur penuh.",
+    landingHowItWorksStepHeading2: "Username custom, semua platform",
+    landingHowItWorksStepBody2:
+      "Daftarkan username unikmu dan sambungkan YouTube, TikTok, Instagram, Vimeo dalam satu klik.",
+    landingHowItWorksStepHeading3: "Satu link, semua platform",
+    landingHowItWorksStepBody3:
+      "Bagikan ke Instagram bio, TikTok, LinkedIn, atau WhatsApp. Pantau views dan klik real-time.",
+    landingHowItWorksResult1Lead: "Akun aktif dalam",
+    landingHowItWorksResult1Value: "< 1 menit",
+    landingHowItWorksResult2Lead: "Link siap pakai di",
+    landingHowItWorksResult2Value: "showreels.id/kamu",
+    landingHowItWorksResult3Lead: "Rata-rata klik pertama dalam",
+    landingHowItWorksResult3Value: "24 jam",
+    landingHowItWorksNextStep: "Langkah berikutnya",
+    landingHowItWorksReadyCta: "Siap? Mulai sekarang",
+
+    // === LANDING — TRUST SECTION ===
+    landingTrustEncrypted: "Pembayaran terenkripsi & aman",
+    landingTrustCancelAnytime: "Batalkan kapan saja",
+
+    // === LANDING — FEATURE SECTION ===
+    landingFeatureSectionEyebrow: "FITUR UTAMA",
+    landingFeatureSectionHeadline: "Tools sederhana untuk portofolio profesional.",
+
+    // === LANDING — FAQ SECTION ===
+    landingFaqSectionHeadline: "Pertanyaan yang sering ditanyakan.",
+
+    // === LANDING — FEATURE CARD ===
+    landingFeatureCardBuildLink: "Buat Link",
+
+    // === LANDING — HEADER (extra UI strings) ===
+    landingHeaderMenu: "Menu",
+    landingHeaderLanguageLabel: "Bahasa",
+    landingHeaderGetStarted: "Mulai Gratis",
   },
   en: {
     language: "Language",
@@ -265,15 +439,6 @@ export const dictionaries = {
     statCreators: "Active creators",
     statVideos: "Stored videos",
     statProfiles: "Share-ready public profiles",
-    authLoginTitle: "Sign in to your account",
-    authLoginSubtitle:
-      "Use your email and password, or continue instantly with Google.",
-    authSignupTitle: "Create your creator account",
-    authSignupSubtitle:
-      "Sign up once, then manage your profile and portfolio videos from the dashboard.",
-    continueGoogle: "Continue with Google",
-    noAccount: "Don't have an account yet?",
-    hasAccount: "Already have an account?",
     welcomeBack: "Welcome back,",
     myVideos: "My Portfolio Videos",
     editProfile: "Edit Profile",
@@ -334,6 +499,190 @@ export const dictionaries = {
     landingSolutionItem4: "Priority custom links for media kit, booking, and more",
     landingCreatorsTitle: "Creators who have joined",
     landingCreatorsEmpty: "Be the first to join.",
+
+    // === AUTH — LOGIN ===
+    authLoginTitle: "Sign in to Showreels",
+    authLoginSubtitle:
+      "Access your dashboard and manage your video portfolio in one place.",
+    authLoginButton: "Sign in",
+    authLoginLocked: "Sign in locked",
+    authLoginProcessing: "Processing...",
+    authLoginEmailLabel: "Email",
+    authLoginPasswordLabel: "Password",
+    authLoginEmailPlaceholder: "name@email.com",
+    authLoginPasswordPlaceholder: "Enter your password",
+    authForgotPasswordLink: "Forgot password?",
+    authNoAccountText: "Don't have an account yet?",
+    authSignupNowLink: "Sign up now",
+    authDividerLogin: "or sign in with",
+    authGoogleConnecting: "Connecting...",
+    authTermsLoginLead: "By signing in, you agree to our",
+    authTermsSignupLead: "By signing up, you agree to our",
+    authTermsAnd: "and",
+    authTermsTail: ".",
+    authTermsLink: "Terms & Conditions",
+    authPrivacyLink: "Privacy Policy",
+    authShowPassword: "Show password",
+    authHidePassword: "Hide password",
+    authLoginInvalid: "Please double-check your email and password.",
+    authLoginWrongCreds: "Email or password is incorrect.",
+    authLoginBootstrapFailed:
+      "Your account is verified, but the dashboard is not ready yet.",
+    authLoginBlockedTitle: "Account blocked",
+    authLoginBlockedMessage:
+      "This account is currently blocked and cannot be used.",
+    authLoginLockedTitle: "Login locked",
+    authLoginInvalidHint:
+      "Please double-check the email and password you entered.",
+    authLoginHeldTitle: "Sign in held",
+    authLoginOauthErrorTitle: "Sign in failed",
+    authLoginOauthErrorText:
+      "Something went wrong during authentication.",
+    authLoginGoogleFailedTitle: "Google sign in failed",
+    authLoginGoogleFailedText:
+      "We couldn't connect your Google account. Please try again.",
+
+    // === AUTH — SIGNUP ===
+    authSignupTitle: "Create a Showreels account",
+    authSignupSubtitle:
+      "Sign up for free. A unique username for your portfolio will be generated automatically and you can change it later.",
+    authSignupButton: "Sign up",
+    authSignupLocked: "Sign up locked",
+    authSignupProcessing: "Creating account...",
+    authSignupFullNameLabel: "Full name",
+    authSignupEmailLabel: "Email",
+    authSignupPasswordLabel: "Password",
+    authSignupConfirmPasswordLabel: "Confirm password",
+    authSignupPasswordPlaceholder: "At least 8 characters",
+    authSignupConfirmPasswordPlaceholder: "Repeat password",
+    authHasAccountText: "Already have an account?",
+    authLoginHereLink: "Sign in here",
+    authDividerSignup: "or sign up with",
+    authGoogleSignupFailedTitle: "Google sign up failed",
+    authGoogleSignupFailedText:
+      "We couldn't connect your Google account. Please try again.",
+    authSignupInvalid: "Please double-check your sign up details.",
+    authSignupRegisterFailed: "Failed to create account.",
+    authSignupAutoLoginTitle: "Account created",
+    authSignupAutoLoginText:
+      "Your account has been created. Please sign in with the email and password you just registered.",
+    authSignupAutoLoginInline:
+      "Your account was created, but auto sign in failed. Please sign in manually.",
+    authSignupSetupIncomplete:
+      "Your account was created, but the initial setup is not complete yet.",
+    authSignupBlockedTitle: "Account blocked",
+    authSignupBlockedMessage:
+      "This account is currently blocked and cannot be used.",
+    authSignupLockedTitle: "Sign up locked",
+    authSignupInvalidHint:
+      "Please double-check the sign-up details you entered.",
+    authSignupDbNotConfigured:
+      "The database is not connected yet. Please try again once setup is complete.",
+    authSignupInvalidPayload: "The sign-up details are not valid.",
+    authSignupUsernameReserved:
+      "This username cannot be used. Please try another one.",
+    authSignupUsernameTaken: "This username is already taken. Please choose another one.",
+    authSignupEmailTaken:
+      "This email is already registered. Please sign in to your account.",
+    authSignupGenericError:
+      "Something went wrong while creating your account. Please try again.",
+    authSignupNotReadyTitle: "Profile not ready",
+    authSignupCatchError:
+      "We couldn't process your sign up. Please try again in a moment.",
+
+    // === AUTH — FORGOT PASSWORD ===
+    authResetTitle: "Reset your password",
+    authResetSubtitle:
+      "Enter your registered email to receive a reset link",
+    authResetSentSubtitle: "Check your email for the next steps",
+    authResetButton: "Send reset link",
+    authResetSending: "Sending...",
+    authResetResend: "Resend",
+    authResetRememberText: "Remembered it?",
+    authResetBackToLogin: "Back to sign in",
+    authResetEmptyEmail: "Please enter your email address.",
+    authResetSendFailed: "Failed to send the reset link. Please try again.",
+    authResetNetworkError:
+      "Something went wrong. Please check your internet connection and try again.",
+    authResetEmailSentPrefix:
+      "A link to reset your password has been sent to",
+    authResetCheckSpamLead:
+      "Open your email and click the link inside.",
+    authResetCheckSpamTail:
+      "If you don't see it, please check your spam or junk folder.",
+    authResetEmailLabel: "Email",
+    authResetEmailPlaceholder: "name@email.com",
+    authResetEmailRequiredTitle: "Email is required",
+    authResetEmailRequiredHint: "Please enter your email address.",
+    authResetSendFailedTitle: "Failed to send the reset link",
+    authResetNetworkErrorTitle: "Something went wrong",
+
+    // === LANDING — HERO (Hero.tsx UI strings) ===
+    landingHeroHeadlineLead: "One link for",
+    landingHeroHeadlineAccent: "all your best video work.",
+    landingHeroSubheadline:
+      "A professional video portfolio from YouTube, TikTok, Instagram, and Vimeo — on a single page that's ready to share.",
+    landingHeroUsernamePlaceholder: "your-username",
+    landingHeroClear: "Clear",
+    landingHeroCheck: "Check",
+    landingHeroAvailableSuffix: "available!",
+    landingHeroTakenInline: "This username is taken, please try another.",
+    landingHeroRegisterCta: "Sign up now",
+
+    // === LANDING — CTA BANNER ===
+    landingCtaPointFast: "Setup in < 2 minutes",
+    landingCtaPointFree: "No credit card",
+    landingCtaPointCustom: "Full customize",
+    landingCtaTitle: "Ready to look professional with a single link?",
+    landingCtaPrimaryButton: "Start free",
+    landingCtaSecondaryButton: "Sign in",
+
+    // === LANDING — HOW IT WORKS ===
+    landingHowItWorksStepsEyebrow: "HOW IT WORKS",
+    landingHowItWorksStepsDescription:
+      "Start using Showreels in 3 simple and quick steps.",
+    landingHowItWorksStepPill1: "STEP 1",
+    landingHowItWorksStepPill2: "STEP 2",
+    landingHowItWorksStepPill3: "STEP 3",
+    landingHowItWorksStepTitle1: "Pick a plan",
+    landingHowItWorksStepTitle2: "Add your videos",
+    landingHowItWorksStepTitle3: "Publish & share",
+    landingHowItWorksStepHeading1: "Start free, upgrade anytime",
+    landingHowItWorksStepBody1:
+      "No credit card required. Choose the Free plan or jump straight to Creator for the full feature set.",
+    landingHowItWorksStepHeading2: "Custom username, every platform",
+    landingHowItWorksStepBody2:
+      "Register your unique username and connect YouTube, TikTok, Instagram, Vimeo in a single click.",
+    landingHowItWorksStepHeading3: "One link, every platform",
+    landingHowItWorksStepBody3:
+      "Share it on your Instagram bio, TikTok, LinkedIn, or WhatsApp. Track views and clicks in real time.",
+    landingHowItWorksResult1Lead: "Account active in",
+    landingHowItWorksResult1Value: "< 1 minute",
+    landingHowItWorksResult2Lead: "Link ready at",
+    landingHowItWorksResult2Value: "showreels.id/you",
+    landingHowItWorksResult3Lead: "Average first click in",
+    landingHowItWorksResult3Value: "24 hours",
+    landingHowItWorksNextStep: "Next step",
+    landingHowItWorksReadyCta: "Ready? Let's start",
+
+    // === LANDING — TRUST SECTION ===
+    landingTrustEncrypted: "Encrypted & secure payments",
+    landingTrustCancelAnytime: "Cancel anytime",
+
+    // === LANDING — FEATURE SECTION ===
+    landingFeatureSectionEyebrow: "CORE FEATURES",
+    landingFeatureSectionHeadline: "Simple tools for a professional portfolio.",
+
+    // === LANDING — FAQ SECTION ===
+    landingFaqSectionHeadline: "Frequently asked questions.",
+
+    // === LANDING — FEATURE CARD ===
+    landingFeatureCardBuildLink: "Build Link",
+
+    // === LANDING — HEADER (extra UI strings) ===
+    landingHeaderMenu: "Menu",
+    landingHeaderLanguageLabel: "Language",
+    landingHeaderGetStarted: "Start free",
   },
 } as const;
 
@@ -348,4 +697,27 @@ export function resolveLocale(input?: string | null): Locale {
 
 export function getDictionary(locale: Locale): Dictionary {
   return dictionaries[locale];
+}
+
+const REGISTER_ERROR_CODE_TO_KEY: Record<string, keyof Dictionary> = {
+  db_not_configured: "authSignupDbNotConfigured",
+  invalid_payload: "authSignupInvalidPayload",
+  username_reserved: "authSignupUsernameReserved",
+  username_taken: "authSignupUsernameTaken",
+  email_taken: "authSignupEmailTaken",
+  register_failed: "authSignupGenericError",
+};
+
+export function getRegisterErrorMessage(
+  dictionary: Dictionary,
+  payload: { code?: string; error?: string } | null | undefined
+): string {
+  if (payload?.code && payload.code in REGISTER_ERROR_CODE_TO_KEY) {
+    const key = REGISTER_ERROR_CODE_TO_KEY[payload.code];
+    return dictionary[key] as string;
+  }
+  if (payload?.error && payload.error !== "INVALID_PAYLOAD") {
+    return payload.error;
+  }
+  return dictionary.authSignupGenericError;
 }

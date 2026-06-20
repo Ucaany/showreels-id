@@ -451,7 +451,7 @@ function PhonePreviewMockup({
           {avatarText ? (
             <span
               className={cn(
-                "inline-flex items-center justify-center rounded-full bg-slate-100 font-extrabold text-slate-600",
+                "inline-flex items-center justify-center rounded-full bg-slate-100 font-bold text-slate-600",
                 compact ? "h-10 w-10 text-[0.9rem]" : "h-14 w-14 text-[1.15rem]"
               )}
             >
@@ -864,7 +864,7 @@ export function LandingPage({
   const sectionBadgeClass =
     "rounded-full border border-[#dbe5ff] bg-[#eef4ff] px-2.5 py-1 text-eyebrow font-semibold uppercase text-[#1a46c9] shadow-none";
   const sectionTitleClass =
-    "mt-3 font-display text-section-display font-extrabold text-slate-950";
+    "mt-3 font-display text-section-display font-bold text-slate-950";
   const sectionDescriptionClass = "mt-3 max-w-3xl text-body-lg text-slate-600";
   const centeredSectionDescriptionClass = cn(sectionDescriptionClass, "mx-auto");
   const accentTextClass = "font-accent text-[#1a46c9]";
@@ -1708,7 +1708,7 @@ export function LandingPage({
                 <Badge className={sectionBadgeClass}>
                   {dictionary.landingPricingBadge}
                 </Badge>
-                <h2 className="mt-3 font-display text-section-display font-extrabold text-slate-950">
+                <h2 className="mt-3 font-display text-section-display font-bold text-slate-950">
                   <span>{dictionary.landingPricingTitleLead}</span>{" "}
                   <span className={accentTextClass}>
                     {dictionary.landingPricingTitleAccent}
@@ -1772,7 +1772,7 @@ export function LandingPage({
 
                 <div className="mt-6 flex justify-center">
                   <Link href="/payment?plan=creator">
-                    <Button className="!shadow-none bg-[#1a46c9] px-6 font-extrabold text-white hover:bg-[#153aa8]">
+                    <Button className="!shadow-none bg-[#1a46c9] px-6 font-bold text-white hover:bg-[#153aa8]">
                       {locale === "en" ? "Choose plan & continue" : "Pilih paket & lanjutkan"}
                     </Button>
                   </Link>
@@ -1964,10 +1964,10 @@ export function LandingPage({
               </m.div>
 
               <div className="relative z-10 mx-auto max-w-3xl text-center">
-                <Badge className="rounded-full border border-slate-600 bg-zinc-900 px-3 py-1 text-eyebrow font-extrabold uppercase text-white shadow-sm">
+                <Badge className="rounded-full border border-slate-600 bg-zinc-900 px-3 py-1 text-eyebrow font-bold uppercase text-white shadow-sm">
                   {dictionary.landingFinalBadge}
                 </Badge>
-                <h2 className="text-safe mt-5 font-display text-[clamp(1.88rem,8.2vw,4rem)] font-extrabold leading-[1.08] text-white sm:text-[clamp(2rem,4.5vw,4rem)]">
+                <h2 className="text-safe mt-5 font-display text-[clamp(1.88rem,8.2vw,4rem)] font-bold leading-[1.08] text-white sm:text-[clamp(2rem,4.5vw,4rem)]">
                   {dictionary.landingFinalTitleLead}{" "}
                   <span className="font-accent text-[#8da8ff]">
                     {dictionary.landingFinalTitleAccent}
@@ -1980,7 +1980,7 @@ export function LandingPage({
 
                 <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
                   <Link href="/auth/signup" className="w-full sm:w-auto">
-                    <Button className="w-full !shadow-none bg-[#1a46c9] px-6 font-extrabold text-white hover:bg-[#153aa8] sm:w-auto sm:min-w-[230px]">
+                    <Button className="w-full !shadow-none bg-[#1a46c9] px-6 font-bold text-white hover:bg-[#153aa8] sm:w-auto sm:min-w-[230px]">
                       {dictionary.landingFinalPrimaryCta}
                       <ArrowRight className="h-4 w-4" />
                     </Button>

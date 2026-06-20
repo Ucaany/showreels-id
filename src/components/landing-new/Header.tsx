@@ -2,18 +2,22 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { navItems } from "@/lib/constants/landing";
 import { navItemsEN } from "@/lib/constants/landing-en";
 import { AppLogo } from "@/components/app-logo";
+import { AvatarBadge } from "@/components/avatar-badge";
 import { useLang } from "@/lib/i18n/landing-context";
 import LanguageSwitch from "./LanguageSwitch";
 
-export default function Header() {
+export default function Header({ hideNav = false }: { hideNav?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { lang } = useLang();
+  const { data: session, status } = useSession();
   const nav = lang === "EN" ? navItemsEN : navItems;
+  const isAuth = status === "authenticated" && !!session?.user;
 
   // Lock body scroll when sidebar is open
   useEffect(() => {
@@ -58,37 +62,45 @@ export default function Header() {
             <AppLogo />
 
             {/* Desktop nav (>= lg) */}
-            <div className="hidden lg:flex items-center gap-7">
-              {nav.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-[13.5px] font-medium text-ink/70 transition-colors hover:text-ink"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
+            {!hideNav && (
+              <div className="hidden lg:flex items-center gap-7">
+                {nav.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="text-[13.5px] font-medium text-ink/70 transition-colors hover:text-ink"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
 
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Desktop: language + login */}
+              {/* Desktop: language + auth actions */}
               <div className="hidden lg:flex items-center gap-2 sm:gap-3">
                 <LanguageSwitch />
-                <Link
-                  href="/auth/login"
-                  className="inline-flex h-10 items-center gap-1.5 rounded-full border border-ink/15 px-4 text-[13px] font-semibold text-ink/80 transition-all hover:-translate-y-0.5 hover:border-ink/30 hover:text-ink"
-                >
-                  Login
-                </Link>
+                {isAuth ? (
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center"
+                    aria-label="Dashboard"
+                  >
+                    <AvatarBadge
+                      name={session?.user?.name || "Creator"}
+                      avatarUrl={session?.user?.image || undefined}
+                      size="sm"
+                    />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth/login"
+                    className="inline-flex h-10 items-center gap-1.5 text-[13px] font-semibold text-ink transition-colors hover:text-ink/70"
+                  >
+                    {lang === "EN" ? "Get Started" : "Mulai Gratis"}
+                  </Link>
+                )}
               </div>
-
-              {/* CTA: plain black text, no card/pill */}
-              <Link
-                href="#cta"
-                className="inline-flex h-10 items-center gap-1.5 text-[13px] font-semibold text-ink transition-colors hover:text-ink/70"
-              >
-                {lang === "EN" ? "Get Started" : "Mulai Gratis"}
-              </Link>
 
               {/* Hamburger: visible below lg */}
               <button
@@ -147,37 +159,39 @@ export default function Header() {
               </div>
 
               {/* Nav links */}
-              <nav className="flex-1 overflow-y-auto px-3 py-4">
-                <p className="px-3 pb-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-ink/35">
-                  {lang === "EN" ? "Menu" : "Menu"}
-                </p>
-                <ul className="flex flex-col">
-                  {nav.map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        onClick={closeMenu}
-                        className="flex items-center justify-between rounded-xl px-3 py-3 text-[15px] font-semibold text-ink/85 transition-colors hover:bg-brand-50/70 hover:text-ink"
-                      >
-                        <span>{item.label}</span>
-                        <svg
-                          className="h-3.5 w-3.5 text-ink/30"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+              {!hideNav && (
+                <nav className="flex-1 overflow-y-auto px-3 py-4">
+                  <p className="px-3 pb-2 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-ink/35">
+                    {lang === "EN" ? "Menu" : "Menu"}
+                  </p>
+                  <ul className="flex flex-col">
+                    {nav.map((item) => (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={closeMenu}
+                          className="flex items-center justify-between rounded-xl px-3 py-3 text-[15px] font-semibold text-ink/85 transition-colors hover:bg-brand-50/70 hover:text-ink"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2.2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
+                          <span>{item.label}</span>
+                          <svg
+                            className="h-3.5 w-3.5 text-ink/30"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              )}
 
               {/* Footer actions */}
               <div className="border-t border-black/[0.06] px-4 py-4">
@@ -188,20 +202,28 @@ export default function Header() {
                   <LanguageSwitch />
                 </div>
 
-                <Link
-                  href="/auth/login"
-                  onClick={closeMenu}
-                  className="mb-2 flex h-11 w-full items-center justify-center rounded-xl border border-ink/15 text-[13.5px] font-semibold text-ink/85 transition-all hover:border-ink/30 hover:text-ink"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="#cta"
-                  onClick={closeMenu}
-                  className="flex h-11 w-full items-center justify-center text-[13.5px] font-semibold text-ink"
-                >
-                  {lang === "EN" ? "Get Started" : "Mulai Gratis"}
-                </Link>
+                {isAuth ? (
+                  <Link
+                    href="/dashboard"
+                    onClick={closeMenu}
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-50 text-[13.5px] font-semibold text-ink transition-all hover:bg-brand-100"
+                  >
+                    <AvatarBadge
+                      name={session?.user?.name || "Creator"}
+                      avatarUrl={session?.user?.image || undefined}
+                      size="sm"
+                    />
+                    {lang === "EN" ? "Dashboard" : "Dashboard"}
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth/login"
+                    onClick={closeMenu}
+                    className="flex h-11 w-full items-center justify-center text-[13.5px] font-semibold text-ink"
+                  >
+                    {lang === "EN" ? "Get Started" : "Mulai Gratis"}
+                  </Link>
+                )}
               </div>
             </motion.aside>
           </>

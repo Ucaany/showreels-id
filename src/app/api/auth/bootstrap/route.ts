@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           code: "account_blocked",
-          error: "Akun ini sedang diblokir dan belum bisa digunakan.",
+          error: "ACCOUNT_BLOCKED",
         },
         { status: 403 }
       );

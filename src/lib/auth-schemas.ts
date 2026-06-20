@@ -31,7 +31,9 @@ export const signUpSchema = z
       .regex(USERNAME_REGEX, "Gunakan huruf kecil, angka, underscore, atau dash.")
       .refine((value) => !isReservedUsername(value), {
         message: "Username tidak dapat digunakan.",
-      }),
+      })
+      .optional()
+      .or(z.literal("")),
     email: z.email("Format email belum valid."),
     password: z.string().min(8, "Password minimal 8 karakter."),
     confirmPassword: z.string(),

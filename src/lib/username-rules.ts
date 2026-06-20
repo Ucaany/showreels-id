@@ -25,5 +25,16 @@ export function isReservedUsername(input: string): boolean {
 }
 
 export function isUsernameFormatValid(input: string): boolean {
-  return USERNAME_REGEX.test(input.trim().toLowerCase());
+ return USERNAME_REGEX.test(input.trim().toLowerCase());
+}
+
+export function generateUsernameFromName(name: string): string {
+ const base = sanitizeUsername(name);
+ if (base.length >= 3) {
+ return base.slice(0, 30);
+ }
+ // Too short, pad with random digits
+ const rand = Math.random().toString(36).substring(2, 6);
+ const padded = `${base || "user"}${rand}`;
+ return padded.slice(0, 30);
 }

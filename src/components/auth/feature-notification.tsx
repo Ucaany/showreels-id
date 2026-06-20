@@ -72,7 +72,7 @@ export function FeatureNotification() {
                 <p className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-[#fed7aa]">
                   {feature.eyebrow}
                 </p>
-                <h3 className="mt-1 font-display text-[1rem] font-extrabold leading-tight tracking-[-0.035em] text-white">
+                <h3 className="mt-1 font-display text-[1rem] font-bold leading-tight tracking-[-0.035em] text-white">
                   {feature.title}
                 </h3>
                 <p className="mt-1 text-[0.72rem] leading-5 text-white/62">

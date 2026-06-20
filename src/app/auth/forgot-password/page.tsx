@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import { SignupForm } from "@/components/auth/signup-form";
+import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { getSafeNextPath } from "@/lib/safe-next-path";
 import { getCurrentUser } from "@/server/current-user";
 
-export default async function SignupPage({
+export default async function ForgotPasswordPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>;
@@ -16,5 +16,5 @@ export default async function SignupPage({
     redirect(user.role === "owner" ? "/admin" : nextPath);
   }
 
-  return <SignupForm nextPath={nextPath} />;
+  return <ForgotPasswordForm nextPath={nextPath} />;
 }

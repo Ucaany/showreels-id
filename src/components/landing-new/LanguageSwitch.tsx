@@ -3,18 +3,18 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLang } from "@/lib/i18n/landing-context";
+import { FlagIcon } from "./FlagIcon";
 
 export type Lang = "ID" | "EN";
 
 type FlagItem = {
   code: Lang;
-  flag: string;
   label: string;
 };
 
 const LANGS: FlagItem[] = [
-  { code: "ID", flag: "🇮🇩", label: "ID" },
-  { code: "EN", flag: "🇬🇧", label: "EN" },
+  { code: "ID", label: "ID" },
+  { code: "EN", label: "EN" },
 ];
 
 export default function LanguageSwitch() {
@@ -35,9 +35,9 @@ export default function LanguageSwitch() {
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         aria-label="Pilih bahasa"
         aria-expanded={open}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-white text-[20px] leading-none transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:bg-brand-50"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-white transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:bg-brand-50"
       >
-        <span className="leading-none">{active.flag}</span>
+        <FlagIcon code={active.code} className="h-[18px] w-[26px] rounded-[3px]" />
       </button>
 
       <AnimatePresence>
@@ -62,7 +62,7 @@ export default function LanguageSwitch() {
                       : "text-ink/75 hover:bg-brand-50/60"
                   }`}
                 >
-                  <span className="text-[22px] leading-none">{l.flag}</span>
+                  <FlagIcon code={l.code} className="h-[18px] w-[26px] shrink-0 rounded-[3px]" />
                   <span className="flex-1 text-[13px] font-semibold">
                     {l.code === "ID" ? "Bahasa Indonesia" : "English"}
                   </span>

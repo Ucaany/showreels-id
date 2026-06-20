@@ -1,24 +1,33 @@
 "use client";
 
-import { Toast } from './toast';
-import { useToastStore } from '@/hooks/use-toast';
+import { motion, AnimatePresence } from "framer-motion";
+import { Toast } from "./toast";
+import { useToastStore } from "@/hooks/use-toast";
 
 export function ToastContainer() {
-  const { toasts, removeToast } = useToastStore();
+ const { toasts, removeToast } = useToastStore();
 
-  if (toasts.length === 0) return null;
-
-  return (
-    <div className="fixed right-4 top-4 z-[100] flex w-full max-w-sm flex-col gap-3 sm:right-6 sm:top-6 max-sm:bottom-20 max-sm:left-4 max-sm:right-4 max-sm:top-auto max-sm:max-w-none">
+ return (
+  <div className="pointer-events-none fixed right-4 top-4 z-[100] flex w-full max-w-sm flex-col gap-3 sm:right-6 sm:top-6">
+    <AnimatePresence initial={false}>
       {toasts.map((toast) => (
-        <Toast
+        <motion.div
           key={toast.id}
-          type={toast.type}
-          title={toast.title}
-          description={toast.description}
-          onClose={() => removeToast(toast.id)}
-        />
+          layout
+          initial={{ opacity: 0, x: 40, scale: 0.96 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: 40, scale: 0.96 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+        >
+          <Toast
+            type={toast.type}
+            title={toast.title}
+            description={toast.description}
+            onClose={() => removeToast(toast.id)}
+          />
+        </motion.div>
       ))}
-    </div>
-  );
+    </AnimatePresence>
+  </div>
+ );
 }

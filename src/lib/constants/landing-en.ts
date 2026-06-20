@@ -201,3 +201,105 @@ export const footerEN = {
     legal: { heading: "Legal", items: ["Privacy", "Terms", "Cookies", "DPA"] },
   },
 };
+
+export const customerServiceEN = {
+  eyebrow: "Help Center",
+  headline: "We're here to help",
+  headlineAccent: "you",
+  headlineSuffix: " anytime.",
+  subheadline:
+    "Got issues with login, video submission, public profile, or billing? Our support team is ready to respond quickly and clearly.",
+  hoursEyebrow: "SERVICE HOURS",
+  hours: [
+    {
+      icon: "clock",
+      label: "Operating Hours",
+      value: "Monday – Friday",
+      helper: "09.00 – 17.00 WIB",
+    },
+    {
+      icon: "mail",
+      label: "Email",
+      value: "1×24h response",
+      helper: "On business days",
+    },
+    {
+      icon: "message",
+      label: "WhatsApp",
+      value: "Fast response",
+      helper: "Mon – Fri, 09.00 – 17.00 WIB",
+    },
+  ],
+  channelsEyebrow: "CONTACT US",
+  channelsHeading: "Pick the",
+  channelsHeadingAccent: "best",
+  channelsHeadingSuffix: " way for you.",
+  channelsSubhead:
+    "Three official channels you can use — pick whichever feels most comfortable.",
+  channels: [
+    {
+      title: "Email",
+      value: "support@showreels.id",
+      helper: "For detailed questions & attachments.",
+      action: "Send email",
+      href: "mailto:support@showreels.id",
+      icon: "mail",
+    },
+    {
+      title: "Phone",
+      value: "+62 898-3704-013",
+      helper: "Monday – Friday, 09.00 – 17.00 WIB.",
+      action: "Call now",
+      href: "tel:+628983704013",
+      icon: "phone",
+    },
+    {
+      title: "WhatsApp",
+      value: "+62 898-3704-013",
+      helper: "Fast response for early-stage consultations.",
+      action: "Chat on WhatsApp",
+      href: "https://wa.me/628983704013",
+      icon: "message",
+    },
+  ],
+  faqsEyebrow: "FAQ",
+  faqsHeading: "Frequently",
+  faqsHeadingAccent: "asked",
+  faqsHeadingSuffix: " questions.",
+  faqs: [
+    {
+      q: "How do I reset my account password?",
+      a: "Open the Login page, click 'Forgot password', then enter your registered email. We'll send a reset link to your inbox within a few minutes.",
+    },
+    {
+      q: "Why doesn't my video show on the public page?",
+      a: "Make sure the video status is 'Published' in the dashboard and the platform link (YouTube, TikTok, etc) is still active. Try clearing your browser cache and reloading the page.",
+    },
+    {
+      q: "How long does the video review take?",
+      a: "For the free plan, review usually completes within 1×24 business hours. Creator and Pro plans get priority and are usually faster.",
+    },
+    {
+      q: "How do I change my subscription plan?",
+      a: "Go to Dashboard → Billing → Manage Plan. You can upgrade, downgrade, or cancel anytime. Changes are pro-rated automatically.",
+    },
+    {
+      q: "Is my data safe?",
+      a: "Yes. All data is encrypted with SSL end-to-end, and we never share personal information with third parties without your consent.",
+    },
+    {
+      q: "Can I use a custom domain on showreels.id?",
+      a: "Absolutely. Creator and Pro plans support custom domains. Reach out via email for DNS setup and domain verification guidance.",
+    },
+  ],
+  ctaEyebrow: "NEED HELP RIGHT NOW?",
+  ctaHeading: "Our team is",
+  ctaHeadingAccent: "ready",
+  ctaHeadingSuffix: " to listen.",
+  ctaBody:
+    "Head back to the dashboard to check your video status, or start fresh and build your professional portfolio link today.",
+  ctaPrimaryLabel: "Open Dashboard",
+  ctaPrimaryHref: "/dashboard",
+  ctaSecondaryLabel: "Get Started Free",
+  ctaSecondaryHref: "/auth/signup",
+};

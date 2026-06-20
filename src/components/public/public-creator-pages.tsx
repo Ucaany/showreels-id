@@ -265,7 +265,7 @@ export function PortfolioCreatorPublicPage({ profile, view = "grid" }: { profile
             </div>
 
             {/* (b) Name + Verified Badge */}
-            <h1 className="text-safe mt-5 text-[1.65rem] font-extrabold text-[#111111] sm:text-3xl lg:text-[2.1rem]">
+            <h1 className="text-safe mt-5 text-[1.65rem] font-bold text-[#111111] sm:text-3xl lg:text-[2.1rem]">
               {creatorName}
               {isProfileVerified(profile) && <VerifiedBadge className="ml-2 inline-block align-middle" />}
             </h1>
@@ -654,10 +654,10 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
             <Card
               className={`${glassCard} rounded-[18px] p-5 sm:rounded-[22px] sm:p-6 lg:p-7`}
             >
-              <p className="text-safe text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#8b98a7]">
+              <p className="text-safe text-[11px] font-bold uppercase tracking-[0.18em] text-[#8b98a7]">
                 Tentang Project
               </p>
-              <h1 className="text-safe mt-2 text-[1.5rem] font-extrabold leading-[1.1] tracking-[-0.04em] text-[#111111] sm:text-[1.875rem] lg:text-[2.125rem]">
+              <h1 className="text-safe mt-2 text-[1.5rem] font-bold leading-[1.1] tracking-[-0.04em] text-[#111111] sm:text-[1.875rem] lg:text-[2.125rem]">
                 {projectTitle}
               </h1>
               <p className="text-safe mt-2.5 max-w-[720px] whitespace-pre-line text-[14px] leading-[1.7] text-[#4b5563] [overflow-wrap:anywhere] sm:text-[15px]">
@@ -722,7 +722,7 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
           <aside className="min-w-0 max-w-full space-y-[18px] overflow-x-hidden lg:sticky lg:top-6 lg:self-start lg:overflow-x-visible">
             {/* Project Info */}
             <Card className={`${glassCard} rounded-[20px] p-5 sm:rounded-[24px]`}>
-              <p className="text-safe text-[12px] font-extrabold uppercase tracking-[0.22em] text-[#8b98a7]">
+              <p className="text-safe text-[12px] font-bold uppercase tracking-[0.22em] text-[#8b98a7]">
                 Project Info
               </p>
               <div className="mt-4 grid min-w-0 gap-2.5">
@@ -748,7 +748,7 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
                   label="Status"
                   value={
                     <span
-                      className={`inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-extrabold ${
+                      className={`inline-flex h-6 items-center rounded-full px-2.5 text-[11px] font-bold ${
                         isPublicStatus
                           ? "bg-[#dcfce7] text-[#15803d]"
                           : "bg-[#fef3c7] text-[#92400e]"
@@ -779,7 +779,7 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
             {/* Creator card */}
             {video.author ? (
               <Card className={`${glassCard} rounded-[20px] p-5 sm:rounded-[24px]`}>
-                <p className="text-safe text-[12px] font-extrabold uppercase tracking-[0.22em] text-[#8b98a7]">
+                <p className="text-safe text-[12px] font-bold uppercase tracking-[0.22em] text-[#8b98a7]">
                   Creator
                 </p>
                 <div className="mt-4 flex min-w-0 items-center gap-3.5">
@@ -794,7 +794,7 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
                     size="lg"
                   />
                   <div className="min-w-0">
-                    <h2 className="text-safe text-[16px] font-extrabold text-[#111827]">
+                    <h2 className="text-safe text-[16px] font-bold text-[#111827]">
                       {video.author.name || "Creator"}
                     </h2>
                     <p className="text-safe mt-0.5 text-[13px] text-[#6b7280]">
@@ -810,14 +810,14 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
                 <div className="mt-[18px] grid min-w-0 gap-2.5">
                   <Link
                     href={creatorHref}
-                    className="inline-flex h-[46px] min-w-0 items-center justify-center rounded-xl bg-[#111111] px-4 text-center text-sm font-extrabold text-white shadow-[0_10px_22px_rgba(17,17,17,0.18)] transition hover:-translate-y-0.5 hover:bg-black"
+                    className="inline-flex h-[46px] min-w-0 items-center justify-center rounded-xl bg-[#111111] px-4 text-center text-sm font-bold text-white shadow-[0_10px_22px_rgba(17,17,17,0.18)] transition hover:-translate-y-0.5 hover:bg-black"
                   >
                     <span className="min-w-0 break-words">Lihat Bio</span>
                   </Link>
                   {video.author.showPortfolioButton !== false ? (
                     <Link
                       href={portfolioHref}
-                      className="inline-flex h-[46px] min-w-0 items-center justify-center rounded-xl border border-[#e5e7eb] bg-white px-4 text-center text-sm font-extrabold text-[#111827] transition hover:-translate-y-0.5 hover:border-[#dbe3ec] hover:bg-[#f8fafc]"
+                      className="inline-flex h-[46px] min-w-0 items-center justify-center rounded-xl border border-[#e5e7eb] bg-white px-4 text-center text-sm font-bold text-[#111827] transition hover:-translate-y-0.5 hover:border-[#dbe3ec] hover:bg-[#f8fafc]"
                     >
                       <span className="min-w-0 break-words">Lihat Semua Portofolio</span>
                     </Link>
@@ -828,10 +828,10 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
 
             {/* Share project card */}
             <Card className={`${glassCard} rounded-[20px] p-5 sm:rounded-[24px]`}>
-              <p className="text-safe text-[12px] font-extrabold uppercase tracking-[0.22em] text-[#8b98a7]">
+              <p className="text-safe text-[12px] font-bold uppercase tracking-[0.22em] text-[#8b98a7]">
                 Bagikan Project
               </p>
-              <h2 className="text-safe mt-2 inline-flex items-center gap-2 text-[1.25rem] font-extrabold text-[#111827]">
+              <h2 className="text-safe mt-2 inline-flex items-center gap-2 text-[1.25rem] font-bold text-[#111827]">
                 <Sparkles className="h-4 w-4 text-[#3b82f6]" aria-hidden />
                 Sebarkan ke audiens
               </h2>
@@ -853,7 +853,7 @@ export function VideoDetailPublicPage({ video }: { video: PublicVideo }) {
               className="inline-flex h-[34px] items-center gap-1.5 rounded-full border border-[#e5edf5] bg-white/85 px-[18px] text-[13px] text-[#6b7280] shadow-[0_10px_24px_rgba(15,23,42,0.045)] transition hover:bg-white"
             >
               Made with
-              <span className="font-extrabold text-[#2563eb]">Showreels.id</span>
+              <span className="font-bold text-[#2563eb]">Showreels.id</span>
               <span aria-hidden className="text-[#ef4444]">
                 ♡
               </span>
@@ -946,7 +946,7 @@ function StatItem({
         {icon}
       </span>
       <span className="min-w-0">
-        <span className="text-safe block min-w-0 break-words text-[15px] font-extrabold text-[#111827] sm:text-[17px]">
+        <span className="text-safe block min-w-0 break-words text-[15px] font-bold text-[#111827] sm:text-[17px]">
           {value}
         </span>
         <span className="text-safe mt-0.5 block min-w-0 break-words text-[12px] text-[#6b7280]">

@@ -36,7 +36,7 @@ export default function AboutPage() {
             <p className="text-eyebrow font-semibold uppercase text-[#ea580c]">
               About showreels.id
             </p>
-            <h1 className="mt-3 font-display text-[clamp(2rem,5vw,4rem)] font-extrabold leading-[1.05] tracking-[-0.04em] text-slate-950">
+            <h1 className="mt-3 font-display text-[clamp(2rem,5vw,4rem)] font-bold leading-[1.05] tracking-[-0.04em] text-slate-950">
               Platform portofolio kreator untuk tampil lebih profesional dan meyakinkan.
             </h1>
             <p className="mt-5 max-w-3xl text-body-lg text-slate-600">
@@ -60,7 +60,7 @@ export default function AboutPage() {
                 <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff7ed] text-[#ea580c] ring-1 ring-[#fed7aa]">
                   <Icon className="h-5 w-5" />
                 </div>
-                <h2 className="mt-4 font-display text-xl font-extrabold tracking-[-0.02em] text-slate-950">
+                <h2 className="mt-4 font-display text-xl font-bold tracking-[-0.02em] text-slate-950">
                   {item.title}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
@@ -71,7 +71,7 @@ export default function AboutPage() {
 
         <Card className="border-slate-200 bg-zinc-950 p-6 text-white shadow-sm sm:p-8">
           <p className="text-eyebrow font-semibold uppercase text-[#8da8ff]">Mulai sekarang</p>
-          <h2 className="mt-2 font-display text-2xl font-extrabold tracking-[-0.03em] text-white sm:text-3xl">
+          <h2 className="mt-2 font-display text-2xl font-bold tracking-[-0.03em] text-white sm:text-3xl">
             Siap tampilkan portfolio terbaikmu?
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-white/75">
