@@ -5,19 +5,31 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart3,
+  Bell,
+  Box,
   CreditCard,
   Film,
+  HelpCircle,
   Home,
+  LayoutGrid,
   LifeBuoy,
-  Bell,
   Link2,
   LogOut,
   Menu,
+  MessageSquare,
+  Package,
   PanelLeftClose,
   PanelLeftOpen,
   Settings2,
+  Truck,
   UserRound,
   X,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  CheckCircle2,
+  XCircle,
+  Clock,
 } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { AvatarBadge } from "@/components/avatar-badge";
@@ -36,6 +48,7 @@ type NavItem = {
   label: string;
   icon: typeof Home;
   matchPrefix?: string;
+  children?: { href: string; label: string; icon: typeof Home }[];
 };
 
 const routeLabels: Record<string, string> = {
@@ -68,44 +81,44 @@ export function DashboardShell({
   const authStatus = searchParams.get("auth");
   const searchParamsValue = searchParams.toString();
   const { dictionary } = usePreferences();
-  const displayUsername = user.username ? `@${user.username}` : "@creator";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [trackDeliveriesOpen, setTrackDeliveriesOpen] = useState(false);
+
+  const trackDeliveriesChildren = [
+    { href: "/dashboard/analytics?status=on-progress", label: "On Progress", icon: Circle },
+    { href: "/dashboard/analytics?status=delivered", label: "Delivered", icon: CheckCircle2 },
+    { href: "/dashboard/analytics?status=canceled", label: "Canceled", icon: XCircle },
+    { href: "/dashboard/analytics?status=pending", label: "Pending", icon: Clock },
+  ];
 
   const primaryNavItems: NavItem[] =
     mode === "admin"
       ? [{ href: "/admin", label: "Owner Panel", icon: Home }]
       : [
-        { href: "/dashboard", label: "Dashboard", icon: Home },
-        { href: "/dashboard/link-builder", label: "Link Bio", icon: Link2 },
-        {
-          href: "/dashboard/videos",
-          label: "Portofolio",
-          icon: Film,
-          matchPrefix: "/dashboard/videos",
-        },
-        { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
-        { href: "/dashboard/billing", label: "Plan & Billing", icon: CreditCard },
-        { href: "/dashboard/profile", label: "Profile", icon: UserRound },
-        { href: "/dashboard/notifications", label: "Notifikasi", icon: Bell },
-      ];
+          { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
+          { href: "/dashboard/link-builder", label: "Orders", icon: Package },
+          {
+            href: "/dashboard/analytics",
+            label: "Track Deliveries",
+            icon: Truck,
+            matchPrefix: "/dashboard/analytics",
+            children: trackDeliveriesChildren,
+          },
+          { href: "/dashboard/billing", label: "Payment", icon: CreditCard },
+          { href: "/dashboard/videos", label: "Portofolio", icon: Film, matchPrefix: "/dashboard/videos" },
+          { href: "/dashboard/profile", label: "Profile", icon: UserRound },
+          { href: "/dashboard/notifications", label: "Notifikasi", icon: Bell },
+        ];
 
   const settingsNavItems: NavItem[] =
     mode === "admin"
       ? []
       : [
-          {
-            href: "/dashboard/settings",
-            label: "Settings",
-            icon: Settings2,
-          },
+          { href: "/dashboard/settings", label: "Settings", icon: Settings2 },
+          { href: "/customer-service", label: "Support & Help", icon: HelpCircle },
+          { href: "/dashboard/notifications?tab=feedback", label: "Feedback", icon: MessageSquare },
         ];
-
-  const helpNavItem: NavItem = {
-    href: "/customer-service",
-    label: "Help Center",
-    icon: LifeBuoy,
-  };
 
   const isNavItemActive = (item: NavItem) => {
     if (item.matchPrefix) return pathname.startsWith(item.matchPrefix);
@@ -113,8 +126,6 @@ export function DashboardShell({
     return pathname === item.href || pathname.startsWith(`${item.href}/`);
   };
 
-  // ─── Aggressive Route Prefetching ─────────────────────────────────────────
-  // Prefetch all dashboard routes on mount so navigation is near-instant
   useEffect(() => {
     const routesToPrefetch = [
       "/dashboard",
@@ -126,22 +137,16 @@ export function DashboardShell({
       "/dashboard/settings",
       "/dashboard/notifications",
     ];
-
-    // Prefetch after a very short delay to not block initial render
     const timer = setTimeout(() => {
       routesToPrefetch.forEach((route) => {
-        if (route !== pathname) {
-          router.prefetch(route);
-        }
+        if (route !== pathname) router.prefetch(route);
       });
     }, 100);
-
     return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (authStatus !== "login") return;
-
     void showFeedbackAlert({
       title: "Berhasil Login",
       text: "Akun berhasil masuk. Kamu akan tetap berada di dashboard.",
@@ -158,23 +163,18 @@ export function DashboardShell({
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setMobileMenuOpen(false);
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [mobileMenuOpen]);
 
-  const authProfileHref = useMemo(
-    () => `/creator/${user.username || "creator"}`,
-    [user.username]
-  );
-
   const breadcrumbLabel =
     routeLabels[pathname] ||
-    routeLabels[Object.keys(routeLabels).find((route) => pathname.startsWith(`${route}/`)) || ""] ||
+    routeLabels[
+      Object.keys(routeLabels).find((route) => pathname.startsWith(`${route}/`)) || ""
+    ] ||
     "Dashboard";
 
   const handleSignOut = async () => {
@@ -182,7 +182,6 @@ export function DashboardShell({
     window.location.replace("/");
   };
 
-  // Mapping route -> API endpoints to prefetch on hover
   const prefetchDataMap: Record<string, string | string[]> = {
     "/dashboard": CACHE_KEYS.DASHBOARD_SUMMARY,
     "/dashboard/videos": CACHE_KEYS.VIDEOS,
@@ -198,6 +197,60 @@ export function DashboardShell({
     const Icon = item.icon;
     const active = isNavItemActive(item);
     const prefetchData = prefetchDataMap[item.href];
+    const hasChildren = item.children && item.children.length > 0;
+    const isTrackDeliveries = item.label === "Track Deliveries";
+
+    if (hasChildren && expanded) {
+      const isOpen = isTrackDeliveries ? trackDeliveriesOpen : false;
+      return (
+        <div key={`group-${item.href}`}>
+          <button
+            type="button"
+            onClick={() => isTrackDeliveries && setTrackDeliveriesOpen((v) => !v)}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
+              active
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            )}
+          >
+            <Icon className={cn("h-4 w-4 shrink-0", active ? "text-slate-700" : "text-slate-400")} />
+            <span className="flex-1 text-left">{item.label}</span>
+            {isOpen ? (
+              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+            )}
+          </button>
+          {isOpen && (
+            <div className="relative ml-3.5 mt-0.5 pl-4">
+              <div className="absolute left-0 top-1 bottom-1 w-px bg-slate-200" />
+              <div className="space-y-0.5">
+                {item.children!.map((child) => {
+                  const ChildIcon = child.icon;
+                  const childActive = pathname === child.href || pathname.startsWith(child.href);
+                  return (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
+                        childActive
+                          ? "font-semibold text-slate-900"
+                          : "font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                      )}
+                    >
+                      <ChildIcon className="h-3.5 w-3.5 shrink-0" />
+                      {child.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
 
     return (
       <PrefetchLink
@@ -209,152 +262,115 @@ export function DashboardShell({
         onClick={mobile ? () => setMobileMenuOpen(false) : undefined}
         className={cn(
           "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
-          active ? "bg-zinc-900 !text-white shadow-sm" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+          active
+            ? "bg-zinc-900 text-white shadow-sm"
+            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
           !expanded && !mobile && "justify-center"
         )}
         title={!expanded && !mobile ? item.label : undefined}
       >
-        <Icon className={cn("h-4 w-4", active ? "!text-white" : "text-slate-500")} />
-        {(expanded || mobile) && <span className={cn(active && "text-white")}>{item.label}</span>}
+        <Icon className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-slate-400")} />
+        {(expanded || mobile) && (
+          <span className={cn("flex-1", active && "text-white")}>{item.label}</span>
+        )}
       </PrefetchLink>
     );
   };
 
-  const renderSidebarContent = (expanded = sidebarOpen, mobile = false) => (
-    <div className="flex h-full flex-col bg-white px-4 py-5">
-      {/* Logo / Plan Info */}
-      {mobile ? (
-        mode === "admin" ? (
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src="/logo.png" 
-                alt="Showreels.id" 
-                className="h-10 w-10 object-contain"
-                loading="eager"
-                onError={(event) => {
-                  const target = event.currentTarget;
-                  target.style.display = "none";
-                  const fallback = target.nextElementSibling as HTMLElement | null;
-                  if (fallback) {
-                    fallback.classList.remove("hidden");
-                    fallback.classList.add("flex");
-                  }
-                }}
-              />
-              <div className="hidden h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
-                <Link2 className="h-5 w-5 text-white" />
-              </div>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-slate-900">Admin Panel</p>
-              <p className="text-xs text-slate-500">Full Access</p>
-            </div>
-          </div>
-        ) : (
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-            <CreditCard className="h-5 w-5 text-slate-600" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold capitalize text-slate-900">Plan {planName}</p>
-            <p className="text-xs text-slate-500">Aktif</p>
-          </div>
-        </div>
-        )
-      ) : (
-        <div className={cn(
-          "flex items-center gap-3",
-          !expanded && "justify-center"
-        )}>
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo.png"
-              alt="Showreels.id"
-              className="h-10 w-10 object-contain"
-              loading="eager"
-              onError={(event) => {
-                const target = event.currentTarget;
-                target.style.display = "none";
-                const fallback = target.nextElementSibling as HTMLElement | null;
-                if (fallback) {
-                  fallback.classList.remove("hidden");
-                  fallback.classList.add("flex");
-                }
-              }}
-            />
-            <div className="hidden h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600">
-              <Link2 className="h-5 w-5 text-white" />
-            </div>
-          </div>
-          {expanded && (
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-base font-bold text-slate-900">showreels.id</p>
-              <p className="text-xs text-slate-500">Creator Dashboard</p>
-            </div>
-          )}
-        </div>
-      )}
+  const userInitials = (user.name || "DC")
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
-      {!mobile && (
+  const renderSidebarContent = (expanded = sidebarOpen, mobile = false) => (
+    <div className="flex h-full flex-col bg-white px-3 py-4">
+      {/* Logo header */}
+      <div className={cn("flex items-center gap-2.5", !expanded && !mobile && "justify-center")}>
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-900">
+          <Box className="h-4.5 w-4.5 text-white" style={{ width: "1.125rem", height: "1.125rem" }} />
+        </div>
+        {(expanded || mobile) && (
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-bold tracking-tight text-slate-900">showreels.id</p>
+          </div>
+        )}
+        {(expanded || mobile) && !mobile && (
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((v) => !v)}
+            className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700"
+            aria-label="Collapse sidebar"
+          >
+            <PanelLeftClose className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {!expanded && !mobile && (
         <button
           type="button"
-          onClick={() => setSidebarOpen((current) => !current)}
-          className={cn(
-            "mt-4 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900",
-            expanded ? "h-9 gap-2 px-3" : "h-10 w-full"
-          )}
-          aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
+          onClick={() => setSidebarOpen((v) => !v)}
+          className="mt-3 flex h-8 w-full items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700"
+          aria-label="Expand sidebar"
         >
-          {expanded ? (
-            <>
-              <PanelLeftClose className="h-4 w-4" />
-              <span className="text-xs font-medium">Collapse</span>
-            </>
-          ) : (
-            <PanelLeftOpen className="h-4 w-4" />
-          )}
+          <PanelLeftOpen className="h-3.5 w-3.5" />
         </button>
       )}
 
+      {/* Main menu group */}
       <div className="mt-6 flex min-h-0 flex-1 flex-col">
-        {expanded && (
-          <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        {(expanded || mobile) && (
+          <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
             Main Menu
           </p>
         )}
-        <nav className="mt-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
-          {primaryNavItems.map((item) => renderNavItem(item, mobile, expanded))}
+        <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto">
+          {primaryNavItems
+            .filter((item) =>
+              ["Dashboard", "Orders", "Track Deliveries", "Payment", "Owner Panel"].includes(item.label)
+            )
+            .map((item) => renderNavItem(item, mobile, expanded))}
         </nav>
 
-        <div className="mt-5 border-t border-slate-200 pt-5">
-          {expanded && (
-            <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        {/* Settings group */}
+        <div className="mt-5 border-t border-slate-100 pt-4">
+          {(expanded || mobile) && (
+            <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Settings
             </p>
           )}
-          <div className="mt-2 space-y-1">
+          <div className="space-y-0.5">
             {settingsNavItems.map((item) => renderNavItem(item, mobile, expanded))}
-            {renderNavItem(helpNavItem, mobile, expanded)}
           </div>
         </div>
 
-        <div className="mt-4 border-t border-slate-200 pt-4">
-          <Button
-            variant="secondary"
-            size="sm"
-            className={cn(
-              "w-full rounded-xl border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900",
-              expanded ? "justify-start" : "justify-center px-0"
+        {/* User footer */}
+        <div className="mt-4 border-t border-slate-100 pt-4">
+          <div className={cn("flex items-center gap-2.5", !expanded && !mobile && "justify-center")}>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-xs font-bold text-white">
+              {userInitials}
+            </div>
+            {(expanded || mobile) && (
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-slate-900">
+                  {user.name || "Creator"}
+                </p>
+                <p className="truncate text-xs text-slate-400">{user.email || ""}</p>
+              </div>
             )}
-            onClick={handleSignOut}
-            aria-label={dictionary.logout}
-          >
-            <LogOut className="h-4 w-4" />
-            {expanded && dictionary.logout}
-          </Button>
+            {(expanded || mobile) && (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                aria-label={dictionary.logout}
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -364,62 +380,96 @@ export function DashboardShell({
   const mobileSidebarContent = renderSidebarContent(true, true);
 
   if (hideChrome) {
-    return <div className="min-h-screen bg-slate-50 font-sans text-slate-900">{children}</div>;
+    return <div className="min-h-screen bg-[#F9FAFB] font-sans text-slate-900">{children}</div>;
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-slate-50 font-sans text-slate-900">
-      {/* Gradient background - light blue/white, behind all content */}
-      <div
-        className="pointer-events-none fixed inset-0 -z-10 opacity-[0.35]"
-        style={{
-          background: "linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 25%, #ffffff 50%, #e0f7fa 75%, #f0f9ff 100%)",
-        }}
-        aria-hidden="true"
-      />
+    <div className="relative min-h-screen overflow-x-hidden bg-[#F9FAFB] font-sans text-slate-900">
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 hidden border-r border-slate-200 bg-white transition-all duration-300 ease-in-out md:block",
-          sidebarOpen ? "w-72" : "w-20"
+          sidebarOpen ? "w-64" : "w-[72px]"
         )}
       >
         {sidebarContent}
       </aside>
 
+      {/* Top header */}
       <header
         className={cn(
-          "fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-xl transition-all duration-300 ease-in-out",
-          sidebarOpen ? "md:left-72" : "md:left-20"
+          "fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-xl transition-all duration-300 ease-in-out",
+          sidebarOpen ? "md:left-64" : "md:left-[72px]"
         )}
       >
-        <div className="flex h-16 min-w-0 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4 md:px-8">
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        <div className="flex h-14 min-w-0 items-center justify-between gap-3 px-4 md:px-6">
+          {/* Left: hamburger (mobile) + breadcrumb */}
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm md:hidden"
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open dashboard menu"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4 w-4" />
             </button>
-            <div className="min-w-0 truncate text-sm text-slate-500">
-              <Link href="/dashboard" className="hidden transition hover:text-slate-900 min-[380px]:inline">Dashboard</Link>
-              <span className="mx-2 hidden text-slate-300 min-[380px]:inline">/</span>
-              <Link href={pathname} className="truncate font-medium text-slate-900 transition hover:text-slate-700">{breadcrumbLabel}</Link>
+            <div className="min-w-0 truncate text-sm text-slate-400">
+              <Link
+                href="/dashboard"
+                className="hidden transition hover:text-slate-700 min-[380px]:inline"
+              >
+                Main Menu
+              </Link>
+              <span className="mx-1.5 hidden text-slate-300 min-[380px]:inline">/</span>
+              <Link
+                href={pathname}
+                className="truncate font-semibold text-slate-900 transition hover:text-slate-700"
+              >
+                {breadcrumbLabel}
+              </Link>
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
-            {mode !== "admin" && (
-              <Link
-                href="/dashboard/billing"
-                className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 sm:inline-flex"
+          {/* Right: search + calendar icon + avatar */}
+          <div className="flex shrink-0 items-center gap-2.5">
+            <div className="relative hidden items-center md:flex">
+              <span className="pointer-events-none absolute left-3 flex h-full items-center">
+                <svg
+                  className="h-4 w-4 text-slate-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
+                </svg>
+              </span>
+              <input
+                type="search"
+                placeholder="Search anything..."
+                className="h-9 w-56 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-100"
+                aria-label="Search"
+              />
+            </div>
+            <button
+              type="button"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
+              aria-label="Calendar"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.75}
               >
-                <CreditCard className="h-3.5 w-3.5 text-slate-500" />
-                <span className="font-semibold capitalize">{planName}</span>
-              </Link>
-            )}
-            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-0.5 shadow-sm md:px-3 md:py-1.5">
+                <rect x="3" y="4" width="18" height="18" rx="3" ry="3" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </button>
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-0.5 pl-0.5 shadow-sm md:pr-3">
               <AvatarBadge
                 name={user.name || "Creator"}
                 avatarUrl={user.image || ""}
@@ -430,7 +480,7 @@ export function DashboardShell({
                 }}
                 size="sm"
               />
-              <p className="hidden max-w-[180px] truncate text-sm font-semibold text-slate-800 sm:block">
+              <p className="hidden max-w-[140px] truncate text-sm font-semibold text-slate-800 md:block">
                 {user.name || "Creator"}
               </p>
             </div>
@@ -438,38 +488,41 @@ export function DashboardShell({
         </div>
       </header>
 
+      {/* Mobile drawer */}
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-900/35 md:hidden">
+        <div className="fixed inset-0 z-50 bg-slate-900/30 md:hidden">
           <button
             type="button"
             className="absolute inset-0 h-full w-full cursor-default"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu backdrop"
           />
-          <div className="absolute left-0 top-0 h-full w-[84vw] max-w-[360px] overflow-hidden border-r border-slate-200 bg-white shadow-2xl">
+          <div className="absolute left-0 top-0 h-full w-[82vw] max-w-[320px] overflow-hidden border-r border-slate-200 bg-white shadow-2xl">
             <div className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-200 p-4">
               <AppLogo className="min-w-0" />
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700"
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Close menu"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="h-[calc(100%-73px)] overflow-y-auto">{mobileSidebarContent}</div>
+            <div className="h-[calc(100%-65px)] overflow-y-auto">{mobileSidebarContent}</div>
           </div>
         </div>
       ) : null}
 
       <div
         className={cn(
-          "min-h-screen pt-16 transition-[padding] duration-300 ease-in-out",
-          sidebarOpen ? "md:pl-72" : "md:pl-20"
+          "min-h-screen pt-14 transition-[padding] duration-300 ease-in-out",
+          sidebarOpen ? "md:pl-64" : "md:pl-[72px]"
         )}
       >
-        <main key={pathname} className="min-w-0 overflow-x-hidden p-3 pb-24 sm:p-4 md:p-8 md:pb-8">{children}</main>
+        <main key={pathname} className="min-w-0 overflow-x-hidden p-3 pb-24 sm:p-4 md:p-6 md:pb-8">
+          {children}
+        </main>
       </div>
 
       <BottomNavigation />

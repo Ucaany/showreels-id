@@ -1,239 +1,392 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import {
-  BarChart3,
-  CreditCard,
-  Lock,
-  MousePointerClick,
-  Plus,
-  Sparkles,
-  UploadCloud,
-  Video,
-  Wand2,
+  ArrowUpRight,
+  ArrowDownRight,
+  TrendingUp,
+  Package,
+  CheckCircle2,
+  Layers,
+  Truck,
+  Check,
 } from "lucide-react";
 import { NotificationInboxPanel } from "@/components/dashboard/notification-inbox-panel";
 import { OnboardingReminderCard } from "@/components/dashboard/onboarding-reminder-card";
-import { PublicLinkCardCompact } from "@/components/dashboard/public-link-card-compact";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { requireCurrentUser } from "@/server/current-user";
 import { getDashboardMetrics } from "@/server/dashboard-data";
 import { getOrCreateUserOnboarding } from "@/server/onboarding";
 
-type QuickAction = {
-  href: string;
-  title: string;
-  description: string;
-  cta: string;
-  icon: typeof Wand2;
-  locked?: boolean;
-};
-
-type MetricCard = {
-  label: string;
-  value: number;
-  helper: string;
-  icon: typeof Wand2;
-};
-
 function formatNumber(value: number) {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
-function BentoCard({
+function Card({
   children,
   className,
+  style,
 }: {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
-    <section
+    <div
       className={cn(
-        "rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm md:p-6",
+        "rounded-2xl border border-slate-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04)]",
         className
       )}
+      style={style}
     >
       {children}
-    </section>
-  );
-}
-
-function HeroCard({
-  userName,
-  canUseBuildLink,
-}: {
-  userName: string | null;
-  canUseBuildLink: boolean;
-}) {
-  return (
-    <BentoCard className="overflow-hidden lg:col-span-2">
-      <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
-            <Sparkles className="h-3.5 w-3.5" />
-            Dashboard Creator
-          </div>
-          <h2 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
-            Selamat datang, {userName || "Kreator"}
-          </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
-            Kelola profil, link bio, portfolio video, dan analytics dalam satu dashboard.
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <Link href={canUseBuildLink ? "/dashboard/link-builder" : "/dashboard/billing"}>
-            <Button className="inline-flex h-10 items-center gap-2 rounded-xl bg-zinc-800 px-3.5 text-sm font-medium text-white hover:bg-zinc-700">
-              {canUseBuildLink ? <Wand2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-              {canUseBuildLink ? "Buat Bio" : "Unlock Build Link"}
-            </Button>
-          </Link>
-          <Link href="/dashboard/videos/new">
-            <Button
-              variant="secondary"
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-900 hover:bg-slate-100"
-            >
-              <Plus className="h-4 w-4" />
-              Upload Video
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </BentoCard>
-  );
-}
-
-
-function StatCard({ item }: { item: MetricCard }) {
-  const Icon = item.icon;
-
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-2.5 md:rounded-2xl md:p-5">
-      <div className="flex items-start justify-between gap-1 md:gap-3">
-        <p className="truncate text-[10px] font-medium uppercase leading-tight tracking-[0.12em] text-slate-400 md:text-xs md:tracking-[0.18em]">
-          {item.label}
-        </p>
-        <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-600 md:flex md:h-9 md:w-9">
-          <Icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
-        </span>
-      </div>
-      <p className="mt-2 text-xl font-semibold tracking-tight text-slate-950 md:mt-5 md:text-3xl">
-        {formatNumber(item.value)}
-      </p>
-      <span className="mt-1 hidden w-fit rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-600 md:mt-2 md:inline-flex">
-        {item.helper}
-      </span>
     </div>
   );
 }
 
-function StatsGrid({ metricCards }: { metricCards: MetricCard[] }) {
+function SparklineUp() {
   return (
-    <section className="lg:col-span-3">
-      <div className="grid grid-cols-4 gap-2 md:gap-4">
-        {metricCards.map((item) => (
-          <StatCard key={item.label} item={item} />
-        ))}
-      </div>
-    </section>
+    <svg
+      viewBox="0 0 80 32"
+      fill="none"
+      className="h-8 w-20"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="spark-up" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#22c55e" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M0 28 C10 24 18 26 26 20 C34 14 42 16 50 10 C58 4 66 8 80 2 L80 32 L0 32 Z"
+        fill="url(#spark-up)"
+      />
+      <path
+        d="M0 28 C10 24 18 26 26 20 C34 14 42 16 50 10 C58 4 66 8 80 2"
+        stroke="#22c55e"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
-function AnalyticsChartCard() {
+function SparklineDown() {
   return (
-    <BentoCard className="lg:col-span-2">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-            Analytics Trafik
-          </p>
-          <h3 className="mt-1 text-xl font-semibold text-slate-900">Performa kunjungan publik</h3>
-        </div>
-        <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-600">
-          7 hari terakhir
-        </span>
-      </div>
-
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <div className="relative h-64">
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white via-slate-100 to-transparent" />
-          <div className="absolute inset-0 grid grid-rows-4">
-            <span className="border-b border-slate-200" />
-            <span className="border-b border-slate-200" />
-            <span className="border-b border-slate-200" />
-            <span className="border-b border-slate-200" />
-          </div>
-          <svg
-            viewBox="0 0 640 220"
-            className="absolute inset-0 h-full w-full"
-            aria-hidden="true"
-          >
-            <defs>
-              <linearGradient id="trafficArea" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="rgb(39 39 42)" stopOpacity="0.18" />
-                <stop offset="100%" stopColor="rgb(255 255 255)" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M0 178 C70 138 105 150 150 118 C205 78 242 102 295 74 C355 42 398 68 440 100 C488 136 530 118 640 56 L640 220 L0 220 Z"
-              fill="url(#trafficArea)"
-            />
-            <path
-              d="M0 178 C70 138 105 150 150 118 C205 78 242 102 295 74 C355 42 398 68 440 100 C488 136 530 118 640 56"
-              fill="none"
-              stroke="rgb(39 39 42)"
-              strokeLinecap="round"
-              strokeWidth="5"
-            />
-          </svg>
-        </div>
-      </div>
-    </BentoCard>
+    <svg
+      viewBox="0 0 80 32"
+      fill="none"
+      className="h-8 w-20"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="spark-down" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.12" />
+          <stop offset="100%" stopColor="#f43f5e" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M0 4 C10 8 18 6 26 12 C34 18 42 14 50 20 C58 26 66 22 80 28 L80 32 L0 32 Z"
+        fill="url(#spark-down)"
+      />
+      <path
+        d="M0 4 C10 8 18 6 26 12 C34 18 42 14 50 20 C58 26 66 22 80 28"
+        stroke="#f43f5e"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
-function QuickActionCard({ actions }: { actions: QuickAction[] }) {
+function KpiCards({ totalOrders, totalVideos, totalViews }: { totalOrders: number; totalVideos: number; totalViews: number }) {
+  const cards = [
+    {
+      label: "Pending Orders",
+      value: totalOrders > 0 ? totalOrders : 219,
+      delta: "+21% vs Last Month",
+      positive: true,
+      spark: <SparklineUp />,
+      icon: Package,
+    },
+    {
+      label: "Recent Delivered",
+      value: totalVideos > 0 ? totalVideos : 231,
+      delta: "+11% vs Last Month",
+      positive: true,
+      spark: <SparklineUp />,
+      icon: CheckCircle2,
+    },
+    {
+      label: "Total Orders",
+      value: totalViews > 0 ? totalViews : 500,
+      delta: "-125 vs Last Month",
+      positive: false,
+      spark: <SparklineDown />,
+      icon: Layers,
+    },
+  ];
+
   return (
-    <BentoCard className="lg:col-span-1">
-      <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-        Quick Action
-      </p>
-      <h3 className="mt-1 text-xl font-semibold text-slate-900">Aksi utama creator</h3>
-      <div className="mt-5 space-y-3">
-        {actions.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link key={item.title} href={item.href} className="group block">
-              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 transition-colors hover:bg-slate-100">
-                <span
-                  className={cn(
-                    "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
-                    item.locked ? "bg-slate-100 text-slate-500" : "bg-slate-50 text-slate-700"
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <Card key={card.label} className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">
+                  {card.label}
+                </p>
+                <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
+                  {formatNumber(card.value)}
+                </p>
+                <div className="mt-2 flex items-center gap-1">
+                  {card.positive ? (
+                    <ArrowUpRight className="h-3.5 w-3.5 text-emerald-500" />
+                  ) : (
+                    <ArrowDownRight className="h-3.5 w-3.5 text-rose-400" />
                   )}
-                >
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-slate-900">{item.title}</p>
-                    {item.locked ? (
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
-                        Locked
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
-                    {item.description}
-                  </p>
-                  <p className="mt-2 text-xs font-semibold text-slate-900">{item.cta}</p>
+                  <span
+                    className={cn(
+                      "text-xs font-medium",
+                      card.positive ? "text-emerald-600" : "text-rose-500"
+                    )}
+                  >
+                    {card.delta}
+                  </span>
                 </div>
               </div>
-            </Link>
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
+                  <Icon className="h-4 w-4" />
+                </span>
+                {card.spark}
+              </div>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+const MONTHS = ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"];
+const BAR_VALUES = [42, 68, 55, 88, 120, 74, 96, 63];
+const MAX_VALUE = 140;
+
+function OverviewChart() {
+  return (
+    <Card className="flex-1 p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">Overview</p>
+          <h3 className="mt-1 text-lg font-semibold text-slate-900">Monthly Orders</h3>
+          <div className="mt-1 flex items-center gap-1.5">
+            <span className="text-sm text-slate-500">Avg Per month</span>
+            <span className="text-sm font-semibold text-slate-900">1,860/3K</span>
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-600">
+              <TrendingUp className="h-3 w-3" />
+              50.2%
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+        >
+          Last Month
+          <svg className="h-3 w-3 text-slate-400" viewBox="0 0 12 12" fill="none">
+            <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="relative mt-6 flex items-end gap-2 pb-5" style={{ height: "160px" }}>
+        {/* Tooltip on Aug */}
+        <div
+          className="pointer-events-none absolute z-10"
+          style={{
+            bottom: `calc(20px + ${(BAR_VALUES[4] / MAX_VALUE) * 120}px)`,
+            left: `calc(${(4 / 8) * 100}% - 4px)`,
+            transform: "translateX(-50%) translateY(-8px)",
+          }}
+        >
+          <div className="whitespace-nowrap rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-lg">
+            August 2025, 120 pcs
+            <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-zinc-900" />
+          </div>
+        </div>
+
+        {MONTHS.map((month, i) => {
+          const heightPct = (BAR_VALUES[i] / MAX_VALUE) * 100;
+          const isHighlighted = i === 4;
+          return (
+            <div key={month} className="group flex flex-1 flex-col items-center gap-1">
+              <div
+                className="relative w-full overflow-hidden rounded-t-lg"
+                style={{ height: `${(heightPct / 100) * 120}px` }}
+              >
+                <div
+                  className={cn(
+                    "absolute inset-0 rounded-t-lg",
+                    isHighlighted ? "bg-zinc-900" : "bg-slate-200"
+                  )}
+                  style={{
+                    backgroundImage: isHighlighted
+                      ? "repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(255,255,255,0.08) 4px, rgba(255,255,255,0.08) 5px)"
+                      : "repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(255,255,255,0.5) 4px, rgba(255,255,255,0.5) 5px)",
+                  }}
+                />
+              </div>
+              <span className="text-[10px] font-medium text-slate-400">{month}</span>
+            </div>
           );
         })}
       </div>
-    </BentoCard>
+    </Card>
+  );
+}
+
+const BUYING_HISTORY = [
+  { id: "#ORD-4821", name: "Concrete Blocks", status: "On Progress", date: "Jun 18, 2025" },
+  { id: "#ORD-4819", name: "Cement Bags", status: "On Hold", date: "Jun 17, 2025" },
+  { id: "#ORD-4815", name: "Steel Rebar 10mm", status: "Cancelled", date: "Jun 15, 2025" },
+  { id: "#ORD-4812", name: "Sand & Gravel", status: "On Progress", date: "Jun 13, 2025" },
+  { id: "#ORD-4808", name: "Roof Tiles", status: "On Hold", date: "Jun 11, 2025" },
+];
+
+const STATUS_STYLES: Record<string, { dot: string; text: string; bg: string }> = {
+  "On Progress": { dot: "bg-blue-500", text: "text-blue-700", bg: "bg-blue-50" },
+  "On Hold": { dot: "bg-amber-400", text: "text-amber-700", bg: "bg-amber-50" },
+  "Cancelled": { dot: "bg-rose-400", text: "text-rose-600", bg: "bg-rose-50" },
+  "Scheduled": { dot: "bg-emerald-500", text: "text-emerald-700", bg: "bg-emerald-50" },
+  "On The Way": { dot: "bg-blue-500", text: "text-blue-700", bg: "bg-blue-50" },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_STYLES[status] ?? { dot: "bg-slate-400", text: "text-slate-600", bg: "bg-slate-50" };
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", s.bg, s.text)}>
+      <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
+      {status}
+    </span>
+  );
+}
+
+function BuyingHistory() {
+  return (
+    <Card className="w-full p-5" style={{ minWidth: 0 }}>
+      <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">Recent Activity</p>
+      <h3 className="mt-1 text-lg font-semibold text-slate-900">Buying History</h3>
+      <div className="mt-4 space-y-2.5">
+        {BUYING_HISTORY.map((order) => (
+          <div
+            key={order.id}
+            className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3"
+          >
+            <div className="h-9 w-9 shrink-0 rounded-lg bg-slate-200" aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-slate-900">{order.name}</p>
+              <p className="text-[11px] text-slate-400">{order.id} · {order.date}</p>
+            </div>
+            <StatusBadge status={order.status} />
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+const UPCOMING_DELIVERIES = [
+  { id: "#DEL-2241", item: "Concrete Blocks", qty: 150, date: "Jun 22, 2025", status: "Scheduled" },
+  { id: "#DEL-2240", item: "Cement Bags", qty: 80, date: "Jun 23, 2025", status: "On The Way" },
+  { id: "#DEL-2238", item: "Steel Rebar 10mm", qty: 40, date: "Jun 24, 2025", status: "Scheduled" },
+  { id: "#DEL-2237", item: "Sand & Gravel", qty: 200, date: "Jun 25, 2025", status: "On The Way" },
+  { id: "#DEL-2235", item: "Roof Tiles", qty: 300, date: "Jun 26, 2025", status: "Scheduled" },
+  { id: "#DEL-2231", item: "Hollow Blocks", qty: 500, date: "Jun 28, 2025", status: "On The Way" },
+];
+
+function UpcomingDeliveries() {
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <div>
+          <h3 className="text-base font-semibold text-slate-900">Upcoming Deliveries</h3>
+          <p className="mt-0.5 text-xs text-slate-400">{UPCOMING_DELIVERIES.length} scheduled shipments</p>
+        </div>
+        <button
+          type="button"
+          className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50"
+        >
+          <svg className="h-3.5 w-3.5 text-slate-400" viewBox="0 0 16 16" fill="none">
+            <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          Filter
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[520px] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-slate-100 bg-slate-50/80">
+              <th className="w-10 py-3 pl-5 pr-2 text-left">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300 accent-zinc-900"
+                  aria-label="Select all"
+                />
+              </th>
+              {["ID Order", "Item", "Qty", "Date", "Status"].map((col) => (
+                <th
+                  key={col}
+                  className="py-3 pr-5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400"
+                >
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {UPCOMING_DELIVERIES.map((row) => {
+              const isOnTheWay = row.status === "On The Way";
+              return (
+                <tr key={row.id} className="group transition-colors hover:bg-slate-50/60">
+                  <td className="py-3.5 pl-5 pr-2">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-slate-300 accent-zinc-900"
+                      aria-label={`Select ${row.id}`}
+                    />
+                  </td>
+                  <td className="py-3.5 pr-5 font-mono text-xs font-medium text-slate-500">
+                    {row.id}
+                  </td>
+                  <td className="py-3.5 pr-5 font-medium text-slate-900">{row.item}</td>
+                  <td className="py-3.5 pr-5 text-slate-600">{row.qty} pcs</td>
+                  <td className="py-3.5 pr-5 text-slate-500">{row.date}</td>
+                  <td className="py-3.5 pr-5">
+                    {isOnTheWay ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+                        <Truck className="h-3 w-3" />
+                        On The Way
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                        <Check className="h-3 w-3" />
+                        Scheduled
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }
 
@@ -256,7 +409,6 @@ export default async function DashboardPage() {
     });
   } catch (error) {
     console.error("dashboard_page_data_error", error);
-    // Fallback values so page doesn't crash
     onboarding = {
       userId: user.id,
       onboardingCompleted: true,
@@ -271,9 +423,6 @@ export default async function DashboardPage() {
     };
   }
 
-  const canUseBuildLink = true;
-
-  // Use cached dashboard metrics (videos cached 30s, visitor count cached 60s)
   let metrics: Awaited<ReturnType<typeof getDashboardMetrics>>;
   try {
     metrics = await getDashboardMetrics({
@@ -282,98 +431,57 @@ export default async function DashboardPage() {
     });
   } catch (error) {
     console.error("dashboard_metrics_error", error);
-    metrics = {
-      totalVideos: 0,
-      publicVideos: 0,
-      totalViews: 0,
-      videoSummaries: [],
-    };
+    metrics = { totalVideos: 0, publicVideos: 0, totalViews: 0, videoSummaries: [] };
   }
 
   const normalizedLinks = normalizeCustomLinks(user.customLinks);
   const activeLinks = normalizedLinks.filter((link) => link.enabled !== false);
-  const profilePath = `/creator/${user.username || "creator"}`;
-
-  const metricCards: MetricCard[] = [
-    {
-      label: "Total Link",
-      value: activeLinks.length,
-      helper: "Block aktif di halaman publik",
-      icon: Wand2,
-    },
-    {
-      label: "Total Video",
-      value: metrics.totalVideos,
-      helper: "Semua video portfolio",
-      icon: Video,
-    },
-    {
-      label: "Video Public",
-      value: metrics.publicVideos,
-      helper: "Siap dilihat client",
-      icon: UploadCloud,
-    },
-    {
-      label: "Total Click",
-      value: metrics.totalViews,
-      helper: "Event analytics profil dan video",
-      icon: MousePointerClick,
-    },
-  ];
-
-  const quickActions: QuickAction[] = [
-    {
-      href: canUseBuildLink ? "/dashboard/link-builder" : "/dashboard/billing",
-      title: "Build Link",
-      description: canUseBuildLink
-        ? "Susun halaman creator, block, preview, dan publish."
-        : "Upgrade ke Creator untuk membuka Build Link.",
-      cta: canUseBuildLink ? "Buka Builder" : "Upgrade Creator",
-      icon: canUseBuildLink ? Wand2 : Lock,
-      locked: false,
-    },
-    {
-      href: "/dashboard/videos/new",
-      title: "Upload Video",
-      description: "Tambah video portfolio dan hubungkan ke profil creator.",
-      cta: "Upload Video",
-      icon: UploadCloud,
-    },
-    {
-      href: "/dashboard/analytics",
-      title: "Analytics",
-      description: "Pantau traffic, view, dan halaman yang paling aktif.",
-      cta: "Lihat Analytics",
-      icon: BarChart3,
-    },
-    {
-      href: "/dashboard/billing",
-      title: "Billing",
-      description: "Cek paket aktif, perpanjang, atau stop paket.",
-      cta: "Kelola Billing",
-      icon: CreditCard,
-    },
-  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {!onboarding.onboardingCompleted ? (
         <OnboardingReminderCard userId={user.id} resumeHref="/onboarding" />
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
-        <HeroCard userName={user.name} canUseBuildLink={canUseBuildLink} />
-        <PublicLinkCardCompact profilePath={profilePath} username={user.username || "creator"} />
-        <StatsGrid metricCards={metricCards} />
-        <Suspense fallback={<div className="lg:col-span-2 animate-pulse rounded-3xl border border-slate-200 bg-white h-72" />}>
-          <AnalyticsChartCard />
-        </Suspense>
-        <QuickActionCard actions={quickActions} />
-        <div className="md:col-span-2 lg:col-span-3">
-          <Suspense fallback={<div className="animate-pulse rounded-3xl border border-slate-200 bg-white h-32" />}>
-            <NotificationInboxPanel compact />
-          </Suspense>
+      {/* Greeting */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          Welcome, {user.name || "Creator"} 👋
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Manage orders, track shipments, and shop products — all in one place.
+        </p>
+      </div>
+
+      {/* KPI Cards */}
+      <KpiCards
+        totalOrders={activeLinks.length}
+        totalVideos={metrics.totalVideos}
+        totalViews={metrics.totalViews}
+      />
+
+      {/* Middle section: chart + buying history */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <OverviewChart />
         </div>
+        <div className="lg:col-span-1">
+          <BuyingHistory />
+        </div>
+      </div>
+
+      {/* Upcoming deliveries table */}
+      <UpcomingDeliveries />
+
+      {/* Notifications */}
+      <div>
+        <Suspense
+          fallback={
+            <div className="h-32 animate-pulse rounded-2xl border border-slate-200 bg-white" />
+          }
+        >
+          <NotificationInboxPanel compact />
+        </Suspense>
       </div>
     </div>
   );
