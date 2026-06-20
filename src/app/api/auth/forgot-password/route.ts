@@ -102,6 +102,12 @@ export async function POST(request: NextRequest) {
           },
         },
       });
+    } else {
+      const resetUrl = buildResetUrl(rawToken);
+      return NextResponse.json({
+        ok: true,
+        fallbackUrl: resetUrl,
+      });
     }
   }
 

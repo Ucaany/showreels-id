@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { MailCheck, ArrowLeft, Mail } from "lucide-react";
@@ -26,12 +26,13 @@ export function ForgotPasswordForm({
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sentEmail, setSentEmail] = useState<string | null>(null);
+  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
+  const emailRef = useRef(email);
+  emailRef.current = email;
   const toast = useToast();
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email.trim()) {
+  const sendRequest = async (emailToSend: string) => {
+    if (!emailToSend.trim()) {
       toast.error(
         dictionary.authResetEmailRequiredTitle,
         dictionary.authResetEmailRequiredHint
@@ -45,11 +46,11 @@ export function ForgotPasswordForm({
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: emailToSend }),
       });
 
       const data = (await res.json().catch(() => null)) as
-        | { error?: string; message?: string }
+        | { error?: string; message?: string; fallbackUrl?: string }
         | null;
 
       if (!res.ok) {
@@ -58,7 +59,10 @@ export function ForgotPasswordForm({
           data?.error || dictionary.authResetSendFailed
         );
       } else {
-        setSentEmail(email);
+        setSentEmail(emailToSend);
+        if (data?.fallbackUrl) {
+          setFallbackUrl(data.fallbackUrl);
+        }
       }
     } catch {
       toast.error(
@@ -68,6 +72,16 @@ export function ForgotPasswordForm({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendRequest(email);
+  };
+
+  const handleResend = () => {
+    setFallbackUrl(null);
+    sendRequest(sentEmail || emailRef.current);
   };
 
   return (
@@ -117,7 +131,6 @@ export function ForgotPasswordForm({
               </Button>
             </form>
 
-            {/* Back to login */}
             <p className="pt-1 text-center text-[0.82rem] text-ink/60">
               {dictionary.authResetRememberText}{" "}
               <Link
@@ -148,17 +161,38 @@ export function ForgotPasswordForm({
               <p className="text-sm font-semibold text-ink">{sentEmail}</p>
             </div>
 
+            {fallbackUrl && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-left">
+                <p className="text-xs font-medium text-amber-700 mb-1">
+                  Link reset (email belum terkirim):
+                </p>
+                <p className="text-xs text-amber-600 break-all">{fallbackUrl}</p>
+              </div>
+            )}
+
             <p className="text-xs leading-relaxed text-ink/40">
               {dictionary.authResetCheckSpamLead}{" "}
               {dictionary.authResetCheckSpamTail}
             </p>
 
-            <Button
-              onClick={() => setSentEmail(null)}
-              className="mx-auto h-10 rounded-xl border border-black/[0.08] bg-white px-4 text-sm font-medium text-ink/80 hover:bg-black/[0.02]"
-            >
-              {dictionary.authResetResend}
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={handleResend}
+                disabled={isSubmitting}
+                className="mx-auto h-10 rounded-xl bg-ink text-white px-6 text-sm font-medium hover:bg-ink-soft transition-all"
+              >
+                {isSubmitting
+                  ? dictionary.authResetSending
+                  : dictionary.authResetResend}
+              </Button>
+
+              <Button
+                onClick={() => setSentEmail(null)}
+                className="mx-auto h-10 rounded-xl border border-black/[0.08] bg-white px-4 text-sm font-medium text-ink hover:bg-black/[0.02]"
+              >
+                Ganti email
+              </Button>
+            </div>
 
             <Link
               href={loginHref}
