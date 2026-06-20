@@ -1,11 +1,20 @@
 import { eq } from "drizzle-orm";
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { authConfig } from "@/auth.config";
 import { db, isDatabaseConfigured } from "@/db";
 import { accounts, sessions, users, verificationTokens } from "@/db/schema";
+import { rateLimiters, getClientIp } from "@/lib/rate-limit";
+
+class LoginRateLimitedError extends CredentialsSignin {
+  code = "LOGIN_RATE_LIMITED";
+}
+
+class LoginInvalidError extends CredentialsSignin {
+  code = "LOGIN_INVALID";
+}
 
 function getGoogleCredentials() {
   const clientId = process.env.AUTH_GOOGLE_ID ?? process.env.GOOGLE_CLIENT_ID;
@@ -41,7 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email =
           typeof credentials?.email === "string"
             ? credentials.email.trim().toLowerCase()
@@ -50,8 +59,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           typeof credentials?.password === "string" ? credentials.password : "";
 
         if (!email || !password || !db) {
-          return null;
+          throw new LoginInvalidError();
         }
+
+        const ipKey = request ? getClientIp(request) : "unknown";
+        const checkAndConsume = () => {
+          const rl = rateLimiters.login(ipKey);
+          if (!rl.success) {
+            throw new LoginRateLimitedError();
+          }
+        };
 
         const user = await db.query.users.findFirst({
           where: eq(users.email, email),
@@ -65,14 +82,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (!user?.passwordHash) {
-          return null;
+          checkAndConsume();
+          throw new LoginInvalidError();
         }
 
         const { verifyPassword } = await import("@/lib/password");
         const isValidPassword = await verifyPassword(password, user.passwordHash);
 
         if (!isValidPassword) {
-          return null;
+          checkAndConsume();
+          throw new LoginInvalidError();
         }
 
         return {

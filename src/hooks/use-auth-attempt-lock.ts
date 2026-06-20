@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 const AUTH_ATTEMPT_KEY = "showreels_auth_attempt_lock";
-const MAX_FAILED_ATTEMPTS = 3;
+const MAX_FAILED_ATTEMPTS = 4;
 const LOCK_DURATION_MS = 5 * 60 * 1000;
 
 type AuthAttemptState = {
@@ -131,10 +131,20 @@ export function useAuthAttemptLock() {
     setAttemptState({ failedAttempts: 0, lockedUntil: 0 });
   }, []);
 
+  const forceLock = useCallback(() => {
+    const nextState: AuthAttemptState = {
+      failedAttempts: 0,
+      lockedUntil: Date.now() + LOCK_DURATION_MS,
+    };
+    writeAttemptState(nextState);
+    setAttemptState(nextState);
+  }, []);
+
   return {
     isLocked,
     lockMessage,
     registerFailure,
     clearFailures,
+    forceLock,
   };
 }

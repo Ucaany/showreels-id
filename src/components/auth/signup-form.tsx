@@ -80,15 +80,15 @@ export function SignupForm({
   const onInvalidSubmit = () => {
     const attempt = authLock.registerFailure();
     if (attempt.isLocked) {
-      toast.error(dictionary.authSignupLockedTitle, attempt.message);
+      toast.error(dictionary.authSignupLockedTitle, dictionary.authLoginLockedHint);
       return;
     }
-    toast.error(dictionary.authSignupInvalid, dictionary.authSignupInvalidHint);
+    toast.error(dictionary.authSignupInvalid);
   };
 
   const onSubmit = async (values: SignupValues) => {
     if (authLock.isLocked) {
-      toast.error(dictionary.authSignupLockedTitle, authLock.lockMessage);
+      toast.error(dictionary.authSignupLockedTitle, dictionary.authLoginLockedHint);
       return;
     }
 
@@ -106,13 +106,10 @@ export function SignupForm({
       if (!registerResponse.ok) {
         const attempt = authLock.registerFailure();
         if (attempt.isLocked) {
-          toast.error(dictionary.authSignupLockedTitle, attempt.message);
+          toast.error(dictionary.authSignupLockedTitle, dictionary.authLoginLockedHint);
           return;
         }
-        toast.error(
-          getRegisterErrorMessage(dictionary, registerPayload),
-          dictionary.authSignupInvalidHint
-        );
+        toast.error(getRegisterErrorMessage(dictionary, registerPayload));
         return;
       }
 
@@ -123,6 +120,19 @@ export function SignupForm({
       });
 
       if (signInResult?.error) {
+        const isServerLocked =
+          typeof signInResult.error === "string" &&
+          signInResult.error.toLowerCase().includes("rate");
+
+        if (isServerLocked) {
+          authLock.forceLock();
+          toast.error(
+            dictionary.authSignupLockedTitle,
+            dictionary.authLoginLockedHint
+          );
+          return;
+        }
+
         authLock.clearFailures();
         void showFeedbackAlert({
           title: dictionary.authSignupAutoLoginTitle,
@@ -159,10 +169,7 @@ export function SignupForm({
       authLock.clearFailures();
       window.location.replace(bootstrapPayload?.redirectTo || "/dashboard");
     } catch {
-      toast.error(
-        dictionary.authSignupCatchError,
-        dictionary.authSignupInvalidHint
-      );
+      toast.error(dictionary.authSignupCatchError);
     }
   };
 

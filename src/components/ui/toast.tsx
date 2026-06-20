@@ -42,32 +42,32 @@ export function Toast({
  const style = toastStyles[type];
  const Icon = style.iconNode;
 
- return (
-  <div className={cn(
-    "pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl border p-4 shadow-lg shadow-slate-900/5 max-sm:p-3.5",
-    style.card
-  )}>
-    <div className={cn(
-      "grid h-9 w-9 shrink-0 place-items-center rounded-full",
-      style.icon
-    )}>
-      <Icon className="h-5 w-5" />
-    </div>
-    <div className="min-w-0 flex-1 pt-0.5">
-      <p className="truncate text-sm font-medium text-slate-950">{title}</p>
-      {description && (
-        <p className="mt-0.5 truncate text-xs leading-5 text-slate-500">{description}</p>
-      )}
-    </div>
-    {onClose && (
-      <button
-        onClick={onClose}
-        className="rounded-lg p-1 text-slate-300 hover:bg-slate-50 hover:text-slate-700"
-        aria-label="Close notification"
-      >
-        <X className="h-4 w-4" />
-      </button>
-    )}
-  </div>
- );
+  return (
+   <div className={cn(
+     "pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl border p-4 shadow-lg shadow-slate-900/5 max-sm:p-3.5",
+     style.card
+   )}>
+     <div className={cn(
+       "grid h-9 w-9 shrink-0 place-items-center rounded-full",
+       style.icon
+     )}>
+       <Icon className="h-5 w-5" />
+     </div>
+     <div className="min-w-0 flex-1 pt-0.5">
+       <p className="break-words text-sm font-medium leading-snug text-slate-950">{title}</p>
+       {description && (
+         <p className="mt-1 break-words text-xs leading-relaxed text-slate-500">{description}</p>
+       )}
+     </div>
+     {onClose && (
+       <button
+         onClick={onClose}
+         className="shrink-0 rounded-lg p-1 text-slate-300 hover:bg-slate-50 hover:text-slate-700"
+         aria-label="Close notification"
+       >
+         <X className="h-4 w-4" />
+       </button>
+     )}
+   </div>
+  );
 }

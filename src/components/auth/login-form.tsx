@@ -88,15 +88,15 @@ export function LoginForm({
   const onInvalidSubmit = () => {
     const attempt = authLock.registerFailure();
     if (attempt.isLocked) {
-      toast.error(dictionary.authLoginLockedTitle, attempt.message);
+      toast.error(dictionary.authLoginLockedTitle, dictionary.authLoginLockedHint);
       return;
     }
-    toast.error(dictionary.authLoginInvalid, dictionary.authLoginInvalidHint);
+    toast.error(dictionary.authLoginInvalid);
   };
 
   const onSubmit = async (values: LoginValues) => {
     if (authLock.isLocked) {
-      toast.error(dictionary.authLoginLockedTitle, authLock.lockMessage);
+      toast.error(dictionary.authLoginLockedTitle, dictionary.authLoginLockedHint);
       return;
     }
 
@@ -107,12 +107,28 @@ export function LoginForm({
     });
 
     if (result?.error) {
-      const attempt = authLock.registerFailure();
-      if (attempt.isLocked) {
-        toast.error(dictionary.authLoginLockedTitle, attempt.message);
+      const isServerLocked =
+        typeof result.error === "string" &&
+        result.error.toLowerCase().includes("rate");
+
+      if (isServerLocked) {
+        authLock.forceLock();
+        toast.error(
+          dictionary.authLoginLockedTitle,
+          dictionary.authLoginLockedHint
+        );
         return;
       }
-      toast.error(dictionary.authLoginWrongCreds, dictionary.authLoginInvalidHint);
+
+      const attempt = authLock.registerFailure();
+      if (attempt.isLocked) {
+        toast.error(
+          dictionary.authLoginLockedTitle,
+          dictionary.authLoginLockedHint
+        );
+        return;
+      }
+      toast.error(dictionary.authLoginWrongCreds);
       return;
     }
 

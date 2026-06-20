@@ -3,7 +3,12 @@
  * Uses simple HTML templates (no React Email dependency needed).
  */
 
-export type EmailType = "welcome" | "subscription_activated" | "subscription_expired" | "payment_success";
+export type EmailType =
+  | "welcome"
+  | "subscription_activated"
+  | "subscription_expired"
+  | "payment_success"
+  | "password_reset";
 
 interface WelcomeEmailData {
   userName: string;
@@ -31,11 +36,18 @@ interface PaymentSuccessData {
   dashboardUrl: string;
 }
 
+interface PasswordResetEmailData {
+  userName: string;
+  resetUrl: string;
+  expiresInMinutes: number;
+}
+
 export type EmailTemplateData =
   | { type: "welcome"; data: WelcomeEmailData }
   | { type: "subscription_activated"; data: SubscriptionActivatedData }
   | { type: "subscription_expired"; data: SubscriptionExpiredData }
-  | { type: "payment_success"; data: PaymentSuccessData };
+  | { type: "payment_success"; data: PaymentSuccessData }
+  | { type: "password_reset"; data: PasswordResetEmailData };
 
 function baseLayout(content: string): string {
   return `<!DOCTYPE html>
@@ -168,6 +180,33 @@ export function renderPaymentSuccessEmail(data: PaymentSuccessData): { subject: 
   };
 }
 
+export function renderPasswordResetEmail(data: PasswordResetEmailData): { subject: string; html: string } {
+  const html = baseLayout(`
+    <h1 class="heading">Reset Password 🔐</h1>
+    <p class="text">
+      Hai ${escapeHtml(data.userName)}, kami menerima permintaan untuk mengatur ulang password akun Showreels.id kamu.
+    </p>
+    <p class="text">
+      Klik tombol di bawah ini untuk membuat password baru. Tautan ini berlaku selama ${data.expiresInMinutes} menit.
+    </p>
+    <p style="margin-top: 24px;">
+      <a href="${escapeHtml(data.resetUrl)}" class="button">Reset Password</a>
+    </p>
+    <p class="text" style="margin-top: 24px;">
+      Jika kamu tidak meminta reset password, abaikan email ini. Akun kamu tetap aman.
+    </p>
+    <p class="text" style="font-size: 13px; color: #94a3b8; word-break: break-all;">
+      Atau salin tautan berikut ke browser:<br/>
+      ${escapeHtml(data.resetUrl)}
+    </p>
+  `);
+
+  return {
+    subject: "Reset password akun Showreels.id",
+    html,
+  };
+}
+
 export function renderEmailTemplate(template: EmailTemplateData): { subject: string; html: string } {
   switch (template.type) {
     case "welcome":
@@ -178,6 +217,8 @@ export function renderEmailTemplate(template: EmailTemplateData): { subject: str
       return renderSubscriptionExpiredEmail(template.data);
     case "payment_success":
       return renderPaymentSuccessEmail(template.data);
+    case "password_reset":
+      return renderPasswordResetEmail(template.data);
   }
 }
 

@@ -191,6 +191,8 @@ export const dictionaries = {
     authLoginBlockedMessage:
       "Akun ini sedang diblokir dan belum bisa digunakan.",
     authLoginLockedTitle: "Login terkunci",
+    authLoginLockedHint:
+      "Terlalu banyak percobaan gagal. Coba lagi nanti.",
     authLoginInvalidHint: "Periksa kembali email dan password yang diisi.",
     authLoginHeldTitle: "Login tertahan",
     authLoginOauthErrorTitle: "Login belum berhasil",
@@ -274,6 +276,26 @@ export const dictionaries = {
     authResetEmailRequiredHint: "Silakan masukkan alamat email.",
     authResetSendFailedTitle: "Gagal mengirim link reset",
     authResetNetworkErrorTitle: "Terjadi kesalahan",
+
+    // === AUTH — RESET PASSWORD (set new password) ===
+    authNewPasswordTitle: "Buat Password Baru",
+    authNewPasswordSubtitle:
+      "Silakan buat password baru untuk akun kamu.",
+    authNewPasswordLabel: "Password baru",
+    authNewPasswordPlaceholder: "Minimal 8 karakter",
+    authNewPasswordConfirmLabel: "Konfirmasi password baru",
+    authNewPasswordSubmit: "Simpan Password",
+    authNewPasswordSubmitting: "Menyimpan...",
+    authNewPasswordMinHint: "Password minimal 8 karakter.",
+    authNewPasswordMismatchHint: "Konfirmasi password tidak sama.",
+    authNewPasswordInvalidTokenTitle: "Link tidak valid",
+    authNewPasswordInvalidTokenHint:
+      "Link reset tidak valid atau sudah kedaluwarsa. Minta link baru.",
+    authNewPasswordSuccessTitle: "Password berhasil diperbarui",
+    authNewPasswordSuccessHint:
+      "Password kamu sudah diperbarui. Silakan masuk dengan password baru.",
+    authNewPasswordRequestNew: "Minta link reset baru",
+    authNewPasswordBackToLogin: "Kembali ke login",
 
     // === LANDING — HERO (Hero.tsx UI strings) ===
     landingHeroHeadlineLead: "Satu link untuk",
@@ -532,6 +554,8 @@ export const dictionaries = {
     authLoginBlockedMessage:
       "This account is currently blocked and cannot be used.",
     authLoginLockedTitle: "Login locked",
+    authLoginLockedHint:
+      "Too many failed attempts. Please try again later.",
     authLoginInvalidHint:
       "Please double-check the email and password you entered.",
     authLoginHeldTitle: "Sign in held",
@@ -616,6 +640,25 @@ export const dictionaries = {
     authResetEmailRequiredHint: "Please enter your email address.",
     authResetSendFailedTitle: "Failed to send the reset link",
     authResetNetworkErrorTitle: "Something went wrong",
+
+    // === AUTH — RESET PASSWORD (set new password) ===
+    authNewPasswordTitle: "Set a new password",
+    authNewPasswordSubtitle: "Create a new password for your account.",
+    authNewPasswordLabel: "New password",
+    authNewPasswordPlaceholder: "At least 8 characters",
+    authNewPasswordConfirmLabel: "Confirm new password",
+    authNewPasswordSubmit: "Save password",
+    authNewPasswordSubmitting: "Saving...",
+    authNewPasswordMinHint: "Password must be at least 8 characters.",
+    authNewPasswordMismatchHint: "Passwords do not match.",
+    authNewPasswordInvalidTokenTitle: "Invalid link",
+    authNewPasswordInvalidTokenHint:
+      "This reset link is invalid or has expired. Request a new one.",
+    authNewPasswordSuccessTitle: "Password updated",
+    authNewPasswordSuccessHint:
+      "Your password has been updated. Please sign in with your new password.",
+    authNewPasswordRequestNew: "Request a new link",
+    authNewPasswordBackToLogin: "Back to sign in",
 
     // === LANDING — HERO (Hero.tsx UI strings) ===
     landingHeroHeadlineLead: "One link for",

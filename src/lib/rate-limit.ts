@@ -174,10 +174,10 @@ export function checkRateLimit(
  * Pre-configured rate limiters for common use cases.
  */
 export const rateLimiters = {
-  /** Login: 5 attempts per 15 minutes per IP */
+  /** Login: 4 attempts per 15 minutes per IP (locks at 4th failure) */
   login: (ip: string) =>
     checkRateLimit("login", ip, {
-      maxRequests: 5,
+      maxRequests: 4,
       windowMs: 15 * 60 * 1000,
     }),
 
