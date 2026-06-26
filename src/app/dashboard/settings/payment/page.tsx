@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, CreditCard, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
+import { NativeSelect as Select } from "@/components/ui/select";
 import { showFeedbackAlert } from "@/lib/feedback-alert";
 
 type PaymentState = {

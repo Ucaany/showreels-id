@@ -16,7 +16,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { NativeSelect as Select } from "@/components/ui/select";
 import { TrafficLineChart } from "@/components/dashboard/traffic-line-chart";
 import { cn } from "@/lib/cn";
 import { fetcher } from "@/lib/fetcher";

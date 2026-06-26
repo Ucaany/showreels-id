@@ -6,7 +6,7 @@ import { ShieldAlert } from "lucide-react";
 import { CopyProfileLinkButton } from "@/components/dashboard/copy-profile-link-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Select } from "@/components/ui/select";
+import { NativeSelect as Select } from "@/components/ui/select";
 import { confirmFeedbackAction, showFeedbackAlert } from "@/lib/feedback-alert";
 import { signOut } from "next-auth/react";
 import type { ProfileVisibility } from "@/lib/types";
