@@ -1,44 +1,66 @@
 "use client";
 
-import { Languages } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePreferences } from "@/hooks/use-preferences";
+import { FlagIcon } from "@/components/landing-new/FlagIcon";
 
-export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
-  const { locale, setLocale, dictionary } = usePreferences();
+export function LanguageSwitcher({ compact: _ = false }: { compact?: boolean }) {
+  const { locale, setLocale } = usePreferences();
+  const [open, setOpen] = useState(false);
+
+  const current = locale === "id" ? "ID" : "EN";
 
   return (
-    <div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#ccdbf5] bg-white/95 px-2 py-1 shadow-sm">
-      <span
-        className={`inline-flex h-8 items-center gap-2 px-2 text-xs font-semibold text-[#355387] ${
-          compact ? "min-w-0 justify-center" : "min-w-[102px]"
-        }`}
-        title={dictionary.language}
-        aria-label={dictionary.language}
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        aria-label="Pilih bahasa"
+        aria-expanded={open}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50"
       >
-        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#e7f0ff] text-[#2f73ff]">
-          <Languages className="h-3.5 w-3.5" />
-        </span>
-        {compact ? null : dictionary.language}
-      </span>
-      <div className="inline-flex items-center gap-1 rounded-full bg-[#edf4ff] p-1">
-        <Button
-          size="sm"
-          variant={locale === "id" ? "default" : "ghost"}
-          className="h-8 rounded-full px-3 text-sm"
-          onClick={() => setLocale("id")}
-        >
-          ID
-        </Button>
-        <Button
-          size="sm"
-          variant={locale === "en" ? "default" : "ghost"}
-          className="h-8 rounded-full px-3 text-sm"
-          onClick={() => setLocale("en")}
-        >
-          EN
-        </Button>
-      </div>
+        <FlagIcon code={current} className="h-[16px] w-[24px] rounded-[3px]" />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_18px_40px_rgba(10,13,20,0.12)]"
+          >
+            {(["ID", "EN"] as const).map((code) => {
+              const isActive = current === code;
+              return (
+                <button
+                  key={code}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    setLocale(code.toLowerCase() as "id" | "en");
+                    setOpen(false);
+                  }}
+                  className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors ${
+                    isActive
+                      ? "bg-blue-50 text-slate-900"
+                      : "text-slate-600 hover:bg-blue-50/60"
+                  }`}
+                >
+                  <FlagIcon code={code} className="h-[16px] w-[24px] shrink-0 rounded-[3px]" />
+                  <span className="flex-1 text-[13px] font-semibold">
+                    {code === "ID" ? "Bahasa Indonesia" : "English"}
+                  </span>
+                  {isActive && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  )}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
