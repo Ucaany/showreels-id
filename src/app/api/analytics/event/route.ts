@@ -1,6 +1,11 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import {
+  checkAnalyticsEventRateLimit,
+  getClientIp,
+  rateLimitExceededResponse,
+} from "@/lib/rate-limit";
 
 const VISITOR_COOKIE = "showreels_visitor_id";
 
@@ -16,6 +21,12 @@ const analyticsEventSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rateLimit = await checkAnalyticsEventRateLimit(ip);
+  if (!rateLimit.success) {
+    return rateLimitExceededResponse(rateLimit);
+  }
+
   const body = await request.json().catch(() => null);
   const parsed = analyticsEventSchema.safeParse(body);
   if (!parsed.success) {

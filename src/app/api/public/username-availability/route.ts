@@ -8,6 +8,11 @@ import {
   isUsernameFormatValid,
   sanitizeUsername,
 } from "@/lib/username-rules";
+import {
+  checkUsernameAvailabilityRateLimit,
+  getClientIp,
+  rateLimitExceededResponse,
+} from "@/lib/rate-limit";
 
 async function findSuggestion(base: string) {
   const suggestionBase = base.slice(0, 24) || "creator";
@@ -32,6 +37,12 @@ async function findSuggestion(base: string) {
 }
 
 export async function GET(request: Request) {
+  const ip = getClientIp(request);
+  const rateLimit = await checkUsernameAvailabilityRateLimit(ip);
+  if (!rateLimit.success) {
+    return rateLimitExceededResponse(rateLimit);
+  }
+
   const { searchParams } = new URL(request.url);
   const input = searchParams.get("username") ?? searchParams.get("slug") ?? "";
   const allowCurrentUser = searchParams.get("current") === "1";

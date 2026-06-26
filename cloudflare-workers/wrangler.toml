@@ -1,0 +1,24 @@
+name = "showreels-anti-phishing"
+main = "anti-phishing.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+CANONICAL_HOST = "showreels.id"
+VERCEL_URL = "https://www.showreels.id"
+VERCEL_ORIGIN = "www.showreels.id"
+
+[[routes]]
+pattern = "showreels.id/*"
+zone_name = "showreels.id"
+
+[[routes]]
+pattern = "www.showreels.id/*"
+zone_name = "showreels.id"
+
+[observability]
+enabled = true
+
+[[rules]]
+type = "ESModule"
+globs = ["**/*.js"]

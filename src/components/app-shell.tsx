@@ -18,9 +18,13 @@ export function AppShell({
   return (
     <SidebarProvider>
       <AppSidebar user={user} mode={mode} />
-      <SidebarInset className="p-4 md:p-6">
+      <SidebarInset className="min-w-0 flex-1 overflow-hidden">
         <AppHeader />
-        <div className="flex flex-1 flex-col gap-4">{children}</div>
+        <main className="flex min-w-0 flex-1 flex-col">
+          <div className="w-full min-w-0 space-y-6 p-4 md:p-6 lg:p-8">
+            {children}
+          </div>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

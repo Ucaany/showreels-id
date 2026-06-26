@@ -4,6 +4,14 @@
   "framework": "nextjs",
   "installCommand": "npm ci --legacy-peer-deps",
   "regions": ["sin1"],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noai, noimageai" }
+      ]
+    }
+  ],
   "functions": {
     "src/app/api/admin/audit/route.ts": {
       "maxDuration": 60

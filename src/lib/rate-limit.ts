@@ -93,6 +93,7 @@ let cleanupInterval: ReturnType<typeof setInterval> | null = null;
 
 function ensureCleanup() {
   if (cleanupInterval) return;
+  if (typeof setInterval === "undefined") return;
   cleanupInterval = setInterval(() => {
     const now = Date.now();
     for (const [, store] of stores) {
@@ -244,6 +245,34 @@ export async function checkPasswordRecoveryVerifyRateLimit(ip: string): Promise<
   });
 }
 
+async function checkSlidingRateLimit(
+  storeKey: string,
+  upstashPrefix: string,
+  requests: number,
+  window: SlidingWindow,
+  windowMs: number,
+  identifier: string
+): Promise<RateLimitResult> {
+  const rl = getSlidingRatelimit(storeKey, upstashPrefix, requests, window);
+  if (rl) return upstashResultToRateLimit(await rl.limit(identifier));
+  return checkRateLimit(storeKey, identifier, { maxRequests: requests, windowMs });
+}
+
+/** AI generate bio: 10 / menit per user ID. */
+export async function checkGenerateBioRateLimit(userId: string): Promise<RateLimitResult> {
+  return checkSlidingRateLimit("generate_bio", "ratelimit_generate_bio", 10, "1 m", 60_000, userId);
+}
+
+/** Username availability: 30 / menit per IP. */
+export async function checkUsernameAvailabilityRateLimit(ip: string): Promise<RateLimitResult> {
+  return checkSlidingRateLimit("username_availability", "ratelimit_username_availability", 30, "1 m", 60_000, ip);
+}
+
+/** Analytics event: 60 / menit per IP. */
+export async function checkAnalyticsEventRateLimit(ip: string): Promise<RateLimitResult> {
+  return checkSlidingRateLimit("analytics_event", "ratelimit_analytics_event", 60, "1 m", 60_000, ip);
+}
+
 /** Demo login: 30 / menit per IP. */
 export async function checkDemoLoginRateLimit(ip: string): Promise<RateLimitResult> {
   const rl = getSlidingRatelimit("demo_login", "ratelimit_demo_login", 30, "1 m");
@@ -264,23 +293,14 @@ export async function checkDemoLoginRateLimit(ip: string): Promise<RateLimitResu
 export function getClientIp(request: Request): string {
   const headers = new Headers(request.headers);
 
-  // Vercel
-  const xForwardedFor = headers.get("x-forwarded-for");
-  if (xForwardedFor) {
-    return xForwardedFor.split(",")[0].trim();
-  }
-
-  // Cloudflare
   const cfConnectingIp = headers.get("cf-connecting-ip");
-  if (cfConnectingIp) {
-    return cfConnectingIp;
-  }
+  if (cfConnectingIp) return cfConnectingIp;
 
-  // Vercel specific
   const xRealIp = headers.get("x-real-ip");
-  if (xRealIp) {
-    return xRealIp;
-  }
+  if (xRealIp) return xRealIp;
+
+  const xForwardedFor = headers.get("x-forwarded-for");
+  if (xForwardedFor) return xForwardedFor.split(",")[0].trim();
 
   return "unknown";
 }

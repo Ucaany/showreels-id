@@ -6,7 +6,6 @@ import {
   Link2Icon,
   UserRoundIcon,
   CreditCardIcon,
-  BellIcon,
   Settings2Icon,
   HelpCircleIcon,
   UsersIcon,
@@ -47,7 +46,7 @@ export const creatorNavGroups: SidebarNavGroup[] = [
     items: [
       { title: "Profile", path: "/dashboard/profile", icon: <UserRoundIcon /> },
       { title: "Billing", path: "/dashboard/billing", icon: <CreditCardIcon /> },
-      { title: "Notifikasi", path: "/dashboard/notifications", icon: <BellIcon /> },
+      { title: "Account", path: "/dashboard/account", icon: <Settings2Icon /> },
     ],
   },
   {

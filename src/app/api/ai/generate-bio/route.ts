@@ -2,6 +2,7 @@ import { z } from "zod";
 import { NextResponse } from "next/server";
 import { isAdminEmail } from "@/server/admin-access";
 import { getCurrentUser } from "@/server/current-user";
+import { checkGenerateBioRateLimit, rateLimitExceededResponse } from "@/lib/rate-limit";
 
 const MAX_BIO_LENGTH = 700;
 
@@ -158,6 +159,11 @@ export async function POST(request: Request) {
       { error: "Akun owner tidak menggunakan fitur creator." },
       { status: 403 }
     );
+  }
+
+  const rateLimit = await checkGenerateBioRateLimit(currentUser.id);
+  if (!rateLimit.success) {
+    return rateLimitExceededResponse(rateLimit);
   }
 
   const body = await request.json().catch(() => null);

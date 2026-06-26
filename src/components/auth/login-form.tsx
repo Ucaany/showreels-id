@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -24,6 +24,9 @@ import { showFeedbackAlert } from "@/lib/feedback-alert";
 import { signInSchema } from "@/lib/auth-schemas";
 import { getSafeNextPath } from "@/lib/safe-next-path";
 
+const TURNSTILE_SITE_KEY =
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAADrnxoPouem5cNLb";
+
 type LoginValues = z.infer<typeof signInSchema>;
 
 function isGoogleEnabled() {
@@ -45,6 +48,9 @@ export function LoginForm({
   const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
   const safeNextPath = getSafeNextPath(nextPath);
   const googleEnabled = useMemo(() => isGoogleEnabled(), []);
   const signupHref =
@@ -71,6 +77,46 @@ export function LoginForm({
       icon: "warning",
     });
   }, [oauthError, dictionary]);
+
+  useEffect(() => {
+    const scriptId = "cf-turnstile-script";
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+
+    const tryRender = () => {
+      if (
+        typeof window !== "undefined" &&
+        window.turnstile &&
+        turnstileRef.current &&
+        !widgetIdRef.current
+      ) {
+        widgetIdRef.current = window.turnstile.render(turnstileRef.current, {
+          sitekey: TURNSTILE_SITE_KEY,
+          callback: (token: string) => setTurnstileToken(token),
+          "expired-callback": () => setTurnstileToken(null),
+          "error-callback": () => setTurnstileToken(null),
+          theme: "auto",
+        });
+      } else if (!widgetIdRef.current) {
+        setTimeout(tryRender, 300);
+      }
+    };
+
+    tryRender();
+
+    return () => {
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, []);
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
@@ -101,6 +147,26 @@ export function LoginForm({
   const onSubmit = async (values: LoginValues) => {
     if (authLock.isLocked) {
       toast.error(dictionary.authLoginLockedTitle, authLock.lockMessage);
+      return;
+    }
+
+    if (!turnstileToken) {
+      toast.error("Verifikasi gagal", "Selesaikan verifikasi captcha terlebih dahulu.");
+      return;
+    }
+
+    const verifyRes = await fetch("/api/auth/verify-turnstile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: turnstileToken }),
+    });
+
+    if (!verifyRes.ok) {
+      setTurnstileToken(null);
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.reset(widgetIdRef.current);
+      }
+      toast.error("Verifikasi gagal", "Captcha tidak valid, silakan coba lagi.");
       return;
     }
 
@@ -162,7 +228,9 @@ export function LoginForm({
       >
         {googleEnabled ? (
           <>
-            <Button
+          <div ref={turnstileRef} className="flex justify-center" />
+
+          <Button
               type="button"
               variant="outline"
               onClick={handleGoogleLogin}

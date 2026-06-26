@@ -75,9 +75,60 @@ const nextConfig: NextConfig = {
   // Enable Turbopack (default in Next.js 16) with empty config to silence webpack warning
   turbopack: {},
 
-  // Cache headers untuk static assets
   async headers() {
     return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-DNS-Prefetch-Control", value: "on" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https://img.youtube.com https://i.ytimg.com https://lh3.googleusercontent.com https://drive.google.com https://vumbnail.com https://avatars.githubusercontent.com https://*.supabase.co https://res.cloudinary.com https://*.cloudinary.com https://ik.imagekit.io https://*.mux.com",
+              "media-src 'self' https://*.mux.com blob:",
+              "connect-src 'self' https://*.supabase.co https://accounts.google.com https://www.google-analytics.com https://*.mux.com wss://*.supabase.co https://cloudflareinsights.com",
+              "frame-src https://accounts.google.com https://www.youtube.com https://player.vimeo.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self' https://accounts.google.com",
+              "frame-ancestors 'none'",
+              "upgrade-insecure-requests",
+            ].join("; "),
+          },
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin-allow-popups",
+          },
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "same-origin",
+          },
+          {
+            key: "Cross-Origin-Embedder-Policy",
+            value: "unsafe-none",
+          },
+          {
+            key: "Link",
+            value: [
+              "<https://fonts.googleapis.com>; rel=preconnect",
+              "<https://accounts.google.com>; rel=preconnect",
+            ].join(", "),
+          },
+        ],
+      },
       {
         source: PUBLIC_SLUG_SOURCE,
         headers: PUBLIC_HTML_CACHE_HEADERS,
@@ -136,19 +187,6 @@ const nextConfig: NextConfig = {
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-      {
-        // Preconnect headers untuk external domains
-        source: "/:path*",
-        headers: [
-          {
-            key: "Link",
-            value: [
-              "<https://fonts.googleapis.com>; rel=preconnect",
-              "<https://accounts.google.com>; rel=preconnect",
-            ].join(", "),
           },
         ],
       },

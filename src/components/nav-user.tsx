@@ -20,7 +20,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { signOut } from "next-auth/react";
-import { UserIcon, BellIcon, CreditCardIcon, LogOutIcon, ChevronsUpDownIcon } from "lucide-react";
+import { UserIcon, CreditCardIcon, LogOutIcon, ChevronsUpDownIcon, SettingsIcon } from "lucide-react";
 import Link from "next/link";
 import type { DbUser } from "@/db/schema";
 
@@ -78,9 +78,9 @@ export function NavUser({ user }: { user: DbUser }) {
                 <UserIcon />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem render={<Link href="/dashboard/notifications" />}>
-                <BellIcon />
-                Notifikasi
+              <DropdownMenuItem render={<Link href="/dashboard/account" />}>
+                <SettingsIcon />
+                Account
               </DropdownMenuItem>
               <DropdownMenuItem render={<Link href="/dashboard/billing" />}>
                 <CreditCardIcon />

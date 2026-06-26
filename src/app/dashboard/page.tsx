@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import {
   ArrowUpRight,
   FilmIcon,
@@ -18,7 +17,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Delta, DeltaIcon, DeltaValue } from "@/components/delta";
-import { NotificationInboxPanel } from "@/components/dashboard/notification-inbox-panel";
 import { OnboardingReminderCard } from "@/components/dashboard/onboarding-reminder-card";
 import { normalizeCustomLinks } from "@/lib/profile-utils";
 import { requireCurrentUser } from "@/server/current-user";
@@ -290,10 +288,6 @@ export default async function DashboardPage() {
         <VideoListCard videos={metrics.videoSummaries} username={user.username} />
         <QuickLinksCard username={user.username} />
       </div>
-
-      <Suspense fallback={<div className="h-40 animate-pulse rounded-xl border bg-muted" />}>
-        <NotificationInboxPanel compact />
-      </Suspense>
     </div>
   );
 }
