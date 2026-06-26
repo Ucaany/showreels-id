@@ -1,13 +1,12 @@
-import { cn } from "@/lib/utils";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Portal, PortalBackdrop } from "@/components/portal";
-import { navLinks } from "@/components/header";
 import { XIcon, MenuIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { AvatarBadge } from "@/components/avatar-badge";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export function MobileNav() {
 	const [open, setOpen] = React.useState(false);
@@ -15,15 +14,15 @@ export function MobileNav() {
 	const isAuth = status === "authenticated" && !!session?.user;
 
 	return (
-		<div className="md:hidden">
+		<div className="sm:hidden">
 			<Button
 				aria-controls="mobile-menu"
 				aria-expanded={open}
 				aria-label="Toggle menu"
-				className="md:hidden"
 				onClick={() => setOpen(!open)}
 				size="icon"
 				variant="outline"
+				className="border-black"
 			>
 				{open ? (
 					<XIcon className="size-4.5" />
@@ -32,7 +31,7 @@ export function MobileNav() {
 				)}
 			</Button>
 			{open && (
-				<Portal className="top-14" id="mobile-menu">
+				<Portal className="top-[4.55rem]" id="mobile-menu">
 					<PortalBackdrop />
 					<div
 						className={cn(
@@ -41,19 +40,15 @@ export function MobileNav() {
 						)}
 						data-slot={open ? "open" : "closed"}
 					>
-						<div className="grid gap-y-2">
-							{navLinks.map((link) => (
-								<Button className="justify-start" key={link.label} variant="ghost" render={<a href={link.href} />} nativeButton={false}>{link.label}</Button>
-							))}
-						</div>
-						<div className="mt-6">
+						<div className="flex items-center justify-between mb-6">
+							<span className="text-sm font-semibold text-slate-600">Bahasa</span>
 							<LanguageSwitcher />
 						</div>
-						<div className="mt-6 flex flex-col gap-2">
+						<div className="flex flex-col gap-2">
 							{isAuth ? (
 								<Link
 									href="/dashboard"
-									className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+									className="flex items-center gap-2 rounded-xl border border-black bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
 									onClick={() => setOpen(false)}
 								>
 									<AvatarBadge
@@ -65,10 +60,19 @@ export function MobileNav() {
 								</Link>
 							) : (
 								<>
-									<Button className="w-full" variant="outline" render={<a href="/auth/login" />} nativeButton={false}>
+									<Button
+										className="w-full border-black"
+										variant="outline"
+										render={<a href="/auth/login" />}
+										nativeButton={false}
+									>
 										Masuk
 									</Button>
-									<Button className="w-full" render={<a href="/auth/signup" />} nativeButton={false}>
+									<Button
+										className="w-full border border-black bg-black text-white hover:bg-slate-800"
+										render={<a href="/auth/signup" />}
+										nativeButton={false}
+									>
 										Daftar Gratis
 									</Button>
 								</>
