@@ -6,7 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, LockKeyhole, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { usePreferences } from "@/hooks/use-preferences";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeNextPath } from "@/lib/safe-next-path";
@@ -33,6 +37,7 @@ export function ResetPasswordForm({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [invalidToken, setInvalidToken] = useState(token.length < 10);
@@ -169,54 +174,63 @@ export function ResetPasswordForm({
             className="space-y-4"
           >
             <div className="space-y-1.5">
-              <label className="flex items-center gap-2 text-[0.8rem] font-medium text-ink/70">
-                <LockKeyhole className="h-3.5 w-3.5 text-ink/50" />
+              <label className="text-[0.8rem] font-medium text-ink/70">
                 {dictionary.authNewPasswordLabel}
               </label>
-              <div className="relative">
-                <Input
+              <InputGroup>
+                <InputGroupAddon align="inline-start">
+                  <LockKeyhole className="h-4 w-4" />
+                </InputGroupAddon>
+                <InputGroupInput
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={dictionary.authNewPasswordPlaceholder}
                   disabled={isSubmitting}
                   autoComplete="new-password"
-                  className="h-11 rounded-xl border-black/[0.08] bg-white pr-10 text-sm transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink/70 transition-colors"
-                  tabIndex={-1}
-                  aria-label={
-                    showPassword
-                      ? dictionary.authHidePassword
-                      : dictionary.authShowPassword
-                  }
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
+                <InputGroupAddon align="inline-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="inline-flex items-center justify-center text-ink/40 hover:text-ink/70 transition-colors"
+                    tabIndex={-1}
+                    aria-label={showPassword ? dictionary.authHidePassword : dictionary.authShowPassword}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </InputGroupAddon>
+              </InputGroup>
             </div>
 
             <div className="space-y-1.5">
-              <label className="flex items-center gap-2 text-[0.8rem] font-medium text-ink/70">
-                <LockKeyhole className="h-3.5 w-3.5 text-ink/50" />
+              <label className="text-[0.8rem] font-medium text-ink/70">
                 {dictionary.authNewPasswordConfirmLabel}
               </label>
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder={dictionary.authNewPasswordPlaceholder}
-                disabled={isSubmitting}
-                autoComplete="new-password"
-                className="h-11 rounded-xl border-black/[0.08] bg-white text-sm transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-              />
+              <InputGroup>
+                <InputGroupAddon align="inline-start">
+                  <LockKeyhole className="h-4 w-4" />
+                </InputGroupAddon>
+                <InputGroupInput
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder={dictionary.authNewPasswordPlaceholder}
+                  disabled={isSubmitting}
+                  autoComplete="new-password"
+                />
+                <InputGroupAddon align="inline-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="inline-flex items-center justify-center text-ink/40 hover:text-ink/70 transition-colors"
+                    tabIndex={-1}
+                    aria-label={showConfirmPassword ? dictionary.authHidePassword : dictionary.authShowPassword}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </InputGroupAddon>
+              </InputGroup>
             </div>
 
             <Button

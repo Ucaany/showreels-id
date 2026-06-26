@@ -6,7 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MailCheck, ArrowLeft, Mail } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { usePreferences } from "@/hooks/use-preferences";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeNextPath } from "@/lib/safe-next-path";
@@ -92,18 +96,21 @@ export function ForgotPasswordForm({
           >
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="flex items-center gap-2 text-[0.8rem] font-medium text-ink/70">
-                  <Mail className="h-3.5 w-3.5 text-ink/50" />
+                <label className="text-[0.8rem] font-medium text-ink/70">
                   {dictionary.authResetEmailLabel}
                 </label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={dictionary.authResetEmailPlaceholder}
-                  disabled={isSubmitting}
-                  className="h-11 rounded-xl border-black/[0.08] bg-white text-sm transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-                />
+                <InputGroup>
+                  <InputGroupAddon align="inline-start">
+                    <Mail className="h-4 w-4" />
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={dictionary.authResetEmailPlaceholder}
+                    disabled={isSubmitting}
+                  />
+                </InputGroup>
               </div>
 
               <Button
@@ -117,7 +124,6 @@ export function ForgotPasswordForm({
               </Button>
             </form>
 
-            {/* Back to login */}
             <p className="pt-1 text-center text-[0.82rem] text-ink/60">
               {dictionary.authResetRememberText}{" "}
               <Link
@@ -155,7 +161,7 @@ export function ForgotPasswordForm({
 
             <Button
               onClick={() => setSentEmail(null)}
-              className="mx-auto h-10 rounded-xl border border-black/[0.08] bg-white px-4 text-sm font-medium text-ink/80 hover:bg-black/[0.02]"
+              className="mx-auto h-10 rounded-xl border-black/[0.08] bg-white px-4 text-sm font-medium text-ink/80 hover:bg-black/[0.02]"
             >
               {dictionary.authResetResend}
             </Button>

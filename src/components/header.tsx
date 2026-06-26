@@ -1,74 +1,108 @@
-﻿"use client";
-
+"use client";
+import { cn } from "@/lib/utils";
+import { useScroll } from "@/hooks/use-scroll";
+import { MobileNav } from "@/components/mobile-nav";
+import { useSession } from "next-auth/react";
+import { AvatarBadge } from "@/components/avatar-badge";
+import LanguageSwitch from "@/components/landing-new/LanguageSwitch";
+import { useLang } from "@/lib/i18n/landing-context";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { navItems } from "@/lib/constants/landing";
-import { AppLogo } from "@/components/app-logo";
-import LanguageSwitch from "./landing-new/LanguageSwitch";
+import Image from "next/image";
 
-export default function Header() {
-  const [scrolled, setScrolled] = useState(false);
+export const navLinks = [
+	{
+		label: "Beranda",
+		labelEN: "Home",
+		href: "#home",
+	},
+	{
+		label: "Fitur",
+		labelEN: "Features",
+		href: "#fitur",
+	},
+	{
+		label: "Harga",
+		labelEN: "Pricing",
+		href: "#harga",
+	},
+];
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+export function Header() {
+	const scrolled = useScroll(10);
+	const { lang } = useLang();
+	const { data: session, status } = useSession();
+	const isAuth = status === "authenticated" && !!session?.user;
 
-  return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
-        scrolled
-          ? "border-b border-white/10 bg-white/70 backdrop-blur-xl shadow-sm"
-          : "border-b border-transparent bg-white/0 backdrop-blur-md"
-      }`}
-    >
-      <div className="container mx-auto max-w-[1180px] px-6">
-        <nav className="flex h-[64px] items-center justify-between gap-3">
-          <AppLogo />
+	return (
+		<header
+			className={cn(
+				"fixed inset-x-0 z-50 mx-auto w-full border-b border-transparent md:rounded-xl md:border md:transition-all md:duration-500 md:ease-out",
+				scrolled
+					? "top-0 md:top-3 border-border/60 bg-white/85 shadow-sm backdrop-blur-xl md:max-w-5xl"
+					: "top-0 md:top-4 bg-transparent md:max-w-7xl"
+			)}
+		>
+			<nav className="mx-auto flex h-12 w-full items-center justify-between px-5 sm:px-8 lg:px-10">
+			
+				{/* Logo */}
+				<Link
+					href="/"
+					aria-label="showreels.id home"
+					className="inline-flex items-center gap-2.5"
+				>
+					<Image
+						src="/logo.png"
+						alt="showreels.id"
+						width={30}
+						height={30}
+						className="h-[30px] w-[30px] rounded-lg object-contain"
+						unoptimized
+					/>
+					<span className="text-[0.95rem] font-semibold text-slate-900">
+						showreels.id
+					</span>
+				</Link>
 
-          <div className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-[13.5px] font-medium text-ink/70 transition-colors hover:text-ink"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
+				{/* Desktop nav — center */}
+				<div className="hidden items-center gap-1 md:flex">
+					{navLinks.map((link) => (
+						<a
+							key={link.label}
+							href={link.href}
+							className="rounded-full px-3.5 py-1.5 text-[13.5px] font-medium text-slate-600 transition-colors hover:text-slate-900 hover:bg-slate-100/60"
+						>
+							{lang === "EN" ? link.labelEN : link.label}
+						</a>
+					))}
+				</div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <LanguageSwitch />
-            <Link
-              href="/auth/login"
-              className="hidden md:inline-flex h-10 items-center gap-1.5 rounded-full border border-ink/15 px-4 text-[13px] font-semibold text-ink/80 transition-all hover:-translate-y-0.5 hover:border-ink/30 hover:text-ink"
-            >
-              Login
-            </Link>
-            <Link
-              href="#cta"
-              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[13px] font-semibold text-ink shadow-[0_6px_20px_rgba(0,0,0,0.15)] transition-all hover:-translate-y-0.5 hover:bg-white/90"
-            >
-              Mulai Gratis
-              <svg
-                className="h-3.5 w-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.4}
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
-            </Link>
-          </div>
-        </nav>
-      </div>
-    </header>
-  );
+				{/* Right side */}
+				<div className="hidden items-center gap-3 md:flex">
+					<LanguageSwitch />
+					{isAuth ? (
+						<Link
+							href="/dashboard"
+							aria-label="Buka dashboard"
+							className="inline-flex items-center rounded-full transition-opacity hover:opacity-80"
+						>
+							<AvatarBadge
+								name={session?.user?.name || "Creator"}
+								avatarUrl={session?.user?.image || undefined}
+								size="sm"
+							/>
+						</Link>
+					) : (
+						<Link
+							href="/auth/login"
+							className="inline-flex h-8 items-center rounded-full border border-slate-900 bg-transparent px-4 text-[13px] font-medium text-slate-900 transition-colors hover:bg-slate-50"
+						>
+							{lang === "EN" ? "Get Started" : "Mulai Sekarang"}
+						</Link>
+					)}
+				</div>
+
+				<MobileNav />
+			</nav>
+		</header>
+	);
 }

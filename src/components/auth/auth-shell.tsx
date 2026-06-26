@@ -1,5 +1,9 @@
+"use client";
+
 import { AppLogo } from "@/components/app-logo";
+import { FullWidthDivider } from "@/components/full-width-divider";
 import { SitePreferences } from "@/components/site-preferences";
+import { Particles } from "@/components/ui/particles";
 
 interface AuthShellProps {
   title: string;
@@ -17,64 +21,29 @@ export function AuthShell({
   footer,
 }: AuthShellProps) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#fbfcfe] px-4 py-12 sm:py-16">
-      {/* Decorative background — matches landing Hero style */}
-      <div className="pointer-events-none absolute inset-0 -z-10 grid-bg" aria-hidden />
-      <div
-        className="glow-blob h-[480px] w-[480px] bg-brand-500/[0.07] left-[2%] top-0 animate-blob"
-        aria-hidden
-      />
-      <div
-        className="glow-blob h-[360px] w-[360px] bg-brand-600/[0.05] right-[3%] top-32 animate-blob"
-        aria-hidden
-      />
-
-      {/* Top logo bar — transparent so it doesn't visually trap the card on mobile */}
-      <div className="fixed top-0 left-0 right-0 z-20 w-full bg-transparent">
-        <div className="container mx-auto max-w-[1180px] px-5 sm:px-6">
-          <div className="flex h-[64px] items-center justify-between">
+    <div className="relative w-full overflow-hidden px-4" style={{ minHeight: "100svh" }}>
+      <Particles className="absolute inset-0 -z-10" color="#2563eb" ease={20} quantity={80} />
+      <div className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center border-x border-black/[0.06]">
+        {/* Header area */}
+        <div className="flex flex-col space-y-6 px-6 pt-8">
+          <div className="flex items-center justify-between">
             <AppLogo />
             {showPreferences ? <SitePreferences compact /> : null}
           </div>
-        </div>
-      </div>
-
-      {/* Card */}
-      <div className="relative z-10 w-full max-w-[420px] pt-4 sm:pt-10">
-        <div className="rounded-[28px] border border-black/[0.08] bg-white/95 p-8 shadow-card backdrop-blur-sm sm:p-9">
-          {/* Centered icon + heading */}
-          <div className="mb-8 text-center">
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-black/[0.08] bg-white text-ink shadow-soft">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                <polyline points="10 17 15 12 10 7" />
-                <line x1="15" y1="12" x2="3" y2="12" />
-              </svg>
-            </div>
-            <h1 className="font-display text-[1.6rem] font-semibold tracking-[-0.03em] text-ink">
-              {title}
-            </h1>
-            <p className="mx-auto mt-2.5 max-w-[280px] text-[0.875rem] font-normal leading-relaxed text-ink/60">
-              {subtitle}
-            </p>
+          <div className="space-y-1">
+            <h1 className="text-xl font-semibold tracking-tight text-ink">{title}</h1>
+            <p className="text-sm text-ink/60">{subtitle}</p>
           </div>
-
-          {/* Form content */}
-          {children}
         </div>
-
+        {/* Form area */}
+        <div className="relative my-6 flex flex-col gap-4 px-6 py-8">
+          <FullWidthDivider position="top" />
+          {children}
+          <FullWidthDivider position="bottom" />
+        </div>
+        {/* Footer */}
         {footer ? (
-          <div className="mt-6 text-center text-[0.78rem] leading-relaxed text-ink/40">
+          <div className="px-6 pb-8 text-center text-[0.75rem] leading-relaxed text-ink/40">
             {footer}
           </div>
         ) : null}
