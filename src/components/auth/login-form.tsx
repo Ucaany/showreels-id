@@ -226,10 +226,10 @@ export function LoginForm({
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
+        <div ref={turnstileRef} className="flex justify-center" />
+
         {googleEnabled ? (
           <>
-          <div ref={turnstileRef} className="flex justify-center" />
-
           <Button
               type="button"
               variant="outline"
