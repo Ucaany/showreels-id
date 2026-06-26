@@ -1,5 +1,5 @@
 import { PricingSubscriptionPage } from "@/components/pricing/pricing-subscription-page";
-import { SiteNavbar } from "@/components/site-navbar";
+import { Header } from "@/components/header";
 import { getPlanCatalog } from "@/server/billing";
 import { isBayarGGConfigured } from "@/server/bayar-gg";
 import { getCurrentUser } from "@/server/current-user";
@@ -31,7 +31,7 @@ export default async function PaymentPage({
 
   return (
     <>
-      <SiteNavbar currentUser={user} />
+      <Header />
       <div className="pt-[4.55rem]">
         <PricingSubscriptionPage
           initialPlan={initialPlan}
