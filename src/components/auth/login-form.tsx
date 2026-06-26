@@ -226,8 +226,6 @@ export function LoginForm({
         transition={{ duration: 0.3 }}
         className="space-y-4"
       >
-        <div ref={turnstileRef} className="flex justify-center" />
-
         {googleEnabled ? (
           <>
           <Button
@@ -312,6 +310,8 @@ export function LoginForm({
                 : dictionary.authLoginButton}
           </Button>
         </form>
+
+        <div ref={turnstileRef} className="flex justify-center" />
 
         <p className="pt-1 text-center text-[0.82rem] text-ink/60">
           {dictionary.authNoAccountText}{" "}
