@@ -15,8 +15,6 @@ import {
   HardDrive,
   Link as LinkIcon,
   Lock,
-  LogOut,
-  Menu,
   Play,
   PlayCircle,
   Plus,
@@ -32,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/hooks/use-preferences";
 import { cn } from "@/lib/cn";
 import { signOut } from "next-auth/react";
+import { Header } from "@/components/header";
 
 // Brand color map for interactive cycling in the hero mockup
 const PLATFORM_BRAND_MAP: Record<
@@ -563,7 +562,6 @@ export function LandingPage({
   const prefersReducedMotion = useReducedMotion();
   const year = new Date().getFullYear();
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
 
   const [usernameInput, setUsernameInput] = useState("");
@@ -571,8 +569,6 @@ export function LandingPage({
     Exclude<UsernameStatus, "invalid">
   >("idle");
   const [usernameSuggestion, setUsernameSuggestion] = useState("");
-
-  const loginLabel = dictionary.login?.trim() || (locale === "en" ? "Login" : "Masuk");
 
   const sanitizedUsername = useMemo(
     () => sanitizeUsernameInput(usernameInput),
@@ -884,238 +880,11 @@ export function LandingPage({
         : usernameStatus === "checking"
           ? "bg-amber-500"
           : "bg-slate-400";
-  const desktopLanguageLinkClass =
-    "inline-flex min-h-8 items-center rounded-full px-3 text-[0.78rem] font-bold uppercase tracking-[0.08em] transition";
-  const mobileLanguageLinkClass =
-    "inline-flex min-h-8 items-center rounded-full px-3 text-[0.78rem] font-bold uppercase tracking-[0.08em] transition";
-  const activeLanguageClass = "bg-white text-[#1a46c9] shadow-sm ring-1 ring-[#dbe5ff]";
-  const inactiveLanguageClass = "text-slate-500 hover:bg-white/70 hover:text-slate-900";
 
   return (
     <LazyMotion features={domAnimation} strict>
       <div className="min-h-screen overflow-x-hidden bg-canvas text-slate-950">
-        <header className="fixed left-0 right-0 top-0 z-[70] overflow-x-hidden border-b border-slate-200 bg-white/92 backdrop-blur">
-          <div className="mx-auto flex min-h-[4.55rem] w-full max-w-[1160px] items-center justify-between gap-2 px-4 py-2.5 sm:gap-4 sm:px-6 lg:px-8">
-            <AppLogo className="max-w-[calc(100vw-9.25rem)] min-[360px]:max-w-[calc(100vw-10.5rem)] lg:max-w-none" />
-
-            <nav className="hidden items-center gap-5 text-[0.95rem] font-semibold tracking-[-0.012em] text-slate-900 lg:flex">
-              <a
-                href="#features"
-                className="inline-flex min-h-11 items-center transition hover:text-slate-950"
-              >
-                {dictionary.landingNavFeatures}
-              </a>
-              <a
-                href="#pricing"
-                className="inline-flex min-h-11 items-center transition hover:text-slate-950"
-              >
-                {dictionary.landingNavPricing}
-              </a>
-              <a
-                href="#faq"
-                className="inline-flex min-h-11 items-center transition hover:text-slate-950"
-              >
-                {dictionary.landingNavFaq}
-              </a>
-            </nav>
-
-            <div className="hidden items-center gap-2.5 lg:flex">
-              <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100/80 p-1 shadow-sm shadow-slate-900/5">
-                <button
-                  type="button"
-                  onClick={() => setLocale("id")}
-                  className={cn(
-                    desktopLanguageLinkClass,
-                    locale === "id" ? activeLanguageClass : inactiveLanguageClass
-                  )}
-                  aria-label={`${dictionary.language} ID`}
-                >
-                  ID
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLocale("en")}
-                  className={cn(
-                    desktopLanguageLinkClass,
-                    locale === "en" ? activeLanguageClass : inactiveLanguageClass
-                  )}
-                  aria-label={`${dictionary.language} EN`}
-                >
-                  EN
-                </button>
-              </div>
-              {currentUser ? (
-                <>
-                  <Link
-                    href="/dashboard"
-                    className="inline-flex min-h-11 items-center px-2 text-[0.95rem] font-semibold tracking-[-0.012em] text-black transition hover:text-slate-950"
-                  >
-                    Dashboard
-                  </Link>
-                  <div className="inline-flex min-h-11 items-center px-1">
-                    <AvatarBadge
-                      name={currentUser.name || "Creator"}
-                      avatarUrl={currentUser.image || ""}
-                      size="sm"
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/auth/login"
-                    className="inline-flex min-h-11 items-center px-2 text-[0.95rem] font-semibold tracking-[-0.012em] text-black transition hover:text-slate-950"
-                  >
-                    {loginLabel}
-                  </Link>
-                  <Link
-                    href="/auth/signup"
-                    className="inline-flex min-h-11 items-center px-2 text-[0.95rem] font-semibold tracking-[-0.012em] text-black transition hover:text-slate-950"
-                  >
-                    {dictionary.signup}
-                  </Link>
-                </>
-              )}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2 lg:hidden">
-              {!currentUser && (
-                <Link
-                  href="/auth/login"
-                  className="inline-flex h-10 items-center rounded-full border border-slate-200 bg-white px-3 text-[0.84rem] font-semibold text-slate-900 transition hover:bg-slate-50 min-[380px]:px-4"
-                >
-                  {loginLabel}
-                </Link>
-              )}
-              <button
-                type="button"
-                className="inline-flex h-12 w-12 items-center justify-center rounded-[1.15rem] border border-slate-200 bg-white text-slate-700"
-                onClick={() => setMobileMenuOpen((prev) => !prev)}
-                aria-label="Open menu"
-                aria-expanded={mobileMenuOpen}
-              >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {mobileMenuOpen ? (
-          <div className="fixed inset-0 z-[80] bg-slate-950/40 lg:hidden">
-            <button
-              type="button"
-              className="absolute inset-0 h-full w-full cursor-default"
-              onClick={() => setMobileMenuOpen(false)}
-              aria-label="Close menu backdrop"
-            />
-            <aside className="absolute right-0 top-0 h-full w-[min(88vw,360px)] max-w-[calc(100vw-1rem)] overflow-y-auto border-l border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-6 flex min-w-0 items-center justify-between gap-3">
-                <AppLogo className="min-w-0" />
-                <button
-                  type="button"
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-[1.05rem] border border-slate-200 bg-white text-slate-700"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4 pb-7 pt-2">
-                <a
-                  href="#features"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-1 py-2 text-[0.95rem] font-semibold tracking-[-0.01em] text-black transition hover:text-slate-950"
-                >
-                  {dictionary.landingNavFeatures}
-                </a>
-                <a
-                  href="#pricing"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-1 py-2 text-[0.95rem] font-semibold tracking-[-0.01em] text-black transition hover:text-slate-950"
-                >
-                  {dictionary.landingNavPricing}
-                </a>
-                <a
-                  href="#faq"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-1 py-2 text-[0.95rem] font-semibold tracking-[-0.01em] text-black transition hover:text-slate-950"
-                >
-                  {dictionary.landingNavFaq}
-                </a>
-              </div>
-
-              <div className="border-t border-slate-200 pt-5">
-                <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100/80 p-1 shadow-sm shadow-slate-900/5">
-                  <button
-                    type="button"
-                    onClick={() => setLocale("id")}
-                    className={cn(
-                      mobileLanguageLinkClass,
-                      locale === "id" ? activeLanguageClass : inactiveLanguageClass
-                    )}
-                    aria-label={`${dictionary.language} ID`}
-                  >
-                    ID
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLocale("en")}
-                    className={cn(
-                      mobileLanguageLinkClass,
-                      locale === "en" ? activeLanguageClass : inactiveLanguageClass
-                    )}
-                    aria-label={`${dictionary.language} EN`}
-                  >
-                    EN
-                  </button>
-                </div>
-                <div className="mt-6 space-y-3">
-                  {currentUser ? (
-                    <>
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block py-2 text-[0.95rem] font-semibold text-black transition hover:text-slate-950"
-                      >
-                        Dashboard
-                      </Link>
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1.5 py-2 text-[0.95rem] font-semibold text-black transition hover:text-slate-950"
-                        onClick={async () => {
-                          await signOut({ redirect: false });
-                          window.location.replace("/");
-                        }}
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Sign out
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-5">
-                        <Link
-                          href="/auth/login"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="inline-flex min-h-10 items-center text-[0.95rem] font-semibold text-black transition hover:text-slate-950"
-                        >
-                          {loginLabel}
-                        </Link>
-                        <Link
-                          href="/auth/signup"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="inline-flex min-h-10 items-center text-[0.95rem] font-semibold text-black transition hover:text-slate-950"
-                        >
-                          {dictionary.signup}
-                        </Link>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </aside>
-          </div>
-        ) : null}
+        <Header />
 
         <main className="overflow-x-clip pb-14 pt-[4.72rem] sm:pt-[4.95rem]">
           <section className="mx-auto w-full max-w-[1160px] overflow-visible px-4 pb-12 pt-12 sm:overflow-hidden sm:px-6 sm:pb-16 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
