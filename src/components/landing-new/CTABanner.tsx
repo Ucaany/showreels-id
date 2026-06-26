@@ -2,14 +2,27 @@
 
 import Link from "next/link";
 import { ArrowRight, CreditCard, Sparkles, Clock, LogIn } from "lucide-react";
-
-const benefits = [
-  { icon: Clock, label: "Setup < 2 menit" },
-  { icon: CreditCard, label: "Tanpa kartu kredit" },
-  { icon: Sparkles, label: "Full customize" },
-];
+import { useLang } from "@/lib/i18n/landing-context";
+import { ctaBannerEN } from "@/lib/constants/landing-en";
 
 export default function CTABanner() {
+  const { lang } = useLang();
+  const isEN = lang === "EN";
+
+  const benefitsID = [
+    { icon: Clock, label: "Setup < 2 menit" },
+    { icon: CreditCard, label: "Tanpa kartu kredit" },
+    { icon: Sparkles, label: "Full customize" },
+  ];
+
+  const benefitsEN = [
+    { icon: Clock, label: ctaBannerEN.benefits[0].label },
+    { icon: CreditCard, label: ctaBannerEN.benefits[1].label },
+    { icon: Sparkles, label: ctaBannerEN.benefits[2].label },
+  ];
+
+  const benefits = isEN ? benefitsEN : benefitsID;
+
   return (
     <section id="cta" className="relative py-12 md:py-16">
       <div className="container mx-auto max-w-[1180px] px-6">
@@ -48,9 +61,19 @@ export default function CTABanner() {
               className="text-section-display font-semibold text-white"
               style={{ textShadow: "0 2px 18px rgba(0,0,0,0.45)" }}
             >
-              Siap tampil{" "}
-              <span className="font-accent text-accent">profesional</span>{" "}
-              dengan satu link?
+              {isEN ? (
+                <>
+                  {ctaBannerEN.headline}{" "}
+                  <span className="font-accent text-accent">{ctaBannerEN.headlineAccent}</span>{" "}
+                  {ctaBannerEN.headlineSuffix}
+                </>
+              ) : (
+                <>
+                  Siap tampil{" "}
+                  <span className="font-accent text-accent">profesional</span>{" "}
+                  dengan satu link?
+                </>
+              )}
             </h2>
 
             {/* Benefits with icons */}
@@ -83,7 +106,7 @@ export default function CTABanner() {
                 href="#username"
                 className="group relative inline-flex h-12 w-full sm:w-auto items-center justify-center gap-1.5 rounded-full bg-white px-7 text-[13.5px] font-semibold text-ink shadow-[0_10px_28px_rgba(0,0,0,0.35),0_6px_18px_rgba(0,0,0,0.25)] transition-all hover:-translate-y-0.5 hover:bg-white/95"
               >
-                Mulai Gratis
+                {isEN ? ctaBannerEN.ctaPrimary : "Mulai Gratis"}
                 <ArrowRight
                   className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                   strokeWidth={2.6}
@@ -94,7 +117,7 @@ export default function CTABanner() {
                 className="group inline-flex h-12 w-full sm:w-auto items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/5 px-7 text-[13.5px] font-semibold text-white backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/10 hover:text-white"
                 style={{ color: "#ffffff" }}
               >
-                <span style={{ color: "#ffffff" }}>Login</span>
+                <span style={{ color: "#ffffff" }}>{isEN ? ctaBannerEN.ctaSecondary : "Login"}</span>
                 <LogIn
                   className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                   strokeWidth={2.4}

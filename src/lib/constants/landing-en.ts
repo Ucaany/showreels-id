@@ -303,3 +303,70 @@ export const customerServiceEN = {
   ctaSecondaryLabel: "Get Started Free",
   ctaSecondaryHref: "/auth/signup",
 };
+
+export const beforeAfterEN = {
+  before: {
+    badges: [
+      { text: "Weak bio link" },
+      { text: "0 video clicks" },
+      { text: "Scattered portfolio" },
+    ],
+  },
+  after: {
+    badges: [
+      { text: "Views ↗ 1200+" },
+      { text: "Clicks ↗ 340%" },
+      { text: "1 link, all videos" },
+    ],
+  },
+};
+
+export const trustEN = {
+  encrypted: "Encrypted & secure payments",
+  cancelAnytime: "Cancel anytime",
+};
+
+export const featureCardsEN = [
+  {
+    badge: "01",
+    title: "Multi-Platform Links",
+    short: "Add links from YouTube, TikTok, Instagram, Vimeo, Drive.",
+    icon: "link",
+    accent: "from-[#EFF6FF] to-[#DBEAFE]/40",
+    mockup: "links",
+  },
+  {
+    badge: "02",
+    title: "Professional Portfolio",
+    short: "Elegant showcase for your best video work.",
+    icon: "layout",
+    accent: "from-[#EFF6FF] to-[#BFDBFE]/40",
+    mockup: "portfolio",
+  },
+  {
+    badge: "03",
+    title: "Custom Username",
+    short: "Easy to remember link: showreels.id/your-username.",
+    icon: "edit",
+    accent: "from-[#F0F7FF] to-[#BFDBFE]/40",
+    mockup: "username",
+    size: "tall",
+  },
+  {
+    badge: "04",
+    title: "Dashboard & Statistics",
+    short: "Monitor portfolio performance in real-time, anytime.",
+    icon: "dashboard",
+    accent: "from-[#F0F7FF] to-[#BFDBFE]/30",
+    mockup: "dashboard",
+  },
+  {
+    badge: "05",
+    title: "Smart Analytics",
+    short: "Deep insights on views, clicks, and content performance.",
+    icon: "analytics",
+    accent: "from-[#F0F7FF] to-[#BFDBFE]/30",
+    mockup: "analytics",
+    size: "tall",
+  },
+];

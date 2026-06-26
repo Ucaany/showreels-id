@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { PlatformIcon } from "./PlatformIcons";
 import type { ReactElement } from "react";
+import { useLang } from "@/lib/i18n/landing-context";
 
 const iconMap: Record<string, ReactElement> = {
   link: <LinkIcon className="h-4 w-4" strokeWidth={2.2} />,
@@ -57,6 +58,35 @@ export default function FeatureCard({ feature, size = "default" }: FeatureCardPr
   );
 }
 
+function UsernameMockup() {
+  const { lang } = useLang();
+  const isEN = lang === "EN";
+
+  return (
+    <div className="relative h-[112px] overflow-hidden rounded-xl border border-[color:var(--border-soft)] bg-surface-soft p-2.5">
+      <div className="flex h-full flex-col items-center justify-center gap-2">
+        <div className="text-[10px] font-semibold text-ink/55">
+          showreels.id/
+        </div>
+        <div className="h-7 w-32 rounded-full bg-ink px-3 flex items-center justify-center">
+          <span className="text-[10px] font-semibold text-white">
+            {isEN ? "Create Link" : "Buat Link"}
+          </span>
+        </div>
+        <div className="flex gap-1">
+          {["youtube", "tiktok", "instagram"].map((p, i) => (
+            <PlatformIcon
+              key={i}
+              name={p}
+              className="h-3 w-3 text-brand-600/50"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function renderMockup(type: string) {
   switch (type) {
     case "links":
@@ -101,29 +131,7 @@ function renderMockup(type: string) {
         </div>
       );
     case "username":
-      return (
-        <div className="relative h-[112px] overflow-hidden rounded-xl border border-[color:var(--border-soft)] bg-surface-soft p-2.5">
-          <div className="flex h-full flex-col items-center justify-center gap-2">
-            <div className="text-[10px] font-semibold text-ink/55">
-              showreels.id/
-            </div>
-            <div className="h-7 w-32 rounded-full bg-ink px-3 flex items-center justify-center">
-              <span className="text-[10px] font-semibold text-white">
-                Buat Link
-              </span>
-            </div>
-            <div className="flex gap-1">
-              {["youtube", "tiktok", "instagram"].map((p, i) => (
-                <PlatformIcon
-                  key={i}
-                  name={p}
-                  className="h-3 w-3 text-brand-600/50"
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      );
+      return <UsernameMockup />;
     case "dashboard":
       return (
         <div className="relative h-[112px] overflow-hidden rounded-xl border border-[color:var(--border-soft)] bg-surface-soft p-2.5">

@@ -2,8 +2,14 @@
 
 import FeatureCard from "./FeatureCard";
 import { featureCards } from "@/lib/constants/landing";
+import { featureCardsEN, featureSectionEN } from "@/lib/constants/landing-en";
+import { useLang } from "@/lib/i18n/landing-context";
 
 export default function FeatureSection() {
+  const { lang } = useLang();
+  const isEN = lang === "EN";
+  const cards = isEN ? featureCardsEN : featureCards;
+
   return (
     <section id="fitur" className="relative py-14 md:py-16">
       <div className="absolute inset-0 -z-10 grid-bg-soft" aria-hidden />
@@ -17,19 +23,29 @@ export default function FeatureSection() {
           <div className="mb-4 flex items-center gap-3 text-ink/35">
             <span className="h-px w-10 bg-current" />
             <span className="rounded-full border border-brand-100 bg-white px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-brand-700">
-              FITUR UTAMA
+              {isEN ? featureSectionEN.eyebrow : "FITUR UTAMA"}
             </span>
             <span className="h-px w-10 bg-current" />
           </div>
           <h2 className="text-section-display font-semibold text-ink">
-            Tools sederhana untuk{" "}
-            <span className="font-accent text-accent">portofolio</span>{" "}
-            profesional.
+            {isEN ? (
+              <>
+                {featureSectionEN.headline}{" "}
+                <span className="font-accent text-accent">{featureSectionEN.headlineAccent}</span>{" "}
+                {featureSectionEN.headlineSuffix}
+              </>
+            ) : (
+              <>
+                Tools sederhana untuk{" "}
+                <span className="font-accent text-accent">portofolio</span>{" "}
+                profesional.
+              </>
+            )}
           </h2>
         </div>
 
         <div className="grid gap-4 md:grid-cols-6">
-          {featureCards.map((f) => (
+          {cards.map((f) => (
             <div
               key={f.title}
               className={

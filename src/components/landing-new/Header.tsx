@@ -95,7 +95,7 @@ export default function Header({ hideNav = false }: { hideNav?: boolean }) {
                 ) : (
                   <Link
                     href="/auth/login"
-                    className="inline-flex h-10 items-center gap-1.5 text-[13px] font-semibold text-ink transition-colors hover:text-ink/70"
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full border border-ink/15 bg-white/60 px-4 text-[13px] font-semibold text-ink shadow-[0_2px_10px_rgba(0,0,0,0.06)] backdrop-blur-md transition-all hover:border-ink/25 hover:bg-white/80 hover:-translate-y-px"
                   >
                     {lang === "EN" ? "Get Started" : "Mulai Gratis"}
                   </Link>

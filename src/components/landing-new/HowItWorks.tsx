@@ -14,8 +14,10 @@ import {
   Globe,
   BarChart3,
 } from "lucide-react";
+import { useLang } from "@/lib/i18n/landing-context";
+import { howItWorksEN } from "@/lib/constants/landing-en";
 
-const steps = [
+const stepsID = [
   {
     id: "pricing",
     step: "01",
@@ -58,6 +60,24 @@ const steps = [
 ];
 
 export default function HowItWorks() {
+  const { lang } = useLang();
+  const isEN = lang === "EN";
+  const steps = isEN
+    ? howItWorksEN.steps.map((s) => ({
+        id: s.id,
+        step: s.step,
+        label: s.label,
+        icon: s.id === "pricing" ? Package : s.id === "builder" ? Link2 : Share2,
+        heading: s.heading,
+        body: s.body,
+        accent: s.id === "pricing" ? "from-brand-500 to-brand-600" : s.id === "builder" ? "from-violet-500 to-violet-600" : "from-emerald-500 to-emerald-600",
+        accentSoft: s.id === "pricing" ? "bg-brand-50" : s.id === "builder" ? "bg-violet-50" : "bg-emerald-50",
+        accentText: s.id === "pricing" ? "text-brand-700" : s.id === "builder" ? "text-violet-700" : "text-emerald-700",
+        accentBorder: s.id === "pricing" ? "border-brand-200" : s.id === "builder" ? "border-violet-200" : "border-emerald-200",
+        result: { label: s.result.label, value: s.result.value, icon: s.id === "pricing" ? Zap : s.id === "builder" ? Globe : BarChart3 },
+      }))
+    : stepsID;
+
   const [active, setActive] = useState(0);
   const step = steps[active];
   const ResultIcon = step.result.icon;
@@ -72,16 +92,27 @@ export default function HowItWorks() {
           <div className="mb-4 flex items-center gap-3 text-ink/35">
             <span className="h-px w-10 bg-current" />
             <span className="rounded-full border border-brand-100 bg-white px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.18em] text-brand-700">
-              CARA KERJA
+              {isEN ? howItWorksEN.eyebrow : "CARA KERJA"}
             </span>
             <span className="h-px w-10 bg-current" />
           </div>
           <h2 className="text-section-display font-semibold text-ink">
-            Fast &amp;{" "}
-            <span className="font-accent text-accent">Easy</span>
+            {isEN ? (
+              <>
+                {howItWorksEN.headline}{" "}
+                <span className="font-accent text-accent">{howItWorksEN.headlineAccent}</span>
+              </>
+            ) : (
+              <>
+                Fast &amp;{" "}
+                <span className="font-accent text-accent">Easy</span>
+              </>
+            )}
           </h2>
           <p className="mt-3 max-w-md text-body-base text-ink/55">
-            Mulai gunakan Showreels dalam 3 langkah sederhana dan cepat.
+            {isEN
+              ? howItWorksEN.subheadline
+              : "Mulai gunakan Showreels dalam 3 langkah sederhana dan cepat."}
           </p>
         </div>
 
@@ -130,7 +161,7 @@ export default function HowItWorks() {
                           isActive ? "text-brand-600" : "text-ink/30"
                         }`}
                       >
-                        LANGKAH {idx + 1}
+                        {isEN ? "STEP" : "LANGKAH"} {idx + 1}
                       </span>
                     </div>
                     <div
@@ -179,7 +210,7 @@ export default function HowItWorks() {
                   onClick={() => setActive(active + 1)}
                   className="flex items-center gap-1.5 text-[12px] font-semibold text-brand-600 transition-all hover:gap-3"
                 >
-                  Langkah berikutnya
+                  {isEN ? howItWorksEN.nextStep : "Langkah berikutnya"}
                   <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
                 </button>
               ) : (
@@ -187,7 +218,7 @@ export default function HowItWorks() {
                   href="#cta"
                   className="flex items-center gap-1.5 text-[12px] font-semibold text-emerald-600 transition-all hover:gap-3"
                 >
-                  Siap? Mulai sekarang
+                  {isEN ? howItWorksEN.readyCta : "Siap? Mulai sekarang"}
                   <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
                 </a>
               )}
@@ -202,7 +233,7 @@ export default function HowItWorks() {
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     idx === active ? "w-8 bg-brand-500" : "w-3 bg-ink/15 hover:bg-ink/25"
                   }`}
-                  aria-label={`Langkah ${idx + 1}`}
+                  aria-label={`${isEN ? "Step" : "Langkah"} ${idx + 1}`}
                 />
               ))}
             </div>
@@ -210,7 +241,7 @@ export default function HowItWorks() {
 
           {/* RIGHT: phone mockup */}
           <div className="flex justify-center">
-            <PhoneMockup activeStep={active} />
+            <PhoneMockup activeStep={active} isEN={isEN} />
           </div>
         </div>
       </div>
@@ -222,7 +253,7 @@ export default function HowItWorks() {
 /*  PHONE MOCKUP SHELL                                                   */
 /* ------------------------------------------------------------------ */
 
-function PhoneMockup({ activeStep }: { activeStep: number }) {
+function PhoneMockup({ activeStep, isEN }: { activeStep: number; isEN: boolean }) {
   return (
     <div className="relative animate-phone-pulse" style={{ width: 260 }}>
       {/* expanding glow ring - single smooth pulse */}
@@ -276,7 +307,7 @@ function PhoneMockup({ activeStep }: { activeStep: number }) {
 
           {/* content panel — animated on step change */}
           <div key={activeStep} className="animate-fade-in-up px-3 pb-5">
-            <PhoneScreenContent step={activeStep} />
+            <PhoneScreenContent step={activeStep} isEN={isEN} />
           </div>
         </div>
 
@@ -293,18 +324,18 @@ function PhoneMockup({ activeStep }: { activeStep: number }) {
 /*  PHONE SCREEN CONTENT per step                                        */
 /* ------------------------------------------------------------------ */
 
-function PhoneScreenContent({ step }: { step: number }) {
-  if (step === 0) return <PhonePricingScreen />;
-  if (step === 1) return <PhoneBuilderScreen />;
-  return <PhoneShareScreen />;
+function PhoneScreenContent({ step, isEN }: { step: number; isEN: boolean }) {
+  if (step === 0) return <PhonePricingScreen isEN={isEN} />;
+  if (step === 1) return <PhoneBuilderScreen isEN={isEN} />;
+  return <PhoneShareScreen isEN={isEN} />;
 }
 
-function PhonePricingScreen() {
+function PhonePricingScreen({ isEN }: { isEN: boolean }) {
   return (
     <div className="space-y-2.5">
       <div className="px-1 pb-1">
-        <div className="text-[11px] font-bold text-ink">Pilih paket</div>
-        <div className="text-[9px] text-ink/40">Mulai gratis, upgrade kapan saja</div>
+        <div className="text-[11px] font-bold text-ink">{isEN ? "Pick a plan" : "Pilih paket"}</div>
+        <div className="text-[9px] text-ink/40">{isEN ? "Start free, upgrade anytime" : "Mulai gratis, upgrade kapan saja"}</div>
       </div>
 
       {/* Free */}
@@ -322,38 +353,38 @@ function PhonePricingScreen() {
       {/* Creator highlighted */}
       <div className="relative flex items-center gap-2.5 rounded-2xl border border-brand-300 bg-brand-50/80 px-3 py-2.5 shadow-[0_2px_12px_rgba(37,99,235,0.15)] backdrop-blur-sm">
         <span className="absolute -top-2 right-2.5 rounded-full bg-brand-500 px-1.5 py-0.5 text-[8px] font-bold uppercase text-white">
-          POPULER
+          {isEN ? "POPULAR" : "POPULER"}
         </span>
         <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-xl bg-brand-500 shadow">
           <CheckCircle2 className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
         </span>
         <div className="flex-1">
           <div className="text-[11px] font-semibold text-brand-700">Creator</div>
-          <div className="text-[9px] text-brand-400">Link tak terbatas + analytics</div>
+          <div className="text-[9px] text-brand-400">{isEN ? "Unlimited links + analytics" : "Link tak terbatas + analytics"}</div>
         </div>
         <span className="text-[10px] font-bold text-brand-600">Rp25k</span>
       </div>
 
       <div className="rounded-2xl bg-ink px-3 py-2 text-center text-[10.5px] font-semibold text-white">
-        Mulai Gratis
+        {isEN ? "Start Free" : "Mulai Gratis"}
       </div>
     </div>
   );
 }
 
-function PhoneBuilderScreen() {
+function PhoneBuilderScreen({ isEN }: { isEN: boolean }) {
   return (
     <div className="space-y-2.5">
       <div className="px-1 pb-1">
-        <div className="text-[11px] font-bold text-ink">Portfolio kamu</div>
-        <div className="text-[9px] text-ink/40">Hubungkan platform video</div>
+        <div className="text-[11px] font-bold text-ink">{isEN ? "Your Portfolio" : "Portfolio kamu"}</div>
+        <div className="text-[9px] text-ink/40">{isEN ? "Connect video platforms" : "Hubungkan platform video"}</div>
       </div>
 
       {/* URL bar */}
       <div className="flex items-center gap-2 rounded-2xl border border-ink/10 bg-white/60 px-3 py-2 backdrop-blur-sm">
         <Globe className="h-3 w-3 flex-shrink-0 text-brand-500" strokeWidth={2} />
         <span className="flex-1 text-[9.5px] text-ink/50">
-          showreels.id/<span className="font-bold text-ink">kamu</span>
+          showreels.id/<span className="font-bold text-ink">{isEN ? "you" : "kamu"}</span>
         </span>
         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
       </div>
@@ -411,7 +442,7 @@ function PhoneBuilderScreen() {
           {p.connected ? (
             <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-emerald-500" strokeWidth={2.5} />
           ) : (
-            <span className="rounded-full border border-ink/10 px-1.5 py-0.5 text-[8px] font-semibold text-ink/30">+ add</span>
+            <span className="rounded-full border border-ink/10 px-1.5 py-0.5 text-[8px] font-semibold text-ink/30">{isEN ? "+ add" : "+ add"}</span>
           )}
         </div>
       ))}
@@ -419,7 +450,7 @@ function PhoneBuilderScreen() {
       <div className="flex items-center justify-between rounded-2xl border border-ink/8 bg-white/60 px-3 py-2 backdrop-blur-sm">
         <div className="flex items-center gap-1.5">
           <PlayCircle className="h-3.5 w-3.5 text-red-500" strokeWidth={2} />
-          <span className="text-[10px] font-semibold text-ink">12 video terhubung</span>
+          <span className="text-[10px] font-semibold text-ink">{isEN ? "12 videos connected" : "12 video terhubung"}</span>
         </div>
         <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[8.5px] font-semibold text-emerald-600">Live</span>
       </div>
@@ -427,12 +458,12 @@ function PhoneBuilderScreen() {
   );
 }
 
-function PhoneShareScreen() {
+function PhoneShareScreen({ isEN }: { isEN: boolean }) {
   return (
     <div className="space-y-2.5">
       <div className="px-1 pb-1">
-        <div className="text-[11px] font-bold text-ink">Profil publik</div>
-        <div className="text-[9px] text-ink/40">showreels.id/kamu · Live</div>
+        <div className="text-[11px] font-bold text-ink">{isEN ? "Public Profile" : "Profil publik"}</div>
+        <div className="text-[9px] text-ink/40">showreels.id/{isEN ? "you" : "kamu"} · Live</div>
       </div>
 
       {/* mini profile card */}
@@ -443,7 +474,7 @@ function PhoneShareScreen() {
           </span>
           <div>
             <div className="flex items-center gap-1">
-              <span className="text-[10.5px] font-semibold text-ink">showreels.id/kamu</span>
+              <span className="text-[10.5px] font-semibold text-ink">showreels.id/{isEN ? "you" : "kamu"}</span>
               <CheckCircle2 className="h-3 w-3 text-brand-500" strokeWidth={3} />
             </div>
             <div className="text-[8.5px] text-ink/40">Videographer · Creator</div>
@@ -466,7 +497,7 @@ function PhoneShareScreen() {
       <div className="grid grid-cols-2 gap-1.5">
         <button className="flex items-center gap-1.5 rounded-2xl border border-ink/10 bg-white/60 px-2.5 py-2 backdrop-blur-sm">
           <Copy className="h-3 w-3 text-ink/40" strokeWidth={2} />
-          <span className="text-[9.5px] font-semibold text-ink/60">Salin link</span>
+          <span className="text-[9.5px] font-semibold text-ink/60">{isEN ? "Copy link" : "Salin link"}</span>
         </button>
         <button className="flex items-center gap-1.5 rounded-2xl bg-emerald-500 px-2.5 py-2">
           <svg className="h-3 w-3 flex-shrink-0 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -479,7 +510,7 @@ function PhoneShareScreen() {
 
       {/* analytics mini */}
       <div className="grid grid-cols-3 gap-1.5">
-        {[{ label: "Views", value: "1.2K" }, { label: "Klik", value: "348" }, { label: "CTR", value: "29%" }].map((s) => (
+        {[{ label: isEN ? "Views" : "Views", value: "1.2K" }, { label: isEN ? "Clicks" : "Klik", value: "348" }, { label: "CTR", value: "29%" }].map((s) => (
           <div
             key={s.label}
             className="flex flex-col items-center gap-0.5 rounded-2xl border border-ink/8 bg-white/60 py-2 backdrop-blur-sm"

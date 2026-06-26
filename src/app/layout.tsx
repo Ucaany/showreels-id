@@ -1,11 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Instrument_Serif, Inter } from "next/font/google";
+import { Instrument_Serif, Inter, Geist } from "next/font/google";
 import "./globals.css";
 import { SentryInit } from "@/components/sentry-init";
 import { AppProviders } from "@/providers/app-providers";
 import { ToastContainer } from "@/components/ui/toast-container";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -58,7 +61,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${inter.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={cn("h-full", "antialiased", inter.variable, instrumentSerif.variable, "font-sans", geist.variable)}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">

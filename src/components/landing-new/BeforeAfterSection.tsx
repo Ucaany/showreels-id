@@ -1,6 +1,8 @@
 "use client";
 
 import { TrendingDown, TrendingUp, Link2, PlaySquare, Eye } from "lucide-react";
+import { useLang } from "@/lib/i18n/landing-context";
+import { beforeAfterEN } from "@/lib/constants/landing-en";
 
 function ProfileCard({ variant }: { variant: "before" | "after" }) {
   const isBefore = variant === "before";
@@ -94,7 +96,7 @@ function ProfileCard({ variant }: { variant: "before" | "after" }) {
   );
 }
 
-const beforeBadges = [
+const beforeBadgesID = [
   {
     icon: <TrendingDown className="h-3 w-3 text-red-500" />,
     text: "Link bio lemah",
@@ -115,7 +117,7 @@ const beforeBadges = [
   },
 ];
 
-const afterBadges = [
+const afterBadgesID = [
   {
     icon: <TrendingUp className="h-3 w-3 text-emerald-500" />,
     text: "Views ↗ 1200+",
@@ -158,6 +160,25 @@ function FloatingBadge({
 }
 
 export default function BeforeAfterSection() {
+  const { lang } = useLang();
+  const isEN = lang === "EN";
+
+  const beforeBadges = isEN
+    ? [
+        { icon: <TrendingDown className="h-3 w-3 text-red-500" />, text: beforeAfterEN.before.badges[0].text, color: "text-red-500", pos: "-top-5 -left-8" },
+        { icon: <Eye className="h-3 w-3 text-red-400" />, text: beforeAfterEN.before.badges[1].text, color: "text-red-400", pos: "-bottom-4 -right-6" },
+        { icon: <Link2 className="h-3 w-3 text-red-400" />, text: beforeAfterEN.before.badges[2].text, color: "text-red-400", pos: "top-1/2 -left-14" },
+      ]
+    : beforeBadgesID;
+
+  const afterBadges = isEN
+    ? [
+        { icon: <TrendingUp className="h-3 w-3 text-emerald-500" />, text: beforeAfterEN.after.badges[0].text, color: "text-emerald-600", pos: "-top-5 -right-8" },
+        { icon: <Eye className="h-3 w-3 text-emerald-500" />, text: beforeAfterEN.after.badges[1].text, color: "text-emerald-600", pos: "-bottom-4 -left-8" },
+        { icon: <Link2 className="h-3 w-3 text-emerald-500" />, text: beforeAfterEN.after.badges[2].text, color: "text-emerald-600", pos: "top-1/2 -right-14" },
+      ]
+    : afterBadgesID;
+
   return (
     <section className="relative overflow-hidden pb-16 pt-4">
       {/* Before / After visual */}
@@ -165,7 +186,7 @@ export default function BeforeAfterSection() {
         {/* Before card */}
         <div className="relative flex flex-col items-center">
           <span className="mb-6 text-[11px] font-semibold uppercase tracking-widest text-ink/25">
-            Before
+            {isEN ? "Before" : "Before"}
           </span>
           <div className="relative">
             <ProfileCard variant="before" />
@@ -207,7 +228,7 @@ export default function BeforeAfterSection() {
         {/* After card */}
         <div className="relative flex flex-col items-center">
           <span className="mb-6 text-[11px] font-semibold uppercase tracking-widest text-ink/60">
-            After
+            {isEN ? "After" : "After"}
           </span>
           <div className="relative">
             <ProfileCard variant="after" />
