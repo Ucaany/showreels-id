@@ -24,7 +24,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
       <div className="inline-flex items-center gap-1 rounded-full bg-[#edf4ff] p-1">
         <Button
           size="sm"
-          variant={locale === "id" ? "primary" : "ghost"}
+          variant={locale === "id" ? "default" : "ghost"}
           className="h-8 rounded-full px-3 text-sm"
           onClick={() => setLocale("id")}
         >
@@ -32,7 +32,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
         </Button>
         <Button
           size="sm"
-          variant={locale === "en" ? "primary" : "ghost"}
+          variant={locale === "en" ? "default" : "ghost"}
           className="h-8 rounded-full px-3 text-sm"
           onClick={() => setLocale("en")}
         >

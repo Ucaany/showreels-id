@@ -1,23 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Lightbulb, Rocket, Users, ArrowRight, Zap, Shield, Globe } from "lucide-react";
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
   show: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.52, ease: [0.22, 1, 0.36, 1], delay: i * 0.08 },
+    transition: { duration: 0.52, ease: [0.22, 1, 0.36, 1] as [number, number, number, number], delay: i * 0.08 },
   }),
 };
 
-const fadeIn = {
+const fadeIn: Variants = {
   hidden: { opacity: 0 },
   show: (i = 0) => ({
     opacity: 1,
-    transition: { duration: 0.48, ease: "easeOut", delay: i * 0.08 },
+    transition: { duration: 0.48, ease: "easeOut" as const, delay: i * 0.08 },
   }),
 };
 

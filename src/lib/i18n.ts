@@ -275,6 +275,23 @@ export const dictionaries = {
     authResetSendFailedTitle: "Gagal mengirim link reset",
     authResetNetworkErrorTitle: "Terjadi kesalahan",
 
+    // === AUTH — RESET PASSWORD (new password form) ===
+    authNewPasswordTitle: "Buat Password Baru",
+    authNewPasswordSubtitle: "Masukkan password baru untuk akunmu.",
+    authNewPasswordLabel: "Password baru",
+    authNewPasswordConfirmLabel: "Konfirmasi password baru",
+    authNewPasswordPlaceholder: "Minimal 8 karakter",
+    authNewPasswordMinHint: "Password minimal 8 karakter.",
+    authNewPasswordMismatchHint: "Konfirmasi password tidak sama.",
+    authNewPasswordInvalidTokenTitle: "Link tidak valid",
+    authNewPasswordInvalidTokenHint: "Link reset password tidak valid atau sudah kedaluwarsa. Minta link baru.",
+    authNewPasswordSuccessTitle: "Password berhasil diubah",
+    authNewPasswordSuccessHint: "Password kamu berhasil diperbarui. Silakan masuk dengan password baru.",
+    authNewPasswordSubmitting: "Menyimpan...",
+    authNewPasswordSubmit: "Simpan Password Baru",
+    authNewPasswordRequestNew: "Minta link reset baru",
+    authNewPasswordBackToLogin: "Kembali ke login",
+
     // === LANDING — HERO (Hero.tsx UI strings) ===
     landingHeroHeadlineLead: "Satu link untuk",
     landingHeroHeadlineAccent: "semua karya video terbaikmu.",
@@ -616,6 +633,23 @@ export const dictionaries = {
     authResetEmailRequiredHint: "Please enter your email address.",
     authResetSendFailedTitle: "Failed to send the reset link",
     authResetNetworkErrorTitle: "Something went wrong",
+
+    // === AUTH — RESET PASSWORD (new password form) ===
+    authNewPasswordTitle: "Create New Password",
+    authNewPasswordSubtitle: "Enter a new password for your account.",
+    authNewPasswordLabel: "New password",
+    authNewPasswordConfirmLabel: "Confirm new password",
+    authNewPasswordPlaceholder: "At least 8 characters",
+    authNewPasswordMinHint: "Password must be at least 8 characters.",
+    authNewPasswordMismatchHint: "Passwords do not match.",
+    authNewPasswordInvalidTokenTitle: "Invalid link",
+    authNewPasswordInvalidTokenHint: "The password reset link is invalid or has expired. Please request a new one.",
+    authNewPasswordSuccessTitle: "Password updated",
+    authNewPasswordSuccessHint: "Your password has been updated. Please sign in with your new password.",
+    authNewPasswordSubmitting: "Saving...",
+    authNewPasswordSubmit: "Save new password",
+    authNewPasswordRequestNew: "Request a new reset link",
+    authNewPasswordBackToLogin: "Back to sign in",
 
     // === LANDING — HERO (Hero.tsx UI strings) ===
     landingHeroHeadlineLead: "One link for",
