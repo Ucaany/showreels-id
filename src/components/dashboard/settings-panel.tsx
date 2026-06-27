@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -214,7 +214,7 @@ export function SettingsPanel({ username, profileVisibility }: SettingsPanelProp
         </div>
         <Button
           type="button"
-          variant="danger"
+          variant="destructive"
           className="mt-4 w-full sm:w-auto"
           onClick={handleDeleteAccount}
           disabled={deletingAccount}

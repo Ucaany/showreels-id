@@ -48,29 +48,27 @@ function SettingsNavCard({
 }) {
   const Icon = icon;
   const body = (
-    <Card
-      className={`dashboard-panel h-full p-4 transition ${
-        disabled ? "opacity-80" : "hover:-translate-y-0.5 hover:border-[#bfd6ff] hover:shadow-md"
+    <div
+      className={`group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition ${
+        disabled ? "opacity-60" : "hover:bg-muted/50 hover:shadow-sm"
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700">
-          <Icon className="h-5 w-5" />
-        </span>
-        <ChevronRight className="h-4 w-4 text-[#7d95bd]" />
+      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+        {meta && <p className="mt-1 text-xs font-medium text-muted-foreground">{meta}</p>}
       </div>
-      <h2 className="mt-3 text-base font-semibold text-slate-900">{title}</h2>
-      <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
-      {meta ? <p className="mt-2 text-xs font-medium text-[#5f78a3]">{meta}</p> : null}
-    </Card>
+      {!disabled && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+    </div>
   );
 
-  if (!href) {
-    return body;
-  }
+  if (!href) return body;
 
   return (
-    <Link href={href} target={external ? "_blank" : undefined} className="group block h-full">
+    <Link href={href} target={external ? "_blank" : undefined} className="block">
       {body}
     </Link>
   );
@@ -151,37 +149,24 @@ export function SettingsHub({
   };
 
   return (
-    <div className="dashboard-stack">
-      <Card className="dashboard-panel bg-gradient-to-b from-[#ffffff] to-[#f6faff] p-4 sm:p-5">
-        <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
-          <Sparkles className="h-3.5 w-3.5" />
-          Settings
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Atur privasi, profil, payment, keamanan, dan penghapusan akun.
+          </p>
         </div>
-        <h1 className="mt-2 font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
-          Pengaturan Akun Creator
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-          Atur privasi, slug profil, payment, whitelabel, keamanan, dan penghapusan akun dalam
-          satu halaman yang rapi.
-        </p>
-        <div className="mt-4 grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:grid-cols-[auto_1fr] sm:items-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-900">
-            <Wrench className="h-4 w-4" />
-            {planBadge}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-[#5b7198]">
-              Username: {entitlements.usernameChangesPer30Days}x / 30 hari
-            </span>
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-[#5b7198]">
-              Analytics: {entitlements.analyticsMaxDays} hari
-            </span>
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-[#5b7198]">
-              Plan aktif: {planLabel}
-            </span>
-          </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <span className="inline-flex items-center rounded-md border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+            <Wrench className="mr-1.5 h-3.5 w-3.5" />
+            Plan: {planLabel}
+          </span>
+          <span className="inline-flex items-center rounded-md border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            Analytics: {entitlements.analyticsMaxDays} hari
+          </span>
         </div>
-      </Card>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <SettingsNavCard
@@ -213,11 +198,7 @@ export function SettingsHub({
         <SettingsNavCard
           icon={Sparkles}
           title="Ganti Tema"
-          description={
-            entitlements.themeSwitchComingSoon
-              ? "Fitur coming soon tersedia untuk plan Business."
-              : "Fitur coming soon khusus plan Business."
-          }
+          description="Fitur coming soon khusus plan Business."
           meta="Coming Soon"
           disabled
         />
@@ -247,28 +228,27 @@ export function SettingsHub({
         ) : null}
       </div>
 
-      <Card className="dashboard-panel border-rose-200 bg-gradient-to-b from-rose-50 to-white p-4 sm:p-5">
-        <div className="flex items-start gap-2.5">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-white text-rose-600">
+      <Card className="border-destructive/30 bg-destructive/5 p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-destructive/30 bg-background text-destructive">
             <ShieldAlert className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-rose-700">Hapus Akun</h2>
-            <p className="mt-1 text-sm leading-6 text-rose-700">
-              Ketik <span className="font-semibold">HAPUS AKUN</span> untuk melanjutkan
-              penghapusan permanen.
+            <h2 className="text-sm font-semibold text-destructive">Hapus Akun</h2>
+            <p className="mt-1 text-sm text-destructive/80">
+              Ketik <span className="font-semibold">HAPUS AKUN</span> untuk melanjutkan penghapusan permanen.
             </p>
           </div>
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
           <input
             value={deleteText}
-            onChange={(event) => setDeleteText(event.target.value)}
+            onChange={(e) => setDeleteText(e.target.value)}
             placeholder="Ketik HAPUS AKUN"
-            className="h-11 w-full rounded-xl border border-rose-200 bg-white px-3 text-sm text-[#201b18] outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-200"
+            className="h-10 w-full rounded-lg border border-destructive/30 bg-background px-3 text-sm outline-none focus:border-destructive focus:ring-2 focus:ring-destructive/20"
           />
           <Button
-            variant="danger"
+            variant="destructive"
             onClick={handleDeleteAccount}
             disabled={deleting}
             className="w-full sm:w-auto"

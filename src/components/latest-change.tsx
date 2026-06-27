@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 
 const latestChange = {
-	badge: "UPDATE",
-	title: "Portfolio analytics baru",
-	description: "Lihat traffic & views real-time.", // TIP: Use a single line of text for the description. (max 5 words)
-	readMore: { href: "/dashboard/analytics", label: "Lihat Analytics" },
+	badge: "CHANGELOG",
+	title: "Product update",
+	description: "Performance boosts and UI polish.", // TIP: Use a single line of text for the description. (max 5 words)
+	readMore: { href: "#", label: "Learn more" },
 } as const;
 
 export function LatestChange() {
@@ -22,7 +22,7 @@ export function LatestChange() {
 	return (
 		<div
 			className={cn(
-				"rounded-lg group/latest-change size-full min-h-27 justify-center border bg-background",
+				"group/latest-change size-full min-h-27 justify-center border-t",
 				"relative flex size-full flex-col gap-1 overflow-hidden px-4 pt-3 pb-1 *:text-nowrap",
 				"transition-opacity group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:opacity-0"
 			)}

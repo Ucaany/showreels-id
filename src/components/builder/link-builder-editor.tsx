@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -298,7 +298,7 @@ function SortableLinkItem({
             <Copy className="h-3.5 w-3.5" />
             <span className="hidden min-[430px]:inline">Duplicate</span>
           </Button>
-          <Button size="sm" variant="danger" onClick={() => onDelete(link.id)} className="h-9 px-2">
+          <Button size="sm" variant="destructive" onClick={() => onDelete(link.id)} className="h-9 px-2">
             <Trash2 className="h-3.5 w-3.5" />
             <span className="hidden min-[430px]:inline">Hapus</span>
           </Button>
@@ -1335,7 +1335,7 @@ export function LinkBuilderEditor({
                         <Button
                           type="button"
                           size="sm"
-                          variant="danger"
+                          variant="destructive"
                           onClick={() => handleDeleteExperience(item.id)}
                         >
                           <Trash2 className="h-3.5 w-3.5" />

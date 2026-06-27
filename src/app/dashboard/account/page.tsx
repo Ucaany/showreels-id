@@ -1,19 +1,9 @@
-import { requireCurrentUser } from "@/server/current-user";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+﻿import { requireCurrentUser } from "@/server/current-user";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Settings2Icon, UserRoundIcon } from "lucide-react";
+import { Settings2Icon, UserRoundIcon, CreditCardIcon, ShieldIcon } from "lucide-react";
 
 export default async function DashboardAccountPage() {
   const user = await requireCurrentUser();
@@ -24,6 +14,13 @@ export default async function DashboardAccountPage() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  const quickLinks = [
+    { href: "/dashboard/profile", icon: UserRoundIcon, label: "Edit Profile" },
+    { href: "/dashboard/settings", icon: Settings2Icon, label: "Settings" },
+    { href: "/dashboard/billing", icon: CreditCardIcon, label: "Billing & Langganan" },
+    { href: "/dashboard/settings/security", icon: ShieldIcon, label: "Keamanan & Password" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -57,7 +54,6 @@ export default async function DashboardAccountPage() {
                 )}
               </div>
             </div>
-
             <div className="divide-y rounded-lg border">
               <div className="flex items-center justify-between px-3 py-2.5">
                 <span className="text-xs text-muted-foreground">Nama</span>
@@ -65,7 +61,7 @@ export default async function DashboardAccountPage() {
               </div>
               <div className="flex items-center justify-between px-3 py-2.5">
                 <span className="text-xs text-muted-foreground">Email</span>
-                <span className="text-sm font-medium">{user.email}</span>
+                <span className="truncate max-w-[180px] text-sm font-medium">{user.email}</span>
               </div>
               <div className="flex items-center justify-between px-3 py-2.5">
                 <span className="text-xs text-muted-foreground">Username</span>
@@ -88,34 +84,16 @@ export default async function DashboardAccountPage() {
             <CardDescription>Akses pengaturan akun kamu.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <Link
-              href="/dashboard/profile"
-              className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              <UserRoundIcon className="size-4 shrink-0 text-muted-foreground" />
-              Edit Profile
-            </Link>
-            <Link
-              href="/dashboard/settings"
-              className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              <Settings2Icon className="size-4 shrink-0 text-muted-foreground" />
-              Settings
-            </Link>
-            <Link
-              href="/dashboard/billing"
-              className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              <Settings2Icon className="size-4 shrink-0 text-muted-foreground" />
-              Billing & Langganan
-            </Link>
-            <Link
-              href="/dashboard/settings/security"
-              className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-            >
-              <Settings2Icon className="size-4 shrink-0 text-muted-foreground" />
-              Keamanan & Password
-            </Link>
+            {quickLinks.map(({ href, icon: Icon, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                <Icon className="size-4 shrink-0 text-muted-foreground" />
+                {label}
+              </Link>
+            ))}
           </CardContent>
         </Card>
       </div>

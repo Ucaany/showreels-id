@@ -19,7 +19,7 @@ export function AppShell({
     <SidebarProvider>
       <AppSidebar user={user} mode={mode} />
       <SidebarInset className="min-w-0 flex-1 overflow-hidden">
-        <AppHeader />
+        <AppHeader user={user} />
         <main className="flex min-w-0 flex-1 flex-col">
           <div className="w-full min-w-0 space-y-6 p-4 md:p-6 lg:p-8">
             {children}

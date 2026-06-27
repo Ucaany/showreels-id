@@ -7,8 +7,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -24,54 +22,16 @@ import {
   type AppMode,
 } from "@/components/app-shared";
 import { NavUser } from "@/components/nav-user";
+import { NavGroup } from "@/components/nav-group";
 import type { DbUser } from "@/db/schema";
 
 function isItemActive(item: SidebarNavItem, pathname: string): boolean {
   if (!item.path) return false;
-  // Exact match for root paths
   if (item.path === "/dashboard" || item.path === "/admin") {
     return pathname === item.path;
   }
-  // Query-based admin sections
-  if (item.path.includes("?")) {
-    return false; // handled by admin panel's own tab state
-  }
+  if (item.path.includes("?")) return false;
   return pathname === item.path || pathname.startsWith(`${item.path}/`);
-}
-
-function SidebarNavGroups({
-  groups,
-  pathname,
-}: {
-  groups: SidebarNavGroup[];
-  pathname: string;
-}) {
-  return (
-    <>
-      {groups.map((group, index) => (
-        <SidebarGroup key={`sidebar-group-${index}`}>
-          {group.label && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
-          <SidebarMenu>
-            {group.items.map((item) => {
-              const active = isItemActive(item, pathname);
-              return (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    isActive={active}
-                    tooltip={item.title}
-                    render={<Link href={item.path || "#"} />}
-                  >
-                    {item.icon}
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
-        </SidebarGroup>
-      ))}
-    </>
-  );
 }
 
 export function AppSidebar({
@@ -85,19 +45,29 @@ export function AppSidebar({
   const groups = mode === "admin" ? adminNavGroups : creatorNavGroups;
   const footerLinks = mode === "admin" ? adminFooterNavLinks : creatorFooterNavLinks;
 
+  const navGroupsWithActive: SidebarNavGroup[] = groups.map((group) => ({
+    ...group,
+    items: group.items.map((item) => ({
+      ...item,
+      isActive: isItemActive(item, pathname),
+    })),
+  }));
+
   return (
-    <Sidebar collapsible="icon" variant="floating">
-      <SidebarHeader className="h-14 justify-center">
+    <Sidebar collapsible="icon" variant="sidebar">
+      <SidebarHeader className="h-14 justify-center border-b px-2">
         <SidebarMenuButton render={<Link href={mode === "admin" ? "/admin" : "/dashboard"} />}>
           <LogoIcon />
-          <span className="font-medium">showreels.id</span>
+          <span className="font-semibold text-foreground">showreels.id</span>
         </SidebarMenuButton>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarNavGroups groups={groups} pathname={pathname} />
+        {navGroupsWithActive.map((group, index) => (
+          <NavGroup key={`sidebar-group-${index}`} {...group} />
+        ))}
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
+      <SidebarFooter className="gap-0 p-0">
+        <SidebarMenu className="border-t p-2">
           {footerLinks.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
@@ -111,7 +81,9 @@ export function AppSidebar({
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
-        <NavUser user={user} />
+        <div className="px-2 pb-2">
+          <NavUser user={user} />
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
