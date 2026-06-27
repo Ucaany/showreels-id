@@ -13,7 +13,7 @@ export function AppLogo({
   tone?: "dark" | "light";
 }) {
   const darkTone = tone === "dark";
-  const [logoVisible, setLogoVisible] = useState(true);
+  const [src, setSrc] = useState("/favicon-96x96.png");
 
   return (
     <Link
@@ -22,22 +22,16 @@ export function AppLogo({
       className={cn("inline-flex max-w-full min-w-0 items-center gap-2.5", className)}
     >
       <span className="relative flex h-[2.15rem] w-[2.15rem] shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-9 sm:w-9">
-        {logoVisible ? (
-          <Image
-            src="/logo.png"
-            alt=""
-            width={36}
-            height={36}
-            decoding="async"
-            unoptimized
-            className="h-full w-full object-contain"
-            onError={() => setLogoVisible(false)}
-          />
-        ) : (
-          <span className="flex h-full w-full items-center justify-center rounded-lg bg-[#ea580c] text-base font-bold text-white">
-            s
-          </span>
-        )}
+        <Image
+          src={src}
+          alt="showreels.id"
+          width={36}
+          height={36}
+          decoding="async"
+          unoptimized
+          className="h-full w-full object-contain"
+          onError={() => setSrc("/logo.png")}
+        />
       </span>
       <span
         className={cn(

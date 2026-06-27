@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Clock3, Database, Edit3, Eye, Film, HardDrive, LayoutDashboard, Loader2, Mail, Megaphone, PlayCircle, Radar, Search, Settings2, Sparkles, Trash2, Users, Video } from "lucide-react";
+import { Bell, Clock3, Database, Edit3, Eye, HardDrive, LayoutDashboard, Loader2, Mail, Megaphone, PlayCircle, Radar, Search, Settings2, Sparkles, Trash2, Users, Video } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,18 +90,412 @@ export function AdminPanelClient({ stats, analytics, audit, dbHealth, settings, 
   const deleteVideo = async (video: AdminVideoItem) => { const confirmed = await confirmFeedbackAction({ title: `Hapus video "${video.title}"?`, text: "Postingan ini akan dihapus permanen dari database.", confirmButtonText: "Hapus video", icon: "warning" }); if (!confirmed) return; const response = await fetch(`/api/admin/videos/${video.id}`, { method: "DELETE" }); if (!response.ok) { await showFeedbackAlert({ title: "Video gagal dihapus", text: await parseApiError(response), icon: "error" }); return; } await showFeedbackAlert({ title: "Video dihapus", icon: "success", timer: 900 }); refresh(); };
   const sendNotification = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (notificationTitle.trim().length < 3 || notificationMessage.trim().length < 3) { await showFeedbackAlert({ title: "Notifikasi belum lengkap", text: "Isi judul dan pesan minimal 3 karakter.", icon: "error" }); return; } setSending(true); const formData = new FormData(event.currentTarget); const startsAtRaw = String(formData.get("startsAt") || ""); const endsAtRaw = String(formData.get("endsAt") || ""); const response = await fetch("/api/admin/notifications", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ targetType: formData.get("targetType"), targetUserId: formData.get("targetUserId") || null, title: notificationTitle.trim(), message: notificationMessage.trim(), sendMode: formData.get("sendMode"), recurrence: formData.get("recurrence"), startsAt: startsAtRaw ? new Date(startsAtRaw).toISOString() : null, endsAt: endsAtRaw ? new Date(endsAtRaw).toISOString() : null, activeDurationDays: formData.get("activeDurationDays") }) }); setSending(false); if (!response.ok) { await showFeedbackAlert({ title: "Notifikasi gagal dikirim", text: await parseApiError(response), icon: "error" }); return; } const payload = (await response.json()) as { schedule?: { deliveredCount?: number; status?: string } }; await showFeedbackAlert({ title: sendMode === "now" ? "Notifikasi dikirim" : "Notifikasi dijadwalkan", text: sendMode === "now" ? `Terkirim ke ${payload.schedule?.deliveredCount ?? 0} user.` : "Campaign tersimpan dan akan dikirim sesuai jadwal.", icon: "success", timer: 1400 }); refresh(); };
 
-  const renderFilterCard = () => <Card className="border-slate-200 bg-white p-4 shadow-sm"><form onSubmit={onFilterSubmit} className="flex flex-col gap-3 xl:flex-row xl:items-center"><div className="relative flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><Input name="search" defaultValue={filters.search} placeholder="Cari user/video berdasarkan nama, email, judul, atau slug" className="pl-9" /></div><Select name="sort" defaultValue={filters.sort} className="xl:w-44"><option value="newest">Terbaru</option><option value="oldest">Terlama</option><option value="az">A-Z</option><option value="za">Z-A</option></Select><Button type="submit"><Search className="h-4 w-4" />Terapkan</Button></form><div className="mt-4 flex flex-wrap gap-2">{[{ v: "all", l: "All Platform" }, { v: "instagram", l: "Instagram" }, { v: "facebook", l: "Facebook" }, { v: "youtube", l: "YouTube" }].map((item) => <button key={item.v} type="button" onClick={() => pushQuery({ platform: item.v, page: 1 })} aria-pressed={filters.platform === item.v} className={cn("rounded-full border px-3 py-1.5 text-sm font-semibold transition", filters.platform === item.v ? "border-slate-950 bg-slate-950 text-white shadow" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}>{item.l}</button>)}<span className="mx-1 hidden h-8 w-px bg-slate-200 sm:inline-block" />{[{ v: "all", l: "All Status" }, { v: "public", l: "Public" }, { v: "private", l: "Private" }].map((item) => <button key={item.v} type="button" onClick={() => pushQuery({ status: item.v, page: 1 })} aria-pressed={filters.status === item.v} className={cn("rounded-full border px-3 py-1.5 text-sm font-semibold transition", filters.status === item.v ? "border-slate-950 bg-slate-950 text-white shadow" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50")}>{item.l}</button>)}</div></Card>;
+  const renderFilterCard = () => (
+    <Card className="p-4">
+      <form onSubmit={onFilterSubmit} className="flex flex-col gap-3 xl:flex-row xl:items-center">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input name="search" defaultValue={filters.search} placeholder="Cari user/video berdasarkan nama, email, judul, atau slug" className="pl-9" />
+        </div>
+        <Select name="sort" defaultValue={filters.sort} className="xl:w-44">
+          <option value="newest">Terbaru</option>
+          <option value="oldest">Terlama</option>
+          <option value="az">A-Z</option>
+          <option value="za">Z-A</option>
+        </Select>
+        <Button variant="secondary" type="submit"><Search className="h-4 w-4" />Terapkan</Button>
+      </form>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {[{ v: "all", l: "All Platform" }, { v: "instagram", l: "Instagram" }, { v: "facebook", l: "Facebook" }, { v: "youtube", l: "YouTube" }].map((item) => (
+          <button key={item.v} type="button" onClick={() => pushQuery({ platform: item.v, page: 1 })} aria-pressed={filters.platform === item.v}
+            className={cn("rounded-full border px-3 py-1.5 text-sm font-medium transition", filters.platform === item.v ? "border-foreground bg-foreground text-background shadow-sm" : "border-border bg-background text-foreground hover:bg-muted")}>
+            {item.l}
+          </button>
+        ))}
+        <span className="mx-1 hidden h-8 w-px bg-border sm:inline-block" />
+        {[{ v: "all", l: "All Status" }, { v: "public", l: "Public" }, { v: "private", l: "Private" }].map((item) => (
+          <button key={item.v} type="button" onClick={() => pushQuery({ status: item.v, page: 1 })} aria-pressed={filters.status === item.v}
+            className={cn("rounded-full border px-3 py-1.5 text-sm font-medium transition", filters.status === item.v ? "border-foreground bg-foreground text-background shadow-sm" : "border-border bg-background text-foreground hover:bg-muted")}>
+            {item.l}
+          </button>
+        ))}
+      </div>
+    </Card>
+  );
 
-  const renderVideoGrid = () => <div className="space-y-4">{renderFilterCard()}<div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">{videos.map((video) => <Card key={video.id} className="group border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="truncate text-base font-semibold text-slate-950">{video.title}</h3><p className="mt-1 truncate text-sm text-slate-600">{video.authorName} · {video.authorEmail}</p></div><Badge className={cn("capitalize ring-1", platformClass(video.source))}>{video.source}</Badge></div><p className="mt-3 truncate rounded-xl bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600">/v/{video.publicSlug}</p><div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500"><span>{formatShortDate(video.createdAt)}</span><Badge className={video.visibility === "public" ? "bg-emerald-600" : "bg-slate-800"}>{video.visibility === "public" ? "Public" : "Private"}</Badge></div><div className="mt-4 grid grid-cols-3 gap-2"><a href={`/v/${video.publicSlug}`} target="_blank" className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50"><Eye className="h-4 w-4" />View</a><details className="contents"><summary className="inline-flex h-9 cursor-pointer list-none items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50"><Edit3 className="h-4 w-4" />Edit</summary><form onSubmit={(event) => updateVideo(event, video.id)} className="col-span-3 mt-3 grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3"><Input name="title" defaultValue={video.title} /><Textarea name="description" defaultValue={video.description} /><Select name="visibility" defaultValue={video.visibility}><option value="public">Public</option><option value="semi_private">Semi Private</option><option value="draft">Draft</option><option value="private">Private</option></Select><Select name="aspectRatio" defaultValue={video.aspectRatio}><option value="landscape">Landscape</option><option value="portrait">Portrait</option></Select><Input name="sourceUrl" defaultValue={video.sourceUrl} /><Input name="thumbnailUrl" defaultValue={video.thumbnailUrl} /><Input name="outputType" defaultValue={video.outputType} /><Input name="durationLabel" defaultValue={video.durationLabel} /><Button type="submit" size="sm">Simpan</Button></form></details><Button variant="danger" size="sm" onClick={() => void deleteVideo(video)}><Trash2 className="h-4 w-4" />Hapus</Button></div></Card>)}</div>{!videos.length ? <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">Tidak ada showcase yang cocok dengan filter.</p> : null}<Card className="flex flex-col gap-3 border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-slate-600">Menampilkan <strong className="text-slate-950">{firstItem}-{lastItem}</strong> dari <strong className="text-slate-950">{formatNumber(pagination.totalItems)}</strong> data</p><div className="flex flex-wrap gap-2">{[1, 2, 3].filter((item) => item <= pagination.totalPages).map((item) => <Button key={item} size="sm" variant={pagination.page === item ? "primary" : "secondary"} onClick={() => pushQuery({ page: item })}>{item}</Button>)}{pagination.totalPages > 3 ? <Button size="sm" variant="secondary" onClick={() => pushQuery({ page: pagination.totalPages })}>{pagination.totalPages}</Button> : null}</div></Card></div>;
+  const renderVideoGrid = () => (
+    <div className="space-y-4">
+      {renderFilterCard()}
+      <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+        {videos.map((video) => (
+          <Card key={video.id} className="group p-4 transition hover:-translate-y-0.5 hover:shadow-md">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-semibold">{video.title}</h3>
+                <p className="mt-1 truncate text-sm text-muted-foreground">{video.authorName} · {video.authorEmail}</p>
+              </div>
+              <Badge className={cn("capitalize ring-1", platformClass(video.source))}>{video.source}</Badge>
+            </div>
+            <p className="mt-3 truncate rounded-lg bg-muted px-3 py-2 text-sm font-medium text-muted-foreground">/v/{video.publicSlug}</p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span>{formatShortDate(video.createdAt)}</span>
+              <Badge variant={video.visibility === "public" ? "default" : "secondary"}>{video.visibility === "public" ? "Public" : "Private"}</Badge>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <a href={`/v/${video.publicSlug}`} target="_blank" rel="noopener noreferrer"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted transition-colors">
+                <Eye className="h-4 w-4" />View
+              </a>
+              <details className="contents">
+                <summary className="inline-flex h-9 cursor-pointer list-none items-center justify-center gap-1.5 rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted transition-colors">
+                  <Edit3 className="h-4 w-4" />Edit
+                </summary>
+                <form onSubmit={(event) => updateVideo(event, video.id)} className="col-span-3 mt-3 grid gap-2 rounded-xl border border-border bg-muted/30 p-3">
+                  <Input name="title" defaultValue={video.title} />
+                  <Textarea name="description" defaultValue={video.description} />
+                  <Select name="visibility" defaultValue={video.visibility}>
+                    <option value="public">Public</option>
+                    <option value="semi_private">Semi Private</option>
+                    <option value="draft">Draft</option>
+                    <option value="private">Private</option>
+                  </Select>
+                  <Select name="aspectRatio" defaultValue={video.aspectRatio}>
+                    <option value="landscape">Landscape</option>
+                    <option value="portrait">Portrait</option>
+                  </Select>
+                  <Input name="sourceUrl" defaultValue={video.sourceUrl} />
+                  <Input name="thumbnailUrl" defaultValue={video.thumbnailUrl} />
+                  <Input name="outputType" defaultValue={video.outputType} />
+                  <Input name="durationLabel" defaultValue={video.durationLabel} />
+                  <Button variant="secondary" type="submit" size="sm">Simpan</Button>
+                </form>
+              </details>
+              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => void deleteVideo(video)}>
+                <Trash2 className="h-4 w-4" />Hapus
+              </Button>
+            </div>
+          </Card>
+        ))}
+      </div>
+      {!videos.length && (
+        <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">Tidak ada showcase yang cocok dengan filter.</p>
+      )}
+      <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">Menampilkan <strong className="text-foreground">{firstItem}-{lastItem}</strong> dari <strong className="text-foreground">{formatNumber(pagination.totalItems)}</strong> data</p>
+        <div className="flex flex-wrap gap-2">
+          {[1, 2, 3].filter((p) => p <= pagination.totalPages).map((p) => (
+            <Button key={p} size="sm" variant={pagination.page === p ? "default" : "outline"} onClick={() => pushQuery({ page: p })}>{p}</Button>
+          ))}
+          {pagination.totalPages > 3 && (
+            <Button size="sm" variant="outline" onClick={() => pushQuery({ page: pagination.totalPages })}>{pagination.totalPages}</Button>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
 
-  return <div className="space-y-6"><Card><CardHeader><div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div><p className="text-xs text-muted-foreground">showreels.id / Admin Panel</p><h1 className="mt-2 text-2xl font-semibold tracking-tight">Admin Panel</h1><p className="mt-1 text-sm text-muted-foreground">Kelola user, video, maintenance, dan notifikasi dari satu panel.</p></div><div className="flex items-center gap-3 rounded-xl border bg-muted/50 px-4 py-2.5"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">{ownerProfile.username.slice(0,2).toUpperCase()}</div><div><p className="text-sm font-semibold">@{ownerProfile.username}</p><p className="text-xs text-muted-foreground">{ownerProfile.email}</p></div></div></div><div className="mt-4 flex flex-wrap gap-2">{menuItems.map((item) => { const Icon = item.icon; return <button key={item.key} type="button" onClick={() => setActiveMenu(item.key)} className={cn("inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition", activeMenu === item.key ? "border-foreground bg-foreground text-background shadow-sm" : "border-border bg-background text-foreground hover:bg-muted")}><Icon className="h-4 w-4" />{item.label}</button>; })}</div></CardHeader></Card>
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground">showreels.id / Admin Panel</p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight">Admin Panel</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Kelola user, video, maintenance, dan notifikasi dari satu panel.</p>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border bg-muted/50 px-4 py-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted border text-xs font-semibold">
+                {ownerProfile.username.slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-sm font-semibold">@{ownerProfile.username}</p>
+                <p className="text-xs text-muted-foreground">{ownerProfile.email}</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setActiveMenu(item.key)}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition",
+                    activeMenu === item.key
+                      ? "border-foreground bg-foreground text-background shadow-sm"
+                      : "border-border bg-background text-foreground hover:bg-muted"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />{item.label}
+                </button>
+              );
+            })}
+          </div>
+        </CardHeader>
+      </Card>
 
-    {activeMenu === "dashboard" ? <><section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><SummaryCard icon={Users} label="Total Users" value={formatNumber(stats.totalUsers)} delta="User" /><SummaryCard icon={PlayCircle} label="Total Showcase" value={formatNumber(stats.totalVideos)} delta="Video" /><SummaryCard icon={Clock3} label="Scheduled Notifications" value={formatNumber(stats.scheduledNotifications)} delta="Queue" tone="amber" /><SummaryCard icon={Megaphone} label="Active Campaigns" value={formatNumber(stats.activeCampaigns)} delta="Live" tone="blue" /></section><section className="grid gap-4 md:grid-cols-3"><Card className="border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Subscription Aktif</p><p className="mt-2 text-3xl font-semibold text-emerald-700">{formatNumber(analytics.subscriptions.active)}</p><p className="mt-1 text-sm text-slate-500">User dengan plan berbayar aktif</p></Card><Card className="border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Trial Aktif</p><p className="mt-2 text-3xl font-semibold text-amber-600">{formatNumber(analytics.subscriptions.trial)}</p><p className="mt-1 text-sm text-slate-500">User dalam masa trial Creator</p></Card><Card className="border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Paket Tersedia</p><div className="mt-2 space-y-1.5"><div className="flex items-center justify-between rounded-xl bg-blue-50 px-3 py-2"><span className="text-sm font-semibold text-blue-800">Creator</span><span className="text-xs text-blue-600">50 video/platform</span></div><div className="flex items-center justify-between rounded-xl bg-purple-50 px-3 py-2"><span className="text-sm font-semibold text-purple-800">Business</span><span className="text-xs text-purple-600">Unlimited</span></div></div></Card></section><section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"><Card className="border-slate-200 bg-white p-5"><p className="text-sm font-semibold text-slate-950">Status database</p><p className={cn("mt-1 text-sm", health.ok ? "text-emerald-700" : "text-rose-700")}>{health.message}</p><Button variant="secondary" size="sm" className="mt-3" onClick={refreshHealth}><Database className="h-4 w-4" />Refresh database</Button>{health.storage ? <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3"><div className="flex items-center gap-2 text-sm font-semibold text-slate-950"><HardDrive className="h-4 w-4" />{health.storage.usedPercent.toFixed(1)}% terpakai</div><p className="mt-1 text-xs text-slate-500">{formatBytes(health.storage.usedBytes)} / {formatBytes(health.storage.limitBytes)}</p></div> : null}</Card><Card className="border-slate-200 bg-white p-5"><div className="flex items-center gap-2"><Mail className="h-5 w-5 text-blue-600" /><p className="text-sm font-semibold text-slate-950">Sisa Resend Email Hari Ini</p></div><div className="mt-3 flex items-end gap-3"><p className={cn("text-3xl font-semibold", emailQuota.remaining <= 10 ? "text-rose-600" : emailQuota.remaining <= 30 ? "text-amber-600" : "text-emerald-700")}>{formatNumber(emailQuota.remaining)}</p><span className="mb-1 text-sm text-slate-500">/ {formatNumber(emailQuota.limit)}</span></div><div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-slate-100"><div className={cn("h-full rounded-full transition-all", emailQuota.percentage >= 90 ? "bg-rose-500" : emailQuota.percentage >= 70 ? "bg-amber-500" : "bg-emerald-500")} style={{ width: `${Math.min(emailQuota.percentage, 100)}%` }} /></div><div className="mt-2 flex items-center justify-between text-xs text-slate-500"><span>Terpakai: {formatNumber(emailQuota.used)}</span><span>{emailQuota.percentage}%</span></div></Card><Card className="border-slate-200 bg-white p-5"><div className="flex items-center gap-2"><Film className="h-5 w-5" /><h2 className="font-display text-lg font-semibold text-slate-950">Analytics ringkas</h2></div><div className="mt-4 grid gap-3 grid-cols-2"><div className="rounded-2xl bg-slate-50 p-4"><p className="text-sm text-slate-500">Klik 30 hari</p><p className="text-2xl font-semibold text-slate-950">{formatNumber(analytics.engagement.clicks)}</p></div><div className="rounded-2xl bg-slate-50 p-4"><p className="text-sm text-slate-500">Video views</p><p className="text-2xl font-semibold text-slate-950">{formatNumber(analytics.engagement.videoViews)}</p></div><div className="rounded-2xl bg-slate-50 p-4"><p className="text-sm text-slate-500">Shares</p><p className="text-2xl font-semibold text-slate-950">{formatNumber(analytics.engagement.shares)}</p></div><div className="rounded-2xl bg-slate-50 p-4"><p className="text-sm text-slate-500">Likes</p><p className="text-2xl font-semibold text-slate-950">{formatNumber(analytics.engagement.likes)}</p></div></div></Card></section></> : null}
-    {activeMenu === "users" ? <Card className="border-slate-200 bg-white p-5"><h2 className="font-display text-2xl font-semibold text-slate-950">User Management</h2><p className="mt-1 text-sm text-slate-600">Kelola user: blokir, unblock, atau hapus akun.</p><div className="mt-4 grid gap-3 lg:grid-cols-2">{users.map((user) => <div key={user.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-slate-950">{user.name || user.email}</p><p className="text-sm text-slate-600">{user.email}</p><p className="text-xs text-slate-500">@{user.username || "-"} · {user.videoCount} video</p></div><Badge className={user.isBlocked ? "bg-rose-600" : "bg-emerald-600"}>{user.isBlocked ? "Blocked" : "Active"}</Badge></div><div className="mt-3 flex flex-wrap gap-2">{user.isBlocked ? <Button variant="secondary" size="sm" onClick={async () => { const confirmed = await confirmFeedbackAction({ title: `Unblock "${user.name || user.email}"?`, text: "User akan bisa login dan mengakses dashboard kembali.", confirmButtonText: "Unblock" }); if (!confirmed) return; const res = await fetch(`/api/admin/users/${user.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: user.name, username: user.username, isBlocked: false, blockedReason: "" }) }); if (!res.ok) { await showFeedbackAlert({ title: "Gagal unblock", text: await parseApiError(res), icon: "error" }); return; } await showFeedbackAlert({ title: "User di-unblock", icon: "success", timer: 900 }); refresh(); }}>Unblock</Button> : <Button variant="secondary" size="sm" onClick={async () => { const confirmed = await confirmFeedbackAction({ title: `Blokir "${user.name || user.email}"?`, text: "User tidak akan bisa login selama diblokir.", confirmButtonText: "Blokir", icon: "warning" }); if (!confirmed) return; const res = await fetch(`/api/admin/users/${user.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: user.name, username: user.username, isBlocked: true, blockedReason: "Diblokir oleh admin" }) }); if (!res.ok) { await showFeedbackAlert({ title: "Gagal blokir", text: await parseApiError(res), icon: "error" }); return; } await showFeedbackAlert({ title: "User diblokir", icon: "success", timer: 900 }); refresh(); }}>Blokir</Button>}<Button variant="danger" size="sm" onClick={async () => { const confirmed = await confirmFeedbackAction({ title: `Hapus akun "${user.name || user.email}"?`, text: "Semua data user (video, profil, subscription) akan dihapus permanen. Aksi ini tidak bisa dibatalkan!", confirmButtonText: "Hapus permanen", icon: "warning" }); if (!confirmed) return; const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" }); if (!res.ok) { await showFeedbackAlert({ title: "Gagal hapus", text: await parseApiError(res), icon: "error" }); return; } await showFeedbackAlert({ title: "Akun dihapus", icon: "success", timer: 900 }); refresh(); }}><Trash2 className="h-3.5 w-3.5" />Hapus</Button></div></div>)}</div>{!users.length ? <p className="mt-4 rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">Belum ada user terdaftar.</p> : null}</Card> : null}
-    {activeMenu === "audit" ? <AdminAuditPanel initialData={audit} /> : null}
-    {activeMenu === "videos" ? renderVideoGrid() : null}
-    {activeMenu === "maintenance" ? <><Card className="border-slate-200 bg-white p-5"><div className="mb-4 flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Website control</p><h2 className="mt-1 font-display text-2xl font-semibold text-slate-950">Maintenance dan pause sementara</h2></div>{isPending ? <Loader2 className="h-5 w-5 animate-spin text-slate-600" /> : null}</div><div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]"><div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4"><label className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Maintenance mode<input type="checkbox" checked={settingsState.maintenanceEnabled} onChange={(event) => setSettingsState((prev) => ({ ...prev, maintenanceEnabled: event.target.checked }))} className="h-5 w-5 accent-slate-950" /></label><label className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Pause website sementara<input type="checkbox" checked={settingsState.pauseEnabled} onChange={(event) => setSettingsState((prev) => ({ ...prev, pauseEnabled: event.target.checked }))} className="h-5 w-5 accent-slate-950" /></label><p className="text-xs text-slate-500">Status saat ini: {settingsState.maintenanceEnabled || settingsState.pauseEnabled ? "Aktif" : "Nonaktif"}</p></div><div className="space-y-3"><Textarea value={settingsState.maintenanceMessage} onChange={(event) => setSettingsState((prev) => ({ ...prev, maintenanceMessage: event.target.value }))} placeholder="Pesan maintenance untuk pengunjung" className="min-h-24" /><Button onClick={updateSettings}><Settings2 className="h-4 w-4" />Simpan pengaturan</Button></div></div></Card><Card className="mt-4 border-slate-200 bg-white p-5"><div className="mb-4"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Billing & Payment</p><h2 className="mt-1 font-display text-2xl font-semibold text-slate-950">Kontrol pembayaran</h2><p className="mt-1 text-sm text-slate-600">Aktifkan atau nonaktifkan fitur pembayaran (checkout/upgrade). Trial 1 bulan gratis tetap berjalan meskipun billing dinonaktifkan.</p></div><div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4"><label className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-900">Aktifkan Billing / Pembayaran<input type="checkbox" checked={settingsState.billingEnabled} onChange={(event) => setSettingsState((prev) => ({ ...prev, billingEnabled: event.target.checked }))} className="h-5 w-5 accent-slate-950" /></label><p className="text-xs text-slate-500">Status: {settingsState.billingEnabled ? <span className="font-semibold text-emerald-700">Aktif — User bisa checkout & upgrade</span> : <span className="font-semibold text-amber-700">Nonaktif — Tampil &quot;Coming Soon&quot; di halaman pembayaran</span>}</p></div><div className="mt-4 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4"><label className="block text-sm font-semibold text-slate-900">Default Payment Method<Select value={settingsState.defaultPaymentMethod || "bayar_gg"} onChange={(event) => setSettingsState((prev) => ({ ...prev, defaultPaymentMethod: event.target.value }))} className="mt-2"><option value="bayar_gg">Bayar.gg (QRIS, GoPay, OVO, Transfer Bank)</option><option value="bank_transfer">Bank Transfer (Manual)</option><option value="manual">Manual</option></Select></label><p className="text-xs text-slate-500">Metode pembayaran default untuk semua creator baru. Creator yang sudah ada tetap menggunakan metode yang mereka pilih.</p><div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3"><p className="text-xs font-semibold text-emerald-800">✓ Gateway Aktif: Bayar.gg</p><p className="mt-1 text-xs text-emerald-700">Mendukung QRIS, GoPay, OVO, dan transfer bank otomatis.</p></div></div><div className="mt-3"><Button onClick={updateSettings}><Settings2 className="h-4 w-4" />Simpan pengaturan</Button></div></Card></> : null}
-    {activeMenu === "notifications" ? <section className="grid gap-5 xl:grid-cols-[1fr_420px]"><Card className="border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center gap-2"><Bell className="h-5 w-5 text-slate-950" /><h2 className="font-display text-2xl font-semibold text-slate-950">Kirim Notifikasi</h2></div><form onSubmit={sendNotification} className="mt-4 space-y-3"><Select name="targetType" defaultValue="all"><option value="all">Semua user</option><option value="active">User aktif</option><option value="blocked">User diblokir</option><option value="public">Profile public</option><option value="private">Profile private</option></Select><Select name="targetUserId" defaultValue=""><option value="">Tidak pilih user spesifik</option>{ownerOptions.map((user) => <option key={user.id} value={user.id}>{user.name || user.email} — {user.email}</option>)}</Select><Input value={notificationTitle} onChange={(event) => setNotificationTitle(event.target.value)} placeholder="Judul notifikasi" /><Textarea value={notificationMessage} onChange={(event) => setNotificationMessage(event.target.value)} placeholder="Isi pesan notifikasi" className="min-h-28" /><div className="rounded-2xl border border-slate-200 bg-slate-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Preview Inbox User</p><div className="mt-3 rounded-2xl bg-white p-4 text-center shadow-sm"><Sparkles className="mx-auto h-8 w-8 text-slate-950" /><p className="mt-2 font-semibold text-slate-950">{notificationTitle || "Judul notifikasi"}</p><p className="mt-1 text-sm text-slate-600">{notificationMessage || "Isi pesan akan tampil di sini."}</p></div></div><div className="grid gap-2 sm:grid-cols-2"><Select name="sendMode" value={sendMode} onChange={(event) => setSendMode(event.target.value)}><option value="now">Kirim sekarang</option><option value="scheduled">Terjadwal</option></Select><Select name="recurrence" defaultValue="once"><option value="once">Sekali</option><option value="daily">Harian</option><option value="weekly">Mingguan</option><option value="monthly">Bulanan</option></Select></div><div className="grid gap-2 sm:grid-cols-2"><Input name="startsAt" type="datetime-local" disabled={sendMode === "now"} /><Input name="endsAt" type="datetime-local" /></div><Input name="activeDurationDays" type="number" min={1} max={365} defaultValue={7} placeholder="Durasi aktif hari" /><Button type="submit" className="w-full" disabled={sending}>{sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bell className="h-4 w-4" />}{sending ? "Mengirim..." : "Kirim Notifikasi"}</Button></form></Card><Card className="border-slate-200 bg-white p-5"><h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Campaign dan riwayat</h3><div className="mt-3 space-y-2">{schedules.map((item) => <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3"><div className="flex items-start justify-between gap-2"><p className="text-sm font-semibold text-slate-950">{item.title}</p><Badge className="bg-slate-950 capitalize">{item.status}</Badge></div><p className="mt-1 line-clamp-2 text-xs text-slate-600">{item.message}</p><p className="mt-2 text-xs text-slate-500">Next: {formatDateTime(item.nextRunAt)} · {item.recurrence}</p></div>)}{!schedules.length ? <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-center text-sm text-slate-500">Belum ada campaign.</p> : null}</div></Card></section> : null}
-  </div>;
+      {activeMenu === "dashboard" && (
+        <>
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <SummaryCard icon={Users} label="Total Users" value={formatNumber(stats.totalUsers)} delta="User" />
+            <SummaryCard icon={PlayCircle} label="Total Showcase" value={formatNumber(stats.totalVideos)} delta="Video" />
+            <SummaryCard icon={Clock3} label="Notifikasi Terjadwal" value={formatNumber(stats.scheduledNotifications)} delta="Queue" tone="amber" />
+            <SummaryCard icon={Megaphone} label="Active Campaigns" value={formatNumber(stats.activeCampaigns)} delta="Live" tone="blue" />
+          </section>
+          <section className="grid gap-4 md:grid-cols-3">
+            <Card className="p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Subscription Aktif</p>
+              <p className="mt-2 text-3xl font-semibold text-emerald-700">{formatNumber(analytics.subscriptions.active)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">User dengan plan berbayar aktif</p>
+            </Card>
+            <Card className="p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Trial Aktif</p>
+              <p className="mt-2 text-3xl font-semibold text-amber-600">{formatNumber(analytics.subscriptions.trial)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">User dalam masa trial Creator</p>
+            </Card>
+            <Card className="p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Paket Tersedia</p>
+              <div className="mt-2 space-y-1.5">
+                <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2">
+                  <span className="text-sm font-semibold text-blue-800">Creator</span>
+                  <span className="text-xs text-blue-600">50 video/platform</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-purple-50 px-3 py-2">
+                  <span className="text-sm font-semibold text-purple-800">Business</span>
+                  <span className="text-xs text-purple-600">Unlimited</span>
+                </div>
+              </div>
+            </Card>
+          </section>
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Card className="p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visitor Hari Ini</p>
+              <p className="mt-2 text-3xl font-semibold">{formatNumber(stats.visitorToday)}</p>
+            </Card>
+            <Card className="p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Kemarin</p>
+              <p className="mt-2 text-3xl font-semibold">{formatNumber(stats.visitorYesterday)}</p>
+            </Card>
+            <Card className="p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">7 Hari Terakhir</p>
+              <p className="mt-2 text-3xl font-semibold">{formatNumber(stats.visitorLast7Days)}</p>
+            </Card>
+            <Card className="p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Email Quota</p>
+              <p className="mt-2 text-3xl font-semibold">{emailQuota.used}<span className="text-base font-normal text-muted-foreground">/{emailQuota.limit}</span></p>
+            </Card>
+          </section>
+          <Card className="p-5">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Database</p>
+                <p className={cn("mt-1 text-sm font-medium", health.ok ? "text-emerald-600" : "text-destructive")}>{health.message}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => void refreshHealth()}>
+                <Database className="h-4 w-4" />Cek
+              </Button>
+            </div>
+            {health.storage && (
+              <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
+                <HardDrive className="h-4 w-4 shrink-0" />
+                <span>{formatBytes(health.storage.usedBytes)} / {formatBytes(health.storage.limitBytes)} ({health.storage.usedPercent.toFixed(1)}%)</span>
+              </div>
+            )}
+          </Card>
+        </>
+      )}
+
+      {activeMenu === "users" && (
+        <Card className="p-5">
+          <h2 className="text-2xl font-semibold">User Management</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Kelola user: blokir, unblock, atau hapus akun.</p>
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            {users.map((user) => (
+              <div key={user.id} className="rounded-xl border border-border bg-muted/30 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{user.name || user.email}</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">@{user.username || "-"} · {user.videoCount} video</p>
+                  </div>
+                  <Badge variant={user.isBlocked ? "destructive" : "default"}>{user.isBlocked ? "Blocked" : "Active"}</Badge>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {user.isBlocked ? (
+                    <Button variant="outline" size="sm" onClick={async () => {
+                      const confirmed = await confirmFeedbackAction({ title: `Unblock "${user.name || user.email}"?`, text: "User akan bisa login dan mengakses dashboard kembali.", confirmButtonText: "Unblock" });
+                      if (!confirmed) return;
+                      const res = await fetch(`/api/admin/users/${user.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: user.name, username: user.username, isBlocked: false, blockedReason: "" }) });
+                      if (!res.ok) { await showFeedbackAlert({ title: "Gagal unblock", text: await parseApiError(res), icon: "error" }); return; }
+                      await showFeedbackAlert({ title: "User di-unblock", icon: "success", timer: 900 }); refresh();
+                    }}>Unblock</Button>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={async () => {
+                      const confirmed = await confirmFeedbackAction({ title: `Blokir "${user.name || user.email}"?`, text: "User tidak akan bisa login selama diblokir.", confirmButtonText: "Blokir", icon: "warning" });
+                      if (!confirmed) return;
+                      const Swal = (await import("sweetalert2")).default;
+                      const reasonResult = await Swal.fire({
+                        title: "Alasan pemblokiran",
+                        input: "textarea",
+                        inputPlaceholder: "Tulis alasan pemblokiran...",
+                        confirmButtonText: "Simpan & Blokir",
+                        showCancelButton: true,
+                        cancelButtonText: "Batal",
+                        buttonsStyling: false,
+                        customClass: { popup: "rounded-2xl bg-white text-slate-950", confirmButton: "inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800", cancelButton: "mr-2 inline-flex h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-900 hover:bg-slate-50" },
+                      });
+                      if (!reasonResult.isConfirmed) return;
+                      const blockedReason = (reasonResult.value as string || "").trim() || "Diblokir oleh admin.";
+                      const res = await fetch(`/api/admin/users/${user.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: user.name, username: user.username, isBlocked: true, blockedReason }) });
+                      if (!res.ok) { await showFeedbackAlert({ title: "Gagal memblokir", text: await parseApiError(res), icon: "error" }); return; }
+                      await showFeedbackAlert({ title: "User diblokir", icon: "success", timer: 900 }); refresh();
+                    }}>Blokir</Button>
+                  )}
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={async () => {
+                    const confirmed = await confirmFeedbackAction({ title: `Hapus akun "${user.name || user.email}"?`, text: "Akun akan dihapus permanen.", confirmButtonText: "Hapus", icon: "warning" });
+                    if (!confirmed) return;
+                    const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
+                    if (!res.ok) { await showFeedbackAlert({ title: "Gagal menghapus", text: await parseApiError(res), icon: "error" }); return; }
+                    await showFeedbackAlert({ title: "Akun dihapus", icon: "success", timer: 900 }); refresh();
+                  }}><Trash2 className="h-4 w-4" />Hapus</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {activeMenu === "audit" && <AdminAuditPanel initialData={audit} />}
+      {activeMenu === "videos" && renderVideoGrid()}
+
+      {activeMenu === "maintenance" && (
+        <>
+          <Card className="p-5">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Website Control</p>
+                <h2 className="mt-1 text-2xl font-semibold">Maintenance dan pause sementara</h2>
+              </div>
+              {isPending && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+            </div>
+            <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+              <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
+                <label className="flex items-center justify-between gap-3 text-sm font-semibold">
+                  Maintenance mode
+                  <input type="checkbox" checked={settingsState.maintenanceEnabled} onChange={(e) => setSettingsState((prev) => ({ ...prev, maintenanceEnabled: e.target.checked }))} className="h-5 w-5 accent-primary" />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-sm font-semibold">
+                  Pause website sementara
+                  <input type="checkbox" checked={settingsState.pauseEnabled} onChange={(e) => setSettingsState((prev) => ({ ...prev, pauseEnabled: e.target.checked }))} className="h-5 w-5 accent-primary" />
+                </label>
+                <p className="text-xs text-muted-foreground">Status: {settingsState.maintenanceEnabled || settingsState.pauseEnabled ? "Aktif" : "Nonaktif"}</p>
+              </div>
+              <div className="space-y-3">
+                <Textarea value={settingsState.maintenanceMessage} onChange={(e) => setSettingsState((prev) => ({ ...prev, maintenanceMessage: e.target.value }))} placeholder="Pesan maintenance untuk pengunjung" className="min-h-24" />
+                <Button variant="secondary" onClick={updateSettings}><Settings2 className="h-4 w-4" />Simpan pengaturan</Button>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-5">
+            <div className="mb-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Billing & Payment</p>
+              <h2 className="mt-1 text-2xl font-semibold">Pengaturan Billing</h2>
+            </div>
+            <div className="space-y-3">
+              <label className="flex items-center justify-between gap-3 text-sm font-semibold">
+                Aktifkan Billing
+                <input type="checkbox" checked={settingsState.billingEnabled} onChange={(e) => setSettingsState((prev) => ({ ...prev, billingEnabled: e.target.checked }))} className="h-5 w-5 accent-primary" />
+              </label>
+              <div>
+                <p className="mb-1.5 text-xs text-muted-foreground">Metode Pembayaran Default</p>
+                <Select value={settingsState.defaultPaymentMethod} onChange={(e) => setSettingsState((prev) => ({ ...prev, defaultPaymentMethod: e.target.value }))}>
+                  <option value="bayar_gg">bayar.gg</option>
+                  <option value="manual">Manual Transfer</option>
+                </Select>
+              </div>
+              <Button variant="secondary" onClick={updateSettings}><Settings2 className="h-4 w-4" />Simpan Billing</Button>
+            </div>
+          </Card>
+        </>
+      )}
+
+      {activeMenu === "notifications" && (
+        <section className="grid gap-5 xl:grid-cols-[1fr_420px]">
+          <Card className="p-5">
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              <h2 className="text-2xl font-semibold">Kirim Notifikasi</h2>
+            </div>
+            <form onSubmit={sendNotification} className="mt-4 space-y-3">
+              <Select name="targetType" defaultValue="all">
+                <option value="all">Semua user</option>
+                <option value="active">User aktif</option>
+                <option value="blocked">User diblokir</option>
+                <option value="public">Profile public</option>
+                <option value="private">Profile private</option>
+              </Select>
+              <Select name="targetUserId" defaultValue="">
+                <option value="">Tidak pilih user spesifik</option>
+                {ownerOptions.map((u) => <option key={u.id} value={u.id}>{u.name || u.email} — {u.email}</option>)}
+              </Select>
+              <Input value={notificationTitle} onChange={(e) => setNotificationTitle(e.target.value)} placeholder="Judul notifikasi" />
+              <Textarea value={notificationMessage} onChange={(e) => setNotificationMessage(e.target.value)} placeholder="Isi pesan notifikasi" className="min-h-28" />
+              <div className="rounded-xl border border-border bg-muted/30 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Preview Notifikasi</p>
+                <div className="mt-3 rounded-xl border bg-background p-4 text-center">
+                  <Sparkles className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <p className="mt-2 font-semibold">{notificationTitle || "Judul notifikasi"}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{notificationMessage || "Isi pesan akan tampil di sini."}</p>
+                </div>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Select name="sendMode" value={sendMode} onChange={(e) => setSendMode(e.target.value)}>
+                  <option value="now">Kirim sekarang</option>
+                  <option value="scheduled">Terjadwal</option>
+                </Select>
+                <Select name="recurrence" defaultValue="once">
+                  <option value="once">Sekali</option>
+                  <option value="daily">Harian</option>
+                  <option value="weekly">Mingguan</option>
+                  <option value="monthly">Bulanan</option>
+                </Select>
+              </div>
+              {sendMode === "scheduled" && (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div><label className="mb-1 block text-xs text-muted-foreground">Mulai</label><Input type="datetime-local" name="startsAt" /></div>
+                  <div><label className="mb-1 block text-xs text-muted-foreground">Selesai (opsional)</label><Input type="datetime-local" name="endsAt" /></div>
+                </div>
+              )}
+              <Input type="number" name="activeDurationDays" defaultValue={7} placeholder="Durasi tampil (hari)" min={1} max={90} />
+              <Button variant="secondary" type="submit" disabled={sending} className="w-full">
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                {sendMode === "now" ? "Kirim Sekarang" : "Jadwalkan"}
+              </Button>
+            </form>
+          </Card>
+          <Card className="p-5">
+            <h3 className="font-semibold">Riwayat Campaign</h3>
+            <div className="mt-3 space-y-3">
+              {schedules.length === 0 ? (
+                <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Belum ada campaign.</p>
+              ) : schedules.map((s) => (
+                <div key={s.id} className="rounded-xl border border-border p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-semibold">{s.title}</p>
+                    <Badge variant={s.status === "sent" ? "default" : "secondary"}>{s.status}</Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{s.message}</p>
+                  <p className="mt-1.5 text-xs text-muted-foreground">{formatDateTime(s.startsAt)} · {s.targetType}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </section>
+      )}
+    </div>
+  );
 }
 
