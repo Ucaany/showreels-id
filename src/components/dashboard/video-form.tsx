@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -847,7 +847,7 @@ export function VideoForm({
             <p className="text-sm font-semibold text-slate-900">Danger Zone</p>
             <Button
               type="button"
-              variant="danger"
+              variant="destructive"
               className="w-full"
               onClick={handleDelete}
               disabled={deleteLoading}

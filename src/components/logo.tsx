@@ -5,32 +5,21 @@ import { useState } from "react";
 import type React from "react";
 
 export const LogoIcon = (props: React.ComponentProps<"span">) => {
-  const [imgError, setImgError] = useState(false);
+  const [src, setSrc] = useState("/favicon-96x96.png");
   return (
     <span
       className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-md"
       {...props}
     >
-      {!imgError ? (
-        <Image
-          src="/favicon-96x96.png"
-          alt="showreels.id"
-          width={24}
-          height={24}
-          unoptimized
-          className="h-full w-full object-contain"
-          onError={() => setImgError(true)}
-        />
-      ) : (
-        <Image
-          src="/logo.png"
-          alt="showreels.id"
-          width={24}
-          height={24}
-          unoptimized
-          className="h-full w-full object-contain"
-        />
-      )}
+      <Image
+        src={src}
+        alt="showreels.id"
+        width={24}
+        height={24}
+        unoptimized
+        className="h-full w-full object-contain"
+        onError={() => setSrc("/logo.png")}
+      />
     </span>
   );
 };

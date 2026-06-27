@@ -1,8 +1,8 @@
-import Link from "next/link";
-import { ArrowUpRight, Copy, Link2, PlayCircle } from "lucide-react";
-import { CopyProfileLinkButton } from "@/components/dashboard/copy-profile-link-button";
+﻿import Link from "next/link";
+import { BarChart3Icon, Link2Icon, UploadCloudIcon, ArrowUpRightIcon, TrendingUpIcon } from "lucide-react";
 import { CreatorTrafficPanel } from "@/components/dashboard/creator-traffic-panel";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireCurrentUser } from "@/server/current-user";
 
 const tips = [
@@ -22,65 +22,58 @@ const tips = [
 
 export default async function DashboardAnalyticsPage() {
   const user = await requireCurrentUser();
-  const username = user.username || "creator";
 
   return (
-    <div className="space-y-5 bg-slate-50">
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-        <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-            Analytics
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-            Trafik Halaman Creator
-          </h1>
-          <p className="mt-3 text-sm leading-6 text-slate-500 md:text-base">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Pantau kunjungan profil, performa video, dan peluang optimasi secara real-time.
           </p>
         </div>
-      </section>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Link href="/dashboard/link-builder">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Link2Icon className="h-4 w-4" />
+              Build Link
+            </Button>
+          </Link>
+          <Link href="/dashboard/videos">
+            <Button variant="outline" size="sm" className="gap-2">
+              <UploadCloudIcon className="h-4 w-4" />
+              Upload Video
+            </Button>
+          </Link>
+        </div>
+      </div>
 
       <CreatorTrafficPanel />
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-              Next Steps
-            </p>
-            <h2 className="mt-1 text-lg font-semibold text-slate-900">Tips tingkatkan trafik</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Tiga tindakan sederhana untuk membantu analytics kamu lebih cepat terisi data.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/dashboard/link-builder">
-              <Button variant="secondary" size="sm">
-                <Link2 className="h-4 w-4" />
-                Buka Build Link
-              </Button>
-            </Link>
-            <Link href="/dashboard/videos">
-              <Button variant="secondary" size="sm">
-                <Copy className="h-4 w-4" />
-                Upload Video
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {tips.map((tip) => (
-            <article key={tip.title} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-sm font-semibold text-slate-900">{tip.title}</h3>
-                <ArrowUpRight className="mt-0.5 h-4 w-4 text-slate-400" />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <TrendingUpIcon className="size-4 text-muted-foreground" />
+            Tips tingkatkan trafik
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Tiga tindakan sederhana untuk membantu analytics kamu lebih cepat terisi data.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {tips.map((tip) => (
+              <div key={tip.title} className="rounded-lg border border-border bg-muted/30 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-sm font-semibold">{tip.title}</h3>
+                  <ArrowUpRightIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">{tip.description}</p>
               </div>
-              <p className="mt-2 text-sm leading-6 text-slate-500">{tip.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

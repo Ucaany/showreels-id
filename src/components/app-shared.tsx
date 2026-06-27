@@ -26,11 +26,10 @@ export type SidebarNavItem = {
 };
 
 export type SidebarNavGroup = {
-  label: string;
+  label?: string;
   items: SidebarNavItem[];
 };
 
-// --- Customer/Creator navigation ---
 export const creatorNavGroups: SidebarNavGroup[] = [
   {
     label: "Menu Utama",
@@ -61,7 +60,6 @@ export const creatorFooterNavLinks: SidebarNavItem[] = [
   { title: "Bantuan", path: "/customer-service", icon: <HelpCircleIcon /> },
 ];
 
-// --- Admin navigation ---
 export const adminNavGroups: SidebarNavGroup[] = [
   {
     label: "Admin",
@@ -86,7 +84,6 @@ export const adminFooterNavLinks: SidebarNavItem[] = [
   { title: "Kembali ke Dashboard", path: "/dashboard", icon: <LayoutGridIcon /> },
 ];
 
-// Legacy exports for compatibility with dashboard-4 components
 export const navGroups = creatorNavGroups;
 export const footerNavLinks = creatorFooterNavLinks;
 export const navLinks: SidebarNavItem[] = [

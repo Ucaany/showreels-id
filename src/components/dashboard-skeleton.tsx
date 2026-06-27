@@ -4,17 +4,17 @@ export function DashboardSkeleton() {
 	return (
 		<div
 			className={cn(
-				"grid grid-cols-2 gap-4 lg:grid-cols-4",
-				"*:min-h-48 *:w-full *:bg-muted *:ring-1 *:ring-border *:dark:bg-muted/50"
+				"grid grid-cols-2 gap-px bg-border p-px lg:grid-cols-4",
+				"*:min-h-48 *:w-full *:bg-background/90"
 			)}
 		>
-			<div className="rounded-lg" />
-			<div className="rounded-lg" />
-			<div className="rounded-lg" />
-			<div className="rounded-lg" />
-			<div className="rounded-lg col-span-2 min-h-92! lg:col-span-2" />
-			<div className="rounded-lg col-span-2 min-h-92! lg:col-span-2" />
-			<div className="rounded-lg col-span-2 min-h-114! lg:col-span-4" />
+			<div />
+			<div />
+			<div />
+			<div />
+			<div className="col-span-2 min-h-114! lg:col-span-4" />
+			<div className="col-span-2 min-h-92! lg:col-span-2" />
+			<div className="col-span-2 min-h-92! lg:col-span-2" />
 		</div>
 	);
 }
