@@ -65,15 +65,15 @@ export function NotificationInboxPanel({ compact = false }: { compact?: boolean 
   const visibleNotifications = compact ? notifications.slice(0, 4) : notifications;
 
   return (
-    <Card className="border-slate-200 bg-white p-5 shadow-sm">
+    <Card className="p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
             <Bell className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Inbox Notifikasi</p>
-            <h2 className="text-xl font-semibold text-slate-950">Pesan dari admin</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Inbox Notifikasi</p>
+            <h2 className="text-xl font-semibold">Pesan dari admin</h2>
           </div>
         </div>
         <Button variant="secondary" size="sm" onClick={() => void markRead()} disabled={!unreadCount || isPending}>
@@ -84,7 +84,7 @@ export function NotificationInboxPanel({ compact = false }: { compact?: boolean 
 
       <div className="mt-4 space-y-3">
         {loading ? (
-          <p className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">Memuat notifikasi...</p>
+          <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">Memuat notifikasi...</p>
         ) : visibleNotifications.length ? (
           visibleNotifications.map((item) => (
             <button
@@ -92,20 +92,20 @@ export function NotificationInboxPanel({ compact = false }: { compact?: boolean 
               type="button"
               onClick={() => item.status === "unread" && void markRead(item.id)}
               className={cn(
-                "w-full rounded-2xl border p-4 text-left transition hover:bg-slate-50",
-                item.status === "unread" ? "border-slate-950 bg-slate-50" : "border-slate-200 bg-white"
+                "w-full rounded-xl border p-4 text-left transition hover:bg-muted/50",
+                item.status === "unread" ? "border-primary/30 bg-primary/5" : "border-border bg-background"
               )}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="font-semibold text-slate-950">{item.title}</p>
-                <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold uppercase", item.status === "unread" ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-500")}>{item.status === "unread" ? "Baru" : "Dibaca"}</span>
+                <p className="font-semibold">{item.title}</p>
+                <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold uppercase", item.status === "unread" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{item.status === "unread" ? "Baru" : "Dibaca"}</span>
               </div>
-              <p className="mt-1 text-sm leading-6 text-slate-600">{item.message}</p>
-              <p className="mt-2 text-xs text-slate-400">{formatDateTime(item.deliveredAt)}</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.message}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{formatDateTime(item.deliveredAt)}</p>
             </button>
           ))
         ) : (
-          <p className="rounded-2xl border border-dashed border-slate-200 p-4 text-center text-sm text-slate-500">Belum ada notifikasi.</p>
+          <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada notifikasi.</p>
         )}
       </div>
     </Card>

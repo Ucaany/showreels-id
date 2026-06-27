@@ -6,7 +6,6 @@ import {
   CreditCard,
   Lock,
   MousePointerClick,
-  Plus,
   Sparkles,
   UploadCloud,
   Video,
@@ -49,7 +48,7 @@ function BentoCard({
   return (
     <section
       className={cn(
-        'rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm md:p-6',
+        'rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm md:p-6',
         className
       )}
     >
@@ -69,14 +68,14 @@ function HeroCard({
     <BentoCard className="overflow-hidden lg:col-span-2">
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+          <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5" />
             Dashboard Creator
           </div>
-          <h2 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
+          <h2 className="mt-5 text-2xl font-semibold tracking-tight md:text-3xl">
             Selamat datang, {userName || 'Kreator'}
           </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
             Kelola profil, link bio, portfolio video, dan analytics dalam satu dashboard.
           </p>
         </div>
@@ -85,7 +84,7 @@ function HeroCard({
             href={canUseBuildLink ? '/dashboard/link-builder' : '/dashboard/billing'}
             prefetchData={canUseBuildLink ? [CACHE_KEYS.LINKS, CACHE_KEYS.LINK_TYPES] : CACHE_KEYS.BILLING_PLAN}
           >
-            <Button className="inline-flex h-10 items-center gap-2 rounded-xl bg-zinc-800 px-3.5 text-sm font-medium text-white hover:bg-zinc-700">
+            <Button variant="outline" className="inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-medium">
               {canUseBuildLink ? <Wand2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
               {canUseBuildLink ? 'Buat Bio' : 'Unlock Build Link'}
             </Button>
@@ -99,7 +98,7 @@ function HeroCard({
 function MetricsGrid({ metrics }: { metrics: MetricCard[] }) {
   return (
     <BentoCard className="lg:col-span-2">
-      <h3 className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+      <h3 className="text-sm font-medium uppercase tracking-[0.18em] text-muted-foreground">
         Ringkasan Aktivitas
       </h3>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -108,17 +107,17 @@ function MetricsGrid({ metrics }: { metrics: MetricCard[] }) {
           return (
             <div
               key={idx}
-              className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4"
+              className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-4"
             >
-              <div className="rounded-lg bg-white p-2 shadow-sm">
-                <Icon className="h-5 w-5 text-slate-600" />
+              <div className="rounded-lg bg-background p-2 shadow-sm">
+                <Icon className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-slate-500">{metric.label}</p>
-                <p className="mt-1 text-2xl font-semibold text-slate-900">
+                <p className="text-xs font-medium text-muted-foreground">{metric.label}</p>
+                <p className="mt-1 text-2xl font-semibold">
                   {formatNumber(metric.value)}
                 </p>
-                <p className="mt-1 text-xs text-slate-400">{metric.helper}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{metric.helper}</p>
               </div>
             </div>
           )
@@ -136,11 +135,11 @@ function QuickActionsGrid({ actions }: { actions: QuickAction[] }) {
         return (
           <BentoCard key={idx}>
             <div className="flex h-full flex-col">
-              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-                <Icon className="h-6 w-6 text-slate-700" />
+              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
+                <Icon className="h-6 w-6 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900">{action.title}</h3>
-              <p className="mt-2 flex-1 text-sm leading-6 text-slate-500">
+              <h3 className="text-lg font-semibold">{action.title}</h3>
+              <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
                 {action.description}
               </p>
               <div className="mt-4">
@@ -169,12 +168,12 @@ function QuickActionsGrid({ actions }: { actions: QuickAction[] }) {
 
 function LoadingSkeleton() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="w-full">
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="h-48 animate-pulse rounded-2xl bg-slate-200 lg:col-span-2" />
-        <div className="h-48 animate-pulse rounded-2xl bg-slate-200" />
-        <div className="h-64 animate-pulse rounded-2xl bg-slate-200 lg:col-span-2" />
-        <div className="h-64 animate-pulse rounded-2xl bg-slate-200" />
+        <div className="h-48 animate-pulse rounded-2xl bg-muted lg:col-span-2" />
+        <div className="h-48 animate-pulse rounded-2xl bg-muted" />
+        <div className="h-64 animate-pulse rounded-2xl bg-muted lg:col-span-2" />
+        <div className="h-64 animate-pulse rounded-2xl bg-muted" />
       </div>
     </div>
   )
@@ -182,10 +181,10 @@ function LoadingSkeleton() {
 
 function ErrorState({ error }: { error: Error }) {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
-        <p className="text-sm font-medium text-red-900">Error loading dashboard</p>
-        <p className="mt-2 text-sm text-red-700">{error.message}</p>
+    <div className="w-full">
+      <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center">
+        <p className="text-sm font-medium text-destructive">Error loading dashboard</p>
+        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
       </div>
     </div>
   )
@@ -266,31 +265,31 @@ export function DashboardClient({ canUseBuildLink }: { canUseBuildLink: boolean 
   ]
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="w-full">
       <div className="grid gap-6 lg:grid-cols-3">
         <HeroCard userName={profile?.name || null} canUseBuildLink={canUseBuildLink} />
         <BentoCard>
-          <h3 className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
+          <h3 className="text-sm font-medium uppercase tracking-[0.18em] text-muted-foreground">
             Quick Link
           </h3>
           <div className="mt-6 space-y-3">
             <PrefetchLink 
               href="/dashboard/profile"
               prefetchData={CACHE_KEYS.PROFILE}
-              className="block rounded-lg border border-slate-200 p-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="block rounded-lg border border-border bg-background p-3 text-sm font-medium text-foreground hover:bg-muted transition-colors"
             >
               Edit Profil
             </PrefetchLink>
             <PrefetchLink 
               href="/dashboard/videos"
               prefetchData={CACHE_KEYS.VIDEOS}
-              className="block rounded-lg border border-slate-200 p-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="block rounded-lg border border-border bg-background p-3 text-sm font-medium text-foreground hover:bg-muted transition-colors"
             >
               Kelola Video
             </PrefetchLink>
             <PrefetchLink 
               href="/dashboard/settings"
-              className="block rounded-lg border border-slate-200 p-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="block rounded-lg border border-border bg-background p-3 text-sm font-medium text-foreground hover:bg-muted transition-colors"
             >
               Pengaturan
             </PrefetchLink>
